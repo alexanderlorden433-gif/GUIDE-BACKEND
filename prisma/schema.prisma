@@ -1,0 +1,68 @@
+// The Guide — database schema
+// Run `npx prisma migrate dev --name init` locally to create your first migration,
+// or `npx prisma migrate deploy` in production once DATABASE_URL is set.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String   @id @default(uuid())
+  email                String   @unique
+  passwordHash         String
+
+  // Billing
+  isPro                Boolean  @default(false)
+  planType             String?  // "monthly" | "lifetime" | null
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+
+  // App data — mirrors the single JSON blob the frontend already builds
+  // (completed, tools, niches, streak, bookmarks, lastVisited, hasSeenTour)
+  dataBlob             Json     @default("{}")
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  passwordResets       PasswordReset[]
+  mentorProfiles       MentorProfile[]
+
+  @@index([stripeCustomerId])
+}
+
+// Mentor Directory: opt-in profiles, one per user per chapter, visible to
+// every signed-in user browsing that chapter — not just the person who made it.
+model MentorProfile {
+  id          String   @id @default(uuid())
+  nicheId     String
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  displayName String
+  bio         String
+  lookingFor  Json     // array of strings, e.g. ["mentor", "network"]
+  contact     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([nicheId, authorId])
+  @@index([nicheId])
+}
+
+// Real password reset tokens (replacing the prototype's "just tell us your email" flow).
+// A token is emailed to the user; they submit it + a new password to /api/auth/reset-password.
+model PasswordReset {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
