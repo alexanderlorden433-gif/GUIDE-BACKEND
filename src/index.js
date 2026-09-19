@@ -8,6 +8,7 @@ const billingRoutes = require('./routes/billing');
 const mentorAlertRoutes = require('./routes/mentorAlert');
 const aiChatRoutes = require('./routes/aiChat');
 const mentorsRoutes = require('./routes/mentors');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/mentor-alert', mentorAlertRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
 app.use('/api/mentors', mentorsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {
