@@ -5,8 +5,6 @@ const rateLimit = require('express-rate-limit');
 const prisma = require('../db');
 const { signToken } = require('../middleware/auth');
 const { sendEmail } = require('../email');
-const { makeUniqueReferralCode } = require('../referral');
-const { notifyUser } = require('../notifications');
 
 const router = express.Router();
 
@@ -52,25 +50,11 @@ router.post('/signup', async (req, res) => {
       return res.status(409).json({ error: 'An account with that email already exists.' });
     }
 
-    const referralCodeInput = String(req.body.referralCode || '').trim().toUpperCase();
-    let referredByCode = null;
-    let referrerId = null;
-    if (referralCodeInput) {
-      const referrer = await prisma.user.findUnique({ where: { referralCode: referralCodeInput } });
-      if (referrer) {
-        referredByCode = referrer.referralCode;
-        referrerId = referrer.id;
-      }
-    }
-
     const passwordHash = await bcrypt.hash(password, 12);
-    const myReferralCode = await makeUniqueReferralCode();
     const user = await prisma.user.create({
       data: {
         email,
         passwordHash,
-        referralCode: myReferralCode,
-        referredByCode,
         dataBlob: {
           completed: [],
           tools: {},
@@ -82,15 +66,6 @@ router.post('/signup', async (req, res) => {
         },
       },
     });
-
-    if (referrerId) {
-      notifyUser(referrerId, {
-        type: 'referral_signup',
-        title: 'Someone joined using your invite link',
-        body: 'You\'ll get 10 days of free Pro automatically if they go Pro.',
-        link: { view: 'invite' },
-      }).catch(() => {});
-    }
 
     const token = signToken(user);
     res.status(201).json({

@@ -10,10 +10,6 @@ const aiChatRoutes = require('./routes/aiChat');
 const mentorsRoutes = require('./routes/mentors');
 const adminRoutes = require('./routes/admin');
 const partnersRoutes = require('./routes/partners');
-const notificationsRoutes = require('./routes/notifications');
-const discussionRoutes = require('./routes/discussion');
-const { scheduleWeeklyDigest } = require('./digest');
-const { scheduleStreakReminders } = require('./streakReminder');
 
 const app = express();
 
@@ -57,8 +53,6 @@ app.use('/api/ai-chat', aiChatRoutes);
 app.use('/api/mentors', mentorsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/partners', partnersRoutes);
-app.use('/api/notifications', notificationsRoutes);
-app.use('/api/discussion', discussionRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {
@@ -69,6 +63,4 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`The Guide backend running on port ${PORT}`);
-  scheduleWeeklyDigest();
-  scheduleStreakReminders();
 });

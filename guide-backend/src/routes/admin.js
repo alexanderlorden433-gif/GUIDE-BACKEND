@@ -2,8 +2,6 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
-const { sendWeeklyDigests } = require('../digest');
-const { sendStreakReminders } = require('../streakReminder');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -103,30 +101,6 @@ router.get('/stats', async (req, res) => {
     mentorProfileCount,
     estimatedMRR,
   });
-});
-
-// ---------- POST /api/admin/send-digest-now ----------
-// Manually fires the weekly digest immediately, instead of waiting for
-// Monday 9am UTC — handy for testing after deploying a change to it.
-router.post('/send-digest-now', async (req, res) => {
-  try {
-    const result = await sendWeeklyDigests();
-    res.json(result);
-  } catch (err) {
-    console.error('Manual digest trigger failed:', err);
-    res.status(500).json({ error: 'Digest run failed — check server logs.' });
-  }
-});
-
-// ---------- POST /api/admin/send-streak-reminders-now ----------
-router.post('/send-streak-reminders-now', async (req, res) => {
-  try {
-    const result = await sendStreakReminders();
-    res.json(result);
-  } catch (err) {
-    console.error('Manual streak reminder trigger failed:', err);
-    res.status(500).json({ error: 'Streak reminder run failed — check server logs.' });
-  }
 });
 
 module.exports = router;

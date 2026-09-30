@@ -2,7 +2,6 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
-const { notifyAllUsers } = require('../notifications');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -53,14 +52,6 @@ router.post('/', requireOwner, async (req, res) => {
   const partner = await prisma.partner.create({
     data: { name, description, websiteUrl: websiteUrl || null, emoji, sortOrder },
   });
-
-  notifyAllUsers({
-    type: 'new_partner',
-    title: `New partner: ${name}`,
-    body: description.slice(0, 140),
-    link: { view: 'partners' },
-  }, req.user.id).catch(() => {});
-
   res.status(201).json(partner);
 });
 

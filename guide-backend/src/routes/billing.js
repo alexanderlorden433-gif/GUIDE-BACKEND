@@ -2,7 +2,6 @@ const express = require('express');
 const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { stripe, createCheckoutSession, createPortalSession } = require('../stripe');
-const { notifyUser } = require('../notifications');
 
 const router = express.Router();
 
@@ -64,12 +63,7 @@ router.post('/webhook', async (req, res) => {
         const plan = session.metadata?.plan;
         if (!userId) break;
 
-        const wasAlreadyPro = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { isPro: true, referredByCode: true },
-        });
-
-        const updatedUser = await prisma.user.update({
+        await prisma.user.update({
           where: { id: userId },
           data: {
             isPro: true,
@@ -79,30 +73,6 @@ router.post('/webhook', async (req, res) => {
               plan === 'monthly' ? session.subscription || undefined : undefined,
           },
         });
-
-        // Referral reward: only fires the first time this user goes Pro, so
-        // re-subscribing or plan changes don't double-reward the referrer.
-        if (!wasAlreadyPro?.isPro && updatedUser.referredByCode) {
-          const referrer = await prisma.user.findUnique({
-            where: { referralCode: updatedUser.referredByCode },
-          });
-          if (referrer) {
-            const base = referrer.bonusProUntil && referrer.bonusProUntil > new Date()
-              ? referrer.bonusProUntil
-              : new Date();
-            const newBonusUntil = new Date(base.getTime() + 10 * 24 * 60 * 60 * 1000);
-            await prisma.user.update({
-              where: { id: referrer.id },
-              data: { bonusProUntil: newBonusUntil },
-            });
-            notifyUser(referrer.id, {
-              type: 'referral_bonus',
-              title: 'You earned 10 days of free Pro 🎉',
-              body: 'A friend you invited just went Pro.',
-              link: { view: 'invite' },
-            }).catch(() => {});
-          }
-        }
         break;
       }
 

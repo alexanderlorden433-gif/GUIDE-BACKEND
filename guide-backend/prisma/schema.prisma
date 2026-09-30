@@ -22,14 +22,6 @@ model User {
   stripeCustomerId     String?  @unique
   stripeSubscriptionId String?  @unique
 
-  // Referrals: everyone gets a unique shareable code at signup. If they
-  // signed up via someone else's link, referredByCode stores that code.
-  // bonusProUntil is a free-Pro grant earned from referrals going Pro --
-  // separate from real billing, and simply expires on its own.
-  referralCode         String?  @unique
-  referredByCode       String?
-  bonusProUntil        DateTime?
-
   // App data — mirrors the single JSON blob the frontend already builds
   // (completed, tools, niches, streak, bookmarks, lastVisited, hasSeenTour)
   dataBlob             Json     @default("{}")
@@ -39,47 +31,8 @@ model User {
 
   passwordResets       PasswordReset[]
   mentorProfiles       MentorProfile[]
-  notifications        Notification[]
-  discussionPosts      DiscussionPost[]
 
   @@index([stripeCustomerId])
-  @@index([referredByCode])
-}
-
-// Per-chapter discussion — a lightweight forum. Top-level posts
-// (parentId null) plus one level of replies underneath each; no deeper
-// nesting, which keeps both the UI and the moderation surface simple.
-model DiscussionPost {
-  id        String   @id @default(uuid())
-  nicheId   String
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  body      String
-  parentId  String?
-  parent    DiscussionPost?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   DiscussionPost[] @relation("Replies")
-  createdAt DateTime @default(now())
-
-  @@index([nicheId, parentId, createdAt])
-  @@index([parentId])
-}
-
-// In-app notification feed -- referral activity, new partners, new mentors
-// in a chapter you follow. Separate from the email reminders (digest.js,
-// streakReminder.js), which are their own thing.
-model Notification {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String   // "referral_signup" | "referral_bonus" | "new_partner" | "new_mentor"
-  title     String
-  body      String
-  link      Json?    // e.g. {"view":"invite"} or {"view":"niche","nicheId":"video","tab":"mentors"}
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  @@index([userId, read])
-  @@index([userId, createdAt])
 }
 
 // Mentor Directory: opt-in profiles, one per user per chapter, visible to

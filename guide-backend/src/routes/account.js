@@ -2,7 +2,6 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
-const { ensureReferralCode } = require('../referral');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -11,9 +10,8 @@ router.use(requireAuth);
 // Returns everything the frontend needs on login: isPro, plan, and the full
 // data blob (completed guides, tools, streak, bookmarks, etc).
 router.get('/', async (req, res) => {
-  let user = await prisma.user.findUnique({ where: { id: req.user.id } });
+  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
   if (!user) return res.status(404).json({ error: 'Account not found.' });
-  user = await ensureReferralCode(user);
 
   // The app owner's account (set via OWNER_EMAIL) always has full Pro access,
   // regardless of what's actually stored — no real payment involved. This is
@@ -22,25 +20,11 @@ router.get('/', async (req, res) => {
   const isOwner = process.env.OWNER_EMAIL &&
     user.email.toLowerCase() === process.env.OWNER_EMAIL.toLowerCase();
 
-  // A referral bonus is a free, time-boxed Pro grant that lives entirely in
-  // our own database -- no Stripe subscription involved, so it just expires
-  // on its own with no cleanup needed.
-  const hasReferralBonus = !!(user.bonusProUntil && user.bonusProUntil > new Date());
-
-  const [referredCount, referredProCount] = await Promise.all([
-    prisma.user.count({ where: { referredByCode: user.referralCode } }),
-    prisma.user.count({ where: { referredByCode: user.referralCode, isPro: true } }),
-  ]);
-
   res.json({
     email: user.email,
-    isPro: isOwner ? true : (user.isPro || hasReferralBonus),
+    isPro: isOwner ? true : user.isPro,
     planType: isOwner ? 'lifetime' : user.planType,
     data: user.dataBlob,
-    referralCode: user.referralCode,
-    referredCount,
-    referredProCount,
-    bonusProUntil: hasReferralBonus ? user.bonusProUntil : null,
   });
 });
 
