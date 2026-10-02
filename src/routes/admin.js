@@ -89,6 +89,58 @@ router.get('/stats', async (req, res) => {
     .slice(0, 8);
 
   const estimatedMRR = Math.round(monthlyUsers * MONTHLY_PRICE * 100) / 100;
+  const lifetimeRevenue = Math.round(lifetimeUsers * 84.99 * 100) / 100;
+  const conversionRate = totalUsers > 0 ? Math.round((proUsers / totalUsers) * 10000) / 100 : 0;
+
+  // Engagement: users active in last 7 days (updated their account)
+  const activeUsersLast7 = await prisma.user.count({
+    where: { updatedAt: { gte: sevenDaysAgo } }
+  });
+  const activeUsersLast30 = await prisma.user.count({
+    where: { updatedAt: { gte: thirtyDaysAgo } }
+  });
+
+  // Streak stats
+  const streakData = allUsers.map(u => {
+    const s = (u.dataBlob && u.dataBlob.streak) || {};
+    return s.count || 0;
+  });
+  const avgStreak = streakData.length > 0 ? Math.round(streakData.reduce((a,b)=>a+b,0) / streakData.length * 10) / 10 : 0;
+  const maxStreak = streakData.length > 0 ? Math.max(...streakData) : 0;
+
+  // Avg guides completed per user
+  const completionCounts = allUsers.map(u => {
+    const c = (u.dataBlob && u.dataBlob.completed) || [];
+    return Array.isArray(c) ? c.length : 0;
+  });
+  const avgCompleted = completionCounts.length > 0 ? Math.round(completionCounts.reduce((a,b)=>a+b,0) / completionCounts.length * 10) / 10 : 0;
+  const totalCompleted = completionCounts.reduce((a,b)=>a+b,0);
+
+  // Recent signups (last 10 users with basic info)
+  const recentSignups = await prisma.user.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 15,
+    select: { email: true, createdAt: true, isPro: true, planType: true, dataBlob: true }
+  });
+  const recentSignupsList = recentSignups.map(u => ({
+    email: u.email,
+    createdAt: u.createdAt,
+    isPro: u.isPro,
+    planType: u.planType,
+    niches: (u.dataBlob && u.dataBlob.niches) || [],
+    guidesCompleted: Array.isArray(u.dataBlob && u.dataBlob.completed) ? u.dataBlob.completed.length : 0,
+    streak: (u.dataBlob && u.dataBlob.streak && u.dataBlob.streak.count) || 0,
+  }));
+
+  // Network & community stats
+  let networkRequestCount = 0;
+  let winCount = 0;
+  try {
+    networkRequestCount = await prisma.networkRequest.count();
+  } catch(e) { /* model may not exist yet */ }
+  try {
+    winCount = await prisma.win.count();
+  } catch(e) { /* model may not exist yet */ }
 
   res.json({
     totalUsers,
@@ -102,6 +154,17 @@ router.get('/stats', async (req, res) => {
     popularChapters,
     mentorProfileCount,
     estimatedMRR,
+    lifetimeRevenue,
+    conversionRate,
+    activeUsersLast7,
+    activeUsersLast30,
+    avgStreak,
+    maxStreak,
+    avgCompleted,
+    totalCompleted,
+    recentSignupsList,
+    networkRequestCount,
+    winCount,
   });
 });
 
