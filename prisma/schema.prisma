@@ -41,6 +41,10 @@ model User {
   mentorProfiles       MentorProfile[]
   notifications        Notification[]
   discussionPosts      DiscussionPost[]
+  wins                 Win[]
+  winReactions         WinReaction[]
+  networkRequests      NetworkRequest[]   @relation("NetworkFrom")
+  networkReceived      NetworkRequest[]   @relation("NetworkTo")
 
   @@index([stripeCustomerId])
   @@index([referredByCode])
@@ -128,4 +132,86 @@ model Partner {
   updatedAt   DateTime @updatedAt
 
   @@index([sortOrder])
+}
+
+// Pre-launch email waitlist -- public signup, no account required. Used to
+// collect interested emails before the app opens up, then email everyone
+// once via the owner-only /launch-announcement endpoint.
+model WaitlistSignup {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  niche      String?
+  notifiedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// Client-facing project status pages (Lifetime perk). The owner (a User)
+// creates/updates one of these per client; the public reads it at
+// /client-status.html?t=<token> with no login -- it's meant to be sent as a
+// link. Intentionally has no relation back to a User model field so a
+// public GET by token never has to touch or expose account data beyond the
+// owner's display name, which we deliberately don't even store here.
+model ClientStatusPage {
+  id          String   @id @default(uuid())
+  token       String   @unique
+  ownerId     String
+  clientName  String
+  projectName String
+  status      String   @default("In Progress")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+// ---------- Wins Board ----------
+// Public celebrations -- a user posts a win (text + optional emoji category),
+// other users react with emoji. Lightweight social proof that keeps people
+// coming back and seeing each other succeed.
+model Win {
+  id        String   @id @default(uuid())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String
+  emoji     String   @default("🎉")
+  reactions WinReaction[]
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([authorId])
+}
+
+model WinReaction {
+  id     String @id @default(uuid())
+  winId  String
+  win    Win    @relation(fields: [winId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji  String // "🔥", "👏", "💪", "❤️"
+
+  @@unique([winId, userId, emoji])
+  @@index([winId])
+}
+
+// ---------- Networking / Connect ----------
+// One user sends a connection request to another; the other user sees it
+// in their network tab. No messaging yet — just the intent to connect,
+// with both users' profiles visible to each other once accepted.
+model NetworkRequest {
+  id         String   @id @default(uuid())
+  fromUserId String
+  fromUser   User     @relation("NetworkFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String
+  toUser     User     @relation("NetworkTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  status     String   @default("pending") // "pending" | "accepted" | "declined"
+  nicheId    String?  // which niche they connected through
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId, status])
+  @@index([fromUserId])
 }
