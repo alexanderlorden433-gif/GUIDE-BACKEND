@@ -7,6 +7,7 @@ const { signToken } = require('../middleware/auth');
 const { sendEmail } = require('../email');
 const { makeUniqueReferralCode } = require('../referral');
 const { notifyUser } = require('../notifications');
+const { sendWelcomeEmail } = require('../onboardingDrip');
 
 const router = express.Router();
 
@@ -91,6 +92,9 @@ router.post('/signup', async (req, res) => {
         link: { view: 'invite' },
       }).catch(() => {});
     }
+
+    // Fire-and-forget welcome email (first in the onboarding drip sequence)
+    sendWelcomeEmail(user).catch(() => {});
 
     const token = signToken(user);
     res.status(201).json({
