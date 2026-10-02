@@ -12,6 +12,9 @@ const adminRoutes = require('./routes/admin');
 const partnersRoutes = require('./routes/partners');
 const notificationsRoutes = require('./routes/notifications');
 const discussionRoutes = require('./routes/discussion');
+const winsRoutes = require('./routes/wins');
+const leaderboardRoutes = require('./routes/leaderboard');
+const networkRoutes = require('./routes/networking');
 const { scheduleWeeklyDigest } = require('./digest');
 const { scheduleStreakReminders } = require('./streakReminder');
 
@@ -59,6 +62,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/discussion', discussionRoutes);
+app.use('/api/wins', winsRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/network', networkRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {
