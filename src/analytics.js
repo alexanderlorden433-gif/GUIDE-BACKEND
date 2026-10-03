@@ -650,14 +650,17 @@ const totalsCache = new Map();
 async function ownerTotals() {
   return cached(totalsCache, 'totals', 10000, async () => {
     const staff = staffEmails();
-    const [r] = await q(
-      `SELECT COUNT(*)::int AS "totalUsers",
-              COUNT(*) FILTER (WHERE "isPro")::int AS "proUsers",
-              COUNT(*) FILTER (WHERE "isPro" AND "planType" = 'monthly')::int AS "monthly",
-              COUNT(*) FILTER (WHERE "isPro" AND "planType" = 'yearly')::int AS "yearly"
-         FROM "User" WHERE lower(email) <> ALL($1::text[])`, staff);
+    const [[r], [money]] = await Promise.all([
+      q(`SELECT COUNT(*)::int AS "totalUsers",
+                COUNT(*) FILTER (WHERE "isPro")::int AS "proUsers",
+                COUNT(*) FILTER (WHERE "isPro" AND "planType" = 'monthly')::int AS "monthly",
+                COUNT(*) FILTER (WHERE "isPro" AND "planType" = 'yearly')::int AS "yearly"
+           FROM "User" WHERE lower(email) <> ALL($1::text[])`, staff),
+      // Every payment recorded since tracking began (first payments + renewals).
+      q(`SELECT COALESCE(SUM(value), 0)::float8 AS "allTimeRevenue" FROM "AnalyticsEvent" WHERE type IN ('purchase','renewal')`),
+    ]);
     const mrr = r.monthly * PRICES.monthly + r.yearly * PRICES.yearly / 12;
-    return { ...r, mrr: Math.round(mrr * 100) / 100 };
+    return { ...r, mrr: Math.round(mrr * 100) / 100, allTimeRevenue: Math.round(money.allTimeRevenue * 100) / 100 };
   });
 }
 
