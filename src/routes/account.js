@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
   res.json({
     email: user.email,
     isPro: (isOwner || isPreview) ? true : (user.isPro || hasReferralBonus),
-    planType: (isOwner || isPreview) ? 'lifetime' : user.planType,
+    planType: (isOwner || isPreview) ? 'yearly' : user.planType,
     data: user.dataBlob,
     referralCode: user.referralCode,
     referredCount,

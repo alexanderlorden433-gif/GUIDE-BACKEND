@@ -7,11 +7,11 @@ const { notifyUser } = require('../notifications');
 const router = express.Router();
 
 // ---------- POST /api/billing/checkout ----------
-// Body: { plan: "monthly" | "lifetime" }
+// Body: { plan: "monthly" | "yearly" }
 // Returns a Stripe Checkout URL for the frontend to redirect the user to.
 router.post('/checkout', requireAuth, async (req, res) => {
   try {
-    const plan = req.body.plan === 'lifetime' ? 'lifetime' : 'monthly';
+    const plan = req.body.plan === 'yearly' ? 'yearly' : 'monthly';
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) return res.status(404).json({ error: 'Account not found.' });
 
@@ -75,8 +75,7 @@ router.post('/webhook', async (req, res) => {
             isPro: true,
             planType: plan,
             stripeCustomerId: session.customer || undefined,
-            stripeSubscriptionId:
-              plan === 'monthly' ? session.subscription || undefined : undefined,
+            stripeSubscriptionId: session.subscription || undefined,
           },
         });
 

@@ -30,7 +30,8 @@ function requireOwner(req, res, next) {
 }
 router.use(requireOwner);
 
-const MONTHLY_PRICE = 12.99;
+const MONTHLY_PRICE = 28.99;
+const YEARLY_PRICE = 325.99;
 
 // ---------- GET /api/admin/stats ----------
 router.get('/stats', async (req, res) => {
@@ -42,7 +43,7 @@ router.get('/stats', async (req, res) => {
     totalUsers,
     proUsers,
     monthlyUsers,
-    lifetimeUsers,
+    yearlyUsers,
     signupsLast7Days,
     signupsLast30Days,
     recentUsers,
@@ -51,7 +52,7 @@ router.get('/stats', async (req, res) => {
     prisma.user.count(),
     prisma.user.count({ where: { isPro: true } }),
     prisma.user.count({ where: { planType: 'monthly' } }),
-    prisma.user.count({ where: { planType: 'lifetime' } }),
+    prisma.user.count({ where: { planType: 'yearly' } }),
     prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
     prisma.user.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
     // Only what's needed for the two aggregates below — never full account data.
@@ -118,8 +119,8 @@ router.get('/stats', async (req, res) => {
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
-  const estimatedMRR = Math.round(monthlyUsers * MONTHLY_PRICE * 100) / 100;
-  const lifetimeRevenue = Math.round(lifetimeUsers * 84.99 * 100) / 100;
+  const estimatedMRR = Math.round((monthlyUsers * MONTHLY_PRICE + yearlyUsers * YEARLY_PRICE / 12) * 100) / 100;
+  const yearlyRevenue = Math.round(yearlyUsers * YEARLY_PRICE * 100) / 100;
   const conversionRate = totalUsers > 0 ? Math.round((proUsers / totalUsers) * 10000) / 100 : 0;
 
   // Engagement: users active in last 7 days (updated their account)
@@ -163,14 +164,14 @@ router.get('/stats', async (req, res) => {
     proUsers,
     freeUsers: totalUsers - proUsers,
     monthlyUsers,
-    lifetimeUsers,
+    yearlyUsers,
     signupsLast7Days,
     signupsLast30Days,
     signupsByDay,
     popularChapters,
     mentorProfileCount,
     estimatedMRR,
-    lifetimeRevenue,
+    yearlyRevenue,
     conversionRate,
     activeUsersLast7,
     activeUsersLast30,

@@ -5,13 +5,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 /**
- * Creates a Stripe Checkout Session for either the monthly subscription
- * or the one-time lifetime purchase, tied to a specific user.
+ * Creates a Stripe Checkout Session for either the monthly or yearly
+ * subscription, tied to a specific user.
  */
 async function createCheckoutSession({ user, plan }) {
   const priceId =
-    plan === 'lifetime'
-      ? process.env.STRIPE_PRICE_LIFETIME
+    plan === 'yearly'
+      ? process.env.STRIPE_PRICE_YEARLY
       : process.env.STRIPE_PRICE_MONTHLY;
 
   if (!priceId) {
@@ -19,7 +19,7 @@ async function createCheckoutSession({ user, plan }) {
   }
 
   const session = await stripe.checkout.sessions.create({
-    mode: plan === 'lifetime' ? 'payment' : 'subscription',
+    mode: 'subscription',
     customer_email: user.stripeCustomerId ? undefined : user.email,
     customer: user.stripeCustomerId || undefined,
     line_items: [{ price: priceId, quantity: 1 }],
