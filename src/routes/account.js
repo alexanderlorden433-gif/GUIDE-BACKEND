@@ -22,6 +22,11 @@ router.get('/', async (req, res) => {
   const isOwner = process.env.OWNER_EMAIL &&
     user.email.toLowerCase() === process.env.OWNER_EMAIL.toLowerCase();
 
+  // Preview / demo account — full Pro access for showing off the app to
+  // potential users or investors, but no admin dashboard.
+  const previewEmails = (process.env.PREVIEW_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+  const isPreview = previewEmails.includes(user.email.toLowerCase());
+
   // A referral bonus is a free, time-boxed Pro grant that lives entirely in
   // our own database -- no Stripe subscription involved, so it just expires
   // on its own with no cleanup needed.
@@ -34,8 +39,8 @@ router.get('/', async (req, res) => {
 
   res.json({
     email: user.email,
-    isPro: isOwner ? true : (user.isPro || hasReferralBonus),
-    planType: isOwner ? 'lifetime' : user.planType,
+    isPro: (isOwner || isPreview) ? true : (user.isPro || hasReferralBonus),
+    planType: (isOwner || isPreview) ? 'lifetime' : user.planType,
     data: user.dataBlob,
     referralCode: user.referralCode,
     referredCount,
