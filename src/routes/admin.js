@@ -74,15 +74,45 @@ router.get('/stats', async (req, res) => {
   });
   const signupsByDay = Object.entries(dayBuckets).map(([date, count]) => ({ date, count }));
 
-  // Popular chapters — tally each user's selected niches from their data blob.
-  // This reads only the `niches` field out of each blob, not any of their
-  // actual guide/business content.
-  const allUsers = await prisma.user.findMany({ select: { dataBlob: true } });
+  // Popular chapters, streak stats, and completion stats — computed from
+  // dataBlob. Paginated to avoid loading all users into memory at once.
+  const BATCH_SIZE = 500;
+  let dbCursor = undefined;
   const nicheCounts = {};
-  allUsers.forEach(u => {
-    const niches = (u.dataBlob && u.dataBlob.niches) || [];
-    niches.forEach(n => { nicheCounts[n] = (nicheCounts[n] || 0) + 1; });
-  });
+  let totalStreakSum = 0;
+  let maxStreak = 0;
+  let totalCompletedSum = 0;
+  let userCount = 0;
+
+  while (true) {
+    const batch = await prisma.user.findMany({
+      take: BATCH_SIZE,
+      ...(dbCursor ? { skip: 1, cursor: { id: dbCursor } } : {}),
+      select: { id: true, dataBlob: true },
+      orderBy: { id: 'asc' },
+    });
+    if (batch.length === 0) break;
+    dbCursor = batch[batch.length - 1].id;
+
+    for (const u of batch) {
+      userCount++;
+      const blob = u.dataBlob || {};
+
+      // Niche counts
+      const niches = blob.niches || [];
+      niches.forEach(n => { nicheCounts[n] = (nicheCounts[n] || 0) + 1; });
+
+      // Streak
+      const streak = (blob.streak && blob.streak.count) || 0;
+      totalStreakSum += streak;
+      if (streak > maxStreak) maxStreak = streak;
+
+      // Completed
+      const completed = Array.isArray(blob.completed) ? blob.completed.length : 0;
+      totalCompletedSum += completed;
+    }
+  }
+
   const popularChapters = Object.entries(nicheCounts)
     .map(([nicheId, count]) => ({ nicheId, count }))
     .sort((a, b) => b.count - a.count)
@@ -93,28 +123,14 @@ router.get('/stats', async (req, res) => {
   const conversionRate = totalUsers > 0 ? Math.round((proUsers / totalUsers) * 10000) / 100 : 0;
 
   // Engagement: users active in last 7 days (updated their account)
-  const activeUsersLast7 = await prisma.user.count({
-    where: { updatedAt: { gte: sevenDaysAgo } }
-  });
-  const activeUsersLast30 = await prisma.user.count({
-    where: { updatedAt: { gte: thirtyDaysAgo } }
-  });
+  const [activeUsersLast7, activeUsersLast30] = await Promise.all([
+    prisma.user.count({ where: { updatedAt: { gte: sevenDaysAgo } } }),
+    prisma.user.count({ where: { updatedAt: { gte: thirtyDaysAgo } } }),
+  ]);
 
-  // Streak stats
-  const streakData = allUsers.map(u => {
-    const s = (u.dataBlob && u.dataBlob.streak) || {};
-    return s.count || 0;
-  });
-  const avgStreak = streakData.length > 0 ? Math.round(streakData.reduce((a,b)=>a+b,0) / streakData.length * 10) / 10 : 0;
-  const maxStreak = streakData.length > 0 ? Math.max(...streakData) : 0;
-
-  // Avg guides completed per user
-  const completionCounts = allUsers.map(u => {
-    const c = (u.dataBlob && u.dataBlob.completed) || [];
-    return Array.isArray(c) ? c.length : 0;
-  });
-  const avgCompleted = completionCounts.length > 0 ? Math.round(completionCounts.reduce((a,b)=>a+b,0) / completionCounts.length * 10) / 10 : 0;
-  const totalCompleted = completionCounts.reduce((a,b)=>a+b,0);
+  const avgStreak = userCount > 0 ? Math.round(totalStreakSum / userCount * 10) / 10 : 0;
+  const avgCompleted = userCount > 0 ? Math.round(totalCompletedSum / userCount * 10) / 10 : 0;
+  const totalCompleted = totalCompletedSum;
 
   // Recent signups (last 10 users with basic info)
   const recentSignups = await prisma.user.findMany({

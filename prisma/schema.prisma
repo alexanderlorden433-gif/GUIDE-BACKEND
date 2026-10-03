@@ -116,6 +116,7 @@ model PasswordReset {
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([expiresAt])
 }
 
 // Business partners / sponsors of The Guide itself -- curated by the owner,

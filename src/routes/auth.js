@@ -23,6 +23,15 @@ const loginLimiter = rateLimit({
 // Forgot-password now sends a real email per request, so this also protects
 // against someone using it to spam an inbox or burn through your email
 // provider's sending quota.
+// Prevent automated mass account creation.
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,
+  message: { error: 'Too many accounts created. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const forgotPasswordLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5,
@@ -36,7 +45,7 @@ function isValidEmail(email) {
 }
 
 // ---------- POST /api/auth/signup ----------
-router.post('/signup', async (req, res) => {
+router.post('/signup', signupLimiter, async (req, res) => {
   try {
     const email = String(req.body.email || '').trim().toLowerCase();
     const password = String(req.body.password || '');

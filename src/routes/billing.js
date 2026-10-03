@@ -33,7 +33,7 @@ router.post('/portal', requireAuth, async (req, res) => {
     res.json({ url: session.url });
   } catch (err) {
     console.error('Portal session error:', err);
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: 'Could not open billing portal. Please try again.' });
   }
 });
 

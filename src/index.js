@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 
 const authRoutes = require('./routes/auth');
 const accountRoutes = require('./routes/account');
@@ -33,6 +34,9 @@ const app = express();
 // silently rejecting every request until someone spots the mismatch.
 const normalizeOrigin = (value) => (value || '').replace(/\/+$/, '');
 
+// Security headers — protects against clickjacking, MIME-sniffing, XSS, etc.
+app.use(helmet());
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || origin === 'null' || normalizeOrigin(origin) === normalizeOrigin(process.env.APP_URL)) {
@@ -48,7 +52,7 @@ app.use(cors({
 // the signature, so it must be mounted with express.raw() BEFORE the
 // general express.json() parser below (which would otherwise consume it).
 app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
-app.use(express.json());
+app.use(express.json({ limit: '16kb' }));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 

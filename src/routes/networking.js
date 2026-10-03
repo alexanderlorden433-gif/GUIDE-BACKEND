@@ -7,6 +7,12 @@ const { notifyUser } = require('../notifications');
 const router = express.Router();
 router.use(requireAuth);
 
+// Mask email: "john@gmail.com" → "j***@g***"
+function maskEmail(email) {
+  const [local, domain] = email.split('@');
+  return `${local.charAt(0)}***@${domain.charAt(0)}***`;
+}
+
 const netLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 60,
@@ -47,27 +53,40 @@ router.get('/matches', async (req, res) => {
       excludeIds.add(r.toUserId);
     });
 
-    // Find users who share niches
-    const allUsers = await prisma.user.findMany({
-      where: { id: { notIn: Array.from(excludeIds) } },
-      select: { id: true, email: true, dataBlob: true },
-    });
+    // Find users who share niches — paginated to avoid loading all users at once
+    const BATCH_SIZE = 200;
+    let dbCursor = undefined;
+    let matches = [];
 
-    const matches = allUsers
-      .map(u => {
+    while (matches.length < 20) {
+      const batch = await prisma.user.findMany({
+        take: BATCH_SIZE,
+        ...(dbCursor ? { skip: 1, cursor: { id: dbCursor } } : {}),
+        where: { id: { notIn: Array.from(excludeIds) } },
+        select: { id: true, email: true, dataBlob: true },
+        orderBy: { id: 'asc' },
+      });
+
+      if (batch.length === 0) break;
+      dbCursor = batch[batch.length - 1].id;
+
+      for (const u of batch) {
         const blob = u.dataBlob || {};
         const theirNiches = blob.niches || [];
         const shared = myNiches.filter(n => theirNiches.includes(n));
-        if (shared.length === 0) return null;
-        return {
-          userId: u.id,
-          email: u.email,
-          initial: u.email.charAt(0).toUpperCase(),
-          sharedNiches: shared,
-          completedCount: Array.isArray(blob.completed) ? blob.completed.length : 0,
-        };
-      })
-      .filter(Boolean)
+        if (shared.length > 0) {
+          matches.push({
+            userId: u.id,
+            email: maskEmail(u.email),
+            initial: u.email.charAt(0).toUpperCase(),
+            sharedNiches: shared,
+            completedCount: Array.isArray(blob.completed) ? blob.completed.length : 0,
+          });
+        }
+      }
+    }
+
+    matches = matches
       .sort((a, b) => b.sharedNiches.length - a.sharedNiches.length)
       .slice(0, 20);
 
@@ -128,16 +147,19 @@ router.post('/connect', async (req, res) => {
 // Returns accepted connections and pending requests.
 router.get('/connections', async (req, res) => {
   try {
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
     const [sent, received] = await Promise.all([
       prisma.networkRequest.findMany({
         where: { fromUserId: req.user.id },
         include: { toUser: { select: { id: true, email: true, dataBlob: true } } },
         orderBy: { createdAt: 'desc' },
+        take: limit,
       }),
       prisma.networkRequest.findMany({
         where: { toUserId: req.user.id },
         include: { fromUser: { select: { id: true, email: true, dataBlob: true } } },
         orderBy: { createdAt: 'desc' },
+        take: limit,
       }),
     ]);
 

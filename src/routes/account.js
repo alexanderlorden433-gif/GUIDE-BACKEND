@@ -60,6 +60,12 @@ router.put('/', async (req, res) => {
     return res.status(400).json({ error: 'Missing or invalid "data" object.' });
   }
 
+  // Guard against someone sending a massive blob to bloat the database.
+  const blobSize = JSON.stringify(data).length;
+  if (blobSize > 512 * 1024) { // 512 KB max
+    return res.status(413).json({ error: 'Data payload too large.' });
+  }
+
   const user = await prisma.user.update({
     where: { id: req.user.id },
     data: { dataBlob: data },
