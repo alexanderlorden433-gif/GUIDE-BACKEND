@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const path = require('path');
 
 const authRoutes = require('./routes/auth');
 const accountRoutes = require('./routes/account');
@@ -40,6 +41,24 @@ app.set('trust proxy', 1);
 // bar — so we strip it from both sides before comparing, rather than
 // silently rejecting every request until someone spots the mismatch.
 const normalizeOrigin = (value) => (value || '').replace(/\/+$/, '');
+
+// Guide video narration + timing files (public). Mounted before helmet and
+// CORS on purpose: the app on theguide.company plays these with an <audio>
+// element, which needs a cross-origin resource policy, and any page may read
+// them. The app requests each file with ?v=<text hash>, so a re-narrated guide
+// gets a fresh URL and the files can be cached for a week. manifest.json (the
+// list of finished videos) is always revalidated so new lessons show up fast.
+app.use('/media', express.static(path.join(__dirname, '..', 'media'), {
+  maxAge: '7d',
+  index: false,
+  dotfiles: 'ignore',
+  setHeaders(res, filePath) {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('X-Content-Type-Options', 'nosniff');
+    if (path.basename(filePath) === 'manifest.json') res.set('Cache-Control', 'no-cache');
+  },
+}));
 
 // Security headers — protects against clickjacking, MIME-sniffing, XSS, etc.
 app.use(helmet());
