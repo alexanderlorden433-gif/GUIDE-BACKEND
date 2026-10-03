@@ -609,6 +609,40 @@ function cached(store, key, ttlMs, fn) {
   return promise;
 }
 
+// ---------------------------------------------------------------- funnel
+// A true funnel: every step is a subset of the step before it.
+//   Visitors   = everyone who visited in the window (plus anyone who signed
+//                up in it, in case a blocker hid their page views)
+//   Signed up  = of those, people who created an account in the window
+//   Saw Pro    = of those new accounts, who opened the upgrade screen ...
+//   Checkout   = ... or went on to checkout ...
+//   Went Pro   = ... or paid.
+// Later steps imply the earlier ones, so a lost beacon can never make a
+// step bigger than the one above it.
+async function cohortFunnel(S, E, tz) {
+  const W = `"createdAt" >= ${S} AND "createdAt" < ${E}`;
+  const [r] = await q(
+    `WITH pv AS (
+       SELECT DISTINCT "visitorId" AS p FROM "AnalyticsEvent" WHERE type = 'pageview' AND ${W}
+     ), su AS (
+       SELECT DISTINCT ON ("userId") "userId",
+              CASE WHEN "visitorId" = 'server' THEN 'u:' || "userId" ELSE "visitorId" END AS p
+         FROM "AnalyticsEvent" WHERE type = 'signup' AND "userId" IS NOT NULL AND ${W}
+        ORDER BY "userId", "createdAt"
+     ), lv AS (
+       SELECT "userId", MAX(CASE type WHEN 'paywall' THEN 1 WHEN 'checkout' THEN 2 ELSE 3 END) AS lvl
+         FROM "AnalyticsEvent" WHERE type IN ('paywall', 'checkout', 'purchase') AND "userId" IS NOT NULL AND ${W}
+        GROUP BY 1
+     )
+     SELECT (SELECT COUNT(*) FROM (SELECT p FROM pv UNION SELECT p FROM su) x)::int AS visitors,
+            (SELECT COUNT(*) FROM su)::int AS signups,
+            COUNT(*) FILTER (WHERE lv.lvl >= 1)::int AS paywall,
+            COUNT(*) FILTER (WHERE lv.lvl >= 2)::int AS checkout,
+            COUNT(*) FILTER (WHERE lv.lvl >= 3)::int AS pro
+       FROM su JOIN lv USING ("userId")`, tz);
+  return r;
+}
+
 // ---------------------------------------------------------------- live snapshot
 const snapCache = new Map();
 const totalsCache = new Map();
@@ -680,7 +714,7 @@ async function ownerOverview(tz) {
     const notStaff1 = `lower(u.email) <> ALL($1::text[])`;
     const [
       [u], signupsDaily, revenueDaily, visitorsDaily, [active], [engage], chapters, chapterViews,
-      recent, channels, [money], community,
+      recent, channels, [money], funnel, community,
     ] = await Promise.all([
       q(`SELECT COUNT(*)::int AS "totalUsers",
                 COUNT(*) FILTER (WHERE "isPro")::int AS "proUsers",
@@ -730,6 +764,7 @@ async function ownerOverview(tz) {
                 COUNT(DISTINCT COALESCE("userId", "visitorId")) FILTER (WHERE type = 'checkout')::int AS "checkout30",
                 COUNT(DISTINCT "visitorId") FILTER (WHERE type = 'pageview')::int AS "visitors30"
            FROM "AnalyticsEvent" WHERE "createdAt" >= ${DAY_START(29)}`, tz),
+      cohortFunnel(DAY_START(29), NOW_UTC, tz),
       Promise.all([
         q(`SELECT COUNT(*)::int AS n FROM "Win"`).catch(() => [{ n: 0 }]),
         q(`SELECT COUNT(*)::int AS n FROM "NetworkRequest"`).catch(() => [{ n: 0 }]),
@@ -754,6 +789,7 @@ async function ownerOverview(tz) {
         paywall30: money.paywall30, checkout30: money.checkout30, visitors30: money.visitors30,
       },
       active: active,
+      funnel,
       engagement: {
         avgStreak: Math.round(engage.avgStreak * 10) / 10, maxStreak: Math.round(engage.maxStreak), totalCompleted: Math.round(engage.totalCompleted),
         avgCompleted: u.totalUsers ? Math.round(engage.totalCompleted / u.totalUsers * 10) / 10 : 0,
@@ -823,10 +859,10 @@ async function marketingReport({ range, tz, model }) {
     }));
 
     const [
-      cur, prev, chTraffic, chSignups, chMoney, srcTraffic, srcSignups, cmpTraffic, cmpSignups, cmpMoney,
+      cur, prev, funnel, chTraffic, chSignups, chMoney, srcTraffic, srcSignups, cmpTraffic, cmpSignups, cmpMoney,
       referrers, landings, landSignups, pages, devices, browsers, countries, seriesCh, seriesSignups,
     ] = await Promise.all([
-      kpis(S, E), kpis(PS, PE),
+      kpis(S, E), kpis(PS, PE), cohortFunnel(S, E, tz),
       q(`SELECT channel, COUNT(DISTINCT "visitorId")::int AS visitors, COUNT(DISTINCT "sessionId")::int AS sessions, COUNT(*)::int AS pageviews
            FROM "AnalyticsEvent" WHERE ${PV} AND ${W()} GROUP BY 1`, tz),
       q(`SELECT COALESCE(${aCh}, 'Unattributed') AS channel, COUNT(*)::int AS signups
@@ -910,7 +946,7 @@ async function marketingReport({ range, tz, model }) {
 
     return {
       generatedAt: Date.now(), range, tz, model, granularity: N === 1 ? 'hour' : 'day',
-      kpis: cur, previous: prev, channels, sources, campaigns,
+      kpis: cur, previous: prev, funnel, channels, sources, campaigns,
       referrers, landings: landings.map(l => ({ ...l, bounceRate: l.sessions ? Math.round(l.bounced / l.sessions * 1000) / 10 : 0, signups: landSign.get(l.landing) || 0 })),
       pages, devices, browsers, countries, series, channelOrder: CHANNELS,
     };
