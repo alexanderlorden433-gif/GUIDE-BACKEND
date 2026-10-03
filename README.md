@@ -137,6 +137,35 @@ gracefully — password reset still generates a valid token (just doesn't
 email it, same as before), and mentor alerts just skip sending rather than
 failing the request. Nothing breaks if you haven't set up Resend yet.
 
+## Analytics & dashboards
+
+The app records page views and where each visitor came from, using first-party
+tracking only (no cookies, no third-party scripts). It works out the channel
+from ad click IDs (Google Ads `gclid`, TikTok `ttclid`, Microsoft `msclkid`...),
+UTM tags, the referring site, and in-app browsers (Instagram/TikTok).
+
+- **Owner dashboard** (account menu → Owner dashboard): live online count, live
+  feed of visits/signups/upgrades, today's numbers, MRR, growth charts, funnel,
+  engagement, recent signups with their source. Only `OWNER_EMAIL` can open it.
+- **Marketing dashboard** (account menu → Marketing dashboard): channels,
+  sources, campaigns, landing pages, referrers, devices, countries, funnel,
+  first/last-touch credit, CSV export and a tracked-link builder. Open to
+  `OWNER_EMAIL` plus everyone in `MARKETING_EMAILS` (comma-separated). It never
+  shows user emails.
+
+The two tables it uses (`AnalyticsEvent`, `UserAttribution`) are created
+automatically on startup. Revenue renewals are counted when the Stripe webhook
+also sends `invoice.paid`. Events older than ~13 months are pruned daily.
+
+| Method | Route | Auth? | Purpose |
+|---|---|---|---|
+| POST | `/api/analytics/collect` | Optional | Page view / funnel event from the app |
+| POST | `/api/analytics/ping` | Optional | Heartbeat for the live "online now" count |
+| GET | `/api/analytics/access` | Yes | `{ owner, marketing }` for the signed-in account |
+| GET | `/api/analytics/live` | Owner/marketing | Server-Sent Events stream of live activity |
+| GET | `/api/analytics/owner/overview` | Owner | Business overview |
+| GET | `/api/analytics/marketing/report?range=today\|7d\|30d\|90d&model=first\|last` | Owner/marketing | Traffic-source report |
+
 ## 6. Deploying
 
 Any Node host works. Easiest options if you haven't deployed a backend before:

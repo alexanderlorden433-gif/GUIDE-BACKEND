@@ -16,10 +16,17 @@ const discussionRoutes = require('./routes/discussion');
 const winsRoutes = require('./routes/wins');
 const leaderboardRoutes = require('./routes/leaderboard');
 const networkRoutes = require('./routes/networking');
+const analyticsRoutes = require('./routes/analytics');
+const { ensureAnalyticsTables, pruneOldEvents, drain: drainAnalytics } = require('./analytics');
 const { scheduleWeeklyDigest } = require('./digest');
 const { scheduleStreakReminders } = require('./streakReminder');
 
 const app = express();
+
+// Railway (like most hosts) sits behind a proxy. Without this, every visitor
+// looks like the same IP address to the rate limiters — so one busy hour
+// could lock everyone out of signing up. Trust the one proxy hop in front.
+app.set('trust proxy', 1);
 
 // Browsers send no Origin header, OR the literal string "null", for a
 // locally-opened HTML file (double-clicked, not served from a real web
@@ -46,6 +53,9 @@ app.use(cors({
     }
   },
   credentials: true,
+  // Let browsers reuse the CORS preflight answer for 10 minutes instead of
+  // asking before every single API call.
+  maxAge: 600,
 }));
 
 // IMPORTANT: the Stripe webhook route needs the raw request body to verify
@@ -69,6 +79,7 @@ app.use('/api/discussion', discussionRoutes);
 app.use('/api/wins', winsRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/network', networkRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {
@@ -81,4 +92,12 @@ app.listen(PORT, () => {
   console.log(`The Guide backend running on port ${PORT}`);
   scheduleWeeklyDigest();
   scheduleStreakReminders();
+  ensureAnalyticsTables().then(ok => { if (ok) pruneOldEvents(); });
+  setInterval(pruneOldEvents, 24 * 60 * 60 * 1000).unref();
+});
+
+// Write any buffered analytics events before the process exits on a redeploy.
+process.on('SIGTERM', () => {
+  drainAnalytics(2500).finally(() => process.exit(0));
+  setTimeout(() => process.exit(0), 3000).unref();
 });

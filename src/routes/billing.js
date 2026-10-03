@@ -3,6 +3,7 @@ const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { stripe, createCheckoutSession, createPortalSession } = require('../stripe');
 const { notifyUser } = require('../notifications');
+const { recordMoney } = require('../analytics');
 
 const router = express.Router();
 
@@ -79,6 +80,14 @@ router.post('/webhook', async (req, res) => {
           },
         });
 
+        // Live dashboards + revenue-by-channel. Never blocks the webhook.
+        recordMoney('purchase', userId, {
+          value: typeof session.amount_total === 'number' ? session.amount_total / 100 : undefined,
+          plan,
+          email: updatedUser.email,
+          id: event.id, // Stripe may resend an event; the id keeps it counted once
+        });
+
         // Referral reward: only fires the first time this user goes Pro, so
         // re-subscribing or plan changes don't double-reward the referrer.
         if (!wasAlreadyPro?.isPro && updatedUser.referredByCode) {
@@ -117,10 +126,38 @@ router.post('/webhook', async (req, res) => {
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
+        const cancelled = await prisma.user.findFirst({
+          where: { stripeSubscriptionId: subscription.id },
+          select: { id: true, planType: true },
+        });
+        if (cancelled) recordMoney('cancel', cancelled.id, { plan: cancelled.planType || undefined, id: event.id });
         await prisma.user.updateMany({
           where: { stripeSubscriptionId: subscription.id },
           data: { isPro: false, stripeSubscriptionId: null },
         });
+        break;
+      }
+
+      // Renewals (month 2 onwards, or year 2). The first payment is already
+      // counted from checkout.session.completed above, so skip that one.
+      // Only arrives if "invoice.paid" is ticked on the Stripe webhook.
+      case 'invoice.paid': {
+        const invoice = event.data.object;
+        // Newer Stripe API versions moved the subscription id under "parent".
+        const subId = invoice.subscription || invoice.parent?.subscription_details?.subscription;
+        if (invoice.billing_reason === 'subscription_cycle' && typeof subId === 'string') {
+          const renewing = await prisma.user.findFirst({
+            where: { stripeSubscriptionId: subId },
+            select: { id: true, planType: true },
+          });
+          if (renewing) {
+            recordMoney('renewal', renewing.id, {
+              value: typeof invoice.amount_paid === 'number' ? invoice.amount_paid / 100 : undefined,
+              plan: renewing.planType || undefined,
+              id: event.id,
+            });
+          }
+        }
         break;
       }
 

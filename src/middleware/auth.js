@@ -34,6 +34,29 @@ function requireAuth(req, res, next) {
   }
 }
 
+/**
+ * Like requireAuth, but never rejects: attaches req.user when a valid token is
+ * present and simply carries on when it isn't. For public endpoints (like
+ * analytics collection) that behave slightly differently for signed-in users.
+ */
+function optionalAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  // Beacon-style requests can't set headers, so they may carry the token in
+  // the body instead (field "tk").
+  const bodyToken = req.body && typeof req.body.tk === 'string' ? req.body.tk : null;
+  const token = header.startsWith('Bearer ') ? header.slice(7) : bodyToken;
+  if (token) {
+    try {
+      const payload = jwt.verify(token, process.env.JWT_SECRET, {
+        issuer: JWT_ISSUER,
+        audience: JWT_AUDIENCE,
+      });
+      req.user = { id: payload.sub, email: payload.email };
+    } catch (err) { /* treat as signed out */ }
+  }
+  next();
+}
+
 function signToken(user) {
   return jwt.sign(
     { sub: user.id, email: user.email },
@@ -46,4 +69,4 @@ function signToken(user) {
   );
 }
 
-module.exports = { requireAuth, signToken };
+module.exports = { requireAuth, optionalAuth, signToken };

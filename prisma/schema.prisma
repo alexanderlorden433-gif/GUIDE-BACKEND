@@ -216,3 +216,66 @@ model NetworkRequest {
   @@index([toUserId, status])
   @@index([fromUserId])
 }
+
+// ---------- Analytics (owner + marketing dashboards) ----------
+// These two tables are also created automatically when the server starts
+// (see src/analytics.js), so they exist even if the schema isn't pushed.
+// The app reads/writes them with SQL aggregates rather than these models.
+
+// One row per page view / funnel step / money event. Each row carries the
+// traffic source of the visit it belongs to (Google Ads, Instagram, ...).
+model AnalyticsEvent {
+  id        String   @id @default(uuid())
+  type      String   // "pageview" | "visit" | "paywall" | "checkout" | "signup" | "purchase" | "renewal" | "cancel"
+  visitorId String
+  sessionId String
+  userId    String?
+  path      String?
+  channel   String   // "Paid Search" | "Paid Social" | "Organic Search" | "Organic Social" | ...
+  source    String   // "Google Ads", "Instagram", "news.ycombinator.com", ...
+  medium    String?
+  campaign  String?
+  term      String?
+  content   String?
+  clickId   String?  // which ad click ID was present, e.g. "gclid"
+  referrer  String?  // referring host only
+  landing   String?
+  device    String?
+  browser   String?
+  os        String?
+  country   String?
+  value     Float?   // money events, in dollars
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+  @@index([channel, createdAt])
+  @@index([userId])
+}
+
+// Where each user came from: first touch (what originally found them) plus
+// the last touch before they signed up.
+model UserAttribution {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  channel      String
+  source       String
+  medium       String?
+  campaign     String?
+  term         String?
+  content      String?
+  clickId      String?
+  referrer     String?
+  landing      String?
+  device       String?
+  country      String?
+  firstSeenAt  DateTime?
+  lastChannel  String?
+  lastSource   String?
+  lastCampaign String?
+  createdAt    DateTime  @default(now())
+
+  @@index([channel])
+  @@index([createdAt])
+}
