@@ -96,10 +96,14 @@ router.post('/signup', async (req, res) => {
     // Fire-and-forget welcome email (first in the onboarding drip sequence)
     sendWelcomeEmail(user).catch(() => {});
 
+    const previewEmails = (process.env.PREVIEW_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+    const isPreviewAcct = previewEmails.includes(user.email.toLowerCase());
+    const isOwnerAcct = process.env.OWNER_EMAIL && user.email.toLowerCase() === process.env.OWNER_EMAIL.toLowerCase();
+
     const token = signToken(user);
     res.status(201).json({
       token,
-      user: { id: user.id, email: user.email, isPro: user.isPro },
+      user: { id: user.id, email: user.email, isPro: (isOwnerAcct || isPreviewAcct) ? true : user.isPro },
     });
   } catch (err) {
     console.error('Signup error:', err);
@@ -123,10 +127,14 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Incorrect email or password.' });
     }
 
+    const previewEmailsL = (process.env.PREVIEW_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+    const isPreviewL = previewEmailsL.includes(user.email.toLowerCase());
+    const isOwnerL = process.env.OWNER_EMAIL && user.email.toLowerCase() === process.env.OWNER_EMAIL.toLowerCase();
+
     const token = signToken(user);
     res.json({
       token,
-      user: { id: user.id, email: user.email, isPro: user.isPro },
+      user: { id: user.id, email: user.email, isPro: (isOwnerL || isPreviewL) ? true : user.isPro },
     });
   } catch (err) {
     console.error('Login error:', err);
