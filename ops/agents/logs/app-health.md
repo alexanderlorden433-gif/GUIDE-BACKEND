@@ -12,3 +12,4 @@
 - Repo has a tracked nested copy `guide-backend/` (old duplicate?) — ask before touching.
 - npm audit --omit=dev: 5 moderate (qs via express, uuid via node-cron), no high/critical.
 - Step 5 area reviewed: community (wins / network / notifications). Next: billing UI flows or src/routes/partners.js.
+- 2026-10-05 (re-run, test fire): main unchanged, PRs #1/#2 open, no comments. Netlify not linked yet (expected, no Deploy Previews). #1 and #2 conflict only in ops/smoke/smoke.py (both add steps) — after one merges, merge main into the other and keep both steps.
