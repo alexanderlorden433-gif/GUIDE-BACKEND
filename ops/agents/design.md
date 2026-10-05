@@ -29,7 +29,7 @@ into signups and Pro members, so they come first in the rotation.
 12. Consistency pass — buttons, spacing, type sizes, icons, bottom navigation on phones
 
 Check `ops/agents/logs/design.md` on the `agent-logs` branch to see where you are
-(`git show origin/agent-logs:ops/agents/logs/design.md`). If an earlier design PR is still
+(how to read it: "Agent logs" in CLAUDE.md). If an earlier design PR is still
 open and unmerged, don't start a new area — improve that PR or wait, and say so in the report.
 
 ## Every run

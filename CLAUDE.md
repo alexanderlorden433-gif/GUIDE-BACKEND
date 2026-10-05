@@ -43,11 +43,23 @@ Live URLs: app `https://theguide.company`, API `https://guide-backend-production
    The app is dark-only today (the ☀️/🌙 button has no light styles yet — a known design issue).
    Don't change prices, plan names, or
    claims about the product (16 chapters, 756 guides/videos, AI mentor).
-8. **Before you start, look at what's already open:** `gh api repos/alexanderlorden433-gif/guide-backend/pulls`.
+8. **Before you start, look at what's already open:** `gh api repos/alexanderlorden433-gif/GUIDE-BACKEND/pulls`.
    Don't duplicate an open PR. If one of yours has conflicts with `main`, update it first
    (merge `main` into its branch, re-run checks, push).
 9. **End every run with a report for Alexander** (format in your playbook). If everything
    is fine, one line is enough.
+
+## Opening a pull request
+
+```bash
+git checkout -b agent/<agent>/<YYYY-MM-DD>-<topic>
+# …change, then: bash ops/check.sh
+git add -A && git commit -m "<what changed>" && git push -u origin HEAD
+gh api repos/alexanderlorden433-gif/GUIDE-BACKEND/pulls -f base=main -f head="$(git branch --show-current)" \
+  -f title="<Area>: <plain-English summary>" -f body="$(cat /tmp/pr-body.md)" --jq .html_url
+```
+Netlify adds a **Deploy Preview** link to the PR a minute or two later (once the site is linked);
+mention it in your report.
 
 ## Checking your work
 
@@ -71,7 +83,7 @@ bash ops/check.sh --quick      # same, smoke test on 3 chapters only
   the checks above stub Prisma. Don't try to "fix" this by changing Prisma settings.
 - Playwright + Chromium are preinstalled (`PLAYWRIGHT_BROWSERS_PATH`); never run `playwright install`.
   Lesson audio needs `--autoplay-policy=no-user-gesture-required`.
-- Deploy status of a commit: `gh api repos/alexanderlorden433-gif/guide-backend/commits/<sha>/status`
+- Deploy status of a commit: `gh api repos/alexanderlorden433-gif/GUIDE-BACKEND/commits/<sha>/status`
   (Railway and Netlify report here).
 
 ## Agent logs
@@ -79,6 +91,17 @@ bash ops/check.sh --quick      # same, smoke test on 3 chapters only
 Agents keep short notes for their future runs on the **`agent-logs`** branch, in
 `ops/agents/logs/<agent>.md` (you may push to that branch directly). Never put customer data,
 money figures or ad performance numbers there — the repo is public.
+
+```bash
+# read your notes
+git fetch origin '+refs/heads/agent-logs:refs/remotes/origin/agent-logs'
+git show origin/agent-logs:ops/agents/logs/<agent>.md
+# add to them (without touching your main working copy)
+git worktree add -B agent-logs /tmp/agent-logs origin/agent-logs
+#   …edit /tmp/agent-logs/ops/agents/logs/<agent>.md, then:
+git -C /tmp/agent-logs add -A && git -C /tmp/agent-logs commit -m "<agent> notes <date>" && git -C /tmp/agent-logs push origin agent-logs
+git worktree remove /tmp/agent-logs
+```
 
 ## Commit attribution
 

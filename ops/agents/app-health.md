@@ -8,14 +8,14 @@ Read `CLAUDE.md` first — its rules always apply.
 ## Every run
 
 1. **Get up to date.** `git fetch origin && git checkout main && git pull`. Read your notes
-   from earlier runs: `git show origin/agent-logs:ops/agents/logs/app-health.md` (may not exist yet).
+   from earlier runs (see "Agent logs" in CLAUDE.md; the file may not exist yet).
    List open pull requests. If one of yours has conflicts or failing checks, fix that first.
 
 2. **Is the live app up?** Use WebFetch (not curl — the shell can't reach these):
    - `https://guide-backend-production.up.railway.app/api/health` → `{"ok":true}`
    - `https://guide-backend-production.up.railway.app/media/guides/manifest.json` → about 756 lessons
    - `https://theguide.company` → the page loads and mentions The Guide
-   - Latest `main` deploy: `gh api repos/alexanderlorden433-gif/guide-backend/commits/main/status`
+   - Latest `main` deploy: `gh api repos/alexanderlorden433-gif/GUIDE-BACKEND/commits/main/status`
      (Railway / Netlify should report `success`).
    If the live app is down or a deploy failed, that's the top of your report — say it plainly
    and say what Alexander should do (e.g. "open Railway → Deployments → see the red one").
