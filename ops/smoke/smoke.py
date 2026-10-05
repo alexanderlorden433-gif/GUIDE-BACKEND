@@ -90,7 +90,7 @@ def fixture(state, method, path, body):
     if p in ('/api/auth/login', '/api/auth/signup'):
         return 200, {'token': 'smoke-token', 'user': {'id': 'u_smoke', 'email': (body or {}).get('email', 'smoke@theguide.test')}}
     if p == '/api/notifications':
-        return 200, {'items': [{'id': 'n1', 'type': 'system', 'title': 'Welcome to The Guide', 'body': 'Pick a chapter to start.', 'link': None, 'read': False, 'createdAt': time.strftime('%Y-%m-%dT%H:%M:%SZ')}], 'unreadCount': 1}
+        return 200, {'items': [{'id': 'n1', 'type': 'system', 'title': 'Welcome to The Guide', 'body': 'Pick a chapter to start.', 'link': None, 'read': False, 'createdAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(time.time() - 2 * 3600))}], 'unreadCount': 1}
     if p.startswith('/api/notifications/'):
         return 200, {'message': 'Marked read.'}
     if p == '/api/leaderboard':
@@ -371,6 +371,24 @@ def logged_in(browser, base, device, viewport, mobile, pro=True):
         except Exception as e:
             problem(step[0], f'{fn} screen failed', e)
     shot(page, f'{device}-08-other')
+
+    # notifications bell: the list opens and shows the item with its time
+    step[0] = f'{device}: notifications'
+    try:
+        page.evaluate('showHome && showHome()')
+        page.locator('#notifBellTrigger').click(timeout=3000)
+        page.wait_for_timeout(800)
+        txt = page.locator('#notifList').inner_text()
+        if 'Welcome to The Guide' not in txt:
+            problem(step[0], 'notification list is empty or broken', txt[:160])
+        elif '2h ago' not in txt:
+            problem(step[0], 'notification shows no time', txt[:160])
+        else:
+            ok(step[0], 'bell opens, notification and its time show')
+        shot(page, f'{device}-08-notifications')
+        page.locator('#notifBellTrigger').click(timeout=3000)
+    except Exception as e:
+        problem(step[0], 'notifications check failed', e)
 
     # privacy
     step[0] = f'{device}: privacy page'
