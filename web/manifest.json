@@ -1,0 +1,36 @@
+{
+  "name": "The Guide — Business Playbooks & Tools",
+  "short_name": "The Guide",
+  "description": "Practical guides, checklists, templates, and business tools for creators, freelancers, and small business owners.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#161028",
+  "theme_color": "#161028",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

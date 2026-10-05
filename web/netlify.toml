@@ -1,0 +1,18 @@
+# Netlify settings for the website (theguide.company).
+# In Netlify: Site configuration → Build & deploy → Base directory = web
+# Nothing to build — the site is plain files, published as-is.
+[build]
+  publish = "."
+  command = ""
+
+# Always check for a fresh copy of the app page and service worker,
+# so approved changes reach people right away.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

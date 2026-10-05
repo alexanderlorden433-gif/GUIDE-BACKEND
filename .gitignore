@@ -1,3 +1,7 @@
 node_modules/
 .env
 *.log
+
+# agent tool output
+ops/smoke/out/
+__pycache__/
