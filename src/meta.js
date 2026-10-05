@@ -29,7 +29,7 @@ const printable = (v, max) => (typeof v === 'string' && v.length > 0 && v.length
 const okFbp = (v) => { const x = printable(v, 120); return x && /^fb\.\d\.\d{10,16}\.\d{1,30}$/.test(x) ? x : undefined; };
 const okFbc = (v) => { const x = printable(v, 600); return x && /^fb\.\d\.\d{10,16}\.[\w-]{10,500}$/.test(x) ? x : undefined; };
 const okEventId = (v) => { const x = printable(v, 100); return x && /^[\w.:-]{6,100}$/.test(x) ? x : undefined; };
-const siteUrl = () => String(process.env.APP_URL || '').replace(/\/+$/, '') + '/';
+const siteUrl = () => (String(process.env.APP_URL || '').replace(/\/+$/, '') || 'https://theguide.company') + '/';
 
 /** Browser info that rides along with signup / checkout: { eid, fbp, fbc, ok }. */
 function fromBrowser(meta) {
@@ -48,6 +48,7 @@ async function ensureMetaTable() {
       "ua" TEXT,
       "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "AdMatch_pkey" PRIMARY KEY ("userId"))`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "AdMatch" ADD COLUMN IF NOT EXISTS "ip" TEXT`);
     ready = true;
   } catch (err) {
     console.error('AdMatch table setup failed:', err.message);
@@ -56,19 +57,22 @@ async function ensureMetaTable() {
 
 // Keeps the browser IDs + consent for a user so a later Purchase (which
 // arrives from Stripe, not the browser) can still be matched to the ad.
-async function remember(userId, { fbp, fbc, consent, ua }) {
-  if (!ready || !userId) return;
-  if (!consent) { fbp = null; fbc = null; ua = null; } // said no: keep only the "no"
+async function remember(userId, { fbp, fbc, consent, ua, ip }) {
+  if (!userId) return;
+  if (!ready) await ensureMetaTable();
+  if (!ready) return;
+  if (!consent) { fbp = null; fbc = null; ua = null; ip = null; } // said no: keep only the "no"
   await prisma.$executeRawUnsafe(
-    `INSERT INTO "AdMatch" ("userId","fbp","fbc","consent","ua","updatedAt")
-     VALUES ($1::text, $2::text, $3::text, $4::boolean, $5::text, (now() at time zone 'UTC'))
+    `INSERT INTO "AdMatch" ("userId","fbp","fbc","consent","ua","ip","updatedAt")
+     VALUES ($1::text, $2::text, $3::text, $4::boolean, $5::text, $6::text, (now() at time zone 'UTC'))
      ON CONFLICT ("userId") DO UPDATE SET
        "fbp" = CASE WHEN EXCLUDED."consent" THEN COALESCE(EXCLUDED."fbp", "AdMatch"."fbp") END,
        "fbc" = CASE WHEN EXCLUDED."consent" THEN COALESCE(EXCLUDED."fbc", "AdMatch"."fbc") END,
        "consent" = EXCLUDED."consent",
        "ua" = CASE WHEN EXCLUDED."consent" THEN COALESCE(EXCLUDED."ua", "AdMatch"."ua") END,
+       "ip" = CASE WHEN EXCLUDED."consent" THEN COALESCE(EXCLUDED."ip", "AdMatch"."ip") END,
        "updatedAt" = EXCLUDED."updatedAt"`,
-    userId, fbp || null, fbc || null, !!consent, ua || null);
+    userId, fbp || null, fbc || null, !!consent, ua || null, ip || null);
 }
 
 function userData({ email, userId, ip, ua, fbp, fbc }) {
@@ -110,7 +114,7 @@ async function trackSignup(user, body, req) {
     const a = body && typeof body.attribution === 'object' && body.attribution ? body.attribution : {};
     const m = fromBrowser(a.meta);
     const ua = clientUa(req);
-    await remember(user.id, { ...m, ua });
+    await remember(user.id, { ...m, ua, ip: req.ip });
     if (!m.consent) return;
     await send({
       event_name: 'CompleteRegistration', event_time: now(), event_id: m.eventId || `reg_${user.id}`,
@@ -128,7 +132,7 @@ async function trackCheckout(user, plan, body, req) {
     if (!enabled() || !user || isStaffEmail(user.email)) return;
     const m = fromBrowser(body && body.meta);
     const ua = clientUa(req);
-    await remember(user.id, { ...m, ua });
+    await remember(user.id, { ...m, ua, ip: req.ip });
     if (!m.consent) return;
     await send({
       event_name: 'InitiateCheckout', event_time: now(), event_id: m.eventId || `chk_${user.id}_${now()}`,
@@ -144,14 +148,16 @@ async function trackCheckout(user, plan, body, req) {
 // From the Stripe webhook. Only for users whose browser allowed ad measurement.
 async function trackPurchase(userId, { email, value, currency, plan, eventId }) {
   try {
-    if (!enabled() || !userId || !ready || isStaffEmail(email)) return;
-    const rows = await prisma.$queryRawUnsafe(`SELECT "fbp","fbc","consent","ua" FROM "AdMatch" WHERE "userId" = $1::text`, userId);
+    if (!enabled() || !userId || isStaffEmail(email)) return;
+    if (!ready) await ensureMetaTable();
+    if (!ready) return;
+    const rows = await prisma.$queryRawUnsafe(`SELECT "fbp","fbc","consent","ua","ip" FROM "AdMatch" WHERE "userId" = $1::text`, userId);
     const r = rows[0];
     if (!r || !r.consent) return;
     await send({
       event_name: 'Purchase', event_time: now(), event_id: eventId || `buy_${userId}_${now()}`,
       action_source: 'website', event_source_url: siteUrl(),
-      user_data: userData({ email, userId, ua: r.ua, fbp: r.fbp, fbc: r.fbc }),
+      user_data: userData({ email, userId, ua: r.ua, ip: r.ip, fbp: r.fbp, fbc: r.fbc }),
       custom_data: { value: typeof value === 'number' ? value : (PRICES[plan] || PRICES.monthly), currency: String(currency || 'usd').toUpperCase(), content_name: `Pro ${plan || 'monthly'}` },
     });
   } catch (err) {
@@ -159,4 +165,26 @@ async function trackPurchase(userId, { email, value, currency, plan, eventId }) 
   }
 }
 
-module.exports = { ensureMetaTable, pixelId, enabled, trackSignup, trackCheckout, trackPurchase, fromBrowser };
+// The visitor changed the ads-measurement switch while signed in.
+async function setConsent(user, meta, req) {
+  try {
+    if (!user) return;
+    const m = fromBrowser(meta);
+    await remember(user.id, { ...m, ua: clientUa(req), ip: req.ip });
+  } catch (err) {
+    console.error('Meta consent update failed:', err.message);
+  }
+}
+
+// Account deletion.
+async function forget(userId) {
+  try {
+    if (!userId) return;
+    if (!ready) await ensureMetaTable();
+    if (ready) await prisma.$executeRawUnsafe(`DELETE FROM "AdMatch" WHERE "userId" = $1::text`, userId);
+  } catch (err) {
+    console.error('Meta forget failed:', err.message);
+  }
+}
+
+module.exports = { ensureMetaTable, pixelId, enabled, trackSignup, trackCheckout, trackPurchase, setConsent, forget, fromBrowser };

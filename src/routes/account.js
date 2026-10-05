@@ -1,4 +1,6 @@
 const express = require('express');
+const { forgetUser } = require('../analytics');
+const { forget: forgetAdMatch } = require('../meta');
 const bcrypt = require('bcryptjs');
 const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
@@ -100,6 +102,9 @@ router.put('/password', async (req, res) => {
 // requires a two-click confirmation before calling this.
 router.delete('/', async (req, res) => {
   await prisma.user.delete({ where: { id: req.user.id } });
+  // Also remove analytics attribution and the Meta ads-matching row.
+  await forgetUser(req.user.id);
+  await forgetAdMatch(req.user.id);
   res.json({ message: 'Account deleted.' });
 });
 

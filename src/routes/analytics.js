@@ -113,9 +113,15 @@ function requireRole(kind) {
 
 // Public: lets the app know whether to load the Meta pixel (the pixel ID is
 // public by design — it's visible in every page that uses it).
-router.get('/config', pingLimiter, (req, res) => {
+router.get('/config', collectLimiter, (req, res) => {
   res.set('Cache-Control', 'public, max-age=300');
-  res.json({ metaPixelId: meta.pixelId() || null });
+  res.json({ metaPixelId: meta.enabled() ? meta.pixelId() : null });
+});
+
+// Signed-in visitor switched ads measurement on/off (Privacy page or banner).
+router.post('/ad-consent', pingLimiter, requireAuth, async (req, res) => {
+  await meta.setConsent(req.user, req.body && req.body.meta, req);
+  res.json({ ok: true });
 });
 
 router.get('/access', staffLimiter, requireAuth, (req, res) => {

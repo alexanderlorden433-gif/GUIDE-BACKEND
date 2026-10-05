@@ -290,5 +290,6 @@ model AdMatch {
   fbc       String?
   consent   Boolean  @default(false)
   ua        String?
+  ip        String?
   updatedAt DateTime @default(now())
 }

@@ -574,6 +574,18 @@ async function recordMoney(type, userId, { value, plan, email, id } = {}) {
   }
 }
 
+// Account deletion: drop where the person came from and detach their events,
+// so totals stay right but nothing points back to them.
+async function forgetUser(userId) {
+  if (!userId || !ready) return;
+  try {
+    await prisma.$executeRawUnsafe(`DELETE FROM "UserAttribution" WHERE "userId" = $1::text`, userId);
+    await prisma.$executeRawUnsafe(`UPDATE "AnalyticsEvent" SET "userId" = NULL WHERE "userId" = $1::text`, userId);
+  } catch (err) {
+    console.error('Analytics forgetUser failed:', err.message);
+  }
+}
+
 // ---------------------------------------------------------------- query helpers
 // Dashboards fire many small aggregate queries. Cap how many run at once so
 // they can never hog the connection pool that signups, logins and the Stripe
@@ -993,6 +1005,6 @@ async function pruneOldEvents() {
 
 module.exports = {
   CHANNELS, ensureAnalyticsTables, isReady, roleFor, isStaffEmail, classify, parseUA, isBot, validTz, countryFromTz,
-  touchPresence, leavePresence, presenceSummary, recordEvent, recordSignup, recordMoney, liveSnapshot, ownerOverview,
+  touchPresence, leavePresence, presenceSummary, recordEvent, recordSignup, recordMoney, forgetUser, liveSnapshot, ownerOverview,
   marketingReport, bus, scrubFor, flush, drain, pruneOldEvents, s,
 };
