@@ -148,7 +148,7 @@ UTM tags, the referring site, and in-app browsers (Instagram/TikTok).
   feed of visits/signups/upgrades, today's numbers, MRR, growth charts, funnel,
   engagement, recent signups with their source. Only `OWNER_EMAIL` can open it.
 - **Marketing dashboard** (account menu → Marketing dashboard): channels,
-  sources, campaigns, landing pages, referrers, devices, countries, funnel,
+  sources, campaigns, individual ads (`utm_content`), landing pages, referrers, devices, countries, funnel,
   first/last-touch credit, CSV export and a tracked-link builder. Open to
   `OWNER_EMAIL` plus everyone in `MARKETING_EMAILS` (comma-separated). It never
   shows user emails.

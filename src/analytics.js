@@ -864,6 +864,7 @@ async function marketingReport({ range, tz, model }) {
     const [
       cur, prev, funnel, chTraffic, chSignups, chMoney, srcTraffic, srcSignups, cmpTraffic, cmpSignups, cmpMoney,
       referrers, landings, landSignups, pages, devices, browsers, countries, seriesCh, seriesSignups,
+      adTraffic, adSignups, adMoney,
     ] = await Promise.all([
       kpis(S, E), kpis(PS, PE), cohortFunnel(S, E, tz),
       q(`SELECT channel, COUNT(DISTINCT "visitorId")::int AS visitors, COUNT(DISTINCT "sessionId")::int AS sessions, COUNT(*)::int AS pageviews
@@ -905,6 +906,15 @@ async function marketingReport({ range, tz, model }) {
       q(`SELECT ${bucket} AS b, channel, COUNT(DISTINCT "sessionId")::int AS n
            FROM "AnalyticsEvent" WHERE ${PV} AND ${W()} GROUP BY 1, 2`, tz),
       q(`SELECT ${ubucket} AS b, COUNT(*)::int AS n FROM "User" u WHERE ${W('u."createdAt"')} AND ${notStaff} GROUP BY 1`, tz, staff),
+      // Individual ads: utm_content (Meta fills it with the ad name via {{ad.name}}).
+      q(`SELECT content, MIN(campaign) AS campaign, MIN(channel) AS channel, COUNT(DISTINCT "visitorId")::int AS visitors,
+                COUNT(DISTINCT "sessionId")::int AS sessions
+           FROM "AnalyticsEvent" WHERE ${PV} AND content IS NOT NULL AND ${W()} GROUP BY 1 ORDER BY sessions DESC LIMIT 25`, tz),
+      q(`SELECT a.content, COUNT(*)::int AS signups FROM "User" u JOIN "UserAttribution" a ON a."userId" = u.id
+          WHERE ${W('u."createdAt"')} AND ${notStaff} AND a.content IS NOT NULL GROUP BY 1`, tz, staff),
+      q(`SELECT a.content, COUNT(*) FILTER (WHERE e.type = 'purchase')::int AS pro, COALESCE(SUM(e.value), 0)::float8 AS revenue
+           FROM "AnalyticsEvent" e JOIN "UserAttribution" a ON a."userId" = e."userId"
+          WHERE e.type IN ('purchase','renewal') AND ${W('e."createdAt"')} AND a.content IS NOT NULL GROUP BY 1`, tz),
     ]);
 
     // Channel table = traffic + signups + money, merged.
@@ -930,6 +940,14 @@ async function marketingReport({ range, tz, model }) {
         signups: cmpSign.get(name) || 0, pro: p.pro, revenue: Math.round(p.revenue * 100) / 100 };
     }).sort((a, b) => b.sessions - a.sessions || b.signups - a.signups).slice(0, 25);
     const landSign = new Map(landSignups.map(r => [r.landing, r.signups]));
+    const adSign = new Map(adSignups.map(r => [r.content, r.signups]));
+    const adPay = new Map(adMoney.map(r => [r.content, r]));
+    const ads = [...new Set([...adTraffic.map(r => r.content), ...adSignups.map(r => r.content)])].map(name => {
+      const t = adTraffic.find(r => r.content === name) || { visitors: 0, sessions: 0, campaign: null, channel: null };
+      const p = adPay.get(name) || { pro: 0, revenue: 0 };
+      return { ad: name, campaign: t.campaign, channel: t.channel, visitors: t.visitors, sessions: t.sessions,
+        signups: adSign.get(name) || 0, pro: p.pro, revenue: Math.round(p.revenue * 100) / 100 };
+    }).sort((a, b) => b.signups - a.signups || b.sessions - a.sessions).slice(0, 25);
 
     // Series buckets
     let buckets;
@@ -949,7 +967,7 @@ async function marketingReport({ range, tz, model }) {
 
     return {
       generatedAt: Date.now(), range, tz, model, granularity: N === 1 ? 'hour' : 'day',
-      kpis: cur, previous: prev, funnel, channels, sources, campaigns,
+      kpis: cur, previous: prev, funnel, channels, sources, campaigns, ads,
       referrers, landings: landings.map(l => ({ ...l, bounceRate: l.sessions ? Math.round(l.bounced / l.sessions * 1000) / 10 : 0, signups: landSign.get(l.landing) || 0 })),
       pages, devices, browsers, countries, series, channelOrder: CHANNELS,
     };
