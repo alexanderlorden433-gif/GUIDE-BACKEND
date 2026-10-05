@@ -279,3 +279,16 @@ model UserAttribution {
   @@index([channel])
   @@index([createdAt])
 }
+
+// Browser IDs (_fbp/_fbc) and ad-measurement consent per user, so purchases
+// reported from the Stripe webhook can be matched to the Meta ad that brought
+// the user in. Created at startup by src/meta.js; only used when the Meta
+// Conversions API is configured.
+model AdMatch {
+  userId    String   @id
+  fbp       String?
+  fbc       String?
+  consent   Boolean  @default(false)
+  ua        String?
+  updatedAt DateTime @default(now())
+}

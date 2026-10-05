@@ -139,8 +139,8 @@ failing the request. Nothing breaks if you haven't set up Resend yet.
 
 ## Analytics & dashboards
 
-The app records page views and where each visitor came from, using first-party
-tracking only (no cookies, no third-party scripts). It works out the channel
+The app records page views and where each visitor came from with first-party
+tracking (a random visitor ID in localStorage, sent only to this backend). It works out the channel
 from ad click IDs (Google Ads `gclid`, TikTok `ttclid`, Microsoft `msclkid`...),
 UTM tags, the referring site, and in-app browsers (Instagram/TikTok).
 
@@ -165,6 +165,25 @@ also sends `invoice.paid`. Events older than ~13 months are pruned daily.
 | GET | `/api/analytics/live` | Owner/marketing | Server-Sent Events stream of live activity |
 | GET | `/api/analytics/owner/overview` | Owner | Business overview |
 | GET | `/api/analytics/marketing/report?range=today\|7d\|30d\|90d&model=first\|last` | Owner/marketing | Traffic-source report |
+| GET | `/api/analytics/config` | No | `{ metaPixelId }` so the app knows whether to load the Meta pixel |
+
+### Meta ads (pixel + Conversions API)
+
+Optional, and off until `META_PIXEL_ID` and `META_CAPI_TOKEN` are set in the
+host's environment variables — no app redeploy needed. Once set:
+
+- The app loads the Meta pixel and reports `PageView`, `CompleteRegistration`
+  (signup) and `InitiateCheckout`.
+- The server sends the same events through the Conversions API with matching
+  `event_id`s (Meta de-duplicates them), plus `Purchase` from the Stripe
+  webhook with the real amount. Emails are SHA-256 hashed before sending.
+- Visitors in Europe/UK are asked before the pixel loads; everyone can switch
+  ad measurement off under Privacy in the app. Users who said no are never
+  sent. Staff accounts are never sent.
+- `META_TEST_EVENT_CODE` (from Events Manager → Test events) routes events to
+  the test view while you check the setup; remove it when you go live.
+- Browser IDs and consent per user live in the `AdMatch` table (created on
+  startup).
 
 ## 6. Deploying
 

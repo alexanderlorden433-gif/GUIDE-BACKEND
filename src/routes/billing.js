@@ -4,6 +4,7 @@ const { requireAuth } = require('../middleware/auth');
 const { stripe, createCheckoutSession, createPortalSession } = require('../stripe');
 const { notifyUser } = require('../notifications');
 const { recordMoney } = require('../analytics');
+const { trackCheckout, trackPurchase } = require('../meta');
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.post('/checkout', requireAuth, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'Account not found.' });
 
     const session = await createCheckoutSession({ user, plan });
+    trackCheckout(user, plan, req.body, req);
     res.json({ url: session.url });
   } catch (err) {
     console.error('Checkout session error:', err);
@@ -86,6 +88,11 @@ router.post('/webhook', async (req, res) => {
           plan,
           email: updatedUser.email,
           id: event.id, // Stripe may resend an event; the id keeps it counted once
+        });
+        trackPurchase(userId, {
+          email: updatedUser.email, plan, eventId: event.id,
+          value: typeof session.amount_total === 'number' ? session.amount_total / 100 : undefined,
+          currency: session.currency,
         });
 
         // Referral reward: only fires the first time this user goes Pro, so

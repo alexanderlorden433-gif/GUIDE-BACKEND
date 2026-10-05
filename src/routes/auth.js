@@ -9,6 +9,7 @@ const { makeUniqueReferralCode } = require('../referral');
 const { notifyUser } = require('../notifications');
 const { sendWelcomeEmail } = require('../onboardingDrip');
 const { recordSignup } = require('../analytics');
+const { trackSignup } = require('../meta');
 
 const router = express.Router();
 
@@ -108,6 +109,8 @@ router.post('/signup', signupLimiter, async (req, res) => {
 
     // Fire-and-forget: remember which channel/campaign brought this user in.
     recordSignup(user, req.body, req);
+    // Same signup, reported to Meta so ads can optimise for real signups (off until configured).
+    trackSignup(user, req.body, req);
 
     const previewEmails = (process.env.PREVIEW_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
     const isPreviewAcct = previewEmails.includes(user.email.toLowerCase());

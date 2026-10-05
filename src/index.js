@@ -19,6 +19,7 @@ const leaderboardRoutes = require('./routes/leaderboard');
 const networkRoutes = require('./routes/networking');
 const analyticsRoutes = require('./routes/analytics');
 const { ensureAnalyticsTables, pruneOldEvents, drain: drainAnalytics } = require('./analytics');
+const { ensureMetaTable } = require('./meta');
 const { scheduleWeeklyDigest } = require('./digest');
 const { scheduleStreakReminders } = require('./streakReminder');
 
@@ -112,6 +113,7 @@ app.listen(PORT, () => {
   scheduleWeeklyDigest();
   scheduleStreakReminders();
   ensureAnalyticsTables().then(ok => { if (ok) pruneOldEvents(); });
+  ensureMetaTable();
   setInterval(pruneOldEvents, 24 * 60 * 60 * 1000).unref();
 });
 

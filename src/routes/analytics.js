@@ -13,6 +13,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
 const A = require('../analytics');
+const meta = require('../meta');
 
 const router = express.Router();
 
@@ -109,6 +110,13 @@ function requireRole(kind) {
     res.status(403).json({ error: 'Not authorized.' });
   };
 }
+
+// Public: lets the app know whether to load the Meta pixel (the pixel ID is
+// public by design — it's visible in every page that uses it).
+router.get('/config', pingLimiter, (req, res) => {
+  res.set('Cache-Control', 'public, max-age=300');
+  res.json({ metaPixelId: meta.pixelId() || null });
+});
 
 router.get('/access', staffLimiter, requireAuth, (req, res) => {
   res.json(A.roleFor(req.user.email));
