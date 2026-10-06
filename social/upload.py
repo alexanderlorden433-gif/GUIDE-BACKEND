@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Puts finished videos online at a public link so the posting tool (Metricool) can fetch them.
 
-    python3 social/queue.py social/out/video-05efc793.mp4 social/out/photo-06207980.mp4
+    python3 social/upload.py social/out/video-05efc793.mp4 social/out/photo-06207980.mp4
 
 Videos go on the `social-queue` branch of this (public) GitHub repo. The branch keeps only
 today's and yesterday's videos — each run replaces it with a single fresh commit (force push),

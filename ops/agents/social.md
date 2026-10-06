@@ -14,7 +14,7 @@ name, so quality and safety beat volume: **if something looks wrong, post fewer,
 - `python3 social/pick.py --count 8 --posted /tmp/social-posted.json` — today's lessons
   (never repeats, rotates chapters, short ones first, skips chapters marked `social:false`).
 - `python3 social/render.py <id> <id> …` — makes 1080×1920 MP4s in `social/out/` (~80s each).
-- `python3 social/queue.py social/out/*.mp4` — puts them online; prints `url` (CDN, video/mp4)
+- `python3 social/upload.py social/out/*.mp4` — puts them online; prints `url` (CDN, video/mp4)
   and `raw_url` (fallback) for each. Give the posting tool the `url`; use `raw_url` only if
   the tool rejects the first.
 - **Metricool connector** (load its tools with ToolSearch, e.g. "metricool"). Use the brand
@@ -32,7 +32,7 @@ name, so quality and safety beat volume: **if something looks wrong, post fewer,
 3. **Pick** 8 lessons, **render** them, then **watch your own output**: extract 3 frames from each
    video (`ffmpeg -ss 1 / middle / end`) and look at them. Drop any video that's blank, cut off,
    stuck on "Loading", or has broken text. Re-render once if needed.
-4. **Queue** the good videos (`social/queue.py`).
+4. **Queue** the good videos (`social/upload.py`).
 5. **Write captions** (one per video per network) — see the rules below.
 6. **Schedule** in Metricool:
    - TikTok: all good videos, spread between **9:00 and 21:00 New York time**, at least

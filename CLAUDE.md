@@ -26,7 +26,7 @@ Live URLs: app `https://theguide.company`, API `https://guide-backend-production
 1. **Never push to `main` and never merge.** Work on a branch named
    `agent/<your-agent>/<YYYY-MM-DD>-<topic>`, open a pull request with `gh api`, and stop.
    Alexander merges. (Exceptions: the `agent-logs` branch, see below, and the `social-queue`
-   branch, which only `social/queue.py` writes to.)
+   branch, which only `social/upload.py` writes to.)
 2. **Run `bash ops/check.sh` before every pull request.** Only open the PR if it passes,
    or if the PR fixes a failing check (say which). Paste the check summary in the PR.
 3. **One topic per pull request, small diff.** PR body: *What changed* (plain English),
