@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+require('./asyncErrors');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
@@ -104,6 +105,7 @@ app.use('/api/analytics', analyticsRoutes);
 // Fallback error handler
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
+  if (res.headersSent) return next(err);
   res.status(500).json({ error: 'Something went wrong on our end.' });
 });
 

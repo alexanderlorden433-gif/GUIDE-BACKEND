@@ -4,6 +4,7 @@
 //   2. every module loads (Prisma is replaced by a stand-in, so missing
 //      imports, typos in require() and crashes at load time are caught)
 //   3. the Prisma schema is valid
+//   4. an error inside an async route gives a 500 instead of stopping the server
 // Usage: node ops/check_backend.js   (exit 1 on any failure)
 const fs = require('fs');
 const path = require('path');
@@ -68,5 +69,36 @@ try {
 }
 
 Module._load = origLoad;
-console.log(problems.length ? `${problems.length} backend problem(s)` : 'Backend OK');
-process.exit(problems.length ? 1 : 0);
+
+// 4. an error inside an async route must give a 500, not stop the server
+async function checkAsyncErrors() {
+  const indexSrc = fs.readFileSync(path.join(ROOT, 'src', 'index.js'), 'utf8');
+  if (!/require\(['"]\.\/asyncErrors['"]\)/.test(indexSrc)) {
+    return bad('src/index.js does not load ./asyncErrors — an error in an async route would stop the server');
+  }
+  let express;
+  try { express = require(path.join(ROOT, 'node_modules', 'express')); require(path.join(ROOT, 'src', 'asyncErrors')); }
+  catch (e) { return bad('async error check skipped: ' + e.message.split('\n')[0]); }
+  const app = express();
+  app.get('/boom', async () => { await null; throw new Error('pretend database hiccup'); });
+  app.use((err, req, res, next) => res.status(500).json({ error: 'x' }));
+  let crashed = false;
+  const onCrash = () => { crashed = true; };
+  process.once('unhandledRejection', onCrash);
+  const server = await new Promise(r => { const s = app.listen(0, '127.0.0.1', () => r(s)); });
+  try {
+    const res = await fetch(`http://127.0.0.1:${server.address().port}/boom`, { signal: AbortSignal.timeout(3000) });
+    if (res.status === 500 && !crashed) ok('an error in an async route returns a 500 and the server keeps running');
+    else bad(`async route error: got status ${res.status}${crashed ? ' and an unhandled rejection' : ''}`);
+  } catch (e) {
+    bad('async route error: request never answered (' + e.name + ')');
+  } finally {
+    process.removeListener('unhandledRejection', onCrash);
+    server.close();
+  }
+}
+
+checkAsyncErrors().catch(e => bad('async error check failed: ' + e.message)).finally(() => {
+  console.log(problems.length ? `${problems.length} backend problem(s)` : 'Backend OK');
+  process.exit(problems.length ? 1 : 0);
+});
