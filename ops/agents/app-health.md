@@ -70,3 +70,6 @@ Watching: <anything open, one line>
   the second silently replaces the first. Make sure both callers still get the right output.
 - `GET /api/account` doesn't return the user's `id`, but the app reads `account.id` on start-up
   (`loginApp(..., account.id)`). Check what depends on it.
+- Templates show literal `\r\n` / `\n` characters instead of line breaks in some chapters
+  (e.g. E-commerce → Templates → "Order Confirmation / Shipping Update Email"), and "Copy to
+  clipboard" copies them too. Render and copy them as real line breaks.
