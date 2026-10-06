@@ -384,6 +384,35 @@ def logged_in(browser, base, device, viewport, mobile, pro=True):
     except Exception as e:
         problem(step[0], 'privacy check failed', e)
 
+    # account settings: Pro users can reach Stripe's billing portal to manage / cancel
+    step[0] = f'{device}: manage subscription'
+    try:
+        page.evaluate('showHome && showHome()')
+        page.evaluate("document.getElementById('accountBtn').click()")
+        if not visible(page, '#accDeleteBtn'):
+            problem(step[0], 'account settings did not open')
+        elif not pro:
+            if page.locator('#accManageBillingBtn').count():
+                problem(step[0], 'free user sees "Manage subscription" button')
+            else:
+                ok(step[0], 'free user: no subscription section (expected)')
+            page.evaluate("document.getElementById('accountCloseBtn').click()")
+        else:
+            btn = page.locator('#accManageBillingBtn')
+            if btn.count() == 0:
+                problem(step[0], 'Pro user has no way to manage or cancel their subscription')
+                page.evaluate("document.getElementById('accountCloseBtn').click()")
+            else:
+                btn.scroll_into_view_if_needed(timeout=3000)
+                shot(page, f'{device}-09-account')
+                btn.click(timeout=3000)
+                page.wait_for_url(re.compile(r'billing\.stripe\.com'), timeout=8000)
+                ok(step[0], 'button goes to Stripe billing portal')
+                page.goto(base + '/', wait_until='load')
+                visible(page, '#appScreen', 10000)
+    except Exception as e:
+        problem(step[0], 'manage subscription check failed', e)
+
     if not pro:
         step[0] = f'{device}: upgrade to Pro'
         try:
