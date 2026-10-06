@@ -13,3 +13,13 @@
 - npm audit --omit=dev: 5 moderate (qs via express, uuid via node-cron), no high/critical.
 - Step 5 area reviewed: community (wins / network / notifications). Next: billing UI flows or src/routes/partners.js.
 - 2026-10-05 (re-run, test fire): main unchanged, PRs #1/#2 open, no comments. Netlify not linked yet (expected, no Deploy Previews). #1 and #2 conflict only in ops/smoke/smoke.py (both add steps) — after one merges, merge main into the other and keep both steps.
+
+## 2026-10-06 (Tue)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway status on main a7198c5 = success. Netlify still not reporting.
+- check.sh on main: same known failures only (backend = root node_modules missing, fixed by #1; timeAgo → #2; network paths → #1; client-status → waiting on Alexander).
+- PRs #1, #2: still open, mergeable/clean, no comments. 2-PR cap reached → no new PR opened.
+- Step 5 area: src/routes/* error handling (+ partners.js). FOUND: Express 4 + no async-error handling → any thrown error in an async route without try/catch (22 routes: account GET/PUT/password/DELETE, discussion, mentors, notifications, partners GET/POST, mentorAlert, analytics ad-consent) = unhandled rejection → Node 22 exits → whole backend down until Railway restarts. Verified locally.
+- READY, pushed but NO PR yet (cap): branch agent/app-health/2026-10-06-route-errors (1f4c8a9): src/asyncErrors.js patches Layer.handle_request to .catch(next); index.js requires it; error handler skips if headersSent; check_backend.js step 4 tests it. Open as PR [no sensitive files] as soon as a slot frees — HIGHEST priority, above account.id fix.
+- Queue after that: GET /api/account `id` (see 10-05).
+- Visual note: phone home has an empty gap under the search box (smoke phone-03-home). For Design agent, low.
+- Next step-5 area: billing UI flows (web/index.html upgrade/manage).
