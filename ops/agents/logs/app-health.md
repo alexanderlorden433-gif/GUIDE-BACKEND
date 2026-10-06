@@ -23,3 +23,11 @@
 - Queue after that: GET /api/account `id` (see 10-05).
 - Visual note: phone home has an empty gap under the search box (smoke phone-03-home). For Design agent, low.
 - Next step-5 area: billing UI flows (web/index.html upgrade/manage).
+- 2026-10-06 (night run): WebFetch worked. Live: /api/health ok, manifest 756 lessons, site up. Railway success on main ad7e1f5 (social commits only). /terms.html and /terms → 404 live.
+- check.sh on main: same known failures only. PRs #1/#2 still open, no comments, branches 2 behind main (social/ only, no conflicts) → left as is.
+- Step 5 area: billing UI. FOUND (a) no way in the app for Pro users to manage/cancel (POST /billing/portal never called; help text says "upgrade to Yearly from account settings"). Branch pushed, NO PR (cap): agent/app-health/2026-10-06-manage-subscription (58b669d) — section in Account settings + smoke step "manage subscription" (fails on main, passes on branch).
+  (b) DELETE /api/account deletes the user but never cancels their Stripe subscription → deleted users keep being charged. Sensitive (billing + deletion); asked Alexander. Suggested fix: cancel active subscription via stripe before prisma.user.delete (needs stripeSubscriptionId check), or refuse deletion until cancelled.
+  (c) web/terms.html says $12.99/mo + $84.99 Lifetime (real: $28.99/mo, $325.99/yr), and isn't linked from the app. Don't edit prices — asked Alexander.
+- Queue when slots free (order): route-errors (backend crash) → manage-subscription → delete-cancels-subscription (if approved) → account.id.
+- Visual: Change password inputs in Account settings are unstyled (white boxes). Design agent.
+- Next step-5 area: src/routes/partners.js + admin.js auth checks.
