@@ -16,6 +16,8 @@ short sentences: what you did, what you found, what you need from him. No jargon
 | `media/guides/` | Lesson video narration (mp3) + timing (json) + `manifest.json` | Served by the backend at `/media/guides/…` |
 | `web/` | The website/app: one big `index.html` (all screens, CSS and JS), plus terms, privacy, PWA files | Netlify deploys `main`; every pull request gets a **Deploy Preview** link |
 | `ops/` | Checks and agent playbooks (`ops/agents/*.md`) | Never deployed |
+| `social/` | Lesson → TikTok/Reels video maker, lesson catalog, posting queue (Social agent) | Videos go to the `social-queue` branch, then Metricool |
+| `ads/` | The Meta ads: copy (`ads.json`) and creatives | Used by the Meta Ads agent |
 
 Live URLs: app `https://theguide.company`, API `https://guide-backend-production.up.railway.app/api`.
 
@@ -23,7 +25,8 @@ Live URLs: app `https://theguide.company`, API `https://guide-backend-production
 
 1. **Never push to `main` and never merge.** Work on a branch named
    `agent/<your-agent>/<YYYY-MM-DD>-<topic>`, open a pull request with `gh api`, and stop.
-   Alexander merges. (Exception: the `agent-logs` branch, see below.)
+   Alexander merges. (Exceptions: the `agent-logs` branch, see below, and the `social-queue`
+   branch, which only `social/queue.py` writes to.)
 2. **Run `bash ops/check.sh` before every pull request.** Only open the PR if it passes,
    or if the PR fixes a failing check (say which). Paste the check summary in the PR.
 3. **One topic per pull request, small diff.** PR body: *What changed* (plain English),
