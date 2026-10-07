@@ -234,6 +234,12 @@ def logged_out(browser, base, device, viewport, mobile):
             problem(step[0], 'sign-up screen did not open')
         shot(page, f'{device}-02-signup')
         no_sideways_scroll(page, step[0])
+        # the main button must use the app's gradient, not the browser's plain white default
+        look = page.eval_on_selector('#authSubmitBtn', "b => { const c = getComputedStyle(b); return {bg: c.backgroundImage, w: b.getBoundingClientRect().width, card: b.closest('.auth-card').getBoundingClientRect().width}; }")
+        if 'gradient' in look['bg'] and look['w'] > look['card'] * 0.6:
+            ok(step[0], 'sign-up / log-in button is styled (full-width gradient)')
+        else:
+            problem(step[0], 'sign-up / log-in button looks like a plain browser button', look)
     except Exception as e:
         problem(step[0], 'could not click "Sign up" on the landing page', e)
     finish(st, step[0])

@@ -130,7 +130,7 @@
     min-height:16px;
     margin-top:10px;
   }
-  .auth-card button[type="submit"]{
+  .auth-card button[type="submit"], .auth-card .auth-primary-btn{
     width:100%;
     margin-top:16px;
     font-family:'Space Grotesk',sans-serif;
@@ -145,9 +145,10 @@
     cursor:pointer;
     transition:transform .15s ease, box-shadow .15s ease;
   }
-  .auth-card button[type="submit"]:hover{box-shadow:0 8px 40px rgba(168,85,247,0.45), 0 0 30px rgba(168,85,247,0.2);}
-  .auth-card button[type="submit"]:active{transform:scale(0.97); box-shadow:0 4px 15px rgba(168,85,247,0.25);}
-  .auth-card button[type="submit"]:disabled{opacity:0.6; cursor:default;}
+  .auth-card button[type="submit"]:hover, .auth-card .auth-primary-btn:hover{box-shadow:0 8px 40px rgba(168,85,247,0.45), 0 0 30px rgba(168,85,247,0.2);}
+  .auth-card button[type="submit"]:active, .auth-card .auth-primary-btn:active{transform:scale(0.97); box-shadow:0 4px 15px rgba(168,85,247,0.25);}
+  .auth-card button[type="submit"]:disabled, .auth-card .auth-primary-btn:disabled{opacity:0.6; cursor:default;}
+  .auth-card .auth-primary-btn:focus-visible{outline:2px solid #C084FC; outline-offset:3px;}
   .auth-switch{
     text-align:center;
     font-size:13.5px;
@@ -4079,11 +4080,10 @@
       <label for="authPassword">Password</label>
       <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password">
       <div class="auth-error" id="authError"></div>
-      <button type="button" id="authSubmitBtn">Sign up & start learning</button>
+      <button type="button" id="authSubmitBtn" class="auth-primary-btn">Sign up & start learning</button>
     </div>
     <p class="auth-switch" id="authSwitchText"></p>
     <p class="auth-switch" id="forgotWrap" style="display:none;"><button type="button" id="forgotBtn">Forgot password?</button></p>
-    <p class="auth-note">Prototype account system — please don't reuse a real password here.</p>
   </div>
 
   <div class="auth-card intro-card" id="authCardIntro" style="display:none;">
@@ -4189,7 +4189,7 @@
       <input type="password" id="resetPassword" placeholder="••••••••" autocomplete="new-password">
     </div>
     <div class="auth-error" id="resetError"></div>
-    <button type="button" id="resetSubmitBtn">Send reset link</button>
+    <button type="button" id="resetSubmitBtn" class="auth-primary-btn">Send reset link</button>
     <p class="auth-switch"><button type="button" id="resetBackBtn">Back to log in</button></p>
   </div>
 </div>
