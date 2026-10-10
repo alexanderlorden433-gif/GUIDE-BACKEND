@@ -9705,6 +9705,14 @@ function goToNotificationTarget(link){
   if(!link) return;
   if(link.view === 'invite') showInvite();
   else if(link.view === 'partners') showPartners();
+  else if(link.view === 'network'){
+    // "Someone wants to connect" / "Connection accepted" → Community → Connect
+    const tabs = document.getElementById('communityTabs');
+    if(tabs){
+      tabs.querySelectorAll('.community-tab').forEach(t => t.classList.toggle('active', t.dataset.ctab === 'connect'));
+    }
+    showCommunityTab();
+  }
   else if(link.view === 'niche' && link.nicheId){
     goToNicheTab(NICHES.find(n=>n.id===link.nicheId) || {id:link.nicheId,name:'',color:'#999'}, link.tab || 'guides');
   }
@@ -12247,30 +12255,9 @@ document.getElementById('ctabLbTabs').addEventListener('click',(e)=>{
   loadCommunityLeaderboard(tab.dataset.lb);
 });
 
-// Community network (inline version)
-async function loadCommunityNetwork(){
-  const content = document.getElementById('ctabNetworkContent');
-  content.innerHTML = skeletonCards(3);
-  try{
-    const data = await apiFetch('/network/matches');
-    if(!data.matches || data.matches.length === 0){
-      content.innerHTML = '<div class="tool-empty">No matches yet — pick your chapters so we can pair you up.</div>';
-      return;
-    }
-    content.innerHTML = '';
-    data.matches.forEach(m => {
-      const card = document.createElement('div');
-      card.className = 'network-card';
-      card.innerHTML = `<div class="net-top"><span class="net-avatar">${(m.name||'?')[0].toUpperCase()}</span><div><div class="net-name">${m.name||'Anon'}</div><div class="net-niches">${(m.niches||[]).join(', ')}</div></div></div><button class="net-connect-btn" data-id="${m.id}">Connect</button>`;
-      card.querySelector('.net-connect-btn').addEventListener('click', async (e)=>{
-        try{ await apiFetch('/network/request',{method:'POST',body:JSON.stringify({targetId:m.id})}); showAppToast('Request sent!','success'); e.target.disabled=true; e.target.textContent='Sent'; }catch(err){ showAppToast('Could not connect — try again.','error'); }
-      });
-      content.appendChild(card);
-    });
-  }catch(e){
-    console.error('Community network error:', e);
-    content.innerHTML = '<div class="tool-empty">Could not load matches — '+(e.message||'check your connection')+'<br><button onclick="loadCommunityNetwork()" style="margin-top:8px;padding:6px 18px;border-radius:8px;background:var(--grape);color:#fff;border:none;cursor:pointer;font-size:.95rem;">Retry</button></div>';
-  }
+// Community network (inline version) — same cards as the Connect screen
+function loadCommunityNetwork(){
+  return loadNetworkMatches('ctabNetworkContent', 'loadCommunityNetwork');
 }
 
 // ---------- Wins Board ----------
@@ -12443,11 +12430,14 @@ function showNetwork(){
 }
 networkBackBtn.addEventListener('click', showHome);
 
-async function loadNetworkMatches(){
-  const content = document.getElementById('networkContent');
+async function loadNetworkMatches(containerId, retryFn){
+  containerId = containerId || 'networkContent';
+  retryFn = retryFn || 'loadNetworkMatches';
+  const content = document.getElementById(containerId);
+  if(!content) return;
   content.innerHTML = skeletonCards(3);
   try {
-    const data = await apiFetch('/networking/matches');
+    const data = await apiFetch('/network/matches');
     if(!data.matches || data.matches.length === 0){
       content.innerHTML = '<div class="tool-empty">No matches found yet. As more people join your chapters, you\'ll see potential connections here!</div>';
       return;
@@ -12459,7 +12449,7 @@ async function loadNetworkMatches(){
       const displayName = (match.email || '').split('@')[0] || 'User';
       const nicheTags = (match.sharedNiches || []).map(nId => {
         const n = NICHES.find(x=>x.id===nId);
-        return n ? n.icon + ' ' + n.name : nId;
+        return n ? n.icon + ' ' + n.name : escapeHtml(String(nId));
       }).join(', ');
       card.innerHTML = `
         <div class="network-match-top">
@@ -12474,16 +12464,19 @@ async function loadNetworkMatches(){
       `;
       card.querySelector('.network-connect-btn').addEventListener('click', async (e) => {
         try {
-          await apiFetch('/networking/connect', { method:'POST', body:JSON.stringify({toUserId:match.userId}) });
+          await apiFetch('/network/connect', { method:'POST', body:JSON.stringify({toUserId:match.userId}) });
           e.target.textContent = '✓ Sent';
           e.target.classList.add('sent');
           e.target.disabled = true;
-        } catch(err) { alert('Could not connect — try again.'); }
+        } catch(err) {
+          if(err && err.status === 409){ e.target.textContent = '✓ Already connected'; e.target.classList.add('sent'); e.target.disabled = true; return; }
+          alert('Could not connect — try again.');
+        }
       });
       content.appendChild(card);
     });
   } catch(e) {
-    content.innerHTML = '<div class="tool-empty">Could not load matches — check your connection.<br><button onclick="loadNetworkMatches()" style="margin-top:8px;padding:6px 18px;border-radius:8px;background:var(--grape);color:#fff;border:none;cursor:pointer;font-size:.95rem;">Retry</button></div>';
+    content.innerHTML = '<div class="tool-empty">Could not load matches — check your connection.<br><button onclick="'+retryFn+'()" style="margin-top:8px;padding:6px 18px;border-radius:8px;background:var(--grape);color:#fff;border:none;cursor:pointer;font-size:.95rem;">Retry</button></div>';
   }
 }
 
