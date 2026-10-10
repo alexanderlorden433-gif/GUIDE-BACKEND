@@ -106,7 +106,11 @@ def fixture(state, method, path, body):
     if p == '/api/partners' and method == 'GET':
         return 200, {'partners': [], 'isOwner': False}
     if p == '/api/network/matches':
-        return 200, {'matches': []}
+        return 200, {'matches': [{'userId': 'u_match1', 'email': 'j***@g***', 'initial': 'J',
+                                  'sharedNiches': ['video'], 'completedCount': 4}]}
+    if p == '/api/network/connect' and method == 'POST':
+        state.setdefault('connects', []).append(body)
+        return 201, {'id': 'nr_1', 'status': 'pending'}
     if p == '/api/network/connections':
         return 200, {'sent': [], 'received': []}
     if p == '/api/analytics/config':
@@ -234,6 +238,12 @@ def logged_out(browser, base, device, viewport, mobile):
             problem(step[0], 'sign-up screen did not open')
         shot(page, f'{device}-02-signup')
         no_sideways_scroll(page, step[0])
+        # the main button must use the app's gradient, not the browser's plain white default
+        look = page.eval_on_selector('#authSubmitBtn', "b => { const c = getComputedStyle(b); return {bg: c.backgroundImage, w: b.getBoundingClientRect().width, card: b.closest('.auth-card').getBoundingClientRect().width}; }")
+        if 'gradient' in look['bg'] and look['w'] > look['card'] * 0.6:
+            ok(step[0], 'sign-up / log-in button is styled (full-width gradient)')
+        else:
+            problem(step[0], 'sign-up / log-in button looks like a plain browser button', look)
     except Exception as e:
         problem(step[0], 'could not click "Sign up" on the landing page', e)
     finish(st, step[0])
@@ -389,6 +399,30 @@ def logged_in(browser, base, device, viewport, mobile, pro=True):
         page.locator('#notifBellTrigger').click(timeout=3000)
     except Exception as e:
         problem(step[0], 'notifications check failed', e)
+
+    # Community → Connect: match card shows, Connect sends a request
+    step[0] = f'{device}: community connect'
+    try:
+        if page.evaluate('typeof showCommunityTab === "function"'):
+            page.evaluate('showHome && showHome(); showCommunityTab()')
+            page.locator('#communityTabs [data-ctab="connect"]').click(timeout=3000)
+            btn = page.locator('#ctabNetworkContent .network-connect-btn').first
+            btn.wait_for(state='visible', timeout=5000)
+            card_txt = page.locator('#ctabNetworkContent').inner_text()
+            if 'Anon' in card_txt or 'Video' not in card_txt:
+                problem(step[0], 'match card is missing the name or shared chapter', card_txt[:160])
+            btn.click(timeout=3000)
+            page.wait_for_timeout(600)
+            sent = st.get('connects') or []
+            if not sent or (sent[-1] or {}).get('toUserId') != 'u_match1':
+                problem(step[0], 'Connect button did not send a request for that person', str(sent)[:160])
+            elif 'Sent' not in btn.inner_text():
+                problem(step[0], 'request sent but the button did not change to "Sent"', btn.inner_text())
+            else:
+                ok(step[0], 'match shows, Connect sends a request')
+            shot(page, f'{device}-08-connect')
+    except Exception as e:
+        problem(step[0], 'Community → Connect failed', e)
 
     # privacy
     step[0] = f'{device}: privacy page'

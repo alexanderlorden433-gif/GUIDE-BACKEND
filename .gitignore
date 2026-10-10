@@ -5,3 +5,4 @@ node_modules/
 # agent tool output
 ops/smoke/out/
 __pycache__/
+social/out/

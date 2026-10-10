@@ -1,0 +1,35 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+/*FONTS*/
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:540px;height:960px;overflow:hidden;background:#0B0A12}
+.c{position:relative;width:540px;height:960px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;font-family:'Inter',sans-serif;
+  background:radial-gradient(360px 360px at 20% 18%, rgba(124,58,237,.38), transparent 70%),radial-gradient(380px 380px at 85% 85%, rgba(236,72,153,.30), transparent 70%),#0B0A12}
+.c:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:36px 36px;-webkit-mask-image:radial-gradient(420px 520px at 50% 50%,#000 20%,transparent 80%)}
+.in{position:relative;padding:0 44px}
+svg{width:132px;height:132px;filter:drop-shadow(0 10px 34px rgba(180,79,208,.55));margin-bottom:30px}
+.k{font-size:21px;font-weight:600;color:#C9C3DD;letter-spacing:.01em}
+.big{margin-top:14px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:58px;line-height:1.02;letter-spacing:-.02em}
+.big b{background:linear-gradient(95deg,#a78bfa,#f472b6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin-top:14px;font-size:22px;font-weight:500;color:#E9E7F2;line-height:1.35}
+.cta{margin-top:34px;display:inline-block;padding:18px 34px;border-radius:999px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:#fff;
+  background:linear-gradient(95deg,#7C3AED,#B44FD0 55%,#EC4899);box-shadow:0 14px 40px rgba(180,79,208,.45)}
+.small{margin-top:20px;font-size:19px;font-weight:600;color:#B9B3CE}
+.small span{color:#FFD23F}
+</style></head>
+<body><div class="c"><div class="in">
+  <svg viewBox="0 0 200 200"><defs>
+    <linearGradient id="r" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#EC4899"/></linearGradient>
+    <linearGradient id="s" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7C3AED"/><stop offset="55%" stop-color="#B44FD0"/><stop offset="100%" stop-color="#EC4899"/></linearGradient></defs>
+    <circle cx="100" cy="100" r="82" fill="none" stroke="url(#r)" stroke-width="14"/>
+    <path d="M100,32 L114.1,85.9 L168,100 L114.1,114.1 L100,168 L85.9,114.1 L32,100 L85.9,85.9 Z" fill="url(#s)"/>
+    <circle cx="100" cy="100" r="14" fill="#FFD23F"/></svg>
+  <div class="k">Want the next step?</div>
+  <div class="big"><b>756</b> free<br>video lessons</div>
+  <div class="sub">to start a real side business —<br>16 paths, an AI mentor, templates.</div>
+  <div class="cta">theguide.company</div>
+  <div class="small"><span>●</span> Link in bio · Start free</div>
+</div></div>
+<script>document.fonts.ready.then(()=>{ window.READY = true; })</script>
+</body></html>

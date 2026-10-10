@@ -130,6 +130,45 @@
       "call_to_action": "SIGN_UP",
       "website_url": "https://theguide.company",
       "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}"
+    },
+    {
+      "name": "ad11-3-hours-searching",
+      "angle": "Desktop: 3 hours searching, 47 videos, 0 plans → The Guide pops up",
+      "feed_4x5": "ad11-3-hours-searching-feed-4x5.mp4",
+      "story_9x16": "ad11-3-hours-searching-story-9x16.mp4",
+      "primary_text": "Spent hours searching how to start an online store and still not sure what to do first? The Guide gives you every step, in order: 16 business paths, 756 short video lessons, an AI mentor and ready-made templates. Start free.",
+      "headline": "Stop searching. Start building.",
+      "description": "Free to start. Pro from $28.99/mo.",
+      "call_to_action": "SIGN_UP",
+      "website_url": "https://theguide.company",
+      "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+      "format": "video"
+    },
+    {
+      "name": "ad12-4-million-results",
+      "angle": "Desktop: millions of results, none say what to do on Monday",
+      "feed_4x5": "ad12-4-million-results-feed-4x5.mp4",
+      "story_9x16": "ad12-4-million-results-story-9x16.mp4",
+      "primary_text": "Millions of videos about starting an online store, and none of them tell you what to do on Monday. The Guide is every step, in order: 756 short video lessons, an AI mentor, and the contracts, emails and trackers you need. Free to start.",
+      "headline": "Every step. In order.",
+      "description": "Free to start. Pro from $28.99/mo.",
+      "call_to_action": "SIGN_UP",
+      "website_url": "https://theguide.company",
+      "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+      "format": "video"
+    },
+    {
+      "name": "ad13-31-tabs",
+      "angle": "Desktop: 31 tabs + \"buy part 2\" upsell → close the tabs, open The Guide",
+      "feed_4x5": "ad13-31-tabs-feed-4x5.mp4",
+      "story_9x16": "ad13-31-tabs-story-9x16.mp4",
+      "primary_text": "Too many tabs, still no plan? The Guide puts every step of starting an online store in one place: in order, with a short video for each one, an AI mentor for your exact questions, and templates so you never start from a blank page. Free to start.",
+      "headline": "Close the tabs. Open The Guide.",
+      "description": "Free to start. Pro from $28.99/mo.",
+      "call_to_action": "SIGN_UP",
+      "website_url": "https://theguide.company",
+      "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+      "format": "video"
     }
   ]
 }
