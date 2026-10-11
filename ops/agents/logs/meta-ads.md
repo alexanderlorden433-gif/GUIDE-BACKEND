@@ -5,3 +5,7 @@
 - Live check done (off-schedule, because Metricool showed no delivery): campaign ACTIVE but Meta reports no delivery since launch. Asked Alexander to check Billing / ad review in Ads Manager.
 - Setup gaps vs. plan seen in live check: ad set targets US only (plan: US/CA/UK/AU); ad named "New Leads Ad" (plan: ad01-47-videos); no URL tags (UTMs missing); Multi-advertiser ads enrolled. Reported to Alexander, not changed.
 - Ad set ID 120254342583220640, ad ID 120254342583210640.
+
+## 2026-10-11 (Sun)
+- Metricool evolution (FAEV*) still shows zero delivery every day Oct 4-11; FACA*/FADE* still empty. No Adspirer ad calls (not a check day, status unchanged). Reminded Alexander about Billing / ad review.
+- Next live check: Mon Oct 12 — confirm delivery status and whether the setup gaps above were fixed.
