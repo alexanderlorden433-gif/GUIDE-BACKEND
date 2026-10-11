@@ -18,6 +18,8 @@ from playwright.sync_api import sync_playwright  # noqa: E402
 SCREENS = {
     'landing':     (False, ''),
     'signup':      (False, "document.getElementById('landingSignupBtn').click()"),
+    'login':       (False, "document.getElementById('landingLoginBtn').click()"),
+    'reset':       (False, "document.getElementById('landingLoginBtn').click(); document.getElementById('forgotBtn').click()"),
     'home':        (True,  "showHome()"),
     'chapter':     (True,  "openNiche(NICHES[0].id)"),
     'guide':       (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView .guide .guide-title').click()"),

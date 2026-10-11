@@ -5,6 +5,8 @@
 # Exit code 0 = all good. Details: ops/smoke/out/report.md (+ screenshots).
 cd "$(dirname "$0")/.."
 if [ ! -d ops/node_modules ]; then (cd ops && npm ci --no-audit --no-fund >/dev/null 2>&1) || echo "! could not install ops tools (cd ops && npm ci)"; fi
+# Backend packages (express, stripe…) are needed to load-test src/ — scripts skipped so Prisma needs no download
+if [ ! -d node_modules/express ]; then npm ci --ignore-scripts --no-audit --no-fund >/dev/null 2>&1 || echo "! could not install backend packages (npm ci --ignore-scripts)"; fi
 fail=0
 echo "== 1/4 backend";   node ops/check_backend.js || fail=1
 echo "== 2/4 lint";      node ops/lint.js || fail=1
