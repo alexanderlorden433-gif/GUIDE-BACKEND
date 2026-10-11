@@ -31,3 +31,13 @@
 - Queue when slots free (order): route-errors (backend crash) → manage-subscription → delete-cancels-subscription (if approved) → account.id.
 - Visual: Change password inputs in Account settings are unstyled (white boxes). Design agent.
 - Next step-5 area: src/routes/partners.js + admin.js auth checks.
+
+## 2026-10-11 (Sun)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway status on main 865ed8d = success. Netlify now posts Deploy Previews on PRs (site linked).
+- Since last notes: PR #1 (connect + check.sh npm ci) MERGED; #4 (login buttons, claude agent) merged. #3 (same login-button topic) still open — looks superseded by #4, flagged to Alexander.
+- check.sh on main: only known failures — lint timeAgo (PR #2) and 4× /client-status (waiting on Alexander). Smoke PASS 0 problems desktop+phone; screenshots fine.
+- Opened PR #5 = route-errors branch (merged main, + `next(err || new Error)` for empty rejections). Check fails without fix, passes with it.
+- PR #2 still open, mergeable clean, Deploy Preview ready, no review comments.
+- 2-PR cap reached (#2, #5). Queue: manage-subscription (branch 58b669d, may need merge of main) → delete-cancels-subscription (needs Alexander OK) → account.id.
+- Step 5 area: partners.js + admin.js auth → OK (requireAuth + server-side OWNER_EMAIL check on every write/admin route; email can't be changed via account PUT). Only issue was missing async error handling → covered by #5.
+- Next step-5 area: src/routes/aiChat.js (input limits, Pro gating, error handling).
