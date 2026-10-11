@@ -13,7 +13,10 @@ Layer.prototype.handle_request = function handleRequest(req, res, next) {
   if (fn.length > 3) return original.call(this, req, res, next); // error handlers
   try {
     const result = fn(req, res, next);
-    if (result && typeof result.then === 'function') result.catch(next);
+    if (result && typeof result.then === 'function') {
+      // `|| new Error` so a rejection with no value still counts as an error
+      result.catch(err => next(err || new Error('Route failed without an error')));
+    }
   } catch (err) {
     next(err);
   }
