@@ -4,7 +4,7 @@
 // meaningful "offline" version of your live account data, so we don't try
 // to fake one; apiFetch() in the app already handles those failures cleanly.
 
-const CACHE_NAME = 'the-guide-shell-v1';
+const CACHE_NAME = 'the-guide-shell-v2';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
