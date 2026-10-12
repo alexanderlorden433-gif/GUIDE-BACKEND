@@ -8064,7 +8064,11 @@ function courseStart(nicheId, create){
 }
 /** Modules open one a week, so a course lasts weeks rather than one long evening. */
 function moduleDaysLeft(nicheId, mi){
-  return Math.max(0, (dayNum(courseStart(nicheId)) + mi * 7) - dayNum(todayStr()));
+  // Going Pro opens the next module straight away, then the weekly pace carries on.
+  // Without this a short trial would only ever show Module 1, which is free anyway,
+  // so nobody could see what they were paying for.
+  const head = isPro ? 1 : 0;
+  return Math.max(0, (dayNum(courseStart(nicheId)) + (mi - head) * 7) - dayNum(todayStr()));
 }
 /** Index of the first lesson the learner hasn't finished: everything after it is still locked. */
 function firstOpenIndex(niche){
