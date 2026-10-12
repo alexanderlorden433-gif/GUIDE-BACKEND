@@ -33,3 +33,24 @@ Things worth remembering:
   the fixed bottom tab bar floating mid-page — that is an artifact, not a layout bug.
 - Still true: **merge `origin/main` into the branch right before opening the PR.** Lost
   commits twice this week to merges landing seconds before a push.
+
+## 2026-10-12 — new look + new chapters
+- **Two looks:** the app now themes from CSS variables (Forest & Gold default, `html[data-theme="purple"]`
+  for the old look). Never hard-code a colour: use `var(--accent)`, `var(--on-accent)`,
+  `rgba(var(--accent-rgb), .x)`, and in JS `themeVar()` / `themeRgba()`. Chosen look lives in
+  localStorage `guide_look`. Smoke tests that don't care about the load-up screen set `guide_splash` = `off`.
+- **New chapters live in packs**, not in `web/index.html`: `web/niches/pack-N.js`, built by
+  `ops/niches/build_pack.py` from one reviewed JSON per chapter and checked by
+  `ops/niches/validate_niche.py`. Read `ops/niches/README.md` first. The page merges packs into
+  `NICHES` right after the array; a chapter brings its own `tools` and `specialtyConfigs`.
+- **Counts shown to people are computed** (`countWord`, `freeLessonCount()`, `proLessonCount()`).
+  Don't type "16" or "756" into new copy. Static ads copy will go stale and needs a human look.
+- New lessons have **no narration** (not in `media/guides/manifest.json`), so they show no Watch button.
+  Public wording was softened from "a video for every lesson" to "narrated video lessons". Flagged to Alexander.
+- The 16 original chapters share 9 lesson ids among themselves (old, harmless). The smoke test only
+  checks that new-pack ids never clash with another chapter.
+- A free user sees only the first lesson open in a chapter (23 of 24 locked), not all of Module 1.
+- Two open PRs already: wait for a merge before opening the next niche batch. Batches 2-4 are built
+  and validated; rebuild with `build_pack.py` from the chapter JSONs if the scratch copies are gone.
+- Parallel PRs that both add a test to `ops/smoke/smoke.py` will conflict at the same spot. Update the
+  second one from `main` after the first merges.
