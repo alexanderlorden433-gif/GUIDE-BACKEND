@@ -2030,11 +2030,6 @@
     .btn-icon-mobile{display:inline;}
     .user-badge{width:26px;height:26px;font-size:12px;}
 
-    .landing-view{padding:28px 16px;}
-    .landing-title{font-size:26px;}
-    .landing-sub{font-size:14px;}
-    .landing-chips{gap:6px;}
-    .landing-chip{font-size:11px; padding:5px 10px;}
 
     .auth-card{padding:26px 20px;}
     .auth-card h2{font-size:22px;}
@@ -2801,123 +2796,251 @@
   /* ---------- Landing page ---------- */
   .landing-view{
     min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:40px 20px;
-    background: linear-gradient(160deg, #0D0C16 0%, #100E1C 50%, #1A1730 100%);
+    background:var(--bg);
+    color:var(--ink);
+    overflow-x:hidden;
   }
-  .landing-inner{
-    max-width:640px;
-    text-align:center;
+  .lp-wrap{max-width:1120px; margin:0 auto; padding:0 22px;}
+  .lp-section{padding:92px 0;}
+  .lp-section + .lp-section{border-top:1px solid rgba(255,255,255,0.055);}
+  .lp-h2{
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:clamp(27px, 4vw, 40px); line-height:1.12; letter-spacing:-0.02em;
+    margin:0 0 12px;
   }
-  .landing-inner .auth-logo{margin-bottom:22px;}
-  .landing-illustration{
-    width:100%;
-    max-width:340px;
-    height:auto;
-    margin:0 auto 24px;
-    display:block;
+  .lp-lead{font-size:16.5px; line-height:1.6; color:var(--ink-soft); max-width:60ch; margin:0 0 36px;}
+  .lp-grad{
+    background:linear-gradient(95deg,#A855F7,#EC4899 70%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
   }
-  .landing-title{
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:38px;
-    color:#fff;
-    line-height:1.15;
-    margin:0 0 16px;
+
+  /* --- hero --- */
+  .lp-hero{position:relative; padding:64px 0 72px; overflow:hidden;}
+  .lp-aurora{position:absolute; inset:-25% -10% auto; height:760px; pointer-events:none; z-index:0;}
+  .lp-aurora i{
+    position:absolute; display:block; border-radius:50%;
+    filter:blur(90px); opacity:.5;
+    animation:lpDrift 26s ease-in-out infinite alternate;
   }
-  .landing-sub{
-    color:#D4D4D8;
-    font-size:15.5px;
-    line-height:1.6;
-    margin:0 0 28px;
+  .lp-aurora i:nth-child(1){width:560px; height:560px; left:-6%; top:4%;  background:#7C3AED;}
+  .lp-aurora i:nth-child(2){width:520px; height:520px; right:-4%; top:0;  background:#EC4899; animation-duration:32s; animation-delay:-8s;}
+  .lp-aurora i:nth-child(3){width:380px; height:380px; left:42%; top:34%; background:#4C1D95; animation-duration:38s; animation-delay:-16s; opacity:.42;}
+  @keyframes lpDrift{ from{transform:translate3d(0,0,0) scale(1);} to{transform:translate3d(60px,42px,0) scale(1.14);} }
+  .lp-hero-grid{position:relative; z-index:1; display:grid; grid-template-columns:1.08fr 0.92fr; gap:52px; align-items:center;}
+  .lp-mark{display:flex; align-items:center; gap:10px; margin-bottom:26px;}
+  .lp-mark svg{width:30px; height:30px; color:#C084FC;}
+  .lp-mark b{font-family:'Space Grotesk',sans-serif; font-size:18px; letter-spacing:-0.01em;}
+  .lp-h1{
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:clamp(38px, 5.6vw, 62px); line-height:1.04; letter-spacing:-0.034em;
+    margin:0 0 20px; text-wrap:balance;
   }
-  .landing-chips{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:8px;
-    margin-bottom:32px;
+  .lp-h1 span{display:block;}
+  .lp-sub{font-size:17.5px; line-height:1.58; color:var(--ink-soft); max-width:50ch; margin:0 0 30px;}
+  .lp-ctas{display:flex; flex-wrap:wrap; gap:12px; align-items:center;}
+  .lp-cta{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px;
+    border:none; border-radius:13px; padding:15px 26px; cursor:pointer;
+    background:var(--accent-gradient); color:#fff;
+    box-shadow:0 10px 34px rgba(168,85,247,0.34);
+    transition:transform .14s ease, box-shadow .14s ease;
   }
-  .landing-chip{
-    background:rgba(255,255,255,0.1);
-    border:1.5px solid rgba(255,255,255,0.25);
-    color:#fff;
-    font-size:12.5px;
-    font-weight:600;
-    padding:6px 14px;
-    border-radius:20px;
+  .lp-cta:hover{box-shadow:0 14px 42px rgba(168,85,247,0.5);}
+  .lp-cta:active{transform:scale(0.98);}
+  .lp-cta-ghost{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15.5px;
+    background:rgba(255,255,255,0.04); color:var(--ink);
+    border:1px solid rgba(255,255,255,0.14); border-radius:13px; padding:15px 22px; cursor:pointer;
   }
-  .landing-ctas{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    align-items:center;
+  .lp-cta-ghost:hover{border-color:rgba(255,255,255,0.3);}
+  .lp-reassure{margin:16px 0 0; font-size:13.5px; color:var(--ink-soft);}
+
+  /* phone frame holding a real screen from the app */
+  .lp-phone{
+    position:relative; width:min(286px, 74vw); margin:0 auto;
+    border-radius:38px; padding:9px;
+    background:linear-gradient(170deg,#2B2440,#15121F);
+    box-shadow:0 40px 90px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07);
   }
-  .landing-cta-primary{
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:16px;
-    padding:14px 28px;
-    border-radius:12px;
-    border:none;
-    background:var(--accent-gradient);
-    color:#fff;
-    box-shadow:0 10px 28px rgba(168,85,247,0.35);
-    cursor:pointer;
+  .lp-phone img{display:block; width:100%; height:auto; max-height:min(520px, 52vh); object-fit:cover; object-position:top; border-radius:30px;}
+  .lp-phone::after{
+    content:""; position:absolute; left:50%; top:9px; transform:translateX(-50%);
+    width:96px; height:20px; border-radius:0 0 13px 13px; background:#15121F;
   }
-  .landing-cta-primary:active{transform:scale(0.98); box-shadow:0 4px 12px rgba(168,85,247,0.25);}
-  .landing-cta-secondary{
-    background:none;
-    border:none;
-    color:#D4D4D8;
-    font-size:13.5px;
-    font-weight:600;
-    text-decoration:underline;
-    cursor:pointer;
+
+  /* --- the one orchestrated entrance --- */
+  .lp-rise{opacity:0; transform:translateY(16px); animation:lpRise .68s cubic-bezier(.2,.7,.3,1) forwards;}
+  .lp-rise.d1{animation-delay:.06s;} .lp-rise.d2{animation-delay:.14s;}
+  .lp-rise.d3{animation-delay:.22s;} .lp-rise.d4{animation-delay:.32s;}
+  @keyframes lpRise{to{opacity:1; transform:none;}}
+
+  /* --- scattered tips becoming an ordered course --- */
+  .lp-order{display:grid; grid-template-columns:1fr 1fr; gap:46px; align-items:center;}
+  .lp-stack{position:relative; min-height:360px;}
+  .lp-card{
+    position:absolute; left:0; right:0;
+    background:#171326; border:1px solid rgba(255,255,255,0.09);
+    border-radius:14px; padding:14px 16px;
+    font-size:14.5px; font-weight:600;
+    box-shadow:0 14px 34px rgba(0,0,0,0.42);
+    transform:translateY(var(--cy)) rotate(var(--cr)) translateX(var(--cx));
+    transition:transform .85s cubic-bezier(.2,.75,.25,1), border-color .6s ease, background .6s ease;
   }
-  .landing-benefits{
-    display:grid;
-    grid-template-columns:repeat(2, 1fr);
-    gap:12px;
-    text-align:left;
-    margin:0 0 32px;
+  .lp-card small{display:block; margin-top:3px; font-size:12.5px; font-weight:500; color:var(--ink-soft);}
+  .lp-card i{
+    position:absolute; left:-15px; top:50%; transform:translateY(-50%) scale(.4);
+    width:28px; height:28px; border-radius:50%;
+    background:var(--accent-gradient); color:#fff;
+    font-style:normal; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12.5px;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity .4s ease .5s, transform .5s cubic-bezier(.2,1.4,.4,1) .5s;
   }
-  @media (max-width:520px){
-    .landing-benefits{grid-template-columns:1fr;}
+  .lp-stack.ordered .lp-card{
+    transform:translateY(var(--oy)) rotate(0deg) translateX(0);
+    background:#13101F; border-color:rgba(168,85,247,0.3);
   }
-  .landing-benefit-card{
-    background:rgba(255,255,255,0.06);
-    border:1.5px solid rgba(255,255,255,0.14);
-    border-radius:14px;
-    padding:16px;
-    display:flex;
-    gap:12px;
-    align-items:flex-start;
+  .lp-stack.ordered .lp-card i{opacity:1; transform:translateY(-50%) scale(1);}
+  .lp-stack.ordered .lp-spine{transform:scaleY(1);}
+  .lp-spine{
+    position:absolute; left:-1px; top:6px; bottom:6px; width:2px; border-radius:2px;
+    background:linear-gradient(#7C3AED,#EC4899);
+    transform:scaleY(0); transform-origin:top; transition:transform .9s ease .25s;
   }
-  .landing-benefit-icon{
-    font-size:20px;
-    width:36px;
-    height:36px;
-    flex-shrink:0;
-    border-radius:10px;
-    background:rgba(255,255,255,0.1);
-    display:flex;
-    align-items:center;
-    justify-content:center;
+
+  /* --- slideshow --- */
+  .lp-show{position:relative;}
+  .lp-stage{
+    position:relative; border-radius:22px; overflow:hidden;
+    background:#100D1B; border:1px solid rgba(255,255,255,0.08);
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(0,1fr));
   }
-  .landing-benefit-title{
-    font-weight:700;
-    font-size:13.5px;
-    color:#fff;
-    margin:0 0 3px;
+  .lp-slide{
+    grid-area:1/1; display:grid; grid-template-columns:0.9fr 1.1fr; gap:34px; align-items:center;
+    padding:34px 38px; min-height:398px; opacity:0; visibility:hidden;
+    transition:opacity .5s ease;
   }
-  .landing-benefit-text{
-    font-size:12px;
-    color:#B8B8C0;
-    line-height:1.45;
-    margin:0;
+  .lp-slide.on{opacity:1; visibility:visible;}
+  .lp-slide img{
+    display:block; width:auto; height:330px; max-width:100%; margin:0 auto;
+    object-fit:cover; object-position:top center;
+    border-radius:18px; border:1px solid rgba(255,255,255,0.1);
+    box-shadow:0 26px 58px rgba(0,0,0,0.5);
+  }
+  .lp-slide.wide img{width:100%; height:auto; max-height:330px; object-fit:contain;}
+  .lp-slide h3{font-family:'Space Grotesk',sans-serif; font-size:23px; margin:0 0 10px; letter-spacing:-0.015em;}
+  .lp-slide p{font-size:15.5px; line-height:1.6; color:var(--ink-soft); margin:0; max-width:46ch;}
+  .lp-dots{display:flex; gap:8px; justify-content:center; margin-top:20px;}
+  .lp-dots button{
+    width:34px; height:5px; border-radius:3px; border:none; cursor:pointer; padding:0;
+    background:rgba(255,255,255,0.16); transition:background .25s ease;
+  }
+  .lp-dots button[aria-selected="true"]{background:linear-gradient(90deg,#7C3AED,#EC4899);}
+
+  /* --- comparison --- */
+  .lp-cmp{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  .lp-col{
+    border-radius:18px; padding:24px 22px;
+    background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.08);
+  }
+  .lp-col.ours{
+    background:linear-gradient(170deg, rgba(124,58,237,0.17), rgba(236,72,153,0.09));
+    border-color:rgba(168,85,247,0.4);
+    box-shadow:0 20px 60px rgba(124,58,237,0.18);
+  }
+  .lp-col h3{font-family:'Space Grotesk',sans-serif; font-size:18px; margin:0 0 4px;}
+  .lp-col .lp-cost{font-size:13.5px; color:var(--ink-soft); margin:0 0 18px;}
+  .lp-col ul{list-style:none; margin:0; padding:0; display:grid; gap:11px;}
+  .lp-col li{display:flex; gap:10px; font-size:14.5px; line-height:1.45; align-items:flex-start;}
+  .lp-col li svg{width:17px; height:17px; flex-shrink:0; margin-top:2px;}
+  .lp-no svg{color:#F87171;} .lp-yes svg{color:#34D399;}
+
+  /* --- chapters --- */
+  .lp-chapters{display:grid; grid-template-columns:repeat(auto-fill,minmax(176px,1fr)); gap:11px;}
+  .lp-chip{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+    border-radius:13px; padding:13px 15px; font-size:14.5px; font-weight:600;
+    transition:border-color .2s ease, background .2s ease;
+  }
+  .lp-chip:hover{border-color:rgba(168,85,247,0.45); background:rgba(168,85,247,0.07);}
+  .lp-chip em{font-style:normal; font-size:18px;}
+
+  /* --- steps --- */
+  .lp-steps{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; counter-reset:lpstep;}
+  .lp-step{position:relative; padding-top:14px;}
+  .lp-step::before{
+    counter-increment:lpstep; content:counter(lpstep);
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px;
+    width:30px; height:30px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(168,85,247,0.16); border:1px solid rgba(168,85,247,0.4); color:#C084FC;
+    margin-bottom:14px;
+  }
+  .lp-step h3{font-family:'Space Grotesk',sans-serif; font-size:17.5px; margin:0 0 7px;}
+  .lp-step p{font-size:14.5px; line-height:1.55; color:var(--ink-soft); margin:0;}
+
+  /* --- price + faq + close --- */
+  .lp-price{
+    display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:720px; margin:0 auto;
+  }
+  .lp-plan{
+    border-radius:18px; padding:26px 24px;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09);
+  }
+  .lp-plan.pro{
+    background:linear-gradient(170deg, rgba(124,58,237,0.18), rgba(236,72,153,0.1));
+    border-color:rgba(168,85,247,0.42);
+  }
+  .lp-plan h3{font-family:'Space Grotesk',sans-serif; font-size:19px; margin:0 0 6px;}
+  .lp-plan .lp-amt{font-family:'Space Grotesk',sans-serif; font-size:30px; font-weight:700; margin:0 0 4px;}
+  .lp-plan .lp-per{font-size:13.5px; color:var(--ink-soft); margin:0 0 18px;}
+  .lp-plan ul{list-style:none; margin:0; padding:0; display:grid; gap:9px; font-size:14.5px;}
+  .lp-plan li{display:flex; gap:9px; align-items:flex-start; line-height:1.45;}
+  .lp-plan li svg{width:16px; height:16px; color:#C084FC; flex-shrink:0; margin-top:2px;}
+  .lp-faq{max-width:760px; margin:0 auto;}
+  .lp-faq details{
+    border-bottom:1px solid rgba(255,255,255,0.08); padding:17px 0;
+  }
+  .lp-faq summary{
+    cursor:pointer; list-style:none; font-weight:600; font-size:16px;
+    display:flex; justify-content:space-between; gap:16px; align-items:center;
+  }
+  .lp-faq summary::-webkit-details-marker{display:none;}
+  .lp-faq summary::after{content:"+"; color:#C084FC; font-size:20px; line-height:1;}
+  .lp-faq details[open] summary::after{content:"–";}
+  .lp-faq p{margin:11px 0 0; font-size:15px; line-height:1.62; color:var(--ink-soft); max-width:68ch;}
+  .lp-close{text-align:center; padding:96px 0 104px;}
+  .lp-close .lp-h2{margin-bottom:14px;}
+  .lp-close .lp-lead{margin:0 auto 30px;}
+  .lp-foot{
+    text-align:center; padding:28px 0 40px; font-size:13px; color:var(--ink-soft);
+    border-top:1px solid rgba(255,255,255,0.055);
+  }
+  .lp-foot a{color:#C084FC;}
+
+  @media (max-width:900px){
+    .lp-hero-grid{grid-template-columns:1fr; gap:40px;}
+    .lp-order{grid-template-columns:1fr; gap:34px;}
+    .lp-cmp{grid-template-columns:1fr;}
+    .lp-steps{grid-template-columns:1fr; gap:26px;}
+    .lp-slide{grid-template-columns:1fr; gap:20px; padding:26px 22px; min-height:0; text-align:center;}
+    .lp-slide p{margin-inline:auto;}
+    .lp-slide img{height:270px;}
+    .lp-slide.wide img{max-height:200px;}
+  }
+  @media (max-width:560px){
+    .lp-section{padding:66px 0;}
+    .lp-hero{padding:40px 0 52px;}
+    .lp-wrap{padding:0 18px;}
+    .lp-price{grid-template-columns:1fr;}
+    .lp-ctas{flex-direction:column; align-items:stretch;}
+    .lp-cta, .lp-cta-ghost{width:100%;}
+    .lp-stack{min-height:330px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .lp-aurora i{animation:none;}
+    .lp-rise{opacity:1; transform:none; animation:none;}
+    .lp-card, .lp-card i, .lp-spine{transition:none;}
   }
 
   /* ---------- Streak & nav badges ---------- */
@@ -4143,65 +4266,220 @@
 <div id="printArea"></div>
 
 <div id="landingView" class="landing-view">
-  <div class="landing-inner">
-    <div class="auth-logo"><svg class="guide-logo-mark" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="100" cy="100" r="82" fill="none" stroke="url(#guideRingGrad)" stroke-width="14"/><path d="M100,32 L114.1,85.9 L168,100 L114.1,114.1 L100,168 L85.9,114.1 L32,100 L85.9,85.9 Z" fill="url(#guideStarGrad)"/><circle cx="100" cy="100" r="14" fill="#FFD23F"/></svg> The Guide</div>
-    <svg class="landing-illustration" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <circle cx="160" cy="80" r="58" fill="rgba(255,255,255,0.06)"/>
-      <rect x="40" y="46" width="72" height="72" rx="18" fill="#E8C89A" opacity="0.85" transform="rotate(-8 76 82)"/>
-      <rect x="124" y="30" width="72" height="72" rx="18" fill="#C9A468" opacity="0.85" transform="rotate(6 160 66)"/>
-      <rect x="208" y="50" width="72" height="72" rx="18" fill="#8A7040" opacity="0.9" transform="rotate(-4 244 86)"/>
-      <text x="76" y="90" font-size="30" text-anchor="middle" transform="rotate(-8 76 82)">🎥</text>
-      <text x="160" y="74" font-size="30" text-anchor="middle" transform="rotate(6 160 66)">📈</text>
-      <text x="244" y="94" font-size="30" text-anchor="middle" transform="rotate(-4 244 86)">📊</text>
-      <circle cx="30" cy="30" r="4" fill="#E8C89A"/>
-      <circle cx="292" cy="128" r="5" fill="#C9A468"/>
-      <circle cx="20" cy="130" r="3" fill="#8A7040"/>
-    </svg>
-    <h1 class="landing-title">Playbooks for people who build their own business.</h1>
-    <p class="landing-sub">Practical guides, client trackers, and daily tools for videographers, photographers, marketers, traders, and e-commerce sellers — written for the work, not the theory.</p>
-    <div class="landing-chips">
-      <span class="landing-chip">🎥 Videography</span>
-      <span class="landing-chip">📷 Photography</span>
-      <span class="landing-chip">📈 Online Marketing</span>
-      <span class="landing-chip">📊 Trading & Investing</span>
-      <span class="landing-chip">🛒 E-commerce</span>
-    </div>
-    <div class="landing-benefits">
-      <div class="landing-benefit-card">
-        <div class="landing-benefit-icon">🎯</div>
-        <div>
-          <p class="landing-benefit-title">A full course in every chapter</p>
-          <p class="landing-benefit-text">Step-by-step, written for the actual work — pricing, contracts, client handling — not general theory.</p>
+
+  <header class="lp-hero">
+    <div class="lp-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="lp-wrap lp-hero-grid">
+      <div>
+        <div class="lp-mark lp-rise">
+          <svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="82" fill="none" stroke="currentColor" stroke-width="14" opacity=".8"/><path d="M100,32 L114.1,85.9 L168,100 L114.1,114.1 L100,168 L85.9,114.1 L32,100 L85.9,85.9 Z" fill="currentColor"/></svg>
+          <b>The Guide</b>
         </div>
-      </div>
-      <div class="landing-benefit-card">
-        <div class="landing-benefit-icon">🧰</div>
-        <div>
-          <p class="landing-benefit-title">Real business tools built in</p>
-          <p class="landing-benefit-text">Track clients, follow-ups, inventory, or trades right in the app — no separate spreadsheet to maintain.</p>
+        <h1 class="lp-h1 lp-rise d1"><span>You don't need more videos.</span><span class="lp-grad">You need them in order.</span></h1>
+        <p class="lp-sub lp-rise d2">Sixteen real businesses, each taught as a proper course: modules in sequence, a short video for every lesson, and an AI mentor for the moment you get stuck.</p>
+        <div class="lp-ctas lp-rise d3">
+          <button type="button" id="landingSignupBtn" class="lp-cta">Start free</button>
+          <button type="button" class="lp-cta-ghost" data-lp-scroll="lpInside">See what's inside</button>
         </div>
+        <p class="lp-reassure lp-rise d3">Module 1 of every course is free. No card needed to start.</p>
       </div>
-      <div class="landing-benefit-card">
-        <div class="landing-benefit-icon">📄</div>
-        <div>
-          <p class="landing-benefit-title">Ready-to-send templates</p>
-          <p class="landing-benefit-text">Contracts, pitch emails, and estimates you can copy, fill in, and send the same day.</p>
-        </div>
-      </div>
-      <div class="landing-benefit-card">
-        <div class="landing-benefit-icon">💬</div>
-        <div>
-          <p class="landing-benefit-title">A community, not just content</p>
-          <p class="landing-benefit-text">Mentor directory and per-chapter discussion boards — ask questions, get answers from people doing the same work.</p>
+      <div class="lp-rise d4">
+        <div class="lp-phone">
+          <img src="img/app-course.webp" width="560" height="1120" alt="A chapter of The Guide, showing Module 1 and its lessons in order" loading="eager" decoding="async">
         </div>
       </div>
     </div>
-    <div class="landing-ctas">
-      <button type="button" id="landingSignupBtn" class="landing-cta-primary">Start learning free →</button>
-      <button type="button" id="landingLoginBtn" class="landing-cta-secondary">I already have an account</button>
+  </header>
+
+  <section class="lp-section">
+    <div class="lp-wrap lp-order">
+      <div>
+        <h2 class="lp-h2">Tips don't add up to a business.</h2>
+        <p class="lp-lead">You can watch fifty videos about starting a store and still not know what to do on Monday morning. Every one of them starts over, assumes something different, and stops before the hard part. The Guide is the opposite: one path, start to finish, where each lesson assumes the one before it.</p>
+        <button type="button" class="lp-cta-ghost" data-lp-scroll="lpInside">Show me the courses</button>
+      </div>
+      <div class="lp-stack" id="lpStack">
+        <span class="lp-spine" aria-hidden="true"></span>
+        <div class="lp-card" style="--cy:6px;  --cr:-5deg; --cx:-12px; --oy:0px;"><i>1</i>Pick a product worth selling<small>Demand, competition, and what a sale really earns you</small></div>
+        <div class="lp-card" style="--cy:78px; --cr:4deg;  --cx:16px; --oy:74px;"><i>2</i>Build a store that sells<small>Pages that answer the questions buyers actually have</small></div>
+        <div class="lp-card" style="--cy:150px;--cr:-3deg; --cx:-8px; --oy:148px;"><i>3</i>Earn trust and smooth the checkout<small>The small doubts that stop people paying</small></div>
+        <div class="lp-card" style="--cy:216px;--cr:6deg;  --cx:20px; --oy:222px;"><i>4</i>Market with email first, then ads<small>Judge every channel by profit, not clicks</small></div>
+        <div class="lp-card" style="--cy:290px;--cr:-6deg; --cx:-16px;--oy:296px;"><i>5</i>Ship orders and keep customers<small>Deliver the same way every time as orders grow</small></div>
+      </div>
     </div>
-    <p style="margin-top:18px;font-size:12.5px;color:var(--ink-soft);">Questions? Email <a href="mailto:TheGuide1@gmail.com" style="color:inherit;text-decoration:underline;">TheGuide1@gmail.com</a> · <button type="button" class="pv-link" onclick="GuideMeta.showPrivacy()">Privacy</button></p>
-  </div>
+  </section>
+
+  <section class="lp-section" id="lpInside">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">What you actually get</h2>
+      <p class="lp-lead">Real screens from the app, not mock-ups.</p>
+      <div class="lp-show">
+        <div class="lp-stage" id="lpStage">
+          <div class="lp-slide on">
+            <img src="img/app-course.webp" width="560" height="1120" alt="Module 1 of the E-commerce course with its lessons listed in order" loading="lazy" decoding="async">
+            <div>
+              <h3>A course, not a pile of links</h3>
+              <p>Every chapter opens as numbered modules with a plain goal at the top. You always know where you are and what comes next — and the next lesson opens when you finish the one before it.</p>
+            </div>
+          </div>
+          <div class="lp-slide">
+            <img src="img/app-lesson.webp" width="560" height="1120" alt="An open lesson with its text and a Your next step box" loading="lazy" decoding="async">
+            <div>
+              <h3>Lessons that end in something to do</h3>
+              <p>Plain writing, worked examples with real numbers, and one concrete next step at the bottom of every lesson. You finish reading and you know exactly what to go and do.</p>
+            </div>
+          </div>
+          <div class="lp-slide">
+            <img src="img/app-video.webp" width="560" height="1120" alt="A narrated video lesson playing inside the app" loading="lazy" decoding="async">
+            <div>
+              <h3>A narrated video for every lesson</h3>
+              <p>Watch it or read it, whichever suits the moment. The key points come up on screen as they're spoken, so it works with the sound off on a bus.</p>
+            </div>
+          </div>
+          <div class="lp-slide">
+            <img src="img/app-mentor.webp" width="560" height="1120" alt="The Guider answering a question about pricing" loading="lazy" decoding="async">
+            <div>
+              <h3>An AI mentor that knows your chapter</h3>
+              <p>Stuck on pricing, a client email, or what to do next? Ask The Guider inside the chapter you're working through and get a straight answer about your situation.</p>
+            </div>
+          </div>
+          <div class="lp-slide wide">
+            <img src="img/app-tools.webp" width="1280" height="841" alt="The business tools: invoicing, expenses and client tracking" loading="lazy" decoding="async">
+            <div>
+              <h3>The tools to actually run it</h3>
+              <p>Invoices, expenses, clients, recurring revenue and tax set-aside — built into the same app, so the business you're learning to start has somewhere to live.</p>
+            </div>
+          </div>
+        </div>
+        <div class="lp-dots" id="lpDots" role="tablist" aria-label="Screens from the app"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-section">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Why this and not the alternatives</h2>
+      <p class="lp-lead">The two things most people try first, and where they tend to leave you.</p>
+      <div class="lp-cmp">
+        <div class="lp-col">
+          <h3>Free videos online</h3>
+          <p class="lp-cost">Costs nothing but your evenings</p>
+          <ul class="lp-no">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>No order — every video restarts from scratch</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>The useful part is often behind a paid program</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Nothing tracks what you've done</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Nobody to ask when you're stuck</li>
+          </ul>
+        </div>
+        <div class="lp-col">
+          <h3>A one-off course</h3>
+          <p class="lp-cost">Often hundreds up front</p>
+          <ul class="lp-no">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>One business model, decided before you buy</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>You pay before you've seen any of it</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Recorded once and rarely updated</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Templates and tools usually cost extra</li>
+          </ul>
+        </div>
+        <div class="lp-col ours">
+          <h3>The Guide</h3>
+          <p class="lp-cost" id="lpOurCost">Free to start</p>
+          <ul class="lp-yes">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><span id="lpOurCourses">Sixteen courses</span> — switch whenever you want</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Module 1 free, so you read it before you pay</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Your progress is saved and picks up where you left off</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Templates, trackers and the AI mentor included</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-section">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Pick the one you want to build</h2>
+      <p class="lp-lead">Start with any of them, change your mind later, or work through two at once.</p>
+      <div class="lp-chapters" id="lpChapters"></div>
+    </div>
+  </section>
+
+  <section class="lp-section">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">How it works</h2>
+      <p class="lp-lead">Three steps, then a module a week.</p>
+      <div class="lp-steps">
+        <div class="lp-step">
+          <h3>Choose a chapter</h3>
+          <p>Pick the business you want to start. Module 1 opens straight away, free, with its videos.</p>
+        </div>
+        <div class="lp-step">
+          <h3>Work through it in order</h3>
+          <p>Read or watch each lesson, do the one next step at the end, and mark it done. Finishing a lesson opens the next.</p>
+        </div>
+        <div class="lp-step">
+          <h3>Keep going weekly</h3>
+          <p>A new module opens every seven days, so the course paces itself instead of becoming another thing you half-watched.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-section">
+    <div class="lp-wrap">
+      <h2 class="lp-h2" style="text-align:center;">Start free, pay when it's worth it</h2>
+      <p class="lp-lead" style="text-align:center; margin-inline:auto;">You can read the whole first module of all sixteen courses without paying anything.</p>
+      <div class="lp-price">
+        <div class="lp-plan">
+          <h3>Free</h3>
+          <p class="lp-amt">$0</p>
+          <p class="lp-per">No card needed</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Module 1 of every course, with videos</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Checklists and the community</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Your progress saved across devices</li>
+          </ul>
+        </div>
+        <div class="lp-plan pro">
+          <h3>Pro</h3>
+          <p class="lp-amt" id="lpProAmt">Free for 7 days</p>
+          <p class="lp-per" id="lpProPer">then a monthly or yearly plan, cancel any time</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Every module of all sixteen courses</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>The Guider, your AI mentor</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Templates, trackers and PDF exports</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-section">
+    <div class="lp-wrap lp-faq">
+      <h2 class="lp-h2" style="text-align:center; margin-bottom:28px;">Questions people ask</h2>
+      <details><summary>Do I need any experience?</summary><p>No. Every course starts from nothing and assumes you haven't done this before. If a term needs explaining, the lesson explains it.</p></details>
+      <details><summary>How much time does it take?</summary><p>Lessons are short enough to do in a sitting. A module opens each week, so most people spend a few evenings a week on it rather than a whole weekend.</p></details>
+      <details><summary>What if I pick the wrong chapter?</summary><p>Switch whenever you like. Pro opens all sixteen courses, and whatever you've finished stays finished.</p></details>
+      <details><summary>Can I cancel?</summary><p>Yes, in one tap from your account page. You keep Pro until the period you've paid for ends, and anything you've already finished stays open to you.</p></details>
+      <details><summary>Is this a get-rich-quick thing?</summary><p>No. It teaches how these businesses actually work — pricing, clients, contracts, delivery, money. Nobody can promise what you'll earn, and we don't.</p></details>
+    </div>
+  </section>
+
+  <section class="lp-close">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Pick one. Start today.</h2>
+      <p class="lp-lead">The first module is free, and you'll have done something real by the end of it.</p>
+      <div class="lp-ctas" style="justify-content:center;">
+        <button type="button" class="lp-cta" data-lp-signup>Start free</button>
+        <button type="button" id="landingLoginBtn" class="lp-cta-ghost">I already have an account</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="lp-foot">
+    <div class="lp-wrap">
+      Questions? Email <a href="mailto:TheGuide1@gmail.com">TheGuide1@gmail.com</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
+    </div>
+  </footer>
 </div>
 
 <div id="authScreen" class="auth-screen" style="display:none;">
@@ -9633,6 +9911,85 @@ function gvCtx(niche, guide, list){
 // ---------- Auth & persistence (real backend API) ----------
 const landingView = document.getElementById('landingView');
 const landingSignupBtn = document.getElementById('landingSignupBtn');
+
+// ---------- Landing page ----------
+// Everything here is read from the app's own data, so the page can't drift out of
+// date when courses or prices change.
+(function(){
+  const view = document.getElementById('landingView');
+  if(!view) return;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // the chapters, straight from NICHES
+  const grid = document.getElementById('lpChapters');
+  if(grid && typeof NICHES !== 'undefined'){
+    grid.innerHTML = NICHES.map(n=> `<div class="lp-chip"><em>${n.icon}</em>${n.name}</div>`).join('');
+    const c = document.getElementById('lpOurCourses');
+    if(c) c.textContent = NICHES.length === 16 ? 'Sixteen courses' : `${NICHES.length} courses`;
+  }
+
+  // scroll to a section
+  view.querySelectorAll('[data-lp-scroll]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const t = document.getElementById(b.dataset.lpScroll);
+      if(t) t.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    });
+  });
+  // the closing button does the same as the hero one
+  view.querySelectorAll('[data-lp-signup]').forEach(b=>{
+    b.addEventListener('click', ()=> document.getElementById('landingSignupBtn').click());
+  });
+
+  // scattered lessons settle into an ordered course, once, when it comes into view
+  const stack = document.getElementById('lpStack');
+  if(stack){
+    if(reduced || !('IntersectionObserver' in window)){
+      stack.classList.add('ordered');
+    } else {
+      const io = new IntersectionObserver((entries)=>{
+        entries.forEach(e=>{ if(e.isIntersecting){ stack.classList.add('ordered'); io.disconnect(); } });
+      }, { threshold: 0.35 });
+      io.observe(stack);
+    }
+  }
+
+  // slideshow of real app screens
+  const stage = document.getElementById('lpStage');
+  const dots = document.getElementById('lpDots');
+  if(stage && dots){
+    const slides = [...stage.querySelectorAll('.lp-slide')];
+    let at = 0, timer = null;
+    dots.innerHTML = slides.map((_, i)=>
+      `<button type="button" role="tab" aria-selected="${i===0}" aria-label="Screen ${i+1} of ${slides.length}"></button>`).join('');
+    const buttons = [...dots.querySelectorAll('button')];
+    function show(i){
+      at = (i + slides.length) % slides.length;
+      slides.forEach((s, k)=> s.classList.toggle('on', k === at));
+      buttons.forEach((b, k)=> b.setAttribute('aria-selected', String(k === at)));
+    }
+    function play(){ if(reduced) return; stop(); timer = setInterval(()=> show(at + 1), 5200); }
+    function stop(){ if(timer){ clearInterval(timer); timer = null; } }
+    buttons.forEach((b, i)=> b.addEventListener('click', ()=>{ show(i); play(); }));
+    stage.addEventListener('mouseenter', stop);
+    stage.addEventListener('mouseleave', play);
+    // swipe on a phone
+    let x0 = null;
+    stage.addEventListener('touchstart', (e)=>{ x0 = e.touches[0].clientX; stop(); }, { passive: true });
+    stage.addEventListener('touchend', (e)=>{
+      if(x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if(Math.abs(dx) > 42) show(at + (dx < 0 ? 1 : -1));
+      x0 = null; play();
+    }, { passive: true });
+    document.addEventListener('visibilitychange', ()=> document.hidden ? stop() : play());
+    play();
+  }
+
+  // The amounts come from Stripe once the live-price route is on main (PR #8);
+  // until then the card says what is true without quoting a number.
+
+})();
+
 const landingLoginBtn = document.getElementById('landingLoginBtn');
 const authScreen = document.getElementById('authScreen');
 const appScreen = document.getElementById('appScreen');
