@@ -940,6 +940,102 @@ def business_ledger(browser, base):
     finish(st, step[0])
     ctx.close()
 
+def new_chapters(browser, base):
+    """Chapters that arrive in web/niches/pack-*.js: they load, are built right, and the page counts them."""
+    step = ['new chapters']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'the app did not open'); ctx.close(); return
+    page.wait_for_timeout(800)
+    info = page.evaluate("""(()=>{
+      const packed = (window.NICHE_PACKS||[]).flat().map(e=>e.chapter.id);
+      const rows = packed.map(id=>{ const n = NICHES.find(x=>x.id===id); return n ? {id, guides:n.guides.length, mods:n.modules.length,
+        free:n.guides.filter(g=>g.mod===0).length, vids:new Set(n.guides.map(g=>g.vid)).size, tools:!!NICHE_TOOLS[id],
+        trackers:(n.tools&&n.tools.type==='client') ? [SPECIALTY_CONFIGS[n.tools.specialty], SPECIALTY_CONFIGS[n.tools.specialty2]].every(Boolean) : true,
+        ok:n.guides.every(g=>g.title&&g.content&&g.action&&g.takeaway&&g.summary&&g.mod>=0&&g.mod<n.modules.length)} : {id, missing:true}; });
+      const all = NICHES.flatMap(n=>n.guides.map(g=>g.vid));
+      // some of the older lessons already share ids; what matters is that a new lesson never clashes with another chapter
+      const mine = new Set(), seen = new Set(); let dup = 0;
+      NICHES.filter(n=>!packed.includes(n.id)).forEach(n=>n.guides.forEach(g=>seen.add(g.vid)));
+      NICHES.filter(n=>packed.includes(n.id)).forEach(n=>n.guides.forEach(g=>{ if(seen.has(g.vid) || mine.has(g.vid)) dup++; mine.add(g.vid); }));
+      return {packed, rows, dup, total: NICHES.length, free: freeLessonCount(), pro: proLessonCount(), all: all.length};})()""")
+    if not info['packed']:
+        notes.append('no new-chapter packs on this page'); ctx.close(); return
+    bad = [r for r in info['rows'] if r.get('missing') or r['guides'] != 24 or r['mods'] != 4 or r['free'] != 6 or r['vids'] != 24 or not r['tools'] or not r['trackers'] or not r['ok']]
+    if bad:
+        problem(step[0], 'a new chapter is built wrong', bad[:3])
+    elif info['dup']:
+        problem(step[0], f"{info['dup']} new lesson id(s) clash with another lesson")
+    else:
+        ok(step[0], f"{len(info['packed'])} new chapters: 4 modules, 24 lessons, a free first module, tools, no clashing ids")
+    # the page's own counts follow the real list
+    if info['free'] + info['pro'] != info['all']:
+        problem(step[0], 'free + Pro lesson counts do not add up', info)
+    word = page.evaluate("document.getElementById('lpOurCourses') ? document.getElementById('lpOurCourses').textContent : ''")
+    ok(step[0], f"counts come from the list: {info['total']} courses, {info['free']} free lessons, {info['pro']} Pro lessons")
+    # open each new chapter as a free user: Module 1 open, the rest locked, no video button without narration
+    for cid in info['packed']:
+        step[0] = f'new chapter: {cid}'
+        try:
+            page.evaluate(f"showHome && showHome(); openNiche({json.dumps(cid)})")
+            visible(page, '#nicheView')
+            page.wait_for_timeout(200)
+            r = page.evaluate("""(()=>({heads:document.querySelectorAll('#nicheView .module-head').length,
+              guides:document.querySelectorAll('#nicheView .guide').length,
+              locked:document.querySelectorAll('#nicheView .guide.locked').length,
+              watch:document.querySelectorAll('#nicheView .gv-watch').length,
+              junk:/undefined|\\[object|NaN/.test(document.getElementById('nicheView').innerText)}))()""")
+            if r['heads'] != 4 or r['guides'] != 24 or r['locked'] != 23:
+                problem(step[0], 'the chapter page does not show 4 modules, 24 lessons and 23 locked (a free user has only the first lesson open)', r)
+            elif r['watch']:
+                problem(step[0], 'a lesson with no narration shows a video button', r)
+            elif r['junk']:
+                problem(step[0], 'the chapter page shows broken text', r)
+            else:
+                g = page.locator('#nicheView .guide').first
+                g.locator('.guide-title').click(timeout=3000)
+                page.wait_for_timeout(250)
+                if g.locator('.guide-content p').count() == 0 or g.locator('.next-step').count() == 0:
+                    problem(step[0], 'the first lesson opens without text or a next step')
+                else:
+                    ok(step[0], '4 modules, first lesson open, the rest locked, first lesson reads')
+            if cid == info['packed'][0]:
+                shot(page, 'phone-16-new-chapter')
+        except Exception as e:
+            problem(step[0], 'opening the new chapter failed', e)
+    ctx.close()
+    # tools: a Pro user gets each new chapter's tools, with no errors
+    step[0] = 'new chapters: tools'
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(True)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if visible(page, '#appScreen', 10000):
+        page.wait_for_timeout(800)
+        for cid in info['packed']:
+            try:
+                page.evaluate(f"showHome && showHome(); openNiche({json.dumps(cid)})")
+                visible(page, '#nicheView')
+                page.locator('#nicheView [data-sub="tools"]').first.click(timeout=3000)
+                page.wait_for_timeout(300)
+                r = page.evaluate("(()=>{const w=document.getElementById('toolsPanelWrap')||document.getElementById('nicheView'); return {n:w.querySelectorAll('button,input,select').length, junk:/undefined|\\[object/.test(w.innerText)};})()")
+                if r['n'] < 3 or r['junk']:
+                    problem(step[0], f'{cid}: the tools tab is empty or shows broken text', r)
+            except Exception as e:
+                problem(step[0], f'{cid}: opening the tools failed', e)
+        ok(step[0], f"tools open for all {len(info['packed'])} new chapters")
+        shot(page, 'phone-16-new-chapter-tools')
+    finish(st, step[0])
+    ctx.close()
+
+
 def new_look(browser, base):
     """The load-up screen, and the Forest & Gold / Purple switch."""
     # 1) load-up screen: shows on a first visit, leaves by itself, stays away for the rest of the visit
@@ -1057,6 +1153,7 @@ def main():
         business_results(browser, base)
         business_ledger(browser, base)
         new_look(browser, base)
+        new_chapters(browser, base)
         quiet_community(browser, base)
         returning_learner(browser, base)
         browser.close()

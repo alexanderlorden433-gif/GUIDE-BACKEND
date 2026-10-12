@@ -1,0 +1,601 @@
+{
+ "tools": {
+  "cleaning": {
+   "type": "local",
+   "panels": [
+    "jobs",
+    "estimates",
+    "maintenance",
+    "supplies",
+    "reviews"
+   ]
+  },
+  "lawn": {
+   "type": "local",
+   "panels": [
+    "jobs",
+    "estimates",
+    "maintenance",
+    "supplies",
+    "reviews"
+   ]
+  },
+  "detailing": {
+   "type": "local",
+   "panels": [
+    "jobs",
+    "estimates",
+    "maintenance",
+    "supplies",
+    "reviews"
+   ]
+  },
+  "handyman": {
+   "type": "local",
+   "panels": [
+    "jobs",
+    "estimates",
+    "maintenance",
+    "supplies",
+    "reviews"
+   ]
+  },
+  "pets": {
+   "type": "local",
+   "panels": [
+    "jobs",
+    "estimates",
+    "maintenance",
+    "supplies",
+    "reviews"
+   ]
+  },
+  "mealprep": {
+   "type": "local",
+   "panels": [
+    "jobs",
+    "estimates",
+    "maintenance",
+    "supplies",
+    "reviews"
+   ]
+  },
+  "rentals": {
+   "type": "local",
+   "panels": [
+    "jobs",
+    "estimates",
+    "maintenance",
+    "supplies",
+    "reviews"
+   ]
+  },
+  "videoediting": {
+   "type": "client",
+   "panels": [
+    "clients",
+    "followups",
+    "quotes",
+    "goals"
+   ],
+   "specialty": "videoediting",
+   "specialty2": "videoediting2"
+  },
+  "webdesign": {
+   "type": "client",
+   "panels": [
+    "clients",
+    "followups",
+    "quotes",
+    "goals"
+   ],
+   "specialty": "webdesign",
+   "specialty2": "webdesign2"
+  },
+  "podcast": {
+   "type": "client",
+   "panels": [
+    "clients",
+    "followups",
+    "quotes",
+    "goals"
+   ],
+   "specialty": "podcast",
+   "specialty2": "podcast2"
+  },
+  "bookkeeping": {
+   "type": "client",
+   "panels": [
+    "clients",
+    "followups",
+    "updates",
+    "goals"
+   ],
+   "specialty": "bookkeeping",
+   "specialty2": "bookkeeping2"
+  },
+  "events": {
+   "type": "client",
+   "panels": [
+    "clients",
+    "followups",
+    "quotes",
+    "goals"
+   ],
+   "specialty": "events",
+   "specialty2": "events2"
+  },
+  "tutoring": {
+   "type": "coaching",
+   "panels": [
+    "roster",
+    "calls",
+    "notes",
+    "goals",
+    "programs"
+   ]
+  },
+  "fitness": {
+   "type": "coaching",
+   "panels": [
+    "roster",
+    "calls",
+    "notes",
+    "goals",
+    "programs"
+   ]
+  },
+  "pod": {
+   "type": "ecommerce",
+   "panels": [
+    "inventory",
+    "adspend",
+    "orders",
+    "returns",
+    "coupons"
+   ]
+  },
+  "reselling": {
+   "type": "ecommerce",
+   "panels": [
+    "inventory",
+    "adspend",
+    "orders",
+    "returns",
+    "coupons"
+   ]
+  },
+  "handmade": {
+   "type": "ecommerce",
+   "panels": [
+    "inventory",
+    "adspend",
+    "orders",
+    "returns",
+    "coupons"
+   ]
+  },
+  "digitalproducts": {
+   "type": "ecommerce",
+   "panels": [
+    "inventory",
+    "adspend",
+    "orders",
+    "returns",
+    "coupons"
+   ]
+  },
+  "newsletter": {
+   "type": "creator",
+   "panels": [
+    "calendar",
+    "deals",
+    "growth",
+    "ideas",
+    "ratecard"
+   ]
+  },
+  "courses": {
+   "type": "creator",
+   "panels": [
+    "calendar",
+    "deals",
+    "growth",
+    "ideas",
+    "ratecard"
+   ]
+  }
+ },
+ "specialtyConfigs": {
+  "videoediting": {
+   "key": "specialty",
+   "icon": "🎞️",
+   "title": "Edit Pipeline",
+   "emptyMsg": "🎞️ No edits tracked yet. Add one to follow each video from raw footage to delivered.",
+   "fields": [
+    {
+     "key": "project",
+     "label": "Video / client",
+     "type": "text",
+     "placeholder": "Video or client"
+    },
+    {
+     "key": "format",
+     "label": "Format",
+     "type": "text",
+     "placeholder": "e.g. Reel, YouTube, ad"
+    },
+    {
+     "key": "due",
+     "label": "Due date",
+     "type": "date"
+    }
+   ],
+   "statusField": {
+    "key": "status",
+    "options": [
+     "Footage in",
+     "Editing",
+     "In review",
+     "Delivered"
+    ]
+   },
+   "titleField": "project",
+   "subFields": [
+    "format",
+    "due"
+   ]
+  },
+  "videoediting2": {
+   "key": "specialty2",
+   "icon": "🔁",
+   "title": "Revision Log",
+   "emptyMsg": "🔁 No revisions logged yet. Add one so feedback rounds never get lost.",
+   "fields": [
+    {
+     "key": "project",
+     "label": "Video / client",
+     "type": "text",
+     "placeholder": "Video or client"
+    },
+    {
+     "key": "round",
+     "label": "Round",
+     "type": "number",
+     "placeholder": "e.g. 1"
+    },
+    {
+     "key": "note",
+     "label": "What to change",
+     "type": "text",
+     "placeholder": "Short note"
+    }
+   ],
+   "statusField": {
+    "key": "status",
+    "options": [
+     "Requested",
+     "In progress",
+     "Done"
+    ]
+   },
+   "titleField": "project",
+   "subFields": [
+    "round",
+    "note"
+   ]
+  },
+  "webdesign": {
+   "key": "specialty",
+   "icon": "🖥️",
+   "title": "Site Build Tracker",
+   "emptyMsg": "🖥️ No sites tracked yet. Add one to follow each site from first call to live.",
+   "fields": [
+    {
+     "key": "site",
+     "label": "Site / client",
+     "type": "text",
+     "placeholder": "Site or client"
+    },
+    {
+     "key": "platform",
+     "label": "Platform",
+     "type": "text",
+     "placeholder": "e.g. Squarespace, Webflow"
+    },
+    {
+     "key": "launch",
+     "label": "Launch date",
+     "type": "date"
+    }
+   ],
+   "statusField": {
+    "key": "status",
+    "options": [
+     "Discovery",
+     "Design",
+     "Build",
+     "Review",
+     "Live"
+    ]
+   },
+   "titleField": "site",
+   "subFields": [
+    "platform",
+    "launch"
+   ]
+  },
+  "webdesign2": {
+   "key": "specialty2",
+   "icon": "🔧",
+   "title": "Care Plans",
+   "emptyMsg": "🔧 No care plans yet. Add a client on a monthly plan to keep renewals in view.",
+   "fields": [
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "text",
+     "placeholder": "Client name"
+    },
+    {
+     "key": "plan",
+     "label": "What's included",
+     "type": "text",
+     "placeholder": "e.g. updates, backups"
+    },
+    {
+     "key": "renews",
+     "label": "Renews on",
+     "type": "date"
+    }
+   ],
+   "statusField": {
+    "key": "status",
+    "options": [
+     "Active",
+     "Paused",
+     "Ended"
+    ]
+   },
+   "titleField": "client",
+   "subFields": [
+    "plan",
+    "renews"
+   ]
+  },
+  "podcast": {
+   "key": "specialty",
+   "icon": "🎧",
+   "title": "Episode Pipeline",
+   "emptyMsg": "🎧 No episodes tracked yet. Add one to follow each episode from recording to published.",
+   "fields": [
+    {
+     "key": "episode",
+     "label": "Episode",
+     "type": "text",
+     "placeholder": "Episode title"
+    },
+    {
+     "key": "show",
+     "label": "Show / client",
+     "type": "text",
+     "placeholder": "Show or client"
+    },
+    {
+     "key": "publish",
+     "label": "Publish date",
+     "type": "date"
+    }
+   ],
+   "statusField": {
+    "key": "status",
+    "options": [
+     "Recording",
+     "Editing",
+     "In review",
+     "Published"
+    ]
+   },
+   "titleField": "episode",
+   "subFields": [
+    "show",
+    "publish"
+   ]
+  },
+  "podcast2": {
+   "key": "specialty2",
+   "icon": "✍️",
+   "title": "Guest Permissions",
+   "emptyMsg": "✍️ No guests listed yet. Add one so every guest's OK to publish is on record.",
+   "fields": [
+    {
+     "key": "guest",
+     "label": "Guest",
+     "type": "text",
+     "placeholder": "Guest name"
+    },
+    {
+     "key": "show",
+     "label": "Show / episode",
+     "type": "text",
+     "placeholder": "Show or episode"
+    },
+    {
+     "key": "note",
+     "label": "Note",
+     "type": "text",
+     "placeholder": "e.g. form sent"
+    }
+   ],
+   "statusField": {
+    "key": "status",
+    "options": [
+     "Requested",
+     "Signed",
+     "Missing"
+    ]
+   },
+   "titleField": "guest",
+   "subFields": [
+    "show",
+    "note"
+   ]
+  },
+  "bookkeeping": {
+   "key": "specialty",
+   "icon": "📒",
+   "title": "Monthly Close Tracker",
+   "emptyMsg": "📒 No months tracked yet. Add a client's month to follow it from receipts to report.",
+   "fields": [
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "text",
+     "placeholder": "Client name"
+    },
+    {
+     "key": "period",
+     "label": "Month",
+     "type": "text",
+     "placeholder": "e.g. March"
+    },
+    {
+     "key": "due",
+     "label": "Report due",
+     "type": "date"
+    }
+   ],
+   "statusField": {
+    "key": "status",
+    "options": [
+     "Collecting",
+     "Categorising",
+     "Reconciling",
+     "Reported"
+    ]
+   },
+   "titleField": "client",
+   "subFields": [
+    "period",
+    "due"
+   ]
+  },
+  "bookkeeping2": {
+   "key": "specialty2",
+   "icon": "❓",
+   "title": "Open Questions",
+   "emptyMsg": "❓ No questions yet. Add anything you need to ask a client before you can finish their books.",
+   "fields": [
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "text",
+     "placeholder": "Client name"
+    },
+    {
+     "key": "question",
+     "label": "Question",
+     "type": "text",
+     "placeholder": "What do you need to know?"
+    },
+    {
+     "key": "due",
+     "label": "Need answer by",
+     "type": "date"
+    }
+   ],
+   "statusField": {
+    "key": "status",
+    "options": [
+     "Open",
+     "Asked",
+     "Answered"
+    ]
+   },
+   "titleField": "client",
+   "subFields": [
+    "question",
+    "due"
+   ]
+  },
+  "events": {
+   "key": "specialty",
+   "icon": "🗓️",
+   "title": "Event Run Sheet",
+   "emptyMsg": "🗓️ No events yet. Add one to follow each event from first call to wrapped.",
+   "fields": [
+    {
+     "key": "event",
+     "label": "Event",
+     "type": "text",
+     "placeholder": "Event name"
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "text",
+     "placeholder": "Client name"
+    },
+    {
+     "key": "date",
+     "label": "Event date",
+     "type": "date"
+    }
+   ],
+   "statusField": {
+    "key": "status",
+    "options": [
+     "Planning",
+     "Booked",
+     "Day-of",
+     "Wrapped"
+    ]
+   },
+   "titleField": "event",
+   "subFields": [
+    "client",
+    "date"
+   ]
+  },
+  "events2": {
+   "key": "specialty2",
+   "icon": "🤝",
+   "title": "Vendor List",
+   "emptyMsg": "🤝 No vendors yet. Add the people you may book for an event.",
+   "fields": [
+    {
+     "key": "vendor",
+     "label": "Vendor",
+     "type": "text",
+     "placeholder": "Vendor name"
+    },
+    {
+     "key": "role",
+     "label": "Role",
+     "type": "text",
+     "placeholder": "e.g. Caterer, DJ"
+    },
+    {
+     "key": "note",
+     "label": "Note",
+     "type": "text",
+     "placeholder": "Quote, contact, deposit"
+    }
+   ],
+   "statusField": {
+    "key": "status",
+    "options": [
+     "Shortlisted",
+     "Quoted",
+     "Booked",
+     "Paid"
+    ]
+   },
+   "titleField": "vendor",
+   "subFields": [
+    "role",
+    "note"
+   ]
+  }
+ }
+}
