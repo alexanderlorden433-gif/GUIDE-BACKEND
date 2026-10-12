@@ -757,6 +757,189 @@ def returning_learner(browser, base):
     ctx.close()
 
 
+def business_ledger(browser, base):
+    """The Business tools have to look like something a paying business owner would use:
+    no unstyled browser controls, no bare glyphs, no truncated client names — and the
+    screen opens on the money, not on an empty form."""
+    import datetime
+    t = datetime.date.today()
+    d = lambda n: (t + datetime.timedelta(days=n)).isoformat()
+    biz = {
+        'invoices': [
+            {'id': '1', 'number': 1001, 'client': 'Rosa Marin', 'items': [{'desc': 'Highlight film', 'amount': 450}],
+             'total': 450, 'dueDate': d(-20), 'status': 'Paid', 'createdDate': d(-30)},
+            {'id': '2', 'number': 1002, 'client': 'Harlow Cafe', 'items': [{'desc': 'Menu photography', 'amount': 900}],
+             'total': 900, 'dueDate': d(5), 'status': 'Unpaid', 'createdDate': d(-9)},
+            {'id': '3', 'number': 1003, 'client': 'Northside Dental Practice', 'items': [{'desc': 'Brand video', 'amount': 1200}],
+             'total': 1200, 'dueDate': d(-4), 'status': 'Unpaid', 'createdDate': d(-25)},
+        ],
+        'invoiceCounter': 1004,
+        'expenses': [{'desc': 'Lens', 'category': 'Gear', 'amount': 320, 'date': d(-30)}],
+    }
+
+    for device, vp, mobile in (('phone', {'width': 390, 'height': 844}, True),
+                               ('desktop', {'width': 1280, 'height': 900}, False)):
+        step = [f'business tools ({device})']
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        st = new_state(True)
+        st['data']['business'] = biz
+        attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); continue
+        page.wait_for_timeout(900)
+        page.evaluate("showBusiness()")
+        page.wait_for_timeout(600)
+
+        # 1. the form stays behind the button, so you land on your invoices
+        if page.evaluate("!!(document.getElementById('invForm')||{}).hidden") is not True:
+            problem(step[0], 'the new-invoice form is open before anyone asked for it')
+        else:
+            ok(step[0], 'the screen opens on the invoices, not on an empty form')
+
+        # 2. nothing is left as a white browser default (the old Generate Invoice button)
+        page.click('#invNewBtn')
+        page.wait_for_timeout(500)
+        pale = page.evaluate("""(()=>{
+          const bad = [];
+          document.querySelectorAll('#businessView button, #businessView input, #businessView select, #businessView textarea').forEach(el=>{
+            if(el.type === 'checkbox' || el.type === 'radio') return;
+            const r = el.getBoundingClientRect();
+            if(!r.width || !r.height) return;
+            const s = getComputedStyle(el);
+            const m = s.backgroundColor.match(/\\d+/g);
+            if(!m) return;
+            const [r1, g1, b1] = m.map(Number);
+            const a = m.length > 3 ? Number(m[3]) : 1;
+            // a light, opaque background on a dark app means the browser styled it, not us
+            if(a > 0.5 && (r1 + g1 + b1) / 3 > 170 && s.backgroundImage === 'none'){
+              bad.push((el.id || el.className || el.tagName) + ' ' + s.backgroundColor);
+            }
+          });
+          return bad;})()""")
+        if pale:
+            problem(step[0], f'{len(pale)} control(s) still use the white browser default', pale[:5])
+        else:
+            ok(step[0], 'every field and button in the business tools is styled for the app')
+
+        # 3. the one primary action wears the brand gradient
+        grad = page.evaluate("getComputedStyle(document.getElementById('invGenerateBtn')).backgroundImage")
+        if 'gradient' not in grad:
+            problem(step[0], 'the Create invoice button is not the brand gradient', grad)
+        else:
+            ok(step[0], 'Create invoice is the one gradient button on the screen')
+
+        # 4. you can actually raise an invoice from here
+        page.fill('#invClient', 'Vellore Bakehouse')
+        page.fill('#invDueDate', d(14))
+        page.fill('.inv-item-desc', 'Launch shoot')
+        page.fill('.inv-item-amount', '300')
+        page.wait_for_timeout(200)
+        page.click('#invGenerateBtn')
+        page.wait_for_timeout(700)
+        if 'Vellore Bakehouse' not in page.inner_text('#invList'):
+            problem(step[0], 'creating an invoice did not add it to the list')
+        else:
+            ok(step[0], 'a new invoice lands in the list straight away')
+
+        # 5. full client names, labelled actions, a status anyone can read
+        r = page.evaluate("""(()=>{
+          const rows = Array.from(document.querySelectorAll('#invList .ledger-row'));
+          const row = rows.find(x=> x.textContent.includes('Northside'));
+          if(!row) return {missing:true};
+          const name = row.querySelector('.ledger-client');
+          const acts = Array.from(row.querySelectorAll('.ledger-acts button'));
+          return {
+            name: name.textContent.trim(),
+            clipped: name.scrollWidth > name.clientWidth + 1,
+            actions: acts.map(b=> (b.textContent||'').trim()),
+            unlabelled: acts.filter(b=> !(b.textContent||'').trim() && !b.getAttribute('aria-label')).length,
+            pill: (row.querySelector('.ledger-pill')||{}).textContent,
+            overdueFirst: (rows[0]||{}).textContent.includes('Northside'),
+          };})()""")
+        if r.get('missing'):
+            problem(step[0], 'the invoice list did not render its rows')
+        elif r['name'] != 'Northside Dental Practice':
+            problem(step[0], 'the client name is cut short', r)
+        elif r['clipped']:
+            problem(step[0], 'the client name overflows its row', r)
+        elif r['unlabelled']:
+            problem(step[0], f"{r['unlabelled']} row action(s) are bare glyphs with no label", r)
+        elif 'Mark paid' not in r['actions'] or 'Send PDF' not in r['actions']:
+            problem(step[0], 'the row actions are not spelled out', r)
+        elif (r['pill'] or '').strip() != 'OVERDUE':
+            problem(step[0], 'a late invoice is not marked overdue', r)
+        elif not r['overdueFirst']:
+            problem(step[0], 'the overdue invoice is not at the top of the list', r)
+        else:
+            ok(step[0], 'full client names, labelled actions, overdue called out and listed first')
+
+        # 6. the tool row says it keeps going instead of just running off the edge
+        nav = page.evaluate("""(()=>{
+          const sc = document.querySelector('#businessView .sub-nav-scroller');
+          const nav = document.getElementById('businessSubNav');
+          const wide = innerWidth >= 1024;
+          return {fade: getComputedStyle(sc, '::after').backgroundImage.includes('gradient'),
+                  overflows: nav.scrollWidth > nav.clientWidth + 2, wide,
+                  column: getComputedStyle(nav).flexDirection};})()""")
+        if nav['wide']:
+            if nav['column'] != 'column' or nav['overflows']:
+                problem(step[0], 'on a laptop the tools should run down the side, not off the edge', nav)
+            else:
+                ok(step[0], 'on a laptop every tool is listed down the side rail')
+        elif nav['overflows'] and not nav['fade']:
+            problem(step[0], 'the tool row runs off the edge with nothing to show it scrolls', nav)
+        else:
+            ok(step[0], 'the tool row shows that it keeps going')
+
+        # 7. on a laptop the ledger columns have to line up, row to row
+        if not mobile:
+            cols = page.evaluate("""(()=>{
+              const rows = Array.from(document.querySelectorAll('#invList .ledger-row'));
+              const left = rows.map(r=> Math.round(r.querySelector('.ledger-amount').getBoundingClientRect().right));
+              return {left, spread: left.length ? Math.max(...left) - Math.min(...left) : 0};})()""")
+            if cols['spread'] > 2:
+                problem(step[0], 'the amount column does not line up between rows', cols)
+            else:
+                ok(step[0], 'the amounts line up down the page like a real ledger')
+
+        shot(page, f'{device}-13-business-ledger')
+        finish(st, step[0])
+        ctx.close()
+
+    # a brand-new account gets an invitation, not four zeros
+    step = ['business tools (new account)']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(True)
+    st['data']['business'] = {}
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if visible(page, '#appScreen', 10000):
+        page.wait_for_timeout(900)
+        page.evaluate("showBusiness()")
+        page.wait_for_timeout(600)
+        r = page.evaluate("""(()=>{
+          // only what is actually on the screen — the new-invoice form is still closed
+          const shown = Array.from(document.getElementById('businessPanelWrap').children)
+            .map(el=> el.cloneNode(true));
+          shown.forEach(el=> el.querySelectorAll('[hidden]').forEach(h=> h.remove()));
+          const text = shown.map(el=> el.textContent).join(' ');
+          return {invite: !!document.querySelector('#businessPanelWrap .ledger-empty'),
+                  zeros: (text.match(/\\$0\\.00/g)||[]).length};})()""")
+        if not r['invite']:
+            problem(step[0], 'a brand-new account should get an invitation to bill someone', r)
+        elif r['zeros']:
+            problem(step[0], f"a brand-new account is shown {r['zeros']} empty $0.00 figure(s)", r)
+        else:
+            ok(step[0], 'a new account gets an invitation, not a wall of zeros')
+        shot(page, 'phone-13-business-empty')
+    finish(st, step[0])
+    ctx.close()
+
 def main():
     srv, base = serve_web()
     t0 = time.time()
@@ -774,6 +957,7 @@ def main():
         account_menu(browser, base, 'phone', phone, True)
         account_menu(browser, base, 'desktop', desktop, False)
         business_results(browser, base)
+        business_ledger(browser, base)
         quiet_community(browser, base)
         returning_learner(browser, base)
         browser.close()
