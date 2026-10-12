@@ -48,6 +48,8 @@ router.get('/', async (req, res) => {
     referredCount,
     referredProCount,
     bonusProUntil: hasReferralBonus ? user.bonusProUntil : null,
+    // when they joined, so the app can say things like "first paid job on day 12"
+    joinedAt: user.createdAt,
   });
 });
 

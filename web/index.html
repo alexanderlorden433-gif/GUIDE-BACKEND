@@ -2507,6 +2507,19 @@
     gap:14px;
     margin-bottom:24px;
   }
+  .outcome-empty{
+    grid-column:1/-1; text-align:center; padding:30px 22px;
+    border:1px dashed rgba(168,85,247,0.34); border-radius:16px;
+    background:rgba(168,85,247,0.05);
+  }
+  .outcome-empty h3{font-family:'Space Grotesk',sans-serif; margin:0 0 8px; font-size:18px;}
+  .outcome-empty p{color:var(--ink-soft); font-size:14.5px; line-height:1.6; margin:0 auto 16px; max-width:52ch;}
+  .outcome-goal-row{display:flex; justify-content:space-between; font-weight:700; font-size:14px; margin:4px 0 8px;}
+  .learn-row{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:4px;}
+  .learn-row > div{text-align:center;}
+  .learn-row b{display:block; font-family:'Space Grotesk',sans-serif; font-size:21px;}
+  .learn-row span{font-size:11.5px; color:var(--ink-soft); line-height:1.3; display:block; margin-top:2px;}
+  @media (max-width:520px){ .learn-row{grid-template-columns:repeat(2,1fr); gap:14px;} }
   .progress-hero-card{
     background:var(--card);
     border:1px solid var(--line);
@@ -4759,10 +4772,12 @@
     <div id="statsView" style="display:none;">
       <button class="back-btn" id="statsBackBtn">← All chapters</button>
       <h2 class="page-title">📊 My Progress</h2>
-      <p class="page-sub">Your learning journey, business stats, and achievements.</p>
+      <p class="page-sub">What your business has done so far, and how far through the courses you are.</p>
 
       <!-- Progress Overview Cards -->
       <div class="progress-hero" id="progressHero"></div>
+      <div class="progress-section" id="outcomeGoal" style="display:none;"></div>
+      <div class="progress-section" id="learningStats"></div>
 
       <!-- Streak & Activity Section -->
       <div class="progress-section" id="streakSection"></div>
@@ -8318,6 +8333,7 @@ const TOUR_STEPS = [
   { selector: '#accountBtn', title: "You're all set! 🚀", text: "Manage your password or account anytime from here. Happy building." }
 ];
 let lastVisited = null; // {nicheId, title}
+let joinedAt = null;    // when the account was created, for "first paid job on day 12"
 let courseStarts = {};   // nicheId -> "YYYY-MM-DD" the learner opened that course
 // todayStr() is defined further down (local date, "YYYY-MM-DD")
 const dayNum = (str)=> Math.floor(new Date(str + 'T00:00:00').getTime() / 86400000);
@@ -10381,6 +10397,7 @@ async function loginApp(email, record, userId){
   bookmarked = new Set(record.bookmarks || []);
   courseStarts = record.courseStarts || {};
   lastVisited = record.lastVisited || null;
+  joinedAt = record.joinedAt || null;
   migrateGuideKeys();
   hasSeenTour = !!record.hasSeenTour;
   hasSeenWelcome = !!record.hasSeenWelcome;
@@ -10451,7 +10468,7 @@ async function handleAuthSubmit(){
       });
       setAuthToken(result.token);
       const account = await apiFetch('/account');
-      await loginApp(result.user.email, Object.assign({}, account.data, { isPro: account.isPro, planType: account.planType }), result.user.id);
+      await loginApp(result.user.email, Object.assign({}, account.data, { isPro: account.isPro, planType: account.planType, joinedAt: account.joinedAt }), result.user.id);
     }
   }catch(err){
     authError.textContent = err.body?.error || err.message || "Something went wrong — please try again.";
@@ -10573,7 +10590,7 @@ async function finishSignup(answers){
   };
   try{
     await apiFetch('/account', { method: 'PUT', body: JSON.stringify({ data: initialData }) });
-    await loginApp(pendingSignup.email, Object.assign({}, initialData, { isPro: false }), pendingSignup.userId);
+    await loginApp(pendingSignup.email, Object.assign({}, initialData, { isPro: false, joinedAt: new Date().toISOString() }), pendingSignup.userId);
   }catch(e){
     authError.textContent = "Something went wrong finishing sign up — please try again.";
     authCardIntro.style.display = 'none';
@@ -10821,7 +10838,7 @@ try{ localStorage.removeItem('guide_theme'); }catch(e){}
   if(!authToken) return;
   try{
     const account = await apiFetch('/account');
-    await loginApp(account.email, Object.assign({}, account.data, { isPro: account.isPro, planType: account.planType }), account.id);
+    await loginApp(account.email, Object.assign({}, account.data, { isPro: account.isPro, planType: account.planType, joinedAt: account.joinedAt }), account.id);
     await handlePostCheckoutReturn();
   }catch(e){
     // token expired/invalid — clear it and let the landing page show normally
@@ -17915,6 +17932,59 @@ function statCard(num, label){
   div.innerHTML = `<div class="stat-num">${num}</div><div class="stat-lbl">${label}</div>`;
   return div;
 }
+
+// ---------- What the business has actually done ----------
+// Everything here comes from figures the person entered themselves — invoices,
+// expenses, clients. It reports those back; it never claims credit for them.
+function businessOutcome(){
+  const b = Object.assign({}, defaultBusinessData(), businessData || {});
+  const invoices = (b.invoices || []).filter(i=> i && Number(i.total) > 0);
+  const isPaid = (i)=> String(i.status || '').toLowerCase() === 'paid';
+  const day = (v)=> { const t = Date.parse(v); return isNaN(t) ? null : t; };
+
+  const invoiced = invoices.reduce((s,i)=> s + Number(i.total || 0), 0);
+  const paid = invoices.filter(isPaid).reduce((s,i)=> s + Number(i.total || 0), 0);
+  const outstanding = invoiced - paid;
+  const expenses = (b.expenses || []).reduce((s,e)=> s + Number(e.amount || 0), 0);
+  const mrr = (b.recurring || []).reduce((s,r)=> s + Number(r.amount || 0), 0);
+
+  // everyone they've billed, plus everyone in any chapter's client tracker
+  const names = new Set();
+  invoices.forEach(i=>{ const n = String(i.client || '').trim().toLowerCase(); if(n) names.add(n); });
+  let trackedClients = 0;
+  Object.values(toolsData || {}).forEach(d=>{
+    if(d && Array.isArray(d.clients)) trackedClients += d.clients.length;
+  });
+  const clients = Math.max(names.size, trackedClients);
+
+  // how long it took to get going, counted from the day they joined
+  const start = day(joinedAt) || day(firstCourseStart()) || null;
+  const dayOf = (v)=>{
+    const t = day(v);
+    if(!start || t === null) return null;
+    return Math.max(1, Math.round((t - start) / 86400000) + 1);
+  };
+  const dates = invoices.map(i=> i.createdDate).filter(Boolean).sort();
+  const paidDates = invoices.filter(isPaid).map(i=> i.createdDate).filter(Boolean).sort();
+  const daysToFirstInvoice = dates.length ? dayOf(dates[0]) : null;
+  const daysToFirstPaid = paidDates.length ? dayOf(paidDates[0]) : null;
+
+  const goal = b.goal || {};
+  const goalTarget = Number(goal.target) || 0;
+  const goalPct = goalTarget > 0 ? Math.min(100, Math.round((paid / goalTarget) * 100)) : null;
+
+  return { invoiced, paid, outstanding, expenses, profit: paid - expenses, mrr, clients,
+           invoiceCount: invoices.length, daysToFirstInvoice, daysToFirstPaid,
+           goalLabel: goal.label || '', goalTarget, goalPct,
+           hasAnything: invoices.length > 0 || clients > 0 || mrr > 0 };
+}
+/** The earliest course someone started, as a fallback when we don't know their join date. */
+function firstCourseStart(){
+  const all = Object.values(courseStarts || {}).filter(Boolean).sort();
+  return all.length ? all[0] : null;
+}
+const outMoney = (n)=> '$' + Math.round(Number(n) || 0).toLocaleString('en-US');
+
 function showStats(){
   hideAllViews();
   statsView.style.display = '';
@@ -17929,28 +17999,90 @@ function showStats(){
   const challengesDone = (window.challengeHistory||[]).length;
   const bookmarkCount = bookmarked.size;
 
-  progressHero.innerHTML = `
+  // Lead with the business, not the homework. These are the learner's own figures
+  // from their invoices, expenses and client lists — reported back, never credited
+  // to the app.
+  const o = businessOutcome();
+  const sinceJoined = joinedAt ? ` since you joined` : '';
+  progressHero.innerHTML = o.hasAnything ? `
     <div class="progress-hero-card accent">
-      <div class="ph-icon">📚</div>
-      <div class="ph-num">${completedCount}</div>
-      <div class="ph-label">Guides completed (${pctComplete}%)</div>
+      <div class="ph-icon">💵</div>
+      <div class="ph-num">${outMoney(o.invoiced)}</div>
+      <div class="ph-label">Invoiced${sinceJoined}${o.outstanding > 0 ? ` · ${outMoney(o.outstanding)} unpaid` : ''}</div>
     </div>
     <div class="progress-hero-card">
-      <div class="ph-icon">🔥</div>
-      <div class="ph-num">${streak.count}</div>
-      <div class="ph-label">Day streak</div>
+      <div class="ph-icon">👥</div>
+      <div class="ph-num">${o.clients}</div>
+      <div class="ph-label">${o.clients === 1 ? 'Client' : 'Clients'}</div>
     </div>
+    ${o.daysToFirstPaid ? `
     <div class="progress-hero-card">
-      <div class="ph-icon">🏆</div>
-      <div class="ph-num">${nichesDone}</div>
-      <div class="ph-label">Chapters mastered</div>
-    </div>
+      <div class="ph-icon">🎉</div>
+      <div class="ph-num">Day ${o.daysToFirstPaid}</div>
+      <div class="ph-label">Your first paid invoice</div>
+    </div>` : o.daysToFirstInvoice ? `
     <div class="progress-hero-card">
-      <div class="ph-icon">⚡</div>
-      <div class="ph-num">${challengesDone}</div>
-      <div class="ph-label">Challenges done</div>
+      <div class="ph-icon">🧾</div>
+      <div class="ph-num">Day ${o.daysToFirstInvoice}</div>
+      <div class="ph-label">Your first invoice sent</div>
+    </div>` : `
+    <div class="progress-hero-card">
+      <div class="ph-icon">🧾</div>
+      <div class="ph-num">${o.invoiceCount}</div>
+      <div class="ph-label">${o.invoiceCount === 1 ? 'Invoice raised' : 'Invoices raised'}</div>
+    </div>`}
+    ${o.mrr > 0 ? `
+    <div class="progress-hero-card">
+      <div class="ph-icon">🔁</div>
+      <div class="ph-num">${outMoney(o.mrr)}</div>
+      <div class="ph-label">Recurring, every month</div>
+    </div>` : `
+    <div class="progress-hero-card">
+      <div class="ph-icon">📈</div>
+      <div class="ph-num">${outMoney(o.profit)}</div>
+      <div class="ph-label">Paid in, minus expenses</div>
+    </div>`}
+  ` : `
+    <div class="outcome-empty">
+      <h3>Your results will show up here</h3>
+      <p>The moment you raise an invoice or add a client, this turns into the story of your
+         business — what you've billed, who you've billed, and how long it took you to get there.
+         Nothing to show yet, which is exactly where everyone starts.</p>
+      <button type="button" class="modal-cta" id="outcomeStartBtn" style="width:auto;">Open your business tools</button>
     </div>
   `;
+  const startBtn = document.getElementById('outcomeStartBtn');
+  if(startBtn) startBtn.addEventListener('click', ()=> showBusiness());
+
+  // the goal they set themselves, measured against money actually received
+  const goalWrap = document.getElementById('outcomeGoal');
+  if(goalWrap){
+    if(o.goalTarget > 0){
+      goalWrap.style.display = '';
+      goalWrap.innerHTML = `
+        <h3>🎯 ${gvEsc(o.goalLabel || 'Your goal')}</h3>
+        <div class="outcome-goal-row">
+          <span>${outMoney(o.paid)} of ${outMoney(o.goalTarget)}</span>
+          <span>${o.goalPct}%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${o.goalPct}%;"></div></div>`;
+    } else {
+      goalWrap.style.display = 'none';
+    }
+  }
+
+  // the learning numbers still matter, they're just not the headline any more
+  const learnWrap = document.getElementById('learningStats');
+  if(learnWrap){
+    learnWrap.innerHTML = `
+      <h3>📚 Your learning</h3>
+      <div class="learn-row">
+        <div><b>${completedCount}</b><span>Lessons done (${pctComplete}%)</span></div>
+        <div><b>${streak.count}</b><span>Day streak</span></div>
+        <div><b>${nichesDone}</b><span>Courses finished</span></div>
+        <div><b>${challengesDone}</b><span>Challenges done</span></div>
+      </div>`;
+  }
 
   // --- Streak Section ---
   const streakSection = document.getElementById('streakSection');
@@ -18019,8 +18151,10 @@ function showStats(){
     { icon:'⚡', name:'First Challenge', earned: challengesDone >= 1 },
     { icon:'🏆', name:'Chapter Master', earned: nichesDone >= 1 },
     { icon:'🎓', name:'5 Chapters Done', earned: nichesDone >= 5 },
-    { icon:'👥', name:'First Client', earned: totalClients >= 1 },
-    { icon:'💰', name:'$1K Quoted', earned: totalQuotedValue >= 1000 },
+    { icon:'🧾', name:'First Invoice', earned: o.invoiceCount >= 1 },
+    { icon:'🎉', name:'First Paid Job', earned: o.paid > 0 },
+    { icon:'👥', name:'First Client', earned: o.clients >= 1 },
+    { icon:'💰', name:'$1K Invoiced', earned: o.invoiced >= 1000 },
     { icon:'📌', name:'Bookworm', earned: bookmarkCount >= 5 },
   ];
   achievementsSection.innerHTML = `
