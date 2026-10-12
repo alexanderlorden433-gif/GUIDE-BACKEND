@@ -676,7 +676,7 @@ async function ownerTotals() {
   });
 }
 
-const PRICES = { monthly: 28.99, yearly: 325.99 };
+const { PRICES } = require('./prices');
 
 async function liveSnapshot(tz, role) {
   tz = validTz(tz);

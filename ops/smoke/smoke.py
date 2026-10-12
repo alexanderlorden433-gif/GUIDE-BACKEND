@@ -123,6 +123,11 @@ def fixture(state, method, path, body):
         return 403, {'error': 'Not authorized.'}
     if p == '/api/ai-chat':
         return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.'}
+    if p == '/api/billing/prices' and method == 'GET':
+        # the real route reads these from Stripe; the numbers here are only a stand-in
+        return 200, {'monthly': {'amount': 24.99, 'currency': 'USD', 'interval': 'month'},
+                     'yearly': {'amount': 149, 'currency': 'USD', 'interval': 'year',
+                                'savingPercent': 50, 'monthsFree': 5}}
     if p == '/api/billing/checkout':
         return 200, {'url': 'https://checkout.stripe.com/c/pay/cs_test_smoke'}
     if p == '/api/billing/portal':
@@ -479,6 +484,69 @@ def finish(st, step):
         problem('media', f'missing media file {p}')
 
 
+def free_vs_pro(browser, base):
+    """Module 1 of every course is free; the rest of the course is Pro."""
+    for label, pro in (('free', False), ('pro', True)):
+        step = [f'{label} user: what the course shows']
+        ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
+        st = new_state(pro)
+        # already started this course weeks ago, so the weekly pace isn't what's locking anything
+        st['data']['courseStarts'] = {'ecommerce': '2026-01-01'}
+        attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); continue
+        page.wait_for_timeout(900)
+        page.evaluate("openNiche('ecommerce')")
+        page.wait_for_timeout(600)
+        close_paywall(page)
+        r = page.evaluate("""(()=>{
+            const n = NICHES.find(x=> x.id === 'ecommerce');
+            const rows = [...document.querySelectorAll('#nicheView .guide')];
+            const mod1 = n.guides.filter(g=> g.mod === 0).length;
+            const proTags = rows.filter(x=> (x.querySelector('.lock-tag')||{}).textContent &&
+                                            x.querySelector('.lock-tag').textContent.includes('Pro')).length;
+            return {rows: rows.length, mod1, proTags, later: n.guides.length - mod1,
+                    unlockButtons: document.querySelectorAll('#nicheView .module-unlock').length};})()""")
+        if pro:
+            if r['proTags'] or r['unlockButtons']:
+                problem(step[0], 'a paying member is still being shown Pro locks', r)
+            else:
+                ok(step[0], 'a paying member sees the whole course')
+        else:
+            if r['proTags'] != r['later']:
+                problem(step[0], f"{r['proTags']} lessons marked Pro, expected {r['later']} (everything after Module 1)", r)
+            elif not r['unlockButtons']:
+                problem(step[0], 'no "Unlock with Pro" button on the locked modules', r)
+            else:
+                ok(step[0], f"Module 1 ({r['mod1']} lessons) free, the other {r['later']} need Pro")
+            # tapping a Pro lesson should offer the upgrade, not just shake
+            page.evaluate("""(()=>{const x=[...document.querySelectorAll('#nicheView .guide')]
+                .find(e=>(e.querySelector('.lock-tag')||{}).textContent?.includes('Pro'));
+                if(x) x.querySelector('.guide-row').click();})()""")
+            page.wait_for_timeout(500)
+            if visible(page, '#upgradeOverlay.open', 2500) or page.locator('#upgradeCta').count():
+                ok(step[0], 'tapping a Pro lesson offers the upgrade')
+            else:
+                problem(step[0], 'tapping a Pro lesson did nothing')
+            page.wait_for_timeout(600)
+            price = page.evaluate('(()=>{ const g=(k)=> (document.querySelector(\'[data-price="\'+k+\'"]\')||{}).textContent || "";\n  return {monthly:g("monthly").trim(), yearly:g("yearly").trim(),\n          note:(document.getElementById("upgradeModalNote")||{}).textContent || "",\n          sub:(document.querySelector(\'[data-sub="yearly"]\')||{}).textContent || ""};})()')
+            # must match what the backend says it charges, never a number typed into the page
+            if price['monthly'] != '$24.99/mo' or price['yearly'] != '$149/yr':
+                problem(step[0], 'the prices shown do not match what the backend charges', price)
+            elif '7 days free' not in price['note']:
+                problem(step[0], 'the free trial is not mentioned on the upgrade screen', price)
+            elif 'months free' not in price['sub']:
+                problem(step[0], 'the yearly plan does not show what it saves', price)
+            else:
+                ok(step[0], "shows Stripe's real prices (" + price['monthly'] + ', ' + price['yearly'] + ')')
+            shot(page, 'desktop-11-free-course')
+        finish(st, step[0])
+        ctx.close()
+
+
 def account_menu(browser, base, device, viewport, mobile):
     """Opening the avatar menu must put Log out somewhere you can actually tap."""
     step = [f'{device}: account menu']
@@ -583,6 +651,7 @@ def main():
         print('Smoke test — phone')
         logged_out(browser, base, 'phone', phone, True)
         logged_in(browser, base, 'phone', phone, True, pro=False)
+        free_vs_pro(browser, base)
         account_menu(browser, base, 'phone', phone, True)
         account_menu(browser, base, 'desktop', desktop, False)
         returning_learner(browser, base)
