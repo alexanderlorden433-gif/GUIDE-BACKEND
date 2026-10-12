@@ -14,7 +14,7 @@ short sentences: what you did, what you found, what you need from him. No jargon
 |---|---|---|
 | `src/`, `prisma/` | Backend: Express + Prisma (Postgres) | Railway deploys `main` automatically |
 | `media/guides/` | Lesson video narration (mp3) + timing (json) + `manifest.json` | Served by the backend at `/media/guides/…` |
-| `web/` | The website/app: one big `index.html` (all screens, CSS and JS), plus terms, privacy, PWA files | Netlify deploys `main`; every pull request gets a **Deploy Preview** link |
+| `web/` | The website/app: `index.html` (all screens, CSS and app JS), `niches/*.js` (the lesson text: `base.js` = the first 16 chapters, `pack-N.js` = newer ones), plus terms, privacy, PWA files | Netlify deploys `main`; every pull request gets a **Deploy Preview** link |
 | `ops/` | Checks and agent playbooks (`ops/agents/*.md`) | Never deployed |
 | `social/` | Lesson → TikTok/Reels video maker, lesson catalog, posting queue (Social agent) | Videos go to the `social-queue` branch, then Metricool |
 | `ads/` | The Meta ads: copy (`ads.json`) and creatives | Used by the Meta Ads agent |
@@ -83,6 +83,8 @@ bash ops/check.sh --quick      # same, smoke test on 3 chapters only
 - `ops/api_routes.py` — every `apiFetch('/…')` in the app has a real backend route.
 - `ops/smoke/smoke.py` — clicks through the app on a laptop and a phone with a fake backend;
   report + screenshots in `ops/smoke/out/`. When you add or fix a feature, extend this test.
+- `ops/smoke/perf.py` — how fast the app feels on a mid-range phone (load time, tap-to-screen). A measuring
+  tool, not part of the check: run it before and after a change that could slow the app down.
 
 ## Environment limits (cloud sandbox)
 

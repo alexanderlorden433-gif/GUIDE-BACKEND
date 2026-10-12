@@ -5,6 +5,10 @@ The Guide (theguide.company) teaches complete beginners to start a real side bus
 
 Read one finished chapter in `web/niches/pack-1.js` first, so your output matches the house style and shape exactly.
 
+Where chapter text lives: the first 16 chapters are in `web/niches/base.js`, newer ones in `web/niches/pack-N.js`.
+Both are plain files the page loads before the app starts (`index.html` itself holds no lesson text). To fix
+wording in an old lesson, edit `base.js`; do not paste lesson text back into `index.html`.
+
 ## What to produce
 
 Write ONE file: `<somewhere outside web/>/<id>.json`. Valid JSON, UTF-8, no comments.

@@ -1036,6 +1036,103 @@ def new_chapters(browser, base):
     ctx.close()
 
 
+def smoother(browser, base):
+    """Cleaner and smoother: the title block belongs to Home, lessons build when opened, screens ease in."""
+    step = ['cleaner and smoother']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'the app did not open'); ctx.close(); return
+    page.wait_for_timeout(600)
+    # 1) Home keeps its progress box and search, without the big title block
+    home = page.evaluate("""(()=>{ const vis = s => { const e = document.querySelector(s); return !!e && !!e.offsetParent; };
+      const r = document.getElementById('search').getBoundingClientRect();
+      return {search: vis('#search'), progress: vis('#overallNum'), blurb: (()=>{ const e = document.querySelector('header .brand'); return !!e && e.getBoundingClientRect().height > 4; })(), searchTop: Math.round(r.top)}; })()""")
+    if not (home['search'] and home['progress']) or home['blurb'] or home['searchTop'] > 260:
+        problem(step[0], 'Home should open on the progress box and search, near the top', home)
+    else:
+        ok(step[0], f"Home opens on progress and search ({home['searchTop']}px from the top), no big title block")
+    # 2) a chapter starts with the chapter, not with the title block and search
+    page.evaluate("openNiche('video')"); page.wait_for_timeout(500)
+    ch = page.evaluate("""(()=>{ const left = s => { const e = document.querySelector('#nicheView ' + s); return e ? Math.round(e.getBoundingClientRect().left) : null; };
+      const h = document.querySelector('.wrap > header');
+      const guides = [...document.querySelectorAll('#nicheView .guide')];
+      return {headerShown: !!(h && h.offsetParent), headerTop: Math.round(document.querySelector('#nicheView .niche-header').getBoundingClientRect().top),
+        nodes: document.querySelectorAll('#nicheView *').length, guides: guides.length,
+        lockedFilled: guides.filter(g => g.classList.contains('locked') && g.querySelector('.guide-content').children.length).length,
+        openFilled: guides.filter(g => !g.classList.contains('locked') && g.querySelector('.guide-content').children.length).length,
+        alignGuide: left('.guide'), alignHead: left('.niche-header'), alignModule: left('.module-head')}; })()""")
+    if ch['headerShown'] or ch['headerTop'] > 200:
+        problem(step[0], 'a chapter still starts under the big title block', ch)
+    else:
+        ok(step[0], f"a chapter starts straight away ({ch['headerTop']}px from the top)")
+    if abs((ch['alignGuide'] or 0) - (ch['alignHead'] or 0)) > 1 or abs((ch['alignModule'] or 0) - (ch['alignHead'] or 0)) > 1:
+        problem(step[0], 'the lessons are not lined up with the rest of the chapter page', ch)
+    else:
+        ok(step[0], 'lessons and module headings line up with the chapter title')
+    # 3) lesson text is built when a lesson is opened, not for the whole chapter up front
+    if ch['guides'] < 10 or ch['nodes'] > 1800 or ch['lockedFilled'] or ch['openFilled']:
+        problem(step[0], 'a chapter page builds lesson text nobody has opened', ch)
+    else:
+        ok(step[0], f"a {ch['guides']}-lesson chapter is {ch['nodes']} page elements until a lesson is opened")
+    first = page.locator('#nicheView .guide:not(.locked)').first
+    first.locator('.guide-title').click(timeout=3000); page.wait_for_timeout(300)
+    if first.locator('.guide-content p').count() == 0 or first.locator('.mark-btn').count() != 1 or first.locator('.next-step').count() == 0:
+        problem(step[0], 'opening a lesson does not show its text and buttons')
+    else:
+        ok(step[0], 'opening a lesson builds its text, next step and buttons once')
+    first.locator('.guide-title').click(timeout=3000); page.wait_for_timeout(200)
+    first.locator('.guide-title').click(timeout=3000); page.wait_for_timeout(200)
+    if first.locator('.mark-btn').count() != 1:
+        problem(step[0], 'opening a lesson twice builds its buttons twice')
+    # 4) opening a lesson from outside (the Continue card, a search result) takes the same door as a tap
+    page.evaluate("window.__locked = [...document.querySelectorAll('#nicheView .guide.locked')].find(g => /Pro/.test((g.querySelector('.lock-tag') || {}).textContent || '')); openGuideRow(window.__locked)")
+    page.wait_for_timeout(500)
+    r = page.evaluate("""(()=>{ const modal = document.getElementById('upgradeOverlay').classList.contains('open');
+      document.getElementById('upgradeOverlay').classList.remove('open');
+      return {modal, opened: window.__locked.classList.contains('open')}; })()""")
+    if not r['modal'] or r['opened']:
+        problem(step[0], 'a Pro lesson opened from search or Continue should show the upgrade box, not open', r)
+    else:
+        ok(step[0], 'a Pro lesson reached from search or Continue shows the upgrade box')
+    # 5) search stays one tap away from every screen
+    page.evaluate("window.scrollTo(0, 600)")
+    page.locator('#topbarSearchBtn').click(timeout=3000); page.wait_for_timeout(400)
+    s1 = page.evaluate("({home: !!document.getElementById('homeView').offsetParent, focused: document.activeElement && document.activeElement.id, y: Math.round(scrollY)})")
+    page.evaluate("openNiche('photo')"); page.wait_for_timeout(300)
+    page.keyboard.press('/'); page.wait_for_timeout(400)
+    s2 = page.evaluate("({home: !!document.getElementById('homeView').offsetParent, focused: document.activeElement && document.activeElement.id})")
+    if not (s1['home'] and s1['focused'] == 'search' and s1['y'] == 0) or not (s2['home'] and s2['focused'] == 'search'):
+        problem(step[0], 'the search button and the "/" key should take you Home with the cursor in the search box', {'button': s1, 'key': s2})
+    else:
+        ok(step[0], 'the search button and the "/" key work from any screen')
+    # 6) smooth by design: no blurred bars, screens ease in, and calm for people who ask for less motion
+    fx = page.evaluate("""(()=>{ const cs = s => getComputedStyle(document.querySelector(s));
+      return {topbar: cs('.topbar').backdropFilter, tabs: cs('.bottom-tab-bar').backdropFilter, view: cs('#homeView').animationName}; })()""")
+    if fx['topbar'] != 'none' or fx['tabs'] != 'none':
+        problem(step[0], 'the top and bottom bars blur the page behind them, which makes scrolling heavy on phones', fx)
+    elif fx['view'] != 'viewFadeIn':
+        problem(step[0], 'screens do not ease in', fx)
+    else:
+        ok(step[0], 'bars are solid and screens ease in')
+    ctx.close()
+    ctx2 = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block', reduced_motion='reduce')
+    attach_backend(ctx2, new_state(False))
+    ctx2.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    pg2 = ctx2.new_page(); pg2.goto(base + '/', wait_until='load')
+    if visible(pg2, '#appScreen', 10000):
+        anim = pg2.evaluate("getComputedStyle(document.getElementById('homeView')).animationName")
+        if anim != 'none':
+            problem(step[0], 'people who ask their phone for less motion still get the screen animation', anim)
+        else:
+            ok(step[0], 'less motion is respected')
+    ctx2.close()
+
+
 def new_look(browser, base):
     """The load-up screen, and the Forest & Gold / Purple switch."""
     # 1) load-up screen: shows on a first visit, leaves by itself, stays away for the rest of the visit
@@ -1154,6 +1251,7 @@ def main():
         business_ledger(browser, base)
         new_look(browser, base)
         new_chapters(browser, base)
+        smoother(browser, base)
         quiet_community(browser, base)
         returning_learner(browser, base)
         browser.close()
