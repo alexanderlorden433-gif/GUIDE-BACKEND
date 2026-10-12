@@ -48,6 +48,8 @@ router.get('/', async (req, res) => {
     referredCount,
     referredProCount,
     bonusProUntil: hasReferralBonus ? user.bonusProUntil : null,
+    // a trial is a first-time-only offer; don't show it to someone who has subscribed before
+    trialEligible: !user.stripeCustomerId,
   });
 });
 

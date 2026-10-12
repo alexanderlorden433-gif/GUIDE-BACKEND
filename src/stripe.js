@@ -4,11 +4,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-06-20',
 });
 
+/** How long the optional free trial runs. Shown to the customer before they choose it. */
+const TRIAL_DAYS = 4;
+
 /**
  * Creates a Stripe Checkout Session for either the monthly or yearly
  * subscription, tied to a specific user.
  */
-async function createCheckoutSession({ user, plan }) {
+async function createCheckoutSession({ user, plan, trial }) {
   const priceId =
     plan === 'yearly'
       ? process.env.STRIPE_PRICE_YEARLY
@@ -23,9 +26,10 @@ async function createCheckoutSession({ user, plan }) {
     customer_email: user.stripeCustomerId ? undefined : user.email,
     customer: user.stripeCustomerId || undefined,
     line_items: [{ price: priceId, quantity: 1 }],
-    // 7 free days, then it bills automatically. Only for someone who has never
-    // subscribed before, so cancelling and resubscribing can't farm free months.
-    subscription_data: user.stripeCustomerId ? undefined : { trial_period_days: 7 },
+    // The free trial is the customer's choice at checkout, and only ever offered to
+    // someone who has never subscribed before — otherwise cancelling and signing up
+    // again would farm free months.
+    subscription_data: (trial && !user.stripeCustomerId) ? { trial_period_days: TRIAL_DAYS } : undefined,
     success_url: `${process.env.APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.APP_URL}/billing/cancelled`,
     metadata: {
@@ -81,4 +85,4 @@ async function getPlanPrices() {
   return out;
 }
 
-module.exports = { stripe, createCheckoutSession, createPortalSession, getPlanPrices };
+module.exports = { stripe, createCheckoutSession, createPortalSession, getPlanPrices, TRIAL_DAYS };
