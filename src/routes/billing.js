@@ -1,7 +1,7 @@
 const express = require('express');
 const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
-const { stripe, createCheckoutSession, createPortalSession, getPlanPrices } = require('../stripe');
+const { stripe, createCheckoutSession, createPortalSession, getPlanPrices, TRIAL_DAYS } = require('../stripe');
 const { notifyUser } = require('../notifications');
 const { recordMoney } = require('../analytics');
 const { trackCheckout, trackPurchase } = require('../meta');
@@ -13,7 +13,7 @@ const router = express.Router();
 // before anyone has an account, and it is the same number Stripe will charge.
 router.get('/prices', async (req, res) => {
   try {
-    res.json(await getPlanPrices());
+    res.json({ ...(await getPlanPrices()), trialDays: TRIAL_DAYS });
   } catch (err) {
     console.error('Could not read prices from Stripe:', err.message);
     res.status(503).json({ error: 'Prices unavailable right now.' });
@@ -21,7 +21,7 @@ router.get('/prices', async (req, res) => {
 });
 
 // ---------- POST /api/billing/checkout ----------
-// Body: { plan: "monthly" | "yearly" }
+// Body: { plan: "monthly" | "yearly", trial: true | false }
 // Returns a Stripe Checkout URL for the frontend to redirect the user to.
 router.post('/checkout', requireAuth, async (req, res) => {
   try {
@@ -29,7 +29,7 @@ router.post('/checkout', requireAuth, async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) return res.status(404).json({ error: 'Account not found.' });
 
-    const session = await createCheckoutSession({ user, plan });
+    const session = await createCheckoutSession({ user, plan, trial: req.body.trial === true });
     trackCheckout(user, plan, req.body, req);
     res.json({ url: session.url });
   } catch (err) {

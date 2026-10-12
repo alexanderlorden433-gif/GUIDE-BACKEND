@@ -50,6 +50,8 @@ router.get('/', async (req, res) => {
     bonusProUntil: hasReferralBonus ? user.bonusProUntil : null,
     // when they joined, so the app can say things like "first paid job on day 12"
     joinedAt: user.createdAt,
+    // a trial is a first-time-only offer; don't show it to someone who has subscribed before
+    trialEligible: !user.stripeCustomerId,
   });
 });
 
