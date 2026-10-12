@@ -4,7 +4,7 @@ Social agent needs to pick lessons and write captions.
 
     python3 social/catalog.py
 
-Each entry: id, chapter, chapter_name, icon, title, summary, level, seconds, social.
+Each entry: id, chapter, chapter_name, icon, title, summary, level, module, seconds, social.
 `social: false` means don't post it on TikTok / Instagram (adult-adjacent chapters get
 flagged and limit the account's reach).
 """
@@ -26,7 +26,8 @@ with sync_playwright() as p:
     page.goto(base + '/', wait_until='load')
     rows = page.evaluate("""NICHES.flatMap(n => n.guides.map(g => ({
         id: gvId(n.id, g.title), chapter: n.id, chapter_name: n.name, icon: n.icon,
-        title: g.title, summary: g.summary || '', level: g.level || ''})))""")
+        title: g.title, summary: g.summary || '', level: g.kind === 'short' ? 'Quick win' : 'Lesson',
+        module: (n.modules && n.modules[g.mod] ? n.modules[g.mod].title : '')})))""")
     b.close()
 srv.shutdown()
 manifest = json.load(open(os.path.join(ROOT, 'media', 'guides', 'manifest.json')))

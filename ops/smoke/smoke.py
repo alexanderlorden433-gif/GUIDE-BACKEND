@@ -287,12 +287,29 @@ def logged_in(browser, base, device, viewport, mobile, pro=True):
             n_guides = page.locator('#nicheView .guide').count()
             if n_guides == 0:
                 problem(step[0], 'chapter shows no guides')
+            # the chapter is a course: modules in order, and only the next lesson is open
+            n_mods = page.locator('#nicheView .module-head').count()
+            if n_mods < 4:
+                problem(step[0], f'chapter shows {n_mods} module headings (expected a course of 4+)')
+            n_locked = page.locator('#nicheView .guide.locked').count()
+            if n_locked != n_guides - 1:
+                problem(step[0], f'{n_locked} of {n_guides} lessons locked — a new learner should have exactly one open')
+            # a locked lesson must not offer its video (that would skip the course order)
+            if page.locator('#nicheView .guide.locked .gv-watch').count():
+                problem(step[0], 'a locked lesson still shows a "watch" button')
+            locked = page.locator('#nicheView .guide.locked').first
+            locked.locator('.guide-row').click(timeout=3000)
+            page.wait_for_timeout(200)
+            if 'open' in (locked.get_attribute('class') or ''):
+                problem(step[0], 'a locked lesson opened when tapped')
             g = page.locator('#nicheView .guide').first
             g.locator('.guide-title').click(timeout=3000)
             page.wait_for_timeout(250)
             paras = g.locator('.guide-content p').count()
             if paras == 0:
                 problem(step[0], 'first guide opened but shows no text')
+            if g.locator('.next-step').count() == 0:
+                problem(step[0], 'first lesson has no "Your next step"')
             if i == 0:
                 shot(page, f'{device}-04-guide')
                 no_sideways_scroll(page, step[0])
@@ -309,7 +326,7 @@ def logged_in(browser, base, device, viewport, mobile, pro=True):
                         no_sideways_scroll(page, step[0] + f' / {sub} tab')
             close_paywall(page)
             page.locator('#nicheView [data-sub="guides"]').first.click(timeout=3000)
-            ok(step[0], f'{n_guides} guides, text shows, tabs open')
+            ok(step[0], f'{n_guides} lessons in {n_mods} modules, locked in order, text shows, tabs open')
         except Exception as e:
             problem(step[0], 'clicking through the chapter failed', e)
 
@@ -444,6 +461,48 @@ def finish(st, step):
         problem('media', f'missing media file {p}')
 
 
+def returning_learner(browser, base):
+    """Someone who was using the app before the lessons were rewritten and renamed must keep
+    their progress, and must not be locked out of modules they could already reach."""
+    step = ['returning learner']
+    ctx = browser.new_context(viewport={'width': 1280, 'height': 800}, service_workers='block')
+    st = new_state(True)
+    # progress saved under the OLD lesson titles, before the rewrite
+    old_titles = ['Building a contract that protects you', 'Building a demo reel that gets you hired',
+                  'Specializing: choosing a lane within video']
+    st['data']['completed'] = ['video|' + t for t in old_titles]
+    st['data']['bookmarks'] = ['video|' + old_titles[0]]
+    st['data']['lastVisited'] = {'nicheId': 'video', 'title': old_titles[0]}
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return
+    page.wait_for_timeout(900)
+    got = page.evaluate("Array.from(completed).filter(k=>k.startsWith('video|'))")
+    renamed = [k for k in got if k.split('|', 1)[1] not in old_titles]
+    if len(got) != 3:
+        problem(step[0], f'had 3 finished lessons before the rewrite, now {len(got)}', got)
+    elif len(renamed) != 3:
+        problem(step[0], 'finished lessons still point at the old titles', got)
+    else:
+        ok(step[0], '3 finished lessons carried over to the renamed lessons')
+    if page.evaluate("Array.from(bookmarked).length") != 1:
+        problem(step[0], 'bookmark was lost in the rename')
+    # every module must be open for them: they could already read the whole chapter
+    page.evaluate("openNiche('video')")
+    page.wait_for_timeout(500)
+    waiting = page.locator('#nicheView .module-locked').count()
+    if waiting:
+        problem(step[0], f'{waiting} module(s) locked behind the weekly wait for someone who already had them')
+    else:
+        ok(step[0], 'keeps access to every module they could already reach')
+    shot(page, 'desktop-09-returning-learner')
+    finish(st, step[0])
+    ctx.close()
+
+
 def main():
     srv, base = serve_web()
     t0 = time.time()
@@ -457,6 +516,7 @@ def main():
         print('Smoke test — phone')
         logged_out(browser, base, 'phone', phone, True)
         logged_in(browser, base, 'phone', phone, True, pro=False)
+        returning_learner(browser, base)
         browser.close()
     srv.shutdown()
     # de-duplicate
