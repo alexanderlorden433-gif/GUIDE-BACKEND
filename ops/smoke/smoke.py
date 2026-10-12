@@ -82,6 +82,7 @@ def fixture(state, method, path, body):
     p = path
     if p == '/api/account' and method == 'GET':
         return 200, {'email': 'smoke@theguide.test', 'isPro': state['pro'], 'planType': 'yearly' if state['pro'] else None,
+                     'joinedAt': state.get('joinedAt'),
                      'trialEligible': True,
                      'data': state['data'], 'referralCode': 'SMOKE1', 'referredCount': 0, 'referredProCount': 0, 'bonusProUntil': None}
     if p == '/api/account' and method == 'PUT':
@@ -629,6 +630,65 @@ def account_menu(browser, base, device, viewport, mobile):
     ctx.close()
 
 
+def business_results(browser, base):
+    """The progress screen must lead with the business, not the homework —
+    and must only ever report figures the person entered themselves."""
+    import datetime
+    join = (datetime.date.today() - datetime.timedelta(days=40)).isoformat()
+    d1 = (datetime.date.today() - datetime.timedelta(days=29)).isoformat()
+    d2 = (datetime.date.today() - datetime.timedelta(days=12)).isoformat()
+    cases = [
+        ('a new account', {}, False),
+        ('a working business', {
+            'invoices': [{'id': '1', 'number': 1001, 'client': 'Rosa Marin', 'total': 450, 'status': 'paid', 'createdDate': d1},
+                         {'id': '2', 'number': 1002, 'client': 'Harlow Cafe', 'total': 900, 'status': 'paid', 'createdDate': d2},
+                         {'id': '3', 'number': 1003, 'client': 'Rosa Marin', 'total': 600, 'status': 'sent', 'createdDate': d2}],
+            'expenses': [{'desc': 'Lens', 'category': 'Gear', 'amount': 320, 'date': d1}],
+            'recurring': [{'name': 'Monthly retainer', 'amount': 250}],
+            'goal': {'label': 'First $5,000', 'target': 5000, 'deadline': ''}}, True),
+    ]
+    for label, biz, expect in cases:
+        step = [f'progress screen ({label})']
+        ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
+        st = new_state(True)
+        st['data']['business'] = biz
+        st['joinedAt'] = join
+        attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); continue
+        page.wait_for_timeout(900)
+        page.evaluate(f"joinedAt = '{join}'; showStats()")
+        page.wait_for_timeout(600)
+        r = page.evaluate("(()=>{const h=document.getElementById('progressHero');"
+                          "return {text:h.textContent.replace(/\\s+/g,' ').trim(),"
+                          "empty:!!document.querySelector('.outcome-empty'),"
+                          "learning:!!document.getElementById('learningStats').textContent.trim(),"
+                          "goal:(document.getElementById('outcomeGoal')||{}).textContent||''}})()")
+        if not expect:
+            if not r['empty']:
+                problem(step[0], 'a brand-new account should get an invitation, not empty figures', r)
+            else:
+                ok(step[0], 'a new account gets an invitation to start, not a wall of zeros')
+        else:
+            # $450 + $900 + $600 = $1,950 invoiced; $600 still unpaid; 2 clients; paid on day 12
+            needed = ['$1,950', '$600 unpaid', '2', 'Day 12', '$250']
+            missing = [x for x in needed if x not in r['text']]
+            if missing:
+                problem(step[0], f'the results screen is missing {missing}', r)
+            elif '27%' not in r['goal']:
+                problem(step[0], 'the goal is not measured against money actually received', r)
+            elif not r['learning']:
+                problem(step[0], 'the learning numbers disappeared entirely', r)
+            else:
+                ok(step[0], 'leads with $1,950 invoiced, 2 clients, first paid on day 12, goal at 27%')
+        shot(page, f"desktop-12-results-{'busy' if expect else 'new'}")
+        finish(st, step[0])
+        ctx.close()
+
+
 def quiet_community(browser, base):
     """The social parts stay hidden while they're empty, and come back when they aren't."""
     for label, posts, expect in (('empty', 0, False), ('busy', 6, True)):
@@ -713,6 +773,7 @@ def main():
         free_vs_pro(browser, base)
         account_menu(browser, base, 'phone', phone, True)
         account_menu(browser, base, 'desktop', desktop, False)
+        business_results(browser, base)
         quiet_community(browser, base)
         returning_learner(browser, base)
         browser.close()
