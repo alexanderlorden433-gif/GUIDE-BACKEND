@@ -228,6 +228,23 @@ def logged_out(browser, base, device, viewport, mobile):
     else:
         problem(step[0], 'landing page did not appear')
     shot(page, f'{device}-01-landing')
+    lp = page.evaluate("(()=>({slides:document.querySelectorAll('.lp-slide').length,"
+                       "dots:document.querySelectorAll('#lpDots button').length,"
+                       "chapters:document.querySelectorAll('#lpChapters .lp-chip').length,"
+                       "imgs:[...document.querySelectorAll('.landing-view img')].length,"
+                       "broken:[...document.querySelectorAll('.landing-view img')].filter(i=>i.complete&&i.naturalWidth===0).length,"
+                       "cta:!!document.getElementById('landingSignupBtn'),"
+                       "login:!!document.getElementById('landingLoginBtn')}))()")
+    if lp['broken']:
+        problem(step[0], f"{lp['broken']} picture(s) on the landing page failed to load", lp)
+    elif lp['imgs'] < 5 or lp['slides'] < 4 or lp['dots'] != lp['slides']:
+        problem(step[0], 'the landing page slideshow did not build', lp)
+    elif lp['chapters'] != page.evaluate('NICHES.length'):
+        problem(step[0], 'the landing page is not listing every chapter', lp)
+    elif not (lp['cta'] and lp['login']):
+        problem(step[0], 'the landing page lost a sign-up or log-in button', lp)
+    else:
+        ok(step[0], f"{lp['chapters']} chapters, {lp['slides']}-screen slideshow, {lp['imgs']} pictures all loaded")
     no_sideways_scroll(page, step[0])
     step[0] = f'{device}: sign-up screen'
     try:
