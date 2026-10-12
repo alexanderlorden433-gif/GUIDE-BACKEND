@@ -290,32 +290,87 @@
   }
   .account-menu{
     display:none;
-    position:absolute;
-    top:calc(100% + 10px);
-    right:0;
+    position:fixed;
     background:var(--card);
     border:1px solid var(--line);
-    border-radius:14px;
-    box-shadow:0 12px 32px rgba(0,0,0,0.18);
-    min-width:190px;
+    border-radius:16px;
+    box-shadow:0 18px 50px rgba(0,0,0,0.45);
+    width:268px;
     padding:6px;
-    z-index:50;
+    z-index:60;
   }
   .account-menu.open{ display:block; }
+  .account-menu-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 12px 11px;
+  }
+  .amh-who{ min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .amh-mail{
+    font-size:13px; font-weight:600; color:var(--ink);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .amh-plan{
+    align-self:flex-start;
+    font-family:'Space Grotesk',sans-serif; font-size:10px; font-weight:700;
+    letter-spacing:.07em; text-transform:uppercase;
+    padding:2px 7px; border-radius:999px;
+    color:var(--ink-soft); border:1px solid var(--line);
+  }
+  .amh-plan.pro{ color:#0B0A12; background:linear-gradient(95deg,#7C3AED,#EC4899); border-color:transparent; }
+  .amh-plan.pro{ color:#fff; }
+  .amh-x{
+    flex-shrink:0; display:none; background:none; border:none; cursor:pointer;
+    color:var(--ink-soft); padding:8px; margin:-8px -6px -8px 0; border-radius:10px;
+  }
+  .amh-x .ami{ width:20px; height:20px; display:block; }
+  .amh-x:hover{ background:var(--line-soft); color:var(--ink); }
+  .account-menu-group{ padding:5px 0; border-top:1px solid var(--line); }
+  .account-menu-group:first-of-type{ border-top:none; padding-top:0; }
   .account-menu-item{
-    display:flex; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:11px;
     width:100%;
     background:none; border:none;
     text-align:left;
     font-family:'Inter',sans-serif;
     font-weight:600;
-    font-size:13.5px;
+    font-size:14px;
     color:var(--ink);
     padding:10px 12px;
-    border-radius:9px;
+    border-radius:10px;
     cursor:pointer;
   }
+  .account-menu-item .ami{ width:18px; height:18px; flex-shrink:0; color:var(--ink-soft); }
+  .account-menu-item > span{ flex:1; min-width:0; }
   .account-menu-item:hover{ background:var(--line-soft); }
+  .account-menu-item:hover .ami{ color:var(--ink); }
+  .account-menu-item.danger{ color:#F87171; }
+  .account-menu-item.danger .ami{ color:#F87171; }
+  .account-menu-item.danger:hover{ background:rgba(248,113,113,0.10); }
+  .account-sheet-back{ display:none; }
+  /* On a phone the menu slides up from the bottom, so every row is an easy tap
+     and nothing can end up off the edge of the screen. */
+  @media (max-width:560px){
+    .account-sheet-back.open{
+      display:block; position:fixed; inset:0;
+      background:rgba(5,4,10,0.6); backdrop-filter:blur(2px); z-index:120;
+    }
+    .account-menu{
+      top:auto !important; right:0 !important; bottom:0; left:0;
+      width:auto; max-height:82vh; overflow-y:auto;
+      border-radius:20px 20px 0 0;
+      border-left:none; border-right:none; border-bottom:none;
+      padding:4px 8px calc(14px + env(safe-area-inset-bottom));
+      z-index:130;
+      box-shadow:0 -14px 50px rgba(0,0,0,0.55);
+    }
+    .account-menu.open{ animation:sheetUp .22s ease; }
+    @keyframes sheetUp{ from{ transform:translateY(16px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+    .account-menu-head{ padding:14px 12px 12px; }
+    .amh-mail{ font-size:14px; }
+    .amh-x{ display:block; }
+    .account-menu-item{ padding:14px 12px; font-size:15px; }
+    .account-menu-item .ami{ width:20px; height:20px; }
+  }
 
   /* ---------- Notification bell ---------- */
   .notif-bell-wrap{ position:relative; }
@@ -4282,16 +4337,26 @@
           <button class="account-menu-trigger" id="accountMenuTrigger">
             <div class="user-badge" id="userBadge">?</div>
           </button>
-          <div class="account-menu" id="accountMenu">
-            <button class="account-menu-item" id="todayNavBtn">📅 <span>Today</span><span class="nav-badge" id="todayBadge" style="display:none;"></span></button>
-            <button class="account-menu-item" id="statsNavBtn">📊 <span>Stats</span></button>
-            <button class="account-menu-item" id="adminNavBtn" style="display:none;">📈 <span>Owner dashboard</span></button>
-            <button class="account-menu-item" id="marketingNavBtn" style="display:none;">📣 <span>Marketing dashboard</span></button>
-            <button class="account-menu-item" id="partnersNavBtn">🤝 <span>Partners</span></button>
-            <button class="account-menu-item" id="themeToggleBtn">🌙 <span>Dark mode</span></button>
-            <button class="account-menu-item" id="helpNavBtn">❓ <span>Help</span></button>
-            <button class="account-menu-item" id="accountBtn">⚙️ <span>Account settings</span></button>
-            <button class="account-menu-item" id="logoutBtn">⎋ <span>Log out</span></button>
+          <div class="account-sheet-back" id="accountSheetBack"></div>
+          <div class="account-menu" id="accountMenu" role="menu" aria-labelledby="accountMenuTrigger">
+            <div class="account-menu-head">
+              <div class="amh-who"><span class="amh-mail" id="accountMenuEmail">&nbsp;</span><span class="amh-plan" id="accountMenuPlan"></span></div>
+              <button type="button" class="amh-x" id="accountMenuClose" aria-label="Close menu"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div class="account-menu-group">
+              <button class="account-menu-item" id="todayNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>Today</span><span class="nav-badge" id="todayBadge" style="display:none;"></span></button>
+              <button class="account-menu-item" id="statsNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-6"/></svg><span>Stats</span></button>
+              <button class="account-menu-item" id="partnersNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M19.5 20v-1.4a3.4 3.4 0 0 0-2.6-3.3M15.6 5.2a3.2 3.2 0 0 1 0 6"/></svg><span>Partners</span></button>
+              <button class="account-menu-item" id="adminNavBtn" role="menuitem" style="display:none;"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg><span>Owner dashboard</span></button>
+              <button class="account-menu-item" id="marketingNavBtn" role="menuitem" style="display:none;"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4a1 1 0 0 0 1 1h3l5 4V5L9 9H5a1 1 0 0 0-1 1Z"/><path d="M17.5 9.5a4 4 0 0 1 0 5"/></svg><span>Marketing dashboard</span></button>
+            </div>
+            <div class="account-menu-group">
+              <button class="account-menu-item" id="accountBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.5a1.6 1.6 0 0 0 .32 1.77l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-1 1.46V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.77.32l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.46-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.32-1.77l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.6 1.6 0 0 0 9 4.6h.08a1.6 1.6 0 0 0 1-1.46V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.46 1.6 1.6 0 0 0 1.77-.32l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.32 1.77V9a1.6 1.6 0 0 0 1.46 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></svg><span>Account settings</span></button>
+              <button class="account-menu-item" id="helpNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.86.83c0 1.67-2.5 2.5-2.5 2.5"/><path d="M12 17h.01"/></svg><span>Help</span></button>
+            </div>
+            <div class="account-menu-group">
+              <button class="account-menu-item danger" id="logoutBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M12 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg><span>Log out</span></button>
+            </div>
           </div>
         </div>
       </div>
@@ -9571,7 +9636,6 @@ const resetSubmitBtn = document.getElementById('resetSubmitBtn');
 const resetBackBtn = document.getElementById('resetBackBtn');
 const userBadge = document.getElementById('userBadge');
 const logoutBtn = document.getElementById('logoutBtn');
-const themeToggleBtn = document.getElementById('themeToggleBtn');
 const undoToast = document.getElementById('undoToast');
 const undoToastMsg = document.getElementById('undoToastMsg');
 const undoToastBtn = document.getElementById('undoToastBtn');
@@ -10178,19 +10242,51 @@ authPassword.addEventListener('keydown', (e)=>{ if(e.key==='Enter') handleAuthSu
 
 const accountMenuTrigger = document.getElementById('accountMenuTrigger');
 const accountMenu = document.getElementById('accountMenu');
+const accountSheetBack = document.getElementById('accountSheetBack');
+// The top bar is blurred (backdrop-filter), which makes it the anchor for anything
+// positioned inside it — the menu has to live on the page itself to sit where we mean.
+document.body.appendChild(accountSheetBack);
+document.body.appendChild(accountMenu);
+const onPhone = ()=> window.matchMedia('(max-width:560px)').matches;
+function placeAccountMenu(){
+  if(onPhone()){ accountMenu.style.top = ''; accountMenu.style.right = ''; return; }
+  const r = accountMenuTrigger.getBoundingClientRect();
+  accountMenu.style.top = Math.round(r.bottom + 10) + 'px';
+  accountMenu.style.right = Math.round(window.innerWidth - r.right) + 'px';
+}
+window.addEventListener('resize', ()=>{ if(accountMenu.classList.contains('open')) placeAccountMenu(); });
+function closeAccountMenu(){
+  accountMenu.classList.remove('open');
+  accountSheetBack.classList.remove('open');
+}
+function openAccountMenu(){
+  // who's signed in, and on which plan
+  const mail = document.getElementById('accountMenuEmail');
+  const plan = document.getElementById('accountMenuPlan');
+  if(mail) mail.textContent = currentEmail || 'Signed in';
+  if(plan){
+    plan.textContent = isPro ? 'Pro' : 'Free';
+    plan.className = 'amh-plan' + (isPro ? ' pro' : '');
+  }
+  placeAccountMenu();
+  accountMenu.classList.add('open');
+  accountSheetBack.classList.add('open');
+}
 accountMenuTrigger.addEventListener('click', (e)=>{
   e.stopPropagation();
-  accountMenu.classList.toggle('open');
+  accountMenu.classList.contains('open') ? closeAccountMenu() : openAccountMenu();
 });
+document.getElementById('accountMenuClose').addEventListener('click', (e)=>{ e.stopPropagation(); closeAccountMenu(); });
+accountSheetBack.addEventListener('click', closeAccountMenu);
 accountMenu.addEventListener('click', (e)=>{
+  if(!e.target.closest('.account-menu-item')) return;
   // Let the individual item's own handler run, then close the menu right after.
-  setTimeout(()=> accountMenu.classList.remove('open'), 50);
+  setTimeout(closeAccountMenu, 50);
 });
 document.addEventListener('click', (e)=>{
-  if(!accountMenu.contains(e.target) && !accountMenuTrigger.contains(e.target)){
-    accountMenu.classList.remove('open');
-  }
+  if(!accountMenu.contains(e.target) && !accountMenuTrigger.contains(e.target)) closeAccountMenu();
 });
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && accountMenu.classList.contains('open')) closeAccountMenu(); });
 
 // ---------- Notifications ----------
 const notifBellTrigger = document.getElementById('notifBellTrigger');
@@ -10356,19 +10452,12 @@ logoutBtn.addEventListener('click', ()=>{
   setAuthMode('signup');
 });
 
-// ---------- Dark mode (device preference — plain localStorage is correct here,
-// this is a real deployed site, not a Claude.ai artifact sandbox) ----------
-themeToggleBtn.addEventListener('click', ()=>{
-  const isDark = document.documentElement.classList.toggle('dark');
-  themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
-  localStorage.setItem('guide_theme', isDark ? 'dark' : 'light');
-});
-(function(){
-  if(localStorage.getItem('guide_theme') !== 'light'){
-    document.documentElement.classList.add('dark');
-    themeToggleBtn.textContent = '☀️';
-  }
-})();
+// ---------- Theme ----------
+// The Guide is dark only. There was a ☀️/🌙 toggle here, but no light styles were ever
+// written, so switching made the app unreadable — and it set its own textContent, which
+// deleted its label and left a blank row in the menu. Removed until a light theme exists.
+document.documentElement.classList.add('dark');
+try{ localStorage.removeItem('guide_theme'); }catch(e){}
 
 // Try to auto-login using a saved token on this device
 (async ()=>{

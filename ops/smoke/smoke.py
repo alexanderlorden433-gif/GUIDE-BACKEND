@@ -547,6 +547,55 @@ def free_vs_pro(browser, base):
         ctx.close()
 
 
+def account_menu(browser, base, device, viewport, mobile):
+    """Opening the avatar menu must put Log out somewhere you can actually tap."""
+    step = [f'{device}: account menu']
+    ctx = browser.new_context(viewport=viewport, is_mobile=mobile, has_touch=mobile, service_workers='block')
+    st = new_state(True)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return
+    page.wait_for_timeout(900)
+    page.click('#accountMenuTrigger', timeout=4000)
+    page.wait_for_timeout(400)
+    r = page.evaluate("""(()=>{
+        const b = document.getElementById('logoutBtn'); if(!b) return {missing:true};
+        const g = b.getBoundingClientRect();
+        const hit = document.elementFromPoint(g.left + g.width / 2, g.top + g.height / 2);
+        return {top: Math.round(g.top), bottom: Math.round(g.bottom), vh: innerHeight,
+                onScreen: g.top >= 0 && g.bottom <= innerHeight,
+                tappable: !!(hit && hit.closest('#logoutBtn')),
+                height: Math.round(g.height),
+                labelled: (b.textContent || '').trim().length > 2,
+                blank: Array.from(document.querySelectorAll('.account-menu-item')).filter(x=> !(x.textContent||'').trim()).length};})()""")
+    if r.get('missing'):
+        problem(step[0], 'no Log out in the account menu')
+    elif not r['onScreen']:
+        problem(step[0], 'Log out is off the screen when the menu opens', r)
+    elif not r['tappable']:
+        problem(step[0], 'something is covering Log out, so it cannot be tapped', r)
+    elif r['height'] < 36:
+        problem(step[0], f"Log out is only {r['height']}px tall — too small to tap reliably", r)
+    elif r['blank']:
+        problem(step[0], f"{r['blank']} row(s) in the account menu have no label at all", r)
+    elif not r['labelled']:
+        problem(step[0], 'the Log out row has no label')
+    else:
+        ok(step[0], 'Log out is on screen, labelled and tappable')
+    shot(page, f'{device}-10-account-menu')
+    page.click('#logoutBtn', timeout=4000)
+    page.wait_for_timeout(800)
+    if visible(page, '#landingView', 4000) or visible(page, '#authScreen', 1000):
+        ok(step[0], 'Log out signs you out')
+    else:
+        problem(step[0], 'tapping Log out did not sign the user out')
+    finish(st, step[0])
+    ctx.close()
+
+
 def returning_learner(browser, base):
     """Someone who was using the app before the lessons were rewritten and renamed must keep
     their progress, and must not be locked out of modules they could already reach."""
@@ -603,6 +652,8 @@ def main():
         logged_out(browser, base, 'phone', phone, True)
         logged_in(browser, base, 'phone', phone, True, pro=False)
         free_vs_pro(browser, base)
+        account_menu(browser, base, 'phone', phone, True)
+        account_menu(browser, base, 'desktop', desktop, False)
         returning_learner(browser, base)
         browser.close()
     srv.shutdown()
