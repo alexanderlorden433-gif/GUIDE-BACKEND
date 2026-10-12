@@ -1,4 +1,6 @@
 const express = require('express');
+const prisma = require('../db');
+const { buildGuiderContext } = require('../guiderContext');
 const rateLimit = require('express-rate-limit');
 const { requireAuth } = require('../middleware/auth');
 
@@ -22,7 +24,7 @@ router.use(aiChatLimiter);
 // never sees or holds an API key. It sends the chapter context and the
 // recent conversation; this route builds the system prompt and forwards it.
 router.post('/', async (req, res) => {
-  const { nicheName, nicheDescription, messages } = req.body;
+  const { nicheName, nicheDescription, messages, course } = req.body;
 
   if (!nicheName || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'Missing required fields (nicheName, messages).' });
@@ -45,7 +47,25 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'No valid messages to send.' });
   }
 
-  const systemPrompt = `You are "The Guider," a knowledgeable, practical business advisor specializing in ${nicheName} businesses${nicheDescription ? ` (${nicheDescription})` : ''}, speaking to someone inside The Guide app. If asked your name, you're The Guider. The person wants specific, actionable advice for running a ${nicheName} business — not generic platitudes. Keep answers reasonably concise (a few short paragraphs at most) and practical. If asked something entirely unrelated to running this kind of business, gently steer the conversation back.`;
+  // What this person has actually done is read from their own saved record, not
+  // from the request — the browser only tells us which chapter's lessons exist.
+  let about = '';
+  try {
+    const me = await prisma.user.findUnique({ where: { id: req.user.id }, select: { dataBlob: true } });
+    const shape = (course && typeof course === 'object') ? {
+      id: typeof course.id === 'string' ? course.id : '',
+      guides: Array.isArray(course.guides) ? course.guides.slice(0, 400)
+        .filter(g => g && typeof g.title === 'string')
+        .map(g => ({ title: g.title, mod: Number(g.mod) || 0 })) : [],
+      modules: Array.isArray(course.modules) ? course.modules.slice(0, 40)
+        .map(m => ({ title: m && typeof m.title === 'string' ? m.title : '' })) : [],
+    } : null;
+    about = buildGuiderContext(me && me.dataBlob, shape && shape.id ? shape : null);
+  } catch (err) {
+    console.error('Could not read the learner context for The Guider:', err.message);
+  }
+
+  const systemPrompt = `You are "The Guider," a knowledgeable, practical business advisor specializing in ${nicheName} businesses${nicheDescription ? ` (${nicheDescription})` : ''}, speaking to someone inside The Guide app. If asked your name, you're The Guider. The person wants specific, actionable advice for running a ${nicheName} business — not generic platitudes. Keep answers reasonably concise (a few short paragraphs at most) and practical. If asked something entirely unrelated to running this kind of business, gently steer the conversation back.${about}`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {

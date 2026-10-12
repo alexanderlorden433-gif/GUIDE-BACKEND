@@ -10390,6 +10390,7 @@ async function loginApp(email, record, userId){
   userProfile = record.userProfile || { displayName: '', bio: '' };
   ensureToolsData();
   ensureRecurringInvoices();
+  checkCommunityActivity();
   ensureRecurringExpenses();
   userBadge.textContent = userProfile.displayName ? userProfile.displayName[0].toUpperCase() : email[0].toUpperCase();
   userBadge.title = userProfile.displayName || email;
@@ -10782,6 +10783,27 @@ document.getElementById('bottomTabGuider').addEventListener('click', ()=>{
     if(tabEl) selectTab(tabEl);
   }, 50);
 });
+// An empty room makes a product feel abandoned, so the social parts stay out of
+// sight until the Wins board has real posts in it. Checked once per sign-in; the
+// moment there are enough, the tab and the Mentors directory appear on their own.
+const COMMUNITY_MIN_POSTS = 5;
+function applyCommunityVisibility(show){
+  const tab = document.getElementById('bottomTabCommunity');
+  if(tab) tab.style.display = show ? '' : 'none';
+  document.querySelectorAll('[data-sub="mentors"]').forEach(el=>{ el.style.display = show ? '' : 'none'; });
+}
+let communityChecked = false;
+async function checkCommunityActivity(){
+  if(communityChecked) return;
+  communityChecked = true;
+  applyCommunityVisibility(false);
+  try{
+    const data = await apiFetch('/wins');
+    const wins = (data && data.wins) || [];
+    applyCommunityVisibility(wins.length >= COMMUNITY_MIN_POSTS);
+  }catch(e){ /* leave it hidden if we can't tell */ }
+}
+
 document.getElementById('bottomTabCommunity').addEventListener('click', ()=>{
   showCommunityTab();
 });
@@ -17333,7 +17355,7 @@ function renderAiChatPanel(){
         <button type="button" class="ai-chat-clear-btn" id="aiChatClearBtn">Clear chat</button>
       </div>
       <div class="ai-chat-intro">
-        💬 Ask The Guider anything about running a <strong>${escapeHtmlAi(niche.name)}</strong> business — pricing, clients, workflow, whatever's on your mind. Answers are AI-generated and won't always be perfect; use judgment.
+        💬 Ask The Guider anything about running a <strong>${escapeHtmlAi(niche.name)}</strong> business — pricing, clients, workflow, whatever's on your mind. It can see how far you are through this chapter and the figures in your own trackers, so ask about your actual numbers. Answers are AI-generated and won't always be perfect; use judgment.
       </div>
       <div class="ai-chat-messages" id="aiChatMessages"></div>
       <div class="ai-chat-input-row">
@@ -17416,6 +17438,13 @@ async function sendAiChatMessage(niche, text){
       body: JSON.stringify({
         nicheName: niche.name,
         nicheDescription: niche.description,
+        // the lessons this chapter contains, so the backend can work out how far
+        // through it this person is — their progress itself comes from their account
+        course: {
+          id: niche.id,
+          modules: (niche.modules || []).map(m=> ({ title: m.title })),
+          guides: niche.guides.map(g=> ({ title: g.title, mod: g.mod }))
+        },
         messages: aiChatHistory[niche.id].slice(-20)
       })
     });

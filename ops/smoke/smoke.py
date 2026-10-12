@@ -96,7 +96,7 @@ def fixture(state, method, path, body):
     if p == '/api/leaderboard':
         return 200, {'leaderboard': [{'rank': 1, 'displayName': 'Smoke Test', 'value': 3, 'isMe': True}], 'type': 'streak'}
     if p == '/api/wins' and method == 'GET':
-        return 200, {'wins': []}
+        return 200, {'wins': state.get('wins', [])}
     if re.match(r'^/api/discussion/[^/]+$', p) and method == 'GET':
         return 200, {'posts': [], 'isOwner': False}
     if re.match(r'^/api/mentors/[^/]+$', p) and method == 'GET':
@@ -613,6 +613,32 @@ def account_menu(browser, base, device, viewport, mobile):
     ctx.close()
 
 
+def quiet_community(browser, base):
+    """The social parts stay hidden while they're empty, and come back when they aren't."""
+    for label, posts, expect in (('empty', 0, False), ('busy', 6, True)):
+        step = [f'community ({label})']
+        ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
+        st = new_state(True)
+        st['wins'] = [{'id': f'w{i}', 'body': 'Got my first client', 'emoji': '🎉',
+                       'authorName': 'Someone', 'isMine': False, 'createdAt': TODAY,
+                       'reactions': []} for i in range(posts)]
+        attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); continue
+        page.wait_for_timeout(1400)
+        shown = page.evaluate("getComputedStyle(document.getElementById('bottomTabCommunity')).display !== 'none'")
+        if shown != expect:
+            problem(step[0], f'with {posts} posts the Community tab should be '
+                             f'{"shown" if expect else "hidden"} but was not')
+        else:
+            ok(step[0], f'{posts} posts — Community tab {"shown" if expect else "stays hidden"}')
+        finish(st, step[0])
+        ctx.close()
+
+
 def returning_learner(browser, base):
     """Someone who was using the app before the lessons were rewritten and renamed must keep
     their progress, and must not be locked out of modules they could already reach."""
@@ -671,6 +697,7 @@ def main():
         free_vs_pro(browser, base)
         account_menu(browser, base, 'phone', phone, True)
         account_menu(browser, base, 'desktop', desktop, False)
+        quiet_community(browser, base)
         returning_learner(browser, base)
         browser.close()
     srv.shutdown()
