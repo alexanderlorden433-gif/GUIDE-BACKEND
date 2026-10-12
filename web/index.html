@@ -3222,6 +3222,355 @@
     line-height:1.6;
     color:var(--ink-soft);
   }
+  /* ---------- Business tab: the Ledger ----------
+     Everything below is scoped to the business surfaces. The control rules use
+     :where() so they carry ZERO specificity: any existing class rule (.sub-tab,
+     .back-btn, .view-mode-btn, .biz-form button ...) still wins, and only the
+     controls that had no styling at all — which were falling back to the
+     browser's white default — pick these up. */
+
+  :where(#businessView, .biz-card, .tool-panel) :where(input:not([type=checkbox]):not([type=radio]), select, textarea){
+    font-family:'Inter',sans-serif;
+    font-size:16px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--bg-raised);
+    color:var(--ink);
+    outline:none;
+    color-scheme:dark;            /* native date/number pickers follow the app */
+    min-width:0;
+  }
+  :where(#businessView, .biz-card, .tool-panel) :where(input, select, textarea)::placeholder{ color:#6E6788; }
+  :where(#businessView, .biz-card, .tool-panel) :where(input[type=checkbox], input[type=radio]){
+    accent-color:var(--grape);
+    width:17px; height:17px;
+    flex:none;
+  }
+  :where(#businessView, .biz-card, .tool-panel) :where(input, select, textarea):focus{
+    border-color:rgba(168,85,247,0.55);
+    box-shadow:0 0 0 3px rgba(168,85,247,0.18);
+  }
+  :where(#businessView, .biz-card, .tool-panel) :where(button){
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    padding:11px 18px;
+    border:1px solid var(--line);
+    border-radius:11px;
+    background:var(--line-soft);
+    color:var(--ink);
+    cursor:pointer;
+  }
+  :where(#businessView, .biz-card, .tool-panel) :where(button):hover{ border-color:#2C2542; }
+
+  /* the one primary action per panel */
+  .biz-primary-btn{
+    font-family:'Space Grotesk',sans-serif !important;
+    font-weight:700 !important;
+    font-size:15px !important;
+    padding:14px 20px !important;
+    border:none !important;
+    border-radius:12px !important;
+    background:var(--accent-gradient) !important;
+    color:#fff !important;
+    cursor:pointer;
+    box-shadow:0 8px 26px rgba(124,58,237,0.3);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  .biz-primary-btn:hover{ filter:brightness(1.07); }
+
+  /* the tool chip row runs off the edge — show that it does */
+  .sub-nav-scroller{ position:relative; }
+  .sub-nav-scroller::after{
+    content:'';
+    position:absolute; top:0; right:0; width:58px; height:100%;
+    background:linear-gradient(to left, var(--bg) 0, var(--bg) 34%, rgba(11,10,18,0));
+    pointer-events:none;
+  }
+
+  /* row actions: labelled where there's room, a real button where there isn't */
+  .tr-act{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    padding:7px 11px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .tr-act:hover{ color:var(--ink); border-color:#2C2542; }
+  .tr-act.is-strong{ background:#1C1830; border-color:#2C2542; color:var(--ink); }
+  .tr-act.is-danger:hover{ color:#FCA5A5; border-color:#7F1D33; }
+  /* the bare glyph buttons in the other panels at least read as buttons now */
+  .tool-row .tr-del{
+    border:1px solid var(--line) !important;
+    border-radius:9px;
+    background:transparent;
+  }
+  .tool-row .tr-del:hover{ border-color:#7F1D33 !important; }
+
+  /* --- the ledger itself --- */
+  .ledger-head{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .ledger-owed{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:34px;
+    font-weight:700;
+    letter-spacing:-0.03em;
+    line-height:1;
+    color:var(--sun);
+  }
+  .ledger-owed-lbl{ font-size:13px; color:var(--ink-soft); margin-top:7px; }
+  .ledger-head .biz-primary-btn{ flex:1 0 100%; }
+  .ledger-tiles{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .ledger-tile{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:11px 13px;
+  }
+  .ledger-tile .n{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:-0.02em;
+  }
+  .ledger-tile .l{ font-size:11.5px; color:var(--ink-soft); margin-top:3px; }
+  .ledger-tile.is-due .n{ color:var(--sun); }
+
+  .ledger-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin:0 0 11px;
+  }
+  .ledger-count{ font-size:12.5px; font-weight:600; color:var(--ink-soft); }
+
+  .ledger-rows{ display:flex; flex-direction:column; gap:9px; }
+  .ledger-row{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:13px;
+    padding:13px 14px;
+  }
+  .ledger-row.is-paid{ opacity:0.82; }
+  .ledger-row-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .ledger-who{ min-width:0; }
+  .ledger-who > div{ min-width:0; }
+  .ledger-client{
+    font-weight:600;
+    font-size:15px;
+    line-height:1.3;
+    overflow-wrap:break-word;   /* a long client name wraps instead of truncating */
+  }
+  .ledger-meta{ font-size:12.5px; color:var(--ink-soft); margin-top:3px; }
+  .ledger-money{ text-align:right; flex:none; }
+  .ledger-amount{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    letter-spacing:-0.01em;
+  }
+  .ledger-pill{
+    display:inline-block;
+    margin-top:5px;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    border-radius:999px;
+    padding:2px 8px;
+    border:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .ledger-pill.is-unpaid{ color:var(--sun); background:rgba(245,158,11,0.12); border-color:rgba(245,158,11,0.32); }
+  .ledger-pill.is-overdue{ color:#FCA5A5; background:rgba(239,68,68,0.13); border-color:rgba(239,68,68,0.34); }
+  .ledger-pill.is-paid{ color:#6EE7B7; background:rgba(52,211,153,0.11); border-color:rgba(52,211,153,0.3); }
+  .ledger-acts{ display:flex; gap:8px; margin-top:12px; }
+  .ledger-acts .tr-act{ flex:1; text-align:center; }
+  .ledger-acts .tr-act.is-icon{ flex:0 0 42px; }
+
+  .ledger-empty{
+    background:var(--card);
+    border:1px dashed var(--line);
+    border-radius:14px;
+    padding:26px 20px;
+    text-align:center;
+  }
+  .ledger-empty strong{ font-family:'Space Grotesk',sans-serif; font-size:15px; }
+  .ledger-empty p{ margin:7px 0 0; font-size:13px; color:var(--ink-soft); line-height:1.6; }
+
+  /* the form is behind the button, so the screen opens on your invoices */
+  .ledger-form{ margin-bottom:18px; }
+  /* the two top fields each get a label, so they sit in their own wrapper */
+  .ledger-form .biz-form > div{ flex:1 1 150px; min-width:0; }
+  .ledger-form .biz-form > div > input{ width:100%; }
+  .ledger-form[hidden]{ display:none; }
+  .ledger-form-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .ledger-form-head h4{ margin:0; font-family:'Space Grotesk',sans-serif; font-size:15.5px; }
+  .ledger-field-lbl{
+    display:block;
+    font-size:11.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin:0 0 6px;
+  }
+
+  /* these three only exist on the laptop ledger */
+  .ledger-head-row{ display:none; }
+  .ledger-initials{ display:none; }
+  .ledger-col{ display:none; }
+
+  /* --- laptop and up: the width earns its keep --- */
+  @media (min-width:1024px){
+    #businessView.biz-wide{
+      display:grid;
+      grid-template-columns:232px minmax(0,1fr);
+      grid-template-rows:auto auto auto minmax(0,1fr);
+      column-gap:30px;
+      align-items:start;
+    }
+    /* the tools run down the side; the heading and the panel stack in the main column */
+    #businessView.biz-wide > .sub-nav-scroller{ grid-column:1; grid-row:1 / span 4; }
+    #businessView.biz-wide > .back-btn{ grid-column:2; grid-row:1; justify-self:start; }
+    #businessView.biz-wide > .page-title{ grid-column:2; grid-row:2; margin:6px 0 0; }
+    #businessView.biz-wide > .page-sub{ grid-column:2; grid-row:3; }
+    #businessView.biz-wide > #businessPanelWrap{ grid-column:2; grid-row:4; }
+
+    /* the chip row becomes a side rail — nothing to scroll off the edge */
+    #businessView.biz-wide .sub-nav-scroller{ position:sticky; top:22px; margin:0; }
+    #businessView.biz-wide .sub-nav-scroller::after{ display:none; }
+    #businessView.biz-wide .sub-nav{
+      flex-direction:column;
+      align-items:stretch;
+      gap:3px;
+      margin:0;
+      overflow:visible;
+      max-height:none;
+    }
+    #businessView.biz-wide .sub-tab{
+      text-align:left;
+      border:none;
+      background:transparent;
+      border-radius:10px;
+      padding:10px 12px;
+      font-size:13.5px;
+      white-space:normal;
+    }
+    #businessView.biz-wide .sub-tab.active{
+      background:var(--line-soft);
+      color:var(--ink);
+      box-shadow:none;
+    }
+    #businessView.biz-wide .sub-tab.active::before{
+      content:'';
+      display:inline-block;
+      width:3px; height:14px;
+      margin-right:9px;
+      border-radius:2px;
+      background:var(--accent-gradient);
+      vertical-align:-2px;
+    }
+
+    .biz-card{ max-width:none; }
+    .ledger-tiles{ grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; }
+    .ledger-tile{ padding:15px 17px; }
+    .ledger-tile .n{ font-size:23px; }
+    .ledger-owed{ font-size:40px; }
+    .ledger-head .biz-primary-btn{ flex:none; }
+
+    /* invoices read like a real ledger */
+    .ledger-rows{ gap:0; border:1px solid var(--line); border-radius:15px; overflow:hidden; background:var(--bg-raised); }
+    .ledger-rows .ledger-head-row{
+      display:grid;
+      grid-template-columns:minmax(140px,2.2fr) minmax(96px,1.1fr) minmax(84px,0.9fr) 78px minmax(238px,1.2fr);
+      align-items:center;
+      gap:14px;
+      padding:11px 20px;
+      border-bottom:1px solid var(--line);
+      font-size:10.5px;
+      font-weight:700;
+      letter-spacing:0.08em;
+      color:var(--ink-soft);
+    }
+    .ledger-row{
+      display:grid;
+      grid-template-columns:minmax(140px,2.2fr) minmax(96px,1.1fr) minmax(84px,0.9fr) 78px minmax(238px,1.2fr);
+      align-items:center;
+      gap:14px;
+      border:none;
+      border-bottom:1px solid var(--line);
+      border-radius:0;
+      background:transparent;
+      padding:14px 20px;
+    }
+    .ledger-row:last-child{ border-bottom:none; }
+    .ledger-row:hover{ background:var(--card); }
+    .ledger-row-top{ display:contents; }
+    .ledger-head-row > *,
+    .ledger-row > *,
+    .ledger-row-top > *,
+    .ledger-money > *{ min-width:0; overflow:hidden; }
+    .ledger-who{ display:flex; align-items:center; gap:11px; }
+    .ledger-initials{
+      flex:none;
+      width:30px; height:30px;
+      border-radius:8px;
+      background:rgba(168,85,247,0.16);
+      color:#C9A2FF;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Space Grotesk',sans-serif;
+      font-weight:700;
+      font-size:12px;
+    }
+    .ledger-row.is-paid .ledger-initials{ background:rgba(52,211,153,0.12); color:#6EE7B7; }
+    .ledger-meta{ display:block; margin-top:2px; font-size:12px; }
+    .ledger-meta .lm-when{ display:none; }
+    .ledger-col{ display:block; font-size:13px; color:var(--ink-soft); white-space:nowrap; }
+    .ledger-col.is-due-soon{ color:var(--sun); }
+    .ledger-col.is-late{ color:#FCA5A5; }
+    .ledger-money{ display:contents; }
+    .ledger-amount{ font-size:15px; text-align:right; }
+    .ledger-pill{ margin-top:0; justify-self:start; }
+    .ledger-acts{
+      margin-top:0;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .ledger-acts .tr-act{ flex:none; }
+    .ledger-acts .tr-act.is-icon{ flex:none; width:38px; }
+    .ledger-empty{ padding:40px 24px; }
+  }
   /* ---------- PDF export (browser print-to-PDF, no external libraries) ---------- */
   #printArea{ display:none; }
   @media print{
@@ -4755,10 +5104,11 @@
       <div id="todayContent"></div>
     </div>
 
-    <div id="businessView" style="display:none;">
+    <div id="businessView" class="biz-wide" style="display:none;">
       <button class="back-btn" id="businessBackBtn">← All chapters</button>
       <h2 class="page-title">💼 Business</h2>
       <p class="page-sub">Cross-chapter tools that work across everything you track — not tied to one niche.</p>
+      <div class="sub-nav-scroller">
       <div class="sub-nav" id="businessSubNav">
         <button class="sub-tab active" data-biz="invoicing">Invoicing</button>
         <button class="sub-tab" data-biz="expenses">Expenses</button>
@@ -4779,6 +5129,7 @@
         <button class="sub-tab" data-biz="incomering">Income Goal 📊</button>
         <button class="sub-tab" data-biz="backup">Data Backup <span class="pro-tag" style="background:var(--grape);">YEARLY</span></button>
         <button class="sub-tab" data-biz="portal">Client Portal <span class="pro-tag" style="background:var(--grape);">YEARLY</span></button>
+      </div>
       </div>
       <div id="businessPanelWrap"></div>
     </div>
@@ -16235,34 +16586,78 @@ function renderBusinessPanel(){
 }
 
 let currentInvoiceItems = [{desc:'', amount:''}];
-function renderInvoicingPanel(){
-  businessPanelWrap.innerHTML = `
-    <div class="biz-card">
-      <h4>🧾 New Invoice</h4>
-      <div class="biz-form">
-        <input type="text" id="invClient" placeholder="Client name">
+let invSortUnpaidFirst = true;   // the thing you came here to see is the money you're owed
+let invFormOpen = false;         // the form stays behind the button so the screen opens on your invoices
+
+function invIsPaid(inv){ return String(inv && inv.status || '').toLowerCase() === 'paid'; }
+function invMoney(n){
+  return '$' + (Number(n) || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function invShortDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso + 'T12:00:00');
+  if(isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+/** Plain-English "when", so nobody has to work out a date in their head. */
+function invDueWord(inv){
+  if(invIsPaid(inv)) return 'Paid';
+  if(!inv.dueDate) return 'No due date';
+  const left = dayNum(inv.dueDate) - dayNum(todayStr());
+  if(left < -1) return `${Math.abs(left)} days late`;
+  if(left === -1) return 'Due yesterday';
+  if(left === 0) return 'Due today';
+  if(left === 1) return 'Due tomorrow';
+  if(left <= 7) return `Due in ${left} days`;
+  return 'Due ' + invShortDate(inv.dueDate);
+}
+function invInitials(name){
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return '–';
+  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+}
+
+/** The new-invoice form. It lives behind the button on both the empty and the busy screen. */
+function invFormHtml(){
+  return `
+    <div class="ledger-form-head">
+      <h4>New invoice</h4>
+      <button type="button" class="tr-act" id="invCancelBtn">Cancel</button>
+    </div>
+    <div class="biz-form">
+      <div>
+        <label class="ledger-field-lbl" for="invClient">Who is it for</label>
+        <input type="text" id="invClient" placeholder="Client name" autocomplete="off">
+      </div>
+      <div>
+        <label class="ledger-field-lbl" for="invDueDate">Payment due</label>
         <input type="date" id="invDueDate" title="Due date">
       </div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);margin:4px 0 12px;">
-        <input type="checkbox" id="invRecurring"> Repeat monthly (auto-generate a fresh copy each month)
-      </label>
-      <div id="invLineItems"></div>
-      <button type="button" id="invAddLineBtn" class="view-mode-btn" style="margin-bottom:12px;">+ Add line item</button>
-      <div class="biz-total-row"><span>Total</span><span id="invTotalDisplay">$0.00</span></div>
-      <button type="button" id="invGenerateBtn" style="width:100%;">Generate Invoice</button>
     </div>
-    <div class="biz-card">
-      <h4>📋 Invoices</h4>
-      <div id="invList"></div>
-    </div>
+    <label class="ledger-field-lbl" style="margin-top:12px;">What they're paying for</label>
+    <div id="invLineItems"></div>
+    <button type="button" id="invAddLineBtn" class="tr-act" style="margin-bottom:12px;">+ Add another line</button>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);margin:4px 0 12px;">
+      <input type="checkbox" id="invRecurring"> Repeat monthly (a fresh copy is created each month)
+    </label>
+    <div class="biz-total-row"><span>Total</span><span id="invTotalDisplay">$0.00</span></div>
+    <button type="button" id="invGenerateBtn" class="biz-primary-btn" style="width:100%;">Create invoice</button>
   `;
+}
 
+function wireInvoiceForm(){
+  const form = document.getElementById('invForm');
   const lineItemsWrap = document.getElementById('invLineItems');
+
+  function updateTotal(){
+    const total = currentInvoiceItems.reduce((s,i)=> s + (parseFloat(i.amount)||0), 0);
+    document.getElementById('invTotalDisplay').textContent = invMoney(total);
+  }
   function renderLineItems(){
     lineItemsWrap.innerHTML = currentInvoiceItems.map((item, i)=>`
       <div class="biz-line-item">
-        <input type="text" class="inv-item-desc" data-idx="${i}" placeholder="Description" value="${item.desc}">
-        <input type="number" class="inv-item-amount biz-amount" data-idx="${i}" placeholder="$0.00" value="${item.amount}">
+        <input type="text" class="inv-item-desc" data-idx="${i}" placeholder="What you did" value="${escapeHtml(item.desc)}">
+        <input type="number" class="inv-item-amount biz-amount" data-idx="${i}" placeholder="0.00" value="${escapeHtml(item.amount)}">
       </div>
     `).join('');
     lineItemsWrap.querySelectorAll('.inv-item-desc').forEach(el=>{
@@ -16275,13 +16670,20 @@ function renderInvoicingPanel(){
       });
     });
   }
-  function updateTotal(){
-    const total = currentInvoiceItems.reduce((s,i)=> s + (parseFloat(i.amount)||0), 0);
-    document.getElementById('invTotalDisplay').textContent = '$' + total.toFixed(2);
-  }
   renderLineItems();
   updateTotal();
 
+  function openForm(open){
+    invFormOpen = open;
+    form.hidden = !open;
+    if(open){
+      const first = document.getElementById('invClient');
+      if(first) first.focus({preventScroll:true});
+      form.scrollIntoView({block:'nearest', behavior:'smooth'});
+    }
+  }
+  document.getElementById('invNewBtn').addEventListener('click', ()=> openForm(!invFormOpen));
+  document.getElementById('invCancelBtn').addEventListener('click', ()=> openForm(false));
   document.getElementById('invAddLineBtn').addEventListener('click', ()=>{
     currentInvoiceItems.push({desc:'', amount:''});
     renderLineItems();
@@ -16291,7 +16693,7 @@ function renderInvoicingPanel(){
     const client = document.getElementById('invClient').value.trim();
     const dueDate = document.getElementById('invDueDate').value;
     const items = currentInvoiceItems.filter(i=> i.desc.trim() && parseFloat(i.amount) > 0);
-    if(!client || items.length===0){ alert('Add a client name and at least one line item with an amount.'); return; }
+    if(!client || items.length===0){ alert('Add a client name and at least one line with an amount.'); return; }
     const total = items.reduce((s,i)=> s + parseFloat(i.amount), 0);
     const recurring = document.getElementById('invRecurring').checked;
     const invoice = {
@@ -16303,7 +16705,75 @@ function renderInvoicingPanel(){
     businessData.invoices.push(invoice);
     businessData.invoiceCounter++;
     currentInvoiceItems = [{desc:'', amount:''}];
+    invFormOpen = false;
     saveProgress();
+    renderInvoicingPanel();
+  });
+}
+
+function renderInvoicingPanel(){
+  const o = businessOutcome();
+  const today = todayStr();
+  const invoices = businessData.invoices || [];
+  const unpaid = invoices.filter(i=> !invIsPaid(i));
+  const overdue = unpaid.filter(i=> i.dueDate && i.dueDate < today).length;
+  const dueWeek = unpaid.filter(i=> i.dueDate && i.dueDate >= today && dayNum(i.dueDate) - dayNum(today) <= 7).length;
+
+  const notes = [];
+  if(overdue) notes.push(`${overdue} overdue`);
+  if(dueWeek) notes.push(`${dueWeek} due this week`);
+
+  if(invoices.length === 0){
+    businessPanelWrap.innerHTML = `
+      <div class="biz-card">
+        <div class="ledger-empty">
+          <strong>No invoices yet</strong>
+          <p>Bill your first client and this becomes the record of what you've earned, what's still owed and who owes it.</p>
+          <button type="button" id="invNewBtn" class="biz-primary-btn" style="margin-top:16px;">+ New invoice</button>
+        </div>
+        <div class="ledger-form" id="invForm" hidden>${invFormHtml()}</div>
+      </div>
+    `;
+    wireInvoiceForm();
+    return;
+  }
+
+  businessPanelWrap.innerHTML = `
+    <div class="biz-card">
+      <div class="ledger-head">
+        <div>
+          <div class="ledger-owed">${invMoney(o.outstanding)}</div>
+          <div class="ledger-owed-lbl">${unpaid.length
+            ? `owed to you across ${unpaid.length} unpaid invoice${unpaid.length === 1 ? '' : 's'}`
+            : invoices.length ? 'owed to you — everything you’ve billed is paid' : 'owed to you — nothing billed yet'}</div>
+        </div>
+        <button type="button" id="invNewBtn" class="biz-primary-btn">+ New invoice</button>
+      </div>
+
+      <div class="ledger-tiles">
+        <div class="ledger-tile"><div class="n">${invMoney(o.invoiced)}</div><div class="l">Invoiced</div></div>
+        <div class="ledger-tile"><div class="n">${invMoney(o.paid)}</div><div class="l">Paid to you</div></div>
+        <div class="ledger-tile"><div class="n">${invMoney(o.expenses)}</div><div class="l">Expenses</div></div>
+        <div class="ledger-tile${o.profit < 0 ? ' is-due' : ''}"><div class="n">${invMoney(o.profit)}</div><div class="l">Profit</div></div>
+      </div>
+
+      <div class="ledger-form" id="invForm"${invFormOpen ? '' : ' hidden'}>${invFormHtml()}</div>
+
+      <div class="ledger-bar">
+        <span class="ledger-count">${invoices.length
+          ? `${invoices.length} invoice${invoices.length === 1 ? '' : 's'}${notes.length ? ' · ' + notes.join(' · ') : ''}`
+          : ''}</span>
+        ${invoices.length > 1 ? `<button type="button" class="tr-act" id="invSortBtn">${invSortUnpaidFirst ? 'Unpaid first' : 'Newest first'}</button>` : ''}
+      </div>
+      <div class="ledger-rows" id="invList"></div>
+    </div>
+  `;
+
+  wireInvoiceForm();
+
+  const sortBtn = document.getElementById('invSortBtn');
+  if(sortBtn) sortBtn.addEventListener('click', ()=>{
+    invSortUnpaidFirst = !invSortUnpaidFirst;
     renderInvoicingPanel();
   });
 
@@ -16314,33 +16784,63 @@ function renderInvoiceList(){
   const listEl = document.getElementById('invList');
   if(!listEl) return;
   const today = todayStr();
-  if(businessData.invoices.length===0){
-    listEl.innerHTML = '<div class="tool-empty">🧾 No invoices yet — create your first one above.</div>';
-    return;
+  const all = businessData.invoices || [];
+  if(all.length === 0){ listEl.innerHTML = ''; return; }
+
+  // newest first, and — unless you asked otherwise — whatever is still unpaid on top
+  const rows = all.map((inv, idx)=> ({inv, idx})).reverse();
+  if(invSortUnpaidFirst){
+    rows.sort((a, b)=>{
+      const ap = invIsPaid(a.inv) ? 1 : 0, bp = invIsPaid(b.inv) ? 1 : 0;
+      if(ap !== bp) return ap - bp;
+      return String(a.inv.dueDate || '9999').localeCompare(String(b.inv.dueDate || '9999'));
+    });
   }
-  listEl.innerHTML = '';
-  businessData.invoices.slice().reverse().forEach(inv=>{
-    const idx = businessData.invoices.indexOf(inv);
-    const isOverdue = inv.status === 'Unpaid' && inv.dueDate && inv.dueDate < today;
-    const displayStatus = isOverdue ? 'Overdue' : inv.status;
+
+  listEl.innerHTML = `
+    <div class="ledger-head-row">
+      <div>CLIENT</div><div>WHEN</div>
+      <div style="text-align:right;">AMOUNT</div><div>STATUS</div><div></div>
+    </div>`;
+
+  rows.forEach(({inv, idx})=>{
+    const paid = invIsPaid(inv);
+    const overdue = !paid && inv.dueDate && inv.dueDate < today;
+    const label = paid ? 'PAID' : overdue ? 'OVERDUE' : 'UNPAID';
+    const pill = paid ? 'is-paid' : overdue ? 'is-overdue' : 'is-unpaid';
+    const soon = !paid && inv.dueDate && dayNum(inv.dueDate) - dayNum(today) <= 7;
+
     const row = document.createElement('div');
-    row.className = 'tool-row';
-    row.style.marginBottom = '8px';
+    row.className = 'ledger-row' + (paid ? ' is-paid' : '');
     row.innerHTML = `
-      <div class="tr-main"><div class="tr-title">#${inv.number} — ${inv.client}</div><div class="tr-sub">$${inv.total.toFixed(2)} · due ${inv.dueDate || 'no date'}</div></div>
-      <span class="tr-badge" style="${displayStatus==='Paid' ? 'background:rgba(34,197,94,0.15);border-color:#22C55E;color:#6EE7B7;' : displayStatus==='Overdue' ? 'background:rgba(239,68,68,0.15);border-color:#EF4444;color:#FCA5A5;' : ''}">${displayStatus}</span>
-      <button class="tr-del" data-act="pdf" aria-label="Download PDF" title="Download PDF">📄</button>
-      <button class="tr-del" data-act="toggle" aria-label="Toggle paid status" title="Mark paid/unpaid">✓</button>
-      <button class="tr-del" data-act="del" aria-label="Delete">✕</button>
+      <div class="ledger-row-top">
+        <div class="ledger-who">
+          <span class="ledger-initials" aria-hidden="true">${escapeHtml(invInitials(inv.client))}</span>
+          <div>
+            <div class="ledger-client">${escapeHtml(inv.client || 'No name')}</div>
+            <div class="ledger-meta"><span class="lm-num">#${escapeHtml(inv.number)}</span><span class="lm-when"> · ${escapeHtml(invDueWord(inv))}</span></div>
+          </div>
+        </div>
+        <div class="ledger-col${overdue ? ' is-late' : soon ? ' is-due-soon' : ''}">${escapeHtml(invDueWord(inv))}</div>
+        <div class="ledger-money">
+          <div class="ledger-amount">${invMoney(inv.total)}</div>
+          <span class="ledger-pill ${pill}">${label}</span>
+        </div>
+      </div>
+      <div class="ledger-acts">
+        <button type="button" class="tr-act${paid ? '' : ' is-strong'}" data-act="toggle">${paid ? 'Mark unpaid' : 'Mark paid'}</button>
+        <button type="button" class="tr-act" data-act="pdf">Send PDF</button>
+        <button type="button" class="tr-act is-icon is-danger" data-act="del" aria-label="Delete invoice ${escapeHtml(inv.number)}" title="Delete">✕</button>
+      </div>
     `;
     row.querySelector('[data-act="pdf"]').addEventListener('click', ()=> printInvoice(inv));
     row.querySelector('[data-act="toggle"]').addEventListener('click', ()=>{
-      inv.status = inv.status === 'Paid' ? 'Unpaid' : 'Paid';
+      inv.status = paid ? 'Unpaid' : 'Paid';
       saveProgress();
-      renderInvoiceList();
+      renderInvoicingPanel();
     });
     row.querySelector('[data-act="del"]').addEventListener('click', ()=>{
-      deleteWithUndo(businessData.invoices, idx, 'Invoice', renderInvoiceList);
+      deleteWithUndo(businessData.invoices, idx, 'Invoice', renderInvoicingPanel);
       saveProgress();
     });
     listEl.appendChild(row);
