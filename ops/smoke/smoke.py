@@ -82,6 +82,7 @@ def fixture(state, method, path, body):
     p = path
     if p == '/api/account' and method == 'GET':
         return 200, {'email': 'smoke@theguide.test', 'isPro': state['pro'], 'planType': 'yearly' if state['pro'] else None,
+                     'trialEligible': True,
                      'data': state['data'], 'referralCode': 'SMOKE1', 'referredCount': 0, 'referredProCount': 0, 'bonusProUntil': None}
     if p == '/api/account' and method == 'PUT':
         if isinstance(body, dict) and isinstance(body.get('data'), dict):
@@ -127,7 +128,8 @@ def fixture(state, method, path, body):
         # the real route reads these from Stripe; the numbers here are only a stand-in
         return 200, {'monthly': {'amount': 24.99, 'currency': 'USD', 'interval': 'month'},
                      'yearly': {'amount': 149, 'currency': 'USD', 'interval': 'year',
-                                'savingPercent': 50, 'monthsFree': 5}}
+                                'savingPercent': 50, 'monthsFree': 5},
+                     'trialDays': 4}
     if p == '/api/billing/checkout':
         return 200, {'url': 'https://checkout.stripe.com/c/pay/cs_test_smoke'}
     if p == '/api/billing/portal':
@@ -536,11 +538,18 @@ def free_vs_pro(browser, base):
             # must match what the backend says it charges, never a number typed into the page
             if price['monthly'] != '$24.99/mo' or price['yearly'] != '$149/yr':
                 problem(step[0], 'the prices shown do not match what the backend charges', price)
-            elif '7 days free' not in price['note']:
-                problem(step[0], 'the free trial is not mentioned on the upgrade screen', price)
+            elif 'free for 4 days' not in price['note'].lower():
+                problem(step[0], 'the upgrade screen does not say how long the free trial is', price)
             elif 'months free' not in price['sub']:
                 problem(step[0], 'the yearly plan does not show what it saves', price)
             else:
+                start = page.evaluate("(()=>{const o=[...document.querySelectorAll('.start-opt')];"
+                                      "return {n:o.length, picked:o.filter(x=>x.classList.contains('selected')).length,"
+                                      "labels:o.map(x=>x.textContent.trim())}})()")
+                if start['n'] != 2 or start['picked'] != 1:
+                    problem(step[0], 'the customer is not offered a clear choice of trial or no trial', start)
+                else:
+                    ok(step[0], 'offers "try it free" or "start now", one chosen')
                 ok(step[0], "shows Stripe's real prices (" + price['monthly'] + ', ' + price['yearly'] + ')')
             shot(page, 'desktop-11-free-course')
         finish(st, step[0])

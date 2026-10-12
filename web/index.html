@@ -2750,6 +2750,20 @@
   }
   .modal-box h2{font-weight:700;font-size:24px;margin:0 0 8px;}
   .modal-plans{display:flex;flex-direction:column;gap:10px;margin:18px 0;}
+  .modal-start{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0 4px;}
+  .start-opt{
+    text-align:left; cursor:pointer; border-radius:12px; padding:12px 13px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--line); color:var(--ink);
+    font-family:'Inter',sans-serif; display:grid; gap:2px;
+  }
+  .start-opt b{font-family:'Space Grotesk',sans-serif; font-size:14px;}
+  .start-opt span{font-size:12.5px; color:var(--ink-soft);}
+  .start-opt.selected{
+    border-color:rgba(168,85,247,0.65);
+    background:linear-gradient(150deg, rgba(124,58,237,0.2), rgba(236,72,153,0.1));
+  }
+  .start-opt.selected span{color:var(--ink);}
+  @media (max-width:420px){ .modal-start{grid-template-columns:1fr;} }
   .modal-plan{
     border:1px solid var(--line);
     border-radius:12px;
@@ -10020,6 +10034,7 @@ async function loginApp(email, record, userId){
   selectedNiches = record.niches || [];
   isPro = !!record.isPro;
   planType = record.planType || null;
+  trialEligible = record.trialEligible !== false;
   streak = record.streak || {count:0, lastDate:null};
   bookmarked = new Set(record.bookmarks || []);
   courseStarts = record.courseStarts || {};
@@ -10565,10 +10580,39 @@ let selectedPlan = 'monthly';
 // What Pro costs comes from Stripe, so the app can never advertise a price we
 // don't charge. Until it arrives the amounts show as "—" rather than a guess.
 let planPrices = null;
+let trialEligible = true;   // a trial is first-time only; the backend is the final word
+let wantsTrial = true;
 async function loadPlanPrices(){
   if(planPrices) return planPrices;
   try{ planPrices = await apiFetch('/billing/prices'); }catch(e){ planPrices = null; }
   return planPrices;
+}
+/** Start with the free trial, or start paying straight away. The customer picks. */
+function paintStartChoice(){
+  const box = upgradeModalBody.querySelector('#upgradeStart');
+  const note = upgradeModalBody.querySelector('#upgradeModalNote');
+  if(!box) return;
+  const days = (planPrices && planPrices.trialDays) || 4;
+  if(!trialEligible){
+    box.innerHTML = '';
+    if(note) note.textContent = 'Billed as soon as you confirm. Cancel any time from your account — you keep Pro until the period you paid for ends.';
+    return;
+  }
+  box.innerHTML = `
+    <button type="button" class="start-opt${wantsTrial ? ' selected' : ''}" data-trial="1">
+      <b>Try it free for ${days} days</b><span>Nothing is charged today</span>
+    </button>
+    <button type="button" class="start-opt${wantsTrial ? '' : ' selected'}" data-trial="0">
+      <b>Start now, no trial</b><span>Billed today</span>
+    </button>`;
+  box.querySelectorAll('.start-opt').forEach(b=>{
+    b.addEventListener('click', ()=>{ wantsTrial = b.dataset.trial === '1'; paintStartChoice(); });
+  });
+  if(note){
+    note.textContent = wantsTrial
+      ? `Free for ${days} days, then it renews automatically unless you cancel. Cancel any time from your account.`
+      : 'Billed as soon as you confirm. Cancel any time from your account — you keep Pro until the period you paid for ends.';
+  }
 }
 function paintPlanPrices(){
   const put = (p)=>{
@@ -10613,12 +10657,15 @@ function openUpgradeModal(resumeAction){
         <div class="mp-price" data-price="yearly">—</div>
       </div>
     </div>
+    <div class="modal-start" id="upgradeStart"></div>
     <button type="button" class="modal-cta" id="upgradeCta">Continue to checkout →</button>
-    <p class="modal-note" id="upgradeModalNote">7 days free, then it renews automatically. Cancel any time from your account — you keep Pro until the period you paid for ends.</p>
+    <p class="modal-note" id="upgradeModalNote"></p>
   `;
   paintPlanPrices();
-  loadPlanPrices().then(paintPlanPrices);
+  loadPlanPrices().then(()=>{ paintPlanPrices(); paintStartChoice(); });
   selectedPlan = 'monthly';
+  wantsTrial = trialEligible;
+  paintStartChoice();
   upgradeModalBody.querySelectorAll('.modal-plan').forEach(p=>{
     p.addEventListener('click', ()=>{
       upgradeModalBody.querySelectorAll('.modal-plan').forEach(x=>x.classList.remove('selected'));
@@ -10642,7 +10689,7 @@ function openUpgradeModal(resumeAction){
       GuideMeta.begin('chk');
       const result = await apiFetch('/billing/checkout', {
         method: 'POST',
-        body: JSON.stringify({ plan: selectedPlan, meta: GuideMeta.info('chk') })
+        body: JSON.stringify({ plan: selectedPlan, trial: !!(wantsTrial && trialEligible), meta: GuideMeta.info('chk') })
       });
       GuideMeta.track('InitiateCheckout', { value: (planPrices && planPrices[selectedPlan] && planPrices[selectedPlan].amount) || (selectedPlan === 'yearly' ? 149 : 24.99), currency: 'USD' }, 'chk');
       window.location.href = result.url; // leaves the page — Stripe handles payment
