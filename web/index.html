@@ -4044,7 +4044,7 @@
       </div>
       <div class="welcome-slide-feature">
         <span class="wsf-icon">💰</span>
-        <span class="wsf-text">Starting at just $28.99/mo — or $325.99/year</span>
+        <span class="wsf-text" id="landingPriceLine">Start free — Module 1 of every course</span>
       </div>
     </div>
 
@@ -10471,8 +10471,43 @@ function showHome(mode){
   setActiveBottomTab(homeViewMode === 'chapters' ? 'bottomTabChapters' : 'bottomTabHome');
 }
 
-// ---------- Upgrade modal (gates Tools / Today / Stats behind Pro) ----------
+// ---------- Upgrade modal (gates the rest of each course, Tools, Today and Stats behind Pro) ----------
 let selectedPlan = 'monthly';
+// What Pro costs comes from Stripe, so the app can never advertise a price we
+// don't charge. Until it arrives the amounts show as "—" rather than a guess.
+let planPrices = null;
+async function loadPlanPrices(){
+  if(planPrices) return planPrices;
+  try{ planPrices = await apiFetch('/billing/prices'); }catch(e){ planPrices = null; }
+  return planPrices;
+}
+function paintPlanPrices(){
+  const put = (p)=>{
+    const el = upgradeModalBody.querySelector(`[data-price="${p}"]`);
+    const info = planPrices && planPrices[p];
+    if(!el) return;
+    if(!info){ el.textContent = '—'; return; }
+    const per = info.interval === 'year' ? '/yr' : '/mo';
+    el.textContent = '$' + info.amount.toFixed(2).replace(/\.00$/, '') + per;
+  };
+  put('monthly'); put('yearly');
+  const sub = upgradeModalBody.querySelector('[data-sub="yearly"]');
+  const y = planPrices && planPrices.yearly;
+  if(sub && y){
+    sub.textContent = y.monthsFree >= 2
+      ? `About ${y.monthsFree} months free — billed once a year`
+      : y.savingPercent > 0 ? `Save ${y.savingPercent}% — billed once a year` : 'Billed once a year';
+  }
+}
+// fetch once in the background so the prices are there the moment the modal opens
+loadPlanPrices().then(()=>{
+  try{ if(upgradeOverlay.classList.contains('open')) paintPlanPrices(); }catch(e){}
+  try{
+    const line = document.getElementById('landingPriceLine');
+    const m = planPrices && planPrices.monthly;
+    if(line && m) line.textContent = `Start free — then Pro from $${m.amount.toFixed(2).replace(/\.00$/, '')}/mo`;
+  }catch(e){}
+});
 function openUpgradeModal(resumeAction){
   pendingProAction = resumeAction || null; // plain serializable object, not a closure — see handlePostCheckoutReturn
   upgradeModalBody.innerHTML = `
@@ -10482,16 +10517,18 @@ function openUpgradeModal(resumeAction){
     <div class="modal-plans">
       <div class="modal-plan selected" data-plan="monthly">
         <div><div class="mp-name">Monthly</div><div class="mp-sub">Cancel anytime</div></div>
-        <div class="mp-price">$28.99/mo</div>
+        <div class="mp-price" data-price="monthly">—</div>
       </div>
       <div class="modal-plan" data-plan="yearly">
-        <div><div class="mp-name">Yearly</div><div class="mp-sub">Save 6% — billed annually</div></div>
-        <div class="mp-price">$325.99/yr</div>
+        <div><div class="mp-name">Yearly</div><div class="mp-sub" data-sub="yearly">Billed once a year</div></div>
+        <div class="mp-price" data-price="yearly">—</div>
       </div>
     </div>
     <button type="button" class="modal-cta" id="upgradeCta">Continue to checkout →</button>
-    <p class="modal-note" id="upgradeModalNote">You'll be redirected to Stripe to complete payment securely.</p>
+    <p class="modal-note" id="upgradeModalNote">7 days free, then it renews automatically. Cancel any time from your account — you keep Pro until the period you paid for ends.</p>
   `;
+  paintPlanPrices();
+  loadPlanPrices().then(paintPlanPrices);
   selectedPlan = 'monthly';
   upgradeModalBody.querySelectorAll('.modal-plan').forEach(p=>{
     p.addEventListener('click', ()=>{
@@ -10518,7 +10555,7 @@ function openUpgradeModal(resumeAction){
         method: 'POST',
         body: JSON.stringify({ plan: selectedPlan, meta: GuideMeta.info('chk') })
       });
-      GuideMeta.track('InitiateCheckout', { value: selectedPlan === 'yearly' ? 325.99 : 28.99, currency: 'USD' }, 'chk');
+      GuideMeta.track('InitiateCheckout', { value: (planPrices && planPrices[selectedPlan] && planPrices[selectedPlan].amount) || (selectedPlan === 'yearly' ? 149 : 24.99), currency: 'USD' }, 'chk');
       window.location.href = result.url; // leaves the page — Stripe handles payment
     }catch(err){
       note.textContent = err.body?.error || err.message || 'Could not start checkout — please try again.';
@@ -15625,7 +15662,7 @@ businessSubNav.querySelectorAll('.sub-tab').forEach(tab=>{
       businessPanelWrap.innerHTML = `
         <div class="today-empty" style="text-align:left; padding:24px;">
           <strong>This one's a Yearly perk.</strong><br>
-          ${tab.dataset.biz === 'revenue' ? 'The Recurring Revenue Dashboard' : tab.dataset.biz === 'backup' ? 'Full data backup/export' : tab.dataset.biz === 'portal' ? 'Shareable client status pages' : 'Custom branding on your exports'} is included with the Yearly plan ($325.99/year) rather than Monthly. You can upgrade to Yearly anytime from your account settings.
+          ${tab.dataset.biz === 'revenue' ? 'The Recurring Revenue Dashboard' : tab.dataset.biz === 'backup' ? 'Full data backup/export' : tab.dataset.biz === 'portal' ? 'Shareable client status pages' : 'Custom branding on your exports'} is included with the Yearly plan rather than Monthly. You can upgrade to Yearly anytime from your account settings.
         </div>`;
       businessSubNav.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
       tab.classList.add('active');

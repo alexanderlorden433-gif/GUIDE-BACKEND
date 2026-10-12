@@ -22,7 +22,7 @@ const cfg = () => ({
 });
 const pixelId = () => (/^\d{6,20}$/.test(cfg().pixel) ? cfg().pixel : '');
 const enabled = () => !!(pixelId() && cfg().token);
-const PRICES = { monthly: 28.99, yearly: 325.99 };
+const { PRICES } = require('./prices');
 
 const sha = (v) => crypto.createHash('sha256').update(String(v).trim().toLowerCase()).digest('hex');
 const printable = (v, max) => (typeof v === 'string' && v.length > 0 && v.length <= max && /^[\x20-\x7E]+$/.test(v) ? v : undefined);

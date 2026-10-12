@@ -18,6 +18,7 @@
 
 const cron = require('node-cron');
 const prisma = require('./db');
+const { PRICES } = require('./prices');
 const { sendEmail } = require('./email');
 
 const appUrl = () => process.env.APP_URL || 'https://theguide.app';
@@ -176,7 +177,7 @@ const DRIP_EMAILS = [
           `- All business tools unlocked (Invoice Generator, Client Status Pages, and more)\n` +
           `- The AI business assistant (The Guider) with unlimited conversations\n` +
           `- Priority access to new features and content\n\n` +
-          `Two options: $28.99/mo or $325.99/year (save 6%).\n\n` +
+          `Two options: $${PRICES.monthly}/mo or $${PRICES.yearly}/year.\n\n` +
           `Upgrade now: ${appUrl()}\n\n` +
           `The Guide Team`,
         html:
@@ -189,7 +190,7 @@ const DRIP_EMAILS = [
           `<li>The AI business assistant (The Guider) with unlimited conversations</li>` +
           `<li>Priority access to new features and content</li>` +
           `</ul>` +
-          `<p>Two options: <strong>$28.99/mo</strong> or <strong>$325.99/year</strong> (save 6%).</p>` +
+          `<p>Two options: <strong>$${PRICES.monthly}/mo</strong> or <strong>$${PRICES.yearly}/year</strong>.</p>` +
           `<p><a href="${appUrl()}" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#A855F7,#EC4899);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">Upgrade to Pro →</a></p>` +
           `<p>The Guide Team</p>` +
           `</div>`,

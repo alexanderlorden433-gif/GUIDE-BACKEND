@@ -123,6 +123,11 @@ def fixture(state, method, path, body):
         return 403, {'error': 'Not authorized.'}
     if p == '/api/ai-chat':
         return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.'}
+    if p == '/api/billing/prices' and method == 'GET':
+        # the real route reads these from Stripe; the numbers here are only a stand-in
+        return 200, {'monthly': {'amount': 24.99, 'currency': 'USD', 'interval': 'month'},
+                     'yearly': {'amount': 149, 'currency': 'USD', 'interval': 'year',
+                                'savingPercent': 50, 'monthsFree': 5}}
     if p == '/api/billing/checkout':
         return 200, {'url': 'https://checkout.stripe.com/c/pay/cs_test_smoke'}
     if p == '/api/billing/portal':
@@ -526,6 +531,17 @@ def free_vs_pro(browser, base):
                 ok(step[0], 'tapping a Pro lesson offers the upgrade')
             else:
                 problem(step[0], 'tapping a Pro lesson did nothing')
+            page.wait_for_timeout(600)
+            price = page.evaluate('(()=>{ const g=(k)=> (document.querySelector(\'[data-price="\'+k+\'"]\')||{}).textContent || "";\n  return {monthly:g("monthly").trim(), yearly:g("yearly").trim(),\n          note:(document.getElementById("upgradeModalNote")||{}).textContent || "",\n          sub:(document.querySelector(\'[data-sub="yearly"]\')||{}).textContent || ""};})()')
+            # must match what the backend says it charges, never a number typed into the page
+            if price['monthly'] != '$24.99/mo' or price['yearly'] != '$149/yr':
+                problem(step[0], 'the prices shown do not match what the backend charges', price)
+            elif '7 days free' not in price['note']:
+                problem(step[0], 'the free trial is not mentioned on the upgrade screen', price)
+            elif 'months free' not in price['sub']:
+                problem(step[0], 'the yearly plan does not show what it saves', price)
+            else:
+                ok(step[0], "shows Stripe's real prices (" + price['monthly'] + ', ' + price['yearly'] + ')')
             shot(page, 'desktop-11-free-course')
         finish(st, step[0])
         ctx.close()

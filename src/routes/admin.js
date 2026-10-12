@@ -30,8 +30,9 @@ function requireOwner(req, res, next) {
 }
 router.use(requireOwner);
 
-const MONTHLY_PRICE = 28.99;
-const YEARLY_PRICE = 325.99;
+const { PRICES } = require('../prices');
+const MONTHLY_PRICE = PRICES.monthly;
+const YEARLY_PRICE = PRICES.yearly;
 
 // ---------- GET /api/admin/stats ----------
 router.get('/stats', async (req, res) => {

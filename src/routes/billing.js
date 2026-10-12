@@ -1,12 +1,24 @@
 const express = require('express');
 const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
-const { stripe, createCheckoutSession, createPortalSession } = require('../stripe');
+const { stripe, createCheckoutSession, createPortalSession, getPlanPrices } = require('../stripe');
 const { notifyUser } = require('../notifications');
 const { recordMoney } = require('../analytics');
 const { trackCheckout, trackPurchase } = require('../meta');
 
 const router = express.Router();
+
+// ---------- GET /api/billing/prices ----------
+// What Pro actually costs, read from Stripe. Public: the signup screen shows it
+// before anyone has an account, and it is the same number Stripe will charge.
+router.get('/prices', async (req, res) => {
+  try {
+    res.json(await getPlanPrices());
+  } catch (err) {
+    console.error('Could not read prices from Stripe:', err.message);
+    res.status(503).json({ error: 'Prices unavailable right now.' });
+  }
+});
 
 // ---------- POST /api/billing/checkout ----------
 // Body: { plan: "monthly" | "yearly" }
