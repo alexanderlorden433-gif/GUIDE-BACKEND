@@ -54,3 +54,20 @@ Things worth remembering:
   and validated; rebuild with `build_pack.py` from the chapter JSONs if the scratch copies are gone.
 - Parallel PRs that both add a test to `ops/smoke/smoke.py` will conflict at the same spot. Update the
   second one from `main` after the first merges.
+
+## 2026-10-12 (later) — cleaner and smoother
+- **Measure before you fix.** `python3 ops/smoke/perf.py` slows the processor 4x and prints load and tap times.
+  Run it before and after; compare only runs from the same computer back to back (single runs swing a lot, use the median).
+- Biggest wins were not in the script: the page was one 1.9MB file, every chapter page built the text of every lesson,
+  and a forced 2s load-up screen. Lesson text for the first 16 chapters now lives in `web/niches/base.js`
+  (edit lessons THERE; never paste it back into `index.html`).
+- **Lessons build when opened** (`g._fill` in `renderNicheDetail`). Anything that opens a lesson from outside must go
+  through `openGuideRow(g)`, never `classList.add('open')`; a locked lesson then shows the upgrade box.
+- The big header (title, progress, search) shows on Home only, via a CSS `:has()` rule on `#homeView`'s inline display.
+  New screens need no code. Search from anywhere: `focusSearch()`.
+- `main > div` has one shared ease-in (`viewFadeIn`); don't leave a transform behind (use `backwards`, not `both`).
+- No `backdrop-filter` on the top or bottom bars and no big `filter:blur` on moving shapes: both are heavy on phones.
+  `content-visibility:auto` is on `.guide`, `.module-head`, `.niche-card`; scrolling to a far lesson may land slightly off.
+- `.guide-list` is also the class of bullet lists inside lesson text; the lesson list is styled by `#guideList`.
+- The analytics script (sensitive, left alone) spends ~14ms real on `Intl...resolvedOptions()` at startup; a later
+  job could defer it.
