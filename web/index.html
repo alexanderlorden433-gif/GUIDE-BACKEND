@@ -185,7 +185,17 @@
     background:rgba(255,210,63,0.10); border:1px solid rgba(255,210,63,0.25);
     border-radius:8px; padding:5px 9px; display:inline-block;
   }
-  .module-head.locked{opacity:.78;}
+  .module-unlock{
+    margin-top:10px; width:100%;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px;
+    color:#fff; border:none; border-radius:10px; padding:10px 12px; cursor:pointer;
+    background:var(--accent-gradient);
+    box-shadow:0 6px 20px rgba(168,85,247,0.28);
+  }
+  .module-unlock:hover{ box-shadow:0 8px 26px rgba(168,85,247,0.42); }
+  .module-unlock:active{ transform:scale(0.985); }
+  .module-head.locked{opacity:.92;}
+  .module-head.locked .module-title, .module-head.locked .module-goal{opacity:.8;}
   .module-head.done .module-count{color:#34D399;}
   /* a locked lesson stays visible, but closed */
   .guide.locked{opacity:.58;}
@@ -7982,8 +7992,13 @@ function firstOpenIndex(niche){
   const i = niche.guides.findIndex(g=> !completed.has(niche.id + '|' + g.title));
   return i < 0 ? niche.guides.length : i;
 }
-/** '' when open, otherwise why it's locked. */
+/** Module 1 of every course is free for everyone; the rest of the course is Pro. */
+function moduleIsPro(guide){ return !isPro && guide.mod > 0; }
+/** '' when open, otherwise why it's locked: 'pro', 'week' or 'order'. */
 function guideLock(niche, guide, idx, firstOpen){
+  // never take back a lesson someone has already finished
+  if(completed.has(niche.id + '|' + guide.title)) return '';
+  if(moduleIsPro(guide)) return 'pro';
   if(moduleDaysLeft(niche.id, guide.mod) > 0) return 'week';
   if(idx > firstOpen) return 'order';
   return '';
@@ -10462,8 +10477,8 @@ function openUpgradeModal(resumeAction){
   pendingProAction = resumeAction || null; // plain serializable object, not a closure — see handlePostCheckoutReturn
   upgradeModalBody.innerHTML = `
     <button class="modal-close" id="upgradeCloseBtn">✕</button>
-    <h2>Unlock Pro tools</h2>
-    <p class="auth-sub">Business tools, client trackers, AI mentor, templates, and PDF exports are Pro features. Guides, community, and stats stay free forever.</p>
+    <h2>Unlock the full course</h2>
+    <p class="auth-sub">Module 1 of all 16 courses is free forever. Pro opens the other 646 lessons, plus the AI mentor, templates, client trackers and PDF exports.</p>
     <div class="modal-plans">
       <div class="modal-plan selected" data-plan="monthly">
         <div><div class="mp-name">Monthly</div><div class="mp-sub">Cancel anytime</div></div>
@@ -10623,7 +10638,7 @@ document.getElementById('bottomTabEarn').addEventListener('click', ()=>{
 // ---------- Help / FAQ ----------
 const FAQ_DATA = [
   { category: "Getting around", items: [
-    { q: "What's free and what needs Pro?", a: "Every course is free forever — all 756 video lessons, in every chapter. Tools, Templates, the Today view, and Stats require Pro ($28.99/mo or $325.99/year), since those are the parts that actually run your business day to day." },
+    { q: "What's free and what needs Pro?", a: "Module 1 of every course is free forever — 110 lessons across all 16 chapters, with the videos. Pro opens the remaining 646 lessons plus Tools, Templates, the AI mentor, the Today view and Stats. Anything you have already finished stays open to you either way." },
     { q: "What is the Today view?", a: "One screen showing everything due or overdue across every chapter you use — follow-ups, discovery calls, showings, scheduled jobs, recurring tasks, and low-stock alerts — sorted soonest first, so you don't have to check each chapter separately." },
     { q: "What's the difference between the Course, Templates, and Tools?", a: "The course teaches you the business, one lesson at a time. Templates give you ready-to-use text (contracts, emails, estimates) you can copy and customize. Tools are the trackers you use daily — client lists, schedulers, goal tracking — specific to whatever chapter you're in." },
     { q: "How do I search?", a: "Use the search bar at the top of the home screen, or press \"/\" anywhere to jump straight to it. It searches guide content and, once you're Pro, your tracked data too (clients, quotes, listings, etc.)." },
@@ -12092,23 +12107,29 @@ function renderNicheDetail(){
       const inMod = niche.guides.filter(x=> x.mod === guide.mod);
       const modDone = inMod.filter(x=> completed.has(niche.id + '|' + x.title)).length;
       const left = moduleDaysLeft(niche.id, guide.mod);
+      const proLocked = !isPro && guide.mod > 0;
       const head = document.createElement('div');
-      head.className = 'module-head' + (left > 0 ? ' locked' : '') + (modDone === inMod.length ? ' done' : '');
+      head.className = 'module-head' + (proLocked || left > 0 ? ' locked' : '') + (modDone === inMod.length ? ' done' : '');
       head.innerHTML = `
         <div class="module-top">
-          <span class="module-label">Module ${guide.mod + 1}</span>
+          <span class="module-label">Module ${guide.mod + 1}${guide.mod === 0 && !isPro ? ' · Free' : ''}</span>
           <span class="module-count">${modDone}/${inMod.length}</span>
         </div>
         <div class="module-title">${gvEsc(m.title)}</div>
         <div class="module-goal">${gvEsc(m.goal)}</div>
-        ${left > 0 ? `<div class="module-locked">🔒 Opens in ${left} day${left === 1 ? '' : 's'}</div>` : ''}`;
+        ${proLocked
+          ? `<button type="button" class="module-unlock">Unlock the rest of this course with Pro</button>`
+          : left > 0 ? `<div class="module-locked">🔒 Opens in ${left} day${left === 1 ? '' : 's'}</div>` : ''}`;
+      const unlockBtn = head.querySelector('.module-unlock');
+      if(unlockBtn) unlockBtn.addEventListener('click', ()=> openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }));
       guideList.appendChild(head);
     }
     const isDone = completed.has(key);
     const isBookmarked = bookmarked.has(key);
     const g = document.createElement('div');
     g.className = 'guide' + (lock ? ' locked' : '');
-    const lockNote = (lock === 'order' && idx === firstOpen + 1) ? 'Finish the lesson above first' : '';
+    const lockNote = lock === 'pro' ? 'Part of Pro — Module 1 is free'
+      : (lock === 'order' && idx === firstOpen + 1) ? 'Finish the lesson above first' : '';
     g.innerHTML = `
       <div class="guide-row">
         <div class="guide-check ${isDone?'done':''}">${isDone?'✓':lock?'🔒':''}</div>
@@ -12117,7 +12138,7 @@ function renderNicheDetail(){
           <div class="guide-meta">
             <span class="level-badge ${guide.kind==='short' ? 'quick' : ''}">${guide.kind==='short' ? 'Quick win' : 'Lesson'}</span>
             <span>${guide.time} read</span>
-            ${lock ? '<span class="lock-tag">🔒 Locked</span>' : ''}
+            ${lock ? `<span class="lock-tag">🔒 ${lock === 'pro' ? 'Pro' : 'Locked'}</span>` : ''}
           </div>
           ${lockNote ? `<div class="lock-note">${lockNote}</div>` : ''}
         </div>
@@ -12164,6 +12185,7 @@ function renderNicheDetail(){
     }
     g.querySelector('.guide-row').addEventListener('click', (e)=>{
       if(e.target.classList.contains('bookmark-star')) return;
+      if(lock === 'pro'){ openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }); return; }
       if(lock){ g.classList.add('shake'); setTimeout(()=> g.classList.remove('shake'), 450); return; }
       const opening = !g.classList.contains('open');
       g.classList.toggle('open');
@@ -12684,7 +12706,7 @@ async function renderEarnInvite(){
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;">
           <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
-          <div><div style="font-weight:600;">Friends sign up free</div><div style="font-size:13px;color:var(--ink-soft);">They get the same free access to all guides</div></div>
+          <div><div style="font-weight:600;">Friends sign up free</div><div style="font-size:13px;color:var(--ink-soft);">They get the same free start: Module 1 of every course</div></div>
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;">
           <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">3</div>
