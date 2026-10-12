@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Screenshots of the app's main screens — laptop and phone (add --light for the light theme).
+"""Screenshots of the app's main screens — laptop and phone (add --light for the light theme, --look=purple for the Purple look; default is Forest & Gold).
 Used by the Design agent for before/after comparisons.
 
     python3 ops/smoke/shots.py before            # all screens → ops/smoke/out/shots/before/
@@ -43,6 +43,7 @@ def main():
     if '--list' in sys.argv or not args:
         print('screens:', ', '.join(SCREENS)); return
     label, wanted = args[0], (args[1:] or list(SCREENS))
+    look = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--look=')), 'forest')
     out = os.path.join(smoke.OUT, 'shots', label)
     os.makedirs(out, exist_ok=True)
     srv, base = smoke.serve_web()
@@ -56,7 +57,7 @@ def main():
                     ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
                     st = smoke.new_state(pro=name.endswith('-pro'))
                     smoke.attach_backend(ctx, st)
-                    init = f"try{{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_theme','{theme}');"
+                    init = f"try{{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_theme','{theme}');localStorage.setItem('guide_look','{look}');"
                     if signed_in:
                         init += "localStorage.setItem('guide_token','smoke-token');"
                     ctx.add_init_script(init + "}catch(e){}")

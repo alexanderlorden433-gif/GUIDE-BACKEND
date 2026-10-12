@@ -228,7 +228,7 @@ def logged_out(browser, base, device, viewport, mobile):
     ctx = browser.new_context(viewport=viewport, is_mobile=mobile, has_touch=mobile, service_workers='block')
     st = new_state()
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if visible(page, '#landingView'):
@@ -280,7 +280,7 @@ def logged_in(browser, base, device, viewport, mobile, pro=True):
     ctx = browser.new_context(viewport=viewport, is_mobile=mobile, has_touch=mobile, service_workers='block')
     st = new_state(pro)
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if not visible(page, '#appScreen', 10000):
@@ -516,7 +516,7 @@ def free_vs_pro(browser, base):
             # a brand-new Pro member: going Pro must open module 2 right away
             st['data']['courseStarts'] = {'ecommerce': TODAY}
         attach_backend(ctx, st)
-        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
         page = ctx.new_page(); watch_errors(page, step)
         page.goto(base + '/', wait_until='load')
         if not visible(page, '#appScreen', 10000):
@@ -587,7 +587,7 @@ def account_menu(browser, base, device, viewport, mobile):
     ctx = browser.new_context(viewport=viewport, is_mobile=mobile, has_touch=mobile, service_workers='block')
     st = new_state(True)
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if not visible(page, '#appScreen', 10000):
@@ -654,7 +654,7 @@ def business_results(browser, base):
         st['data']['business'] = biz
         st['joinedAt'] = join
         attach_backend(ctx, st)
-        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
         page = ctx.new_page(); watch_errors(page, step)
         page.goto(base + '/', wait_until='load')
         if not visible(page, '#appScreen', 10000):
@@ -699,7 +699,7 @@ def quiet_community(browser, base):
                        'authorName': 'Someone', 'isMine': False, 'createdAt': TODAY,
                        'reactions': []} for i in range(posts)]
         attach_backend(ctx, st)
-        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
         page = ctx.new_page(); watch_errors(page, step)
         page.goto(base + '/', wait_until='load')
         if not visible(page, '#appScreen', 10000):
@@ -728,7 +728,7 @@ def returning_learner(browser, base):
     st['data']['bookmarks'] = ['video|' + old_titles[0]]
     st['data']['lastVisited'] = {'nicheId': 'video', 'title': old_titles[0]}
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if not visible(page, '#appScreen', 10000):
@@ -784,7 +784,7 @@ def business_ledger(browser, base):
         st = new_state(True)
         st['data']['business'] = biz
         attach_backend(ctx, st)
-        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
         page = ctx.new_page(); watch_errors(page, step)
         page.goto(base + '/', wait_until='load')
         if not visible(page, '#appScreen', 10000):
@@ -915,7 +915,7 @@ def business_ledger(browser, base):
     st = new_state(True)
     st['data']['business'] = {}
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if visible(page, '#appScreen', 10000):
@@ -946,7 +946,7 @@ def new_chapters(browser, base):
     ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
     st = new_state(False)
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if not visible(page, '#appScreen', 10000):
@@ -1036,6 +1036,104 @@ def new_chapters(browser, base):
     ctx.close()
 
 
+def new_look(browser, base):
+    """The load-up screen, and the Forest & Gold / Purple switch."""
+    # 1) load-up screen: shows on a first visit, leaves by itself, stays away for the rest of the visit
+    step = ['load-up screen']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    attach_backend(ctx, new_state(False))
+    ctx.add_init_script("try{localStorage.setItem('guide_ads','no');}catch(e){}")   # note: no guide_splash=off here
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    page.wait_for_timeout(700)
+    shows = page.evaluate("(()=>{const s=document.getElementById('splash'); if(!s) return false; const c=getComputedStyle(s); return c.display!=='none' && c.visibility==='visible';})()")
+    if not shows:
+        problem(step[0], 'the load-up screen did not appear on a first visit')
+    else:
+        ok(step[0], 'the load-up screen appears on a first visit')
+        shot(page, 'phone-14-loadup')
+    try:
+        page.wait_for_function("!document.getElementById('splash')", timeout=7000)
+        ok(step[0], 'and leaves by itself')
+    except Exception:
+        problem(step[0], 'the load-up screen never went away')
+    if not visible(page, '#landingView', 3000):
+        problem(step[0], 'nothing is behind the load-up screen once it leaves')
+    page.reload(wait_until='load')
+    page.wait_for_timeout(400)
+    if page.evaluate("!!document.getElementById('splash')"):
+        problem(step[0], 'the load-up screen came back on a reload in the same visit')
+    else:
+        ok(step[0], 'it stays away for the rest of the visit')
+    ctx.close()
+
+    # 2) the look: Forest & Gold by default, Purple one tap away, remembered
+    step = ['the look']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'the app did not open')
+    else:
+        page.wait_for_timeout(700)
+        read = "(()=>({theme:document.documentElement.getAttribute('data-theme'),grape:getComputedStyle(document.documentElement).getPropertyValue('--grape').trim().toUpperCase(),saved:localStorage.getItem('guide_look'),meta:document.querySelector('meta[name=theme-color]').getAttribute('content'),bg:getComputedStyle(document.body).backgroundColor}))()"
+        r = page.evaluate(read)
+        if r['theme'] is not None or r['grape'] != '#3FCB93':
+            problem(step[0], 'Forest & Gold should be the default look', r)
+        else:
+            ok(step[0], 'Forest & Gold is the default look')
+        shot(page, 'phone-15-look-forest')
+        def pick(look):
+            page.evaluate("document.getElementById('accountMenuTrigger').click()")
+            page.wait_for_timeout(300)
+            page.locator(f'.look-chip[data-look="{look}"]').click(timeout=3000)
+            page.wait_for_timeout(300)
+        pick('purple')
+        r = page.evaluate(read)
+        if r['theme'] != 'purple' or r['grape'] != '#A855F7' or r['saved'] != 'purple' or r['meta'] != '#161028':
+            problem(step[0], 'choosing Purple did not switch the whole app', r)
+        else:
+            ok(step[0], 'Purple switches the whole app and is saved')
+        shot(page, 'phone-15-look-purple')
+        page.reload(wait_until='load')
+        page.wait_for_timeout(900)
+        r = page.evaluate(read)
+        if r['theme'] != 'purple':
+            problem(step[0], 'the chosen look was forgotten after a reload', r)
+        else:
+            ok(step[0], 'the chosen look is still there after a reload')
+        pick('forest')
+        r = page.evaluate(read)
+        if r['theme'] is not None or r['grape'] != '#3FCB93' or r['saved'] != 'forest':
+            problem(step[0], 'switching back to Forest & Gold did not work', r)
+        else:
+            ok(step[0], 'switching back to Forest & Gold works')
+    finish(st, step[0])
+    ctx.close()
+
+    # 3) the landing page's real-app pictures follow the look
+    step = ['the look (landing pictures)']
+    for look in ('forest', 'purple'):
+        ctx = browser.new_context(viewport={'width': 1280, 'height': 800}, service_workers='block')
+        attach_backend(ctx, new_state(False))
+        ctx.add_init_script(f"try{{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_look','{look}');}}catch(e){{}}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        page.wait_for_timeout(800)
+        page.evaluate("document.querySelectorAll('.landing-view img').forEach(i=>{i.loading='eager'})")
+        page.wait_for_timeout(1200)
+        r = page.evaluate("(()=>{const im=[...document.querySelectorAll('.landing-view img')]; return {n:im.length, purple:im.filter(i=>i.getAttribute('src').includes('img/purple/')).length, broken:im.filter(i=>i.complete&&i.naturalWidth===0).length};})()")
+        want_purple = r['n'] if look == 'purple' else 0
+        if r['n'] < 5 or r['purple'] != want_purple or r['broken']:
+            problem(step[0], f'landing pictures do not match the {look} look', r)
+        else:
+            ok(step[0], f'{look}: all {r["n"]} landing pictures are the {look} set and load')
+        ctx.close()
+
+
 def main():
     srv, base = serve_web()
     t0 = time.time()
@@ -1054,6 +1152,7 @@ def main():
         account_menu(browser, base, 'desktop', desktop, False)
         business_results(browser, base)
         business_ledger(browser, base)
+        new_look(browser, base)
         new_chapters(browser, base)
         quiet_community(browser, base)
         returning_learner(browser, base)

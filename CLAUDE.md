@@ -41,11 +41,17 @@ Live URLs: app `https://theguide.company`, API `https://guide-backend-production
 6. **This repository is public.** Don't write security weaknesses in detail in PR titles,
    PR bodies, issues or commit messages ("hardened the account route" is fine; how to exploit
    it is not). Put the details in your private report to Alexander instead.
-7. **Keep the brand.** Dark background `#0B0A12`, purple→pink gradient `#7C3AED → #EC4899`,
-   gold accent `#FFD23F`, Space Grotesk for headings, Inter for text, the compass-star logo.
-   The app is dark-only today (the ☀️/🌙 button has no light styles yet — a known design issue).
-   Don't change prices, plan names, or
-   claims about the product (16 chapters, 756 guides/videos, AI mentor).
+7. **Keep the brand.** The app has two looks that share one set of colour variables at the
+   top of `web/index.html`: **Forest & Gold** (the default: ground `#0C1310`, action green
+   `#3FCB93`, gold `#E8B94A`) and **Purple** (ground `#0B0A12`, purple→pink `#A855F7 → #EC4899`,
+   gold `#FFD23F`), picked in the account menu and set on `<html data-theme>`. **Never hard-code
+   a colour** in the CSS or the script: use `var(--grape)` (main action colour), `var(--gold)`,
+   `var(--ink)`, `var(--card)`… , `rgba(var(--accent-rgb),.2)` for tints, and `themeVar('--grape')`
+   in script. Text on an action colour uses `var(--on-accent)`. Check every change in both looks
+   (`python3 ops/smoke/shots.py <label> --look=purple`). Space Grotesk for headings, Inter for
+   text, the compass-star logo. The app is dark-only today (the ☀️/🌙 button has no light styles
+   yet — a known design issue). Don't change prices, plan names, or claims about the product
+   (16 chapters, 756 guides/videos, AI mentor).
 8. **Before you start, look at what's already open:** `gh api repos/alexanderlorden433-gif/GUIDE-BACKEND/pulls`.
    Don't duplicate an open PR. If one of yours has conflicts with `main`, update it first
    (merge `main` into its branch, re-run checks, push).

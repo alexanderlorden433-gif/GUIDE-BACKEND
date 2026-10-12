@@ -4,8 +4,8 @@
   "description": "Practical guides, checklists, templates, and business tools for creators, freelancers, and small business owners.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#161028",
-  "theme_color": "#161028",
+  "background_color": "#0C1310",
+  "theme_color": "#0C1310",
   "orientation": "portrait-primary",
   "icons": [
     {
