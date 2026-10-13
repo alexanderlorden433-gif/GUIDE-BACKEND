@@ -3140,6 +3140,43 @@
     .lp-card, .lp-card i, .lp-spine{transition:none;}
   }
 
+  /* --- try step one (landing) --- */
+  .lp-try-grid{display:grid; grid-template-columns:.9fr 1.1fr; gap:44px; align-items:start;}
+  .lp-try-grid .lp-lead{margin-bottom:22px;}
+  .lp-pick{display:flex; flex-wrap:wrap; gap:9px;}
+  .lp-pick button{display:inline-flex; align-items:center; gap:8px; padding:11px 15px; border-radius:13px; background:var(--card); border:1px solid var(--line-2); color:var(--ink-2); font:600 14.5px 'Inter',sans-serif; cursor:pointer; transition:border-color .2s ease, background .2s ease, color .2s ease; touch-action:manipulation;}
+  .lp-pick button em{font-style:normal; font-size:18px;}
+  .lp-pick button:hover{border-color:rgba(var(--accent-rgb),.45);}
+  .lp-pick button[aria-pressed="true"]{background:rgba(var(--accent-rgb),.14); border-color:rgba(var(--accent-rgb),.6); color:var(--ink);}
+  .lp-demo{position:relative; border-radius:22px; padding:24px 22px 22px; background:linear-gradient(160deg, rgba(var(--accent-rgb),.16), rgba(var(--accent-rgb),.03) 62%), var(--card); border:1px solid rgba(var(--accent-rgb),.3); box-shadow:0 18px 60px rgba(var(--accent-rgb),.12);}
+  .lp-demo.swap{animation:dmSwap .3s ease-out;}
+  @keyframes dmSwap{from{opacity:.2; transform:translateY(8px);}to{opacity:1; transform:none;}}
+  .dm-k{font-size:11.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--grape-soft); margin-bottom:8px;}
+  .dm-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; line-height:1.22; letter-spacing:-.01em; color:var(--ink); margin-bottom:12px;}
+  .dm-do{background:rgba(var(--accent-rgb),.08); border:1px solid rgba(var(--accent-rgb),.22); border-radius:14px; padding:13px 15px; font-size:15px; line-height:1.55; color:var(--ink-2); margin-bottom:12px;}
+  .dm-do b{display:block; font-size:11.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--grape-soft); margin-bottom:5px;}
+  .dm-meta{font-size:13px; color:var(--ink-soft); margin-bottom:16px;}
+  .dm-done{display:block; width:100%; border:none; border-radius:13px; padding:14px 16px; font:700 15.5px 'Space Grotesk',sans-serif; background:var(--accent-gradient); color:var(--on-accent); cursor:pointer; box-shadow:0 10px 30px rgba(var(--accent-rgb),.3); touch-action:manipulation; transition:transform .14s ease;}
+  .dm-done:active{transform:scale(.98);}
+  .lp-demo.is-done .dm-done{display:none;}
+  .dm-after{display:none; margin-top:18px; padding-top:18px; border-top:1px solid rgba(var(--accent-rgb),.22);}
+  .lp-demo.is-done .dm-after{display:block; animation:dmSwap .35s ease-out;}
+  .dm-win{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--ink); margin-bottom:8px;}
+  .dm-win span{display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:var(--accent-gradient); color:var(--on-accent); font-size:15px;}
+  .dm-after p{margin:0 0 14px; font-size:14.5px; line-height:1.55; color:var(--ink-2);}
+  .dm-after .dm-go{width:100%;}
+  .dm-after p.dm-pro{margin:12px 0 0; font-size:13px; color:var(--ink-soft);}
+  @media (max-width:900px){
+    .lp-try-grid{grid-template-columns:minmax(0,1fr); gap:22px;}
+    .lp-try-grid > *{min-width:0;}
+    /* one row you swipe along, so the step sits right under it instead of below seven rows of buttons */
+    .lp-pick{flex-wrap:nowrap; overflow-x:auto; margin:0 -22px; padding:2px 22px 8px; scrollbar-width:none; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch;}
+    .lp-pick::-webkit-scrollbar{display:none;}
+    .lp-pick button{flex:none; scroll-snap-align:start;}
+  }
+  @media (max-width:560px){ .lp-pick{margin:0 -18px; padding:2px 18px 8px;} }
+  @media (prefers-reduced-motion: reduce){ .lp-demo.swap, .lp-demo.is-done .dm-after{animation:none;} }
+
   /* ---------- Streak & nav badges ---------- */
   .streak-badge{
     font-size:12px;
@@ -4908,7 +4945,7 @@
         <p class="lp-sub lp-rise d2"><span data-count-word="cap">Sixteen</span> real businesses, each taught as a proper course: modules in sequence, narrated video lessons, and an AI mentor for the moment you get stuck.</p>
         <div class="lp-ctas lp-rise d3">
           <button type="button" id="landingSignupBtn" class="lp-cta">Start free</button>
-          <button type="button" class="lp-cta-ghost" data-lp-scroll="lpInside">See what's inside</button>
+          <button type="button" class="lp-cta-ghost" data-lp-scroll="lpStepOne">Try step one, no signup</button>
         </div>
         <p class="lp-reassure lp-rise d3">Module 1 of every course is free. No card needed to start.</p>
       </div>
@@ -4919,6 +4956,17 @@
       </div>
     </div>
   </header>
+
+  <section class="lp-section" id="lpStepOne">
+    <div class="lp-wrap lp-try-grid">
+      <div>
+        <h2 class="lp-h2">Try step one. No signup.</h2>
+        <p class="lp-lead">Pick a business. This is the first real thing you would do in its course.</p>
+        <div class="lp-pick" id="lpPick" role="group" aria-label="Pick a business"></div>
+      </div>
+      <div class="lp-demo" id="lpDemo" aria-live="polite"></div>
+    </div>
+  </section>
 
   <section class="lp-section">
     <div class="lp-wrap lp-order">
@@ -7296,6 +7344,52 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
     document.querySelectorAll('[data-count-word]').forEach(el => { el.textContent = countWord(NICHES.length, el.dataset.countWord === 'cap'); });
   }
 
+  // "Try step one": pick a business, see the real first lesson and the one thing to do in it. No signup.
+  const pick = document.getElementById('lpPick'), demo = document.getElementById('lpDemo');
+  if(pick && demo && typeof NICHES !== 'undefined' && NICHES.length){
+    const FEATURED = ['lawn', 'detailing', 'handyman', 'cleaning', 'pets', 'ecommerce', 'writing', 'ugc'];
+    const real = (n)=> n && n.guides && n.guides[0] && n.guides[0].action;
+    let list = FEATURED.map(id=> NICHES.find(n=> n.id === id)).filter(real);
+    if(list.length < 4) list = NICHES.filter(real).slice(0, 8);
+    pick.innerHTML = list.map(n=> `<button type="button" data-id="${gvEsc(n.id)}" aria-pressed="false"><em>${gvEsc(n.icon)}</em>${gvEsc(n.name)}</button>`).join('');
+    const show = (n, chosen)=>{
+      if(chosen){ try{ sessionStorage.setItem('guide_demo_pick', n.id); }catch(e){} }   // sign-up starts them on this business
+      pick.querySelectorAll('button').forEach(b=> b.setAttribute('aria-pressed', String(b.dataset.id === n.id)));
+      const g = n.guides[0], mod = (n.modules || [])[0];
+      const free = n.guides.filter(x=> x.mod === 0).length;
+      demo.className = 'lp-demo';
+      demo.innerHTML = `
+        <div class="dm-k">Step one · ${gvEsc(n.icon)} ${gvEsc(n.name)}</div>
+        <div class="dm-title">${gvEsc(g.title)}</div>
+        <div class="dm-do"><b>Your step</b>${gvEsc(g.action)}</div>
+        <div class="dm-meta">Lesson 1 of ${n.guides.length} · ${gvEsc(g.time)} read${mod ? ' · ' + gvEsc(mod.title) : ''}</div>
+        <button type="button" class="dm-done">I'll do this today</button>
+        <div class="dm-after">
+          <div class="dm-win"><span aria-hidden="true">✓</span>Locked in.</div>
+          <p>Step one of ${n.guides.length} in ${gvEsc(n.name)} is ready. Module 1 (${free} lessons) is free, so you can open it right now. A free account saves your progress.</p>
+          <button type="button" class="lp-cta dm-go">Start free and open it</button>
+          <p class="dm-pro">Pro opens the rest of the course, plus the AI mentor, templates and trackers.</p>
+        </div>`;
+      if(chosen && !reduced){ void demo.offsetWidth; demo.classList.add('swap'); }
+      const done = demo.querySelector('.dm-done');
+      done.addEventListener('click', ()=>{
+        if(demo.classList.contains('is-done')) return;
+        try{ sessionStorage.setItem('guide_demo_pick', n.id); }catch(e){}
+        demo.classList.add('is-done');
+        if(!reduced && typeof fireConfetti === 'function') fireConfetti(26);
+        const after = demo.querySelector('.dm-after');
+        try{ after.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }); }catch(e){}
+      });
+      demo.querySelector('.dm-go').addEventListener('click', ()=> document.getElementById('landingSignupBtn').click());
+    };
+    pick.addEventListener('click', (e)=>{
+      const b = e.target.closest('button[data-id]');
+      const n = b && list.find(x=> x.id === b.dataset.id);
+      if(n) show(n, true);
+    });
+    show(list[0], false);
+  }
+
   // scroll to a section
   view.querySelectorAll('[data-lp-scroll]').forEach(b=>{
     b.addEventListener('click', ()=>{
@@ -7863,6 +7957,12 @@ const surveyNextBtn = document.getElementById('surveyNextBtn');
 const SURVEY_TOTAL_STEPS = 6;
 let surveyStep = 1;
 let surveyAnswers = { niches: [], experience: null, goals: [], income: null, challenge: null, source: null };
+/** The business a visitor tried with "Try step one" on the landing page, if they tried one. */
+function demoPick(){
+  try{ const id = sessionStorage.getItem('guide_demo_pick'); return NICHES.some(n=> n.id === id) ? id : null; }catch(e){ return null; }
+}
+/** "Skip" still keeps the business they tried. */
+function skippedAnswers(){ return { niches: demoPick() ? [demoPick()] : [], experience: null, goals: [], income: null, challenge: null, source: null }; }
 
 function showIntroStep(){
   authCardStep1.style.display = 'none';
@@ -7893,14 +7993,17 @@ function showOnboardingStep(){
   authCardStep2.style.display = '';
   surveyAnswers = { niches: [], experience: null, goals: [], income: null, challenge: null, source: null };
   onboardSelection = new Set();
+  const tried = demoPick();               // the business they tried on the landing page starts out ticked
+  if(tried) onboardSelection.add(tried);
   nichePicker.innerHTML = '';
   NICHES.forEach(niche=>{
     const item = document.createElement('div');
-    item.className = 'niche-pick-item';
+    const on = onboardSelection.has(niche.id);
+    item.className = 'niche-pick-item' + (on ? ' selected' : '');
     item.innerHTML = `
       <span class="np-icon">${niche.icon}</span>
       <span class="np-name">${niche.name}</span>
-      <span class="np-check"></span>
+      <span class="np-check">${on ? '✓' : ''}</span>
     `;
     item.addEventListener('click', ()=>{
       if(onboardSelection.has(niche.id)){ onboardSelection.delete(niche.id); item.classList.remove('selected'); item.querySelector('.np-check').textContent=''; }
@@ -7973,8 +8076,8 @@ async function finishSignup(answers){
 }
 
 introContinueBtn.addEventListener('click', showOnboardingStep);
-introSkipBtn.addEventListener('click', ()=> finishSignup({ niches:[], experience:null, goals:[], income:null, challenge:null, source:null }));
-document.querySelectorAll('.survey-skip-link').forEach(btn => btn.addEventListener('click', ()=> finishSignup({ niches:[], experience:null, goals:[], income:null, challenge:null, source:null })));
+introSkipBtn.addEventListener('click', ()=> finishSignup(skippedAnswers()));
+document.querySelectorAll('.survey-skip-link').forEach(btn => btn.addEventListener('click', ()=> finishSignup(skippedAnswers())));
 surveyBackBtn.addEventListener('click', ()=> { collectCurrentStep(); showSurveyStep(surveyStep - 1); });
 surveyNextBtn.addEventListener('click', ()=> {
   collectCurrentStep();
