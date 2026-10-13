@@ -14,6 +14,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import smoke  # noqa: E402
 from playwright.sync_api import sync_playwright  # noqa: E402
 
+# A learner who has finished the first four lessons of the first chapter and has a 3-day streak.
+DEMO = ("NICHES[0].guides.slice(0,4).forEach(g=>completed.add(NICHES[0].id+'|'+g.title));"
+        "streak={count:3,lastDate:todayStr()};lastVisited={nicheId:NICHES[0].id,title:NICHES[0].guides[3].title};")
+
 # name -> (signed_in, javascript to reach the screen)
 SCREENS = {
     'landing':     (False, ''),
@@ -24,7 +28,7 @@ SCREENS = {
     'reset':       (False, "document.getElementById('landingLoginBtn').click(); document.getElementById('forgotBtn').click()"),
     'home':        (True,  "showHome()"),
     'chapter':     (True,  "openNiche(NICHES[0].id)"),
-    'guide':       (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView .guide .guide-title').click()"),
+    'guide':       (True,  "openNiche(NICHES[0].id); setCourseView('list'); document.querySelector('#nicheView .guide .guide-title').click()"),
     'checklists':  (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=checklists]').click()"),
     'templates-pro': (True, "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=templates]').click()"),
     'tools-pro':   (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=tools]').click()"),
@@ -34,9 +38,18 @@ SCREENS = {
     'business-pro': (True, "showBusiness()"),
     'stats':       (True,  "showStats()"),
     'community':   (True,  "showWins()"),
-    'video':       (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView .gv-watch').click()"),
+    'video':       (True,  "openNiche(NICHES[0].id); setCourseView('list'); document.querySelector('#nicheView .gv-watch').click()"),
     'privacy':     (False, "GuideMeta.showPrivacy()"),
+    # the daily step loop: a learner who has done four lessons and has a 3-day streak
+    'home-progress': (True, "DEMO_PROGRESS(); showHome()"),
+    'path':        (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id)"),
+    'step-sheet':  (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); openStepSheet(NICHES[0], 4)"),
+    'step-locked': (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); openStepSheet(NICHES[0], 9)"),
+    'home-pronote': (True, "NICHES[0].guides.filter(g=>g.mod===0).forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); streak={count:2,lastDate:dateMinusDays(todayStr(),1)}; showHome()"),
+    'path-start':  (True,  "streak={count:0,lastDate:null}; openNiche(NICHES[1].id)"),
+    'step-done':   (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); markStepDone(NICHES[0], NICHES[0].guides[4])"),
 }
+SCREENS = {k: (v[0], v[1].replace('DEMO_PROGRESS();', DEMO)) for k, v in SCREENS.items()}
 DEVICES = {'laptop': ({'width': 1280, 'height': 800}, False), 'phone': ({'width': 390, 'height': 844}, True)}
 
 

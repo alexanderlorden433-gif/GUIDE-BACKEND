@@ -4735,6 +4735,94 @@
   /* on a touch screen a tapped card should not stay "lifted" */
   @media (hover:none){ .niche-card:hover, .continue-card:hover{transform:none;} }
   @media (prefers-reduced-motion: reduce){ main > div, .guide.open .guide-content{animation:none;} }
+
+  /* ---------- Daily step loop: Today's step, the "step done" moment, the chapter path ---------- */
+  .today-step{position:relative; background:linear-gradient(160deg, rgba(var(--accent-rgb),.16), rgba(var(--accent-rgb),.03) 62%), var(--card); border:1px solid rgba(var(--accent-rgb),.3); border-radius:20px; padding:18px 18px 16px; margin-bottom:24px; box-shadow:0 10px 36px rgba(var(--accent-rgb),.10); overflow:hidden;}
+  .today-step.quiet{background:var(--card); border-color:var(--line); box-shadow:none;}
+  .ts-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  .ts-label{font-size:11.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--grape-soft);}
+  .ts-streak{font-size:12.5px; font-weight:700; color:var(--gold); white-space:nowrap;}
+  .ts-chap{font-size:12.5px; color:var(--ink-soft); margin-bottom:6px;}
+  .ts-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; line-height:1.25; color:var(--ink); margin-bottom:8px;}
+  .ts-do{font-size:14.5px; line-height:1.5; color:var(--ink-2); margin-bottom:14px;}
+  .ts-do b{color:var(--ink); font-weight:700;}
+  .ts-go{display:block; width:100%; border:none; border-radius:14px; padding:14px 16px; font:700 15px 'Space Grotesk',sans-serif; background:var(--accent-gradient); color:var(--on-accent); cursor:pointer; box-shadow:0 8px 24px rgba(var(--accent-rgb),.28); transition:transform .15s ease, box-shadow .15s ease; touch-action:manipulation;}
+  .ts-go:active{transform:scale(.98); box-shadow:0 3px 12px rgba(var(--accent-rgb),.25);}
+  .today-step.quiet .ts-go{background:rgba(var(--accent-rgb),.14); color:var(--grape-soft); box-shadow:none; border:1px solid rgba(var(--accent-rgb),.3);}
+  .ts-meta{font-size:12px; color:var(--ink-soft); margin-top:9px; text-align:center;}
+  .ts-pro-note{display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; margin:-12px 0 22px; padding:10px 14px; border-radius:12px; border:1px dashed var(--line-2); background:none; color:var(--ink-2); font:500 13px 'Inter',sans-serif; text-align:left; cursor:pointer;}
+  .ts-pro-note b{color:var(--gold); font-weight:700; white-space:nowrap;}
+
+  /* the sheet and the "step done" card share one layer above everything, even the video player */
+  .step-layer{position:fixed; inset:0; z-index:5100; display:none; align-items:flex-end; justify-content:center; background:rgba(var(--scrim-rgb),.74);}
+  .step-layer.open{display:flex; animation:stepFade .18s ease-out;}
+  @keyframes stepFade{from{opacity:0;}to{opacity:1;}}
+  @keyframes stepUp{from{opacity:0; transform:translateY(28px);}to{opacity:1; transform:none;}}
+  .step-card{position:relative; width:100%; max-width:460px; max-height:92vh; overflow:auto; background:var(--card); border:1px solid var(--line); border-radius:24px 24px 0 0; padding:26px 22px calc(22px + env(safe-area-inset-bottom)); box-shadow:0 -16px 60px rgba(var(--scrim-rgb),.7); animation:stepUp .3s cubic-bezier(.2,.8,.2,1);}
+  @media (min-width:600px){ .step-layer{align-items:center; padding:20px;} .step-card{border-radius:24px;} }
+  .step-card:focus{outline:none;}
+  .step-x{position:absolute; top:12px; right:12px; width:34px; height:34px; border:none; border-radius:50%; background:rgba(var(--accent-rgb),.10); color:var(--ink-2); font-size:15px; cursor:pointer;}
+  .sc-kicker{font-size:11.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--grape-soft); margin-bottom:6px;}
+  .sc-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:21px; line-height:1.25; color:var(--ink); margin-bottom:6px; padding-right:30px;}
+  .sc-sub{font-size:13.5px; color:var(--ink-soft); margin-bottom:14px;}
+  .sc-do{background:rgba(var(--accent-rgb),.08); border:1px solid rgba(var(--accent-rgb),.22); border-radius:14px; padding:12px 14px; font-size:14.5px; line-height:1.5; color:var(--ink-2); margin-bottom:16px;}
+  .sc-do b{display:block; font-size:11.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--grape-soft); margin-bottom:4px;}
+  .sc-btn{display:block; width:100%; border:none; border-radius:14px; padding:14px 16px; font:700 15px 'Space Grotesk',sans-serif; background:var(--accent-gradient); color:var(--on-accent); cursor:pointer; box-shadow:0 8px 24px rgba(var(--accent-rgb),.28); touch-action:manipulation;}
+  .sc-btn:active{transform:scale(.98);}
+  .sc-btn.gold{background:var(--gold-gradient); color:var(--on-sun); box-shadow:0 8px 24px rgba(var(--sun-rgb),.25);}
+  .sc-btn.ghost{background:none; color:var(--ink-2); box-shadow:none; border:1px solid var(--line-2); margin-top:10px;}
+  .sc-text{display:block; width:100%; margin-top:6px; padding:12px; border:none; background:none; color:var(--ink-soft); font:600 14px 'Inter',sans-serif; cursor:pointer;}
+  /* the "step done" card */
+  .sc-done{text-align:center; padding-top:30px;}
+  .sc-done .sc-title{padding-right:0; font-size:24px;}
+  .sc-badge{position:relative; width:84px; height:84px; margin:0 auto 16px; border-radius:50%; display:grid; place-items:center; background:var(--accent-gradient); color:var(--on-accent); font-size:42px; font-weight:800; box-shadow:0 10px 36px rgba(var(--accent-rgb),.4); animation:scPop .5s cubic-bezier(.2,1.4,.4,1) both;}
+  .sc-badge::before, .sc-badge::after{content:''; position:absolute; inset:0; border-radius:50%; border:2px solid rgba(var(--accent-rgb),.6); animation:scRing 1.1s ease-out .2s both;}
+  .sc-badge::after{animation-delay:.5s;}
+  @keyframes scPop{0%{transform:scale(.3); opacity:0;}100%{transform:scale(1); opacity:1;}}
+  @keyframes scRing{from{transform:scale(1); opacity:.9;}to{transform:scale(2.2); opacity:0;}}
+  .sc-bar{height:8px; border-radius:99px; background:var(--bg); border:1px solid var(--line); overflow:hidden; margin:2px 0 6px;}
+  .sc-bar i{display:block; height:100%; width:var(--from,0%); border-radius:99px; background:var(--accent-gradient); transition:width .9s cubic-bezier(.2,.8,.2,1) .35s;}
+  .sc-streak{display:inline-block; margin:10px 0 4px; padding:6px 14px; border-radius:99px; background:rgba(var(--sun-rgb),.12); border:1px solid rgba(var(--sun-rgb),.32); color:var(--gold); font-weight:700; font-size:13.5px;}
+  .sc-next{text-align:left; margin:18px 0 14px; padding:14px 16px; border-radius:16px; background:var(--bg); border:1px solid var(--line);}
+  .sc-next .sc-kicker{margin-bottom:4px;}
+  .sc-next .nt{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; color:var(--ink); line-height:1.3;}
+  .sc-next .nm{font-size:13px; color:var(--ink-soft); margin-top:4px;}
+  @media (prefers-reduced-motion: reduce){ .step-layer.open, .step-card, .sc-badge, .sc-badge::before, .sc-badge::after{animation:none;} .sc-bar i{transition:none;} }
+
+  /* the chapter path */
+  #courseViewBar{display:flex; justify-content:flex-end; margin:4px 0 2px;}
+  .cv-seg{display:inline-flex; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:3px;}
+  .cv-seg button{border:none; background:none; color:var(--ink-soft); font:600 12.5px 'Inter',sans-serif; padding:7px 16px; border-radius:999px; cursor:pointer; touch-action:manipulation;}
+  .cv-seg button.on{background:var(--accent-gradient); color:var(--on-accent);}
+  #nicheView:not([data-sub="guides"]) #courseViewBar, #nicheView:not([data-sub="guides"]) #pathMap{display:none;}
+  #nicheView[data-course="list"] #pathMap{display:none;}
+  #nicheView[data-course="path"] #guideList, #nicheView[data-course="path"] .guide-filter-row{display:none;}
+  #pathMap{margin:6px 0 26px;}
+  .pm-head{max-width:420px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin:22px auto 4px;}
+  .pm-head.done{border-color:rgba(var(--accent-rgb),.42);}
+  .pm-k{display:flex; justify-content:space-between; gap:10px; font-size:11.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--grape-soft);}
+  .pm-k em{font-style:normal; color:var(--ink-soft); font-weight:700; letter-spacing:.02em; text-transform:none;}
+  .pm-t{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; margin-top:4px; color:var(--ink);}
+  .pm-g{font-size:13px; color:var(--ink-soft); margin-top:3px; line-height:1.4;}
+  .pm-track{position:relative; max-width:420px; margin:0 auto;}
+  .pm-svg{position:absolute; left:0; top:0; width:100%; pointer-events:none; overflow:visible;}
+  .pm-svg path{fill:none; stroke-width:4; stroke-linecap:round; vector-effect:non-scaling-stroke;}
+  .pm-svg .base{stroke:var(--line-2); stroke-dasharray:2 9;}
+  .pm-svg .prog{stroke:var(--grape);}
+  .pm-step{position:absolute; left:0; right:0; height:88px; padding:0; border:none; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation;}
+  .pm-node{position:absolute; top:18px; width:52px; height:52px; margin-left:-26px; border-radius:50%; display:grid; place-items:center; font-size:20px; font-weight:800; background:var(--card-2); border:2px solid var(--line-2); color:var(--ink-soft); transition:transform .15s ease;}
+  .pm-step:active .pm-node{transform:scale(.92);}
+  .pm-lab{position:absolute; top:16px; font-size:12.5px; line-height:1.3; color:var(--ink-2); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;}
+  .pm-step.short .pm-node{width:42px; height:42px; margin-left:-21px; top:23px; font-size:17px;}
+  .pm-step.st-done .pm-node{background:var(--accent-gradient); border-color:transparent; color:var(--on-accent); box-shadow:0 6px 18px rgba(var(--accent-rgb),.3);}
+  .pm-step.st-cur .pm-node{top:12px; width:64px; height:64px; margin-left:-32px; font-size:26px; background:var(--accent-gradient); border-color:transparent; color:var(--on-accent); box-shadow:0 8px 28px rgba(var(--accent-rgb),.5); animation:pmPulse 2s ease-in-out infinite;}
+  .pm-step.st-cur .pm-lab{top:22px; color:var(--ink); font-weight:700; font-size:13.5px;}
+  .pm-flag{position:absolute; top:-2px; transform:translateX(-50%); padding:3px 10px; border-radius:99px; background:var(--gold); color:var(--on-sun); font:800 10.5px 'Inter',sans-serif; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap;}
+  .pm-step.st-lock .pm-node{opacity:.55; font-size:17px;}
+  .pm-step.st-lock .pm-lab{opacity:.6;}
+  .pm-step.st-pro .pm-node{border-color:rgba(var(--sun-rgb),.55); color:var(--gold);}
+  @keyframes pmPulse{0%,100%{box-shadow:0 8px 28px rgba(var(--accent-rgb),.45), 0 0 0 0 rgba(var(--accent-rgb),.5);}50%{box-shadow:0 8px 28px rgba(var(--accent-rgb),.45), 0 0 0 12px rgba(var(--accent-rgb),0);}}
+  @media (prefers-reduced-motion: reduce){ .pm-step.st-cur .pm-node{animation:none;} }
 </style>
 </head>
 <body>
@@ -5292,6 +5380,7 @@
   <main>
     <div id="homeView">
       <div id="dailyDigestWrap"></div>
+      <div id="todayStepWrap"></div>
       <div id="continueCardWrap"></div>
       <div id="weeklyChallengeWrap"></div>
       <div class="section-head" id="yourChaptersHead" style="display:none;">
@@ -5325,6 +5414,8 @@
           <button class="sub-tab sub-tab-secondary" data-sub="discussion">💬 Discussion</button>
         </div>
       </div>
+      <div id="courseViewBar"><div class="cv-seg" role="group" aria-label="How to see this course"><button type="button" data-v="path">Path</button><button type="button" data-v="list">List</button></div></div>
+      <div id="pathMap"></div>
       <div class="guide-list" id="guideList"></div>
       <div id="checklistsPanelWrap" style="display:none;"></div>
       <div id="templatesPanelWrap" style="display:none;"></div>
@@ -5688,6 +5779,8 @@ function guideLock(niche, guide, idx, firstOpen){
   return '';
 }
 let currentGuideFilter = 'all'; // 'all' | 'todo' | 'short' | 'bookmarked'
+// How a course is shown: as a path of steps or as the plain list. The learner's choice is remembered.
+let coursePref = (()=>{ try{ return localStorage.getItem('guide_course_view') === 'list' ? 'list' : 'path'; }catch(e){ return 'path'; } })();
 
 // ---------- Tools configuration per niche ----------
 const NICHE_TOOLS = {
@@ -7217,13 +7310,7 @@ function gvCtx(niche, guide, list){
   const key = niche.id + '|' + guide.title;
   return {
     isDone: ()=> completed.has(key),
-    onComplete: ()=>{
-      if(completed.has(key)) return;
-      completed.add(key);
-      try{ registerCompletionForStreak(); }catch(e){}
-      try{ renderNicheDetail(); renderOverall(); renderStreakBadge(); }catch(e){}
-      saveProgress();
-    },
+    onComplete: ()=> markStepDone(niche, guide),
     next: (()=>{
       const i = list.indexOf(guide);
       for(let j = i + 1; j < list.length; j++){
@@ -8573,6 +8660,7 @@ subNav.querySelectorAll('.sub-tab').forEach(tab=>{
 });
 function selectTab(tab){
   currentSubTab = tab.dataset.sub;
+  nicheView.dataset.sub = currentSubTab;
   subNav.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
   tab.classList.add('active');
   guideList.style.display = currentSubTab==='guides' ? '' : 'none';
@@ -9726,6 +9814,7 @@ function renderHome(){
     // to quickly.
     renderDailyDigest();
     continueWrap.innerHTML = '';
+    renderTodayStep(true);
     yourChaptersHead.style.display = 'none';
     moreChaptersHead.style.display = 'flex';
     moreChaptersHead.querySelector('h3').textContent = 'All chapters';
@@ -9736,7 +9825,11 @@ function renderHome(){
   }
 
   renderDailyDigest();
-  if(lastVisited){
+  // Today's step is the one thing to do next. When it is there, it takes the place of "Continue where you left off".
+  const hasStep = renderTodayStep();
+  if(hasStep){
+    continueWrap.innerHTML = '';
+  } else if(lastVisited){
     const niche = NICHES.find(n=>n.id===lastVisited.nicheId);
     const guide = niche ? niche.guides.find(g=>g.title===lastVisited.title) : null;
     if(niche && guide){
@@ -10012,7 +10105,14 @@ function openNiche(id){
   templatesPanelWrap.style.display = 'none';
   toolsPanelWrap.style.display = 'none';
 
+  nicheView.dataset.sub = 'guides';
+  setCourseView(coursePref);
   renderNicheDetail();
+  // a learner who is part-way through lands on their own step, not at the top of the path
+  if(coursePref === 'path'){
+    const cur = document.querySelector('#pathMap .st-cur');
+    if(cur && nicheCompleted(niche) > 2){ try{ cur.scrollIntoView({ block: 'center' }); }catch(e){} }
+  }
 }
 
 function renderNicheDetail(){
@@ -10047,6 +10147,8 @@ function renderNicheDetail(){
   } else if(certBanner){
     certBanner.style.display = 'none';
   }
+
+  renderPathMap(niche);
 
   const filters = ['all','todo','short','bookmarked'];
   const filterLabels = {all:'Whole course', todo:'Still to do', short:'Quick wins', bookmarked:'🔖 Bookmarked'};
@@ -10222,14 +10324,13 @@ function renderNicheDetail(){
         e.stopPropagation();
         if(completed.has(key)){
           completed.delete(key);
+          renderNicheDetail();
+          renderOverall();
+          renderStreakBadge();
+          saveProgress();
         } else {
-          completed.add(key);
-          registerCompletionForStreak();
+          markStepDone(niche, guide);
         }
-        renderNicheDetail();
-        renderOverall();
-        renderStreakBadge();
-        saveProgress();
       });
       gvBindWatch(g);
     };
@@ -10241,8 +10342,310 @@ function renderNicheDetail(){
 // same door as a tap: the text is built if needed, and a locked lesson shows its upgrade prompt.
 function openGuideRow(g){
   if(g.classList.contains('locked')){ const row = g.querySelector('.guide-row'); if(row) row.click(); return; }
+  setCourseView('list'); // the lesson text lives in the list; the path map would be hiding it
   if(g._fill) g._fill();
   g.classList.add('open');
+}
+
+// ---------- Daily step loop: Today's step, the "step done" moment, the chapter path ----------
+// One small thing to do each day, a clear "you did it" when it's done, and a map of the whole course.
+// No countdowns and no guilt: a missed day just means the card is still waiting.
+
+/** The learner's next lesson in a chapter and whether it can be opened. null once the chapter is finished. */
+function nicheNextStep(niche){
+  const idx = firstOpenIndex(niche);
+  if(idx >= niche.guides.length) return null;
+  const guide = niche.guides[idx];
+  return { niche, guide, idx, lock: guideLock(niche, guide, idx, idx) };
+}
+
+/** Picks the one step to put in front of the learner: where they were last, then chapters they've started, then the rest. */
+function pickTodayStep(){
+  const sel = (selectedNiches || []).filter(id=> NICHES.some(n=> n.id === id));
+  const mine = sel.length ? NICHES.filter(n=> sel.includes(n.id)) : NICHES;
+  const lastId = lastVisited && lastVisited.nicheId;
+  const rank = (s)=> s.niche.id === lastId ? 0 : (nicheCompleted(s.niche) > 0 ? 1 : 2);
+  const byRank = (a, b)=> rank(a) - rank(b);
+  const all = NICHES.map(nicheNextStep).filter(Boolean);
+  const inMine = all.filter(s=> mine.includes(s.niche));
+  const step = inMine.filter(s=> !s.lock).sort(byRank)[0] || all.filter(s=> !s.lock).sort(byRank)[0] || null;
+  const pro = (inMine.length ? inMine : all).filter(s=> s.lock === 'pro').sort(byRank)[0] || null;
+  const week = all.filter(s=> s.lock === 'week').sort((a, b)=> moduleDaysLeft(a.niche.id, a.guide.mod) - moduleDaysLeft(b.niche.id, b.guide.mod))[0] || null;
+  return { step, pro: isPro ? null : pro, week };
+}
+
+/** The card at the top of Home. Returns true when it shows a step to do (it then stands in for "Continue"). */
+function renderTodayStep(clearOnly){
+  const wrap = document.getElementById('todayStepWrap');
+  if(!wrap) return false;
+  if(clearOnly){ wrap.innerHTML = ''; return false; }
+  const p = pickTodayStep();
+  const today = todayStr();
+  const doneToday = streak.lastDate === today;
+  const alive = streak.count > 0 && (doneToday || streak.lastDate === dateMinusDays(today, 1));
+  const streakBit = alive ? `<span class="ts-streak">🔥 ${streak.count} day${streak.count === 1 ? '' : 's'}</span>` : '';
+  let html = '', onGo = null;
+  const step = p.step;
+  if(step){
+    const n = step.niche, g = step.guide;
+    const first = completed.size === 0;
+    html = `<div class="today-step${doneToday ? ' quiet' : ''}" id="todayStepCard">
+        <div class="ts-top"><span class="ts-label">${doneToday ? 'Done for today ✓' : first ? 'Your first step' : "Today's step"}</span>${streakBit}</div>
+        <div class="ts-chap">${doneToday ? 'Next up · ' : ''}${gvEsc(n.icon)} ${gvEsc(n.name)} · lesson ${step.idx + 1} of ${n.guides.length}</div>
+        <div class="ts-title">${gvEsc(g.title)}</div>
+        ${g.action ? `<div class="ts-do"><b>Your step:</b> ${gvEsc(g.action)}</div>` : ''}
+        <button type="button" class="ts-go" id="todayStepGo">${doneToday ? 'Keep going →' : first ? 'Start step one →' : 'Start this step →'}</button>
+        <div class="ts-meta">${gvEsc(g.time)} read${doneToday ? ' · or come back tomorrow' : ''}</div>
+      </div>`;
+    onGo = ()=> goToLesson(n.id, g.title);
+    if(p.pro){
+      html += `<button type="button" class="ts-pro-note" id="todayProNote"><span>🔒 ${gvEsc(p.pro.niche.name)}: the free part is done</span><b>See Pro →</b></button>`;
+    }
+  } else if(p.pro){
+    const n = p.pro.niche, mod = (n.modules || [])[p.pro.guide.mod];
+    html = `<div class="today-step quiet" id="todayStepCard">
+        <div class="ts-top"><span class="ts-label">You finished the free part</span>${streakBit}</div>
+        <div class="ts-chap">${gvEsc(n.icon)} ${gvEsc(n.name)}</div>
+        <div class="ts-title">${mod ? 'Next: ' + gvEsc(mod.title) : 'The rest of this course is in Pro'}</div>
+        <div class="ts-do">Nice work. Module 1 of every course is free; Pro opens the rest.</div>
+        <button type="button" class="ts-go" id="todayStepGo">See what Pro opens →</button>
+      </div>`;
+    onGo = ()=> openUpgradeModal({ type: 'tab', nicheId: n.id, tab: 'guides' });
+  } else {
+    const wk = p.week, days = wk ? moduleDaysLeft(wk.niche.id, wk.guide.mod) : 0;
+    html = `<div class="today-step quiet" id="todayStepCard">
+        <div class="ts-top"><span class="ts-label">${wk ? 'Come back soon' : 'All done'}</span>${streakBit}</div>
+        <div class="ts-title">${wk ? `Your next module opens in ${days} day${days === 1 ? '' : 's'}` : 'You finished every lesson.'}</div>
+        <div class="ts-do">${wk ? 'Until then, look at another chapter.' : 'Look back at any chapter, or pick one to go deeper.'}</div>
+        <button type="button" class="ts-go" id="todayStepGo">Browse chapters →</button>
+      </div>`;
+    onGo = ()=> showHome('chapters');
+  }
+  wrap.innerHTML = html;
+  const go = document.getElementById('todayStepGo');
+  if(go && onGo) go.addEventListener('click', onGo);
+  const note = document.getElementById('todayProNote');
+  if(note) note.addEventListener('click', ()=> openUpgradeModal({ type: 'tab', nicheId: p.pro.niche.id, tab: 'guides' }));
+  return !!step;
+}
+
+/** Open a lesson from outside the chapter page (Today's step, the path, the "step done" card). */
+function goToLesson(nicheId, title){
+  if(!NICHES.some(n=> n.id === nicheId)) return;
+  openNiche(nicheId);
+  const want = gvId(nicheId, title);
+  const row = [...guideList.querySelectorAll('.guide')].find(el=> el.dataset.gv === want);
+  if(!row) return;
+  openGuideRow(row);
+  if(!row.classList.contains('locked')){ lastVisited = { nicheId, title }; saveProgress(); }
+  try{ row.scrollIntoView({ block: 'center' }); }catch(e){}
+}
+
+/** Course view: the path map or the plain list. A tap on the switch is remembered; opening a lesson is not. */
+function setCourseView(v, persist){
+  const view = v === 'list' ? 'list' : 'path';
+  nicheView.dataset.course = view;
+  document.querySelectorAll('#courseViewBar [data-v]').forEach(b=> b.classList.toggle('on', b.dataset.v === view));
+  if(persist){ coursePref = view; try{ localStorage.setItem('guide_course_view', view); }catch(e){} }
+}
+document.getElementById('courseViewBar').addEventListener('click', (e)=>{
+  const b = e.target.closest('[data-v]');
+  if(b) setCourseView(b.dataset.v, true);
+});
+
+// ----- the sheet and the "step done" card share one layer -----
+let stepLayerEl = null;
+function openStepLayer(html){
+  if(!stepLayerEl){
+    stepLayerEl = document.createElement('div');
+    stepLayerEl.className = 'step-layer';
+    stepLayerEl.addEventListener('click', (e)=>{ if(e.target === stepLayerEl) closeStepLayer(); });
+    document.body.appendChild(stepLayerEl);
+  }
+  stepLayerEl.innerHTML = `<div class="step-card" role="dialog" aria-modal="true">${html}</div>`;
+  stepLayerEl.classList.add('open');
+  const card = stepLayerEl.firstElementChild;
+  const x = card.querySelector('.step-x');
+  if(x) x.addEventListener('click', closeStepLayer);
+  // keyboard and screen-reader users land inside the card; the card itself takes focus so no button shows a ring after a tap
+  card.setAttribute('tabindex', '-1');
+  setTimeout(()=>{ try{ card.focus({ preventScroll: true }); }catch(e){} }, 60);
+  return card;
+}
+function closeStepLayer(){
+  if(!stepLayerEl) return;
+  stepLayerEl.classList.remove('open');
+  stepLayerEl.innerHTML = '';
+}
+
+/** Marks a lesson finished (from the list, the video or anywhere else) and shows the "step done" card. */
+function markStepDone(niche, guide){
+  const key = niche.id + '|' + guide.title;
+  if(completed.has(key)) return false;
+  const before = { done: nicheCompleted(niche), newDay: false };
+  completed.add(key);
+  try{ before.newDay = registerCompletionForStreak(); }catch(e){}
+  try{ renderNicheDetail(); renderOverall(); renderStreakBadge(); }catch(e){}
+  saveProgress();
+  try{ celebrateStep(niche, guide, before); }catch(e){}
+  return true;
+}
+
+function celebrateStep(niche, guide, before){
+  const total = niche.guides.length;
+  const doneNow = nicheCompleted(niche);
+  const chapterDone = doneNow >= total;
+  const modDone = niche.guides.filter(g=> g.mod === guide.mod).every(g=> completed.has(niche.id + '|' + g.title));
+  const next = nicheNextStep(niche);
+  const calm = ['Step done.', 'Done. One more real step.', 'That counts. Nicely done.'];
+  const title = chapterDone ? 'Chapter complete!' : modDone ? `Module ${guide.mod + 1} complete!` : calm[doneNow % calm.length];
+  const from = Math.round(((doneNow - 1) / total) * 100), to = Math.round((doneNow / total) * 100);
+  const streakLine = streak.count >= 2
+    ? `🔥 ${streak.count} days in a row`
+    : (before.newDay ? '🔥 Streak started. Come back tomorrow to make it 2.' : '');
+  let nextHtml = '', primary = '', secondary = '';
+  if(chapterDone){
+    nextHtml = `<div class="sc-next"><div class="sc-kicker">You finished ${gvEsc(niche.name)}</div><div class="nt">Your certificate is ready.</div></div>`;
+    primary = `<button type="button" class="sc-btn" data-act="cert">Get my certificate</button>`;
+    secondary = `<button type="button" class="sc-text" data-act="close">Not now</button>`;
+  } else if(next && !next.lock){
+    nextHtml = `<div class="sc-next"><div class="sc-kicker">Next step</div><div class="nt">${gvEsc(next.guide.title)}</div><div class="nm">${gvEsc(next.guide.time)} read</div></div>`;
+    primary = `<button type="button" class="sc-btn" data-act="next">Next step →</button>`;
+    secondary = `<button type="button" class="sc-text" data-act="close">That's enough for today</button>`;
+  } else if(next && next.lock === 'pro'){
+    nextHtml = `<div class="sc-next"><div class="sc-kicker">You finished the free part</div><div class="nt">The rest of ${gvEsc(niche.name)} is in Pro.</div><div class="nm">Module 1 of every course stays free.</div></div>`;
+    primary = `<button type="button" class="sc-btn gold" data-act="pro">See what Pro opens</button>`;
+    secondary = `<button type="button" class="sc-text" data-act="close">Not now</button>`;
+  } else {
+    const days = next ? moduleDaysLeft(niche.id, next.guide.mod) : 0;
+    nextHtml = `<div class="sc-next"><div class="sc-kicker">Up next</div><div class="nt">The next module opens in ${days} day${days === 1 ? '' : 's'}.</div><div class="nm">Try another chapter in the meantime.</div></div>`;
+    primary = `<button type="button" class="sc-btn" data-act="home">Pick another chapter</button>`;
+    secondary = `<button type="button" class="sc-text" data-act="close">That's enough for today</button>`;
+  }
+  const card = openStepLayer(`
+    <div class="sc-done">
+      <div class="sc-badge" aria-hidden="true">✓</div>
+      <div class="sc-title" role="status">${title}</div>
+      <div class="sc-sub">${gvEsc(niche.icon)} ${gvEsc(niche.name)} · ${doneNow} of ${total} done</div>
+      <div class="sc-bar" style="--from:${from}%"><i></i></div>
+      ${streakLine ? `<div class="sc-streak">${streakLine}</div>` : ''}
+      ${nextHtml}
+      ${primary}${secondary}
+    </div>`);
+  // fill the bar on the next frame so it visibly grows
+  const bar = card.querySelector('.sc-bar i');
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{ if(bar) bar.style.width = to + '%'; }));
+  const act = (name)=>{
+    closeStepLayer();
+    if(name === 'next' && next){ if(gvCurrent) gvCurrent.close(); goToLesson(niche.id, next.guide.title); }
+    else if(name === 'pro') openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' });
+    else if(name === 'cert') generateCertificate(niche);
+    else if(name === 'home'){ if(gvCurrent) gvCurrent.close(); showHome(); }
+  };
+  card.querySelectorAll('[data-act]').forEach(b=> b.addEventListener('click', ()=> act(b.dataset.act)));
+  // the small extras: a chime (if the learner hasn't turned sounds off), a buzz on phones, and confetti
+  try{ if(gvPref('music', '1') === '1') gvSfx.chime(); }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate(18); }catch(e){}
+  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const big = chapterDone ? 90 : (modDone || (before.newDay && streak.count % 5 === 0)) ? 60 : 30;
+    try{ fireConfetti(big).style.zIndex = 5200; }catch(e){}
+  }
+}
+
+// ----- the chapter path -----
+/** A map of the course: one winding path per module. Finished steps are filled in, your step pulses. */
+function renderPathMap(niche){
+  const el = document.getElementById('pathMap');
+  if(!el) return;
+  const ROW = 88;
+  const firstOpen = firstOpenIndex(niche);
+  const started = nicheCompleted(niche) > 0;
+  const byMod = new Map();
+  niche.guides.forEach((g, i)=>{ const m = g.mod || 0; if(!byMod.has(m)) byMod.set(m, []); byMod.get(m).push(i); });
+  let out = '';
+  byMod.forEach((idxs, m)=>{
+    const info = (niche.modules || [])[m];
+    const isDone = (i)=> completed.has(niche.id + '|' + niche.guides[i].title);
+    const modDone = idxs.filter(isDone).length;
+    const left = moduleDaysLeft(niche.id, m);
+    const proLocked = !isPro && m > 0;
+    const xs = idxs.map((_, k)=> Math.round((50 + 21 * Math.sin(k * 1.1)) * 10) / 10);
+    const ys = idxs.map((_, k)=> k * ROW + ROW / 2);
+    const curve = (to)=>{ let s = `M${xs[0]} ${ys[0]}`; for(let k = 1; k <= to; k++) s += ` C${xs[k - 1]} ${ys[k - 1] + ROW * .5} ${xs[k]} ${ys[k] - ROW * .5} ${xs[k]} ${ys[k]}`; return s; };
+    let reach = -1;
+    idxs.forEach((i, k)=>{ if(isDone(i) || i === firstOpen) reach = k; });
+    const H = idxs.length * ROW;
+    const steps = idxs.map((i, k)=>{
+      const g = niche.guides[i];
+      const done = isDone(i);
+      const lock = guideLock(niche, g, i, firstOpen);
+      const cur = !done && !lock && i === firstOpen;
+      const cls = done ? 'st-done' : cur ? 'st-cur' : 'st-lock' + (lock === 'pro' ? ' st-pro' : '');
+      const glyph = done ? '✓' : cur ? (g.kind === 'short' ? '⚡' : '★') : '🔒';
+      const x = xs[k], gap = cur ? 46 : 38;
+      const side = x < 50 ? `left:calc(${x}% + ${gap}px);right:6px;` : `left:6px;right:calc(${100 - x}% + ${gap}px);text-align:right;`;
+      const state = done ? 'done' : cur ? 'your step' : lock === 'pro' ? 'part of Pro' : lock === 'week' ? 'opens later' : 'locked until you finish the one before';
+      return `<button type="button" class="pm-step ${cls}${g.kind === 'short' ? ' short' : ''}" data-i="${i}" style="top:${k * ROW}px" aria-label="Lesson ${i + 1}: ${gvEsc(g.title)}, ${state}">
+        <span class="pm-node" style="left:${x}%">${glyph}</span>
+        ${cur ? `<span class="pm-flag" style="left:${x}%">${started ? 'Next' : 'Start'}</span>` : ''}
+        <span class="pm-lab" style="${side}">${gvEsc(g.title)}</span>
+      </button>`;
+    }).join('');
+    out += `<div class="pm-head${modDone === idxs.length ? ' done' : ''}">
+        <div class="pm-k"><span>Module ${m + 1}${m === 0 && !isPro ? ' · Free' : ''}</span><em>${modDone}/${idxs.length}${proLocked ? ' · 🔒 Pro' : left > 0 ? ` · 🔒 opens in ${left} day${left === 1 ? '' : 's'}` : ''}</em></div>
+        ${info ? `<div class="pm-t">${gvEsc(info.title)}</div><div class="pm-g">${gvEsc(info.goal)}</div>` : ''}
+      </div>
+      <div class="pm-track" style="height:${H}px">
+        ${idxs.length > 1 ? `<svg class="pm-svg" viewBox="0 0 100 ${H}" preserveAspectRatio="none" style="height:${H}px" aria-hidden="true"><path class="base" d="${curve(idxs.length - 1)}"/>${reach > 0 ? `<path class="prog" d="${curve(reach)}"/>` : ''}</svg>` : ''}
+        ${steps}
+      </div>`;
+  });
+  el.innerHTML = out;
+}
+document.getElementById('pathMap').addEventListener('click', (e)=>{
+  const b = e.target.closest('.pm-step');
+  if(!b) return;
+  const niche = NICHES.find(n=> n.id === currentNicheId);
+  if(niche && niche.guides[+b.dataset.i]) openStepSheet(niche, +b.dataset.i);
+});
+
+/** Tap a step on the path: what it is, what to do, and the right button for where the learner is. */
+function openStepSheet(niche, i){
+  const guide = niche.guides[i];
+  const firstOpen = firstOpenIndex(niche);
+  const done = completed.has(niche.id + '|' + guide.title);
+  const lock = guideLock(niche, guide, i, firstOpen);
+  const cur = niche.guides[firstOpen];
+  const curOpen = !!cur && !guideLock(niche, cur, firstOpen, firstOpen);
+  const toStep = curOpen
+    ? `<button type="button" class="sc-btn" data-act="cur">Go to my step</button>`
+    : `<button type="button" class="sc-btn ghost" data-act="close">Got it</button>`;
+  let body = '', btn = '';
+  if(!lock){
+    body = guide.action ? `<div class="sc-do"><b>Your step</b>${gvEsc(guide.action)}</div>` : '';
+    btn = `<button type="button" class="sc-btn" data-act="open">${done ? 'Open lesson' : 'Start lesson'}</button>`;
+  } else if(lock === 'pro'){
+    body = `<div class="sc-sub">Part of Pro. Module 1 of every course is free.</div>`;
+    btn = `<button type="button" class="sc-btn gold" data-act="pro">See what Pro opens</button>`;
+  } else if(lock === 'week'){
+    const d = moduleDaysLeft(niche.id, guide.mod);
+    body = `<div class="sc-sub">This module opens in ${d} day${d === 1 ? '' : 's'}. Until then, finish what's open or look at another chapter.</div>`;
+    btn = toStep;
+  } else {
+    body = `<div class="sc-sub">Finish “${gvEsc(cur ? cur.title : '')}” first. Each step builds on the one before.</div>`;
+    btn = toStep;
+  }
+  const card = openStepLayer(`
+    <button type="button" class="step-x" aria-label="Close">✕</button>
+    <div class="sc-kicker">Lesson ${i + 1} of ${niche.guides.length} · ${guide.kind === 'short' ? 'Quick win' : 'Lesson'}${lock ? '' : ' · ' + gvEsc(guide.time) + ' read'}</div>
+    <div class="sc-title">${gvEsc(guide.title)}</div>
+    ${body}${btn}`);
+  card.querySelectorAll('[data-act]').forEach(b=> b.addEventListener('click', ()=>{
+    closeStepLayer();
+    if(b.dataset.act === 'open') goToLesson(niche.id, guide.title);
+    else if(b.dataset.act === 'cur' && cur) goToLesson(niche.id, cur.title);
+    else if(b.dataset.act === 'pro') openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' });
+  }));
 }
 
 // ---------- Chapter quizzes ----------
@@ -11042,9 +11445,10 @@ function dateMinusDays(dateStr, n){
   dt.setDate(dt.getDate()-n);
   return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
 }
+/** Counts a finished step towards the streak. Returns true when today is a new day on the streak. */
 function registerCompletionForStreak(){
   const today = todayStr();
-  if(streak.lastDate === today) return; // already counted today
+  if(streak.lastDate === today) return false; // already counted today
   const yesterday = dateMinusDays(today, 1);
   if(streak.lastDate === yesterday){
     streak.count += 1;
@@ -11052,9 +11456,7 @@ function registerCompletionForStreak(){
     streak.count = 1;
   }
   streak.lastDate = today;
-  if(streak.count % 5 === 0){
-    fireConfetti(60);
-  }
+  return true;
 }
 function renderStreakBadge(){
   if(streak.count > 0){
@@ -11087,6 +11489,7 @@ function fireConfetti(count){
     container.appendChild(piece);
   }
   setTimeout(()=> container.remove(), 3200);
+  return container;
 }
 
 // ---------- Tools panels ----------
@@ -16496,6 +16899,7 @@ document.addEventListener('keydown', (e)=>{
   // Escape: close whichever modal is open, else go back to home from a sub-view
   if(e.key === 'Escape' && currentEmail){
     if(slideshowOverlay.classList.contains('open')) return; // handled by its own key handler
+    if(stepLayerEl && stepLayerEl.classList.contains('open')){ closeStepLayer(); return; }
     if(upgradeOverlay.classList.contains('open')){ upgradeOverlay.classList.remove('open'); return; }
     if(exportOverlay.classList.contains('open')){ exportOverlay.classList.remove('open'); return; }
     if(document.activeElement === searchInput){ searchInput.blur(); searchInput.value=''; searchResults.innerHTML=''; return; }
