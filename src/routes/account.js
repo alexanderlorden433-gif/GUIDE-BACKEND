@@ -52,6 +52,9 @@ router.get('/', async (req, res) => {
     joinedAt: user.createdAt,
     // a trial is a first-time-only offer; don't show it to someone who has subscribed before
     trialEligible: !user.stripeCustomerId,
+    // they have paid through Stripe before, so Stripe's billing page (POST /billing/portal)
+    // has something to show: change plan, card, invoices, cancel
+    canManageBilling: !!user.stripeCustomerId,
   });
 });
 

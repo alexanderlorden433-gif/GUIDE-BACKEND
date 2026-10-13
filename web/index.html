@@ -10046,6 +10046,13 @@ function renderAccountModal(){
           </div>
         </section>
 
+        <section class="acct-card" id="accBillingCard" hidden>
+          <h4>Your subscription</h4>
+          <p class="acct-hint" id="accBillingText">Change your plan, update your card, see invoices or cancel on Stripe's secure page.</p>
+          <button type="button" class="modal-cta" id="accManageBillingBtn">Manage or cancel subscription</button>
+          <div class="acct-note" id="accBillingError" role="status"></div>
+        </section>
+
         <section class="acct-card">
           <h4>Change password</h4>
           <label class="acct-field" for="accCurrentPw"><span>Current password</span>
@@ -10061,6 +10068,7 @@ function renderAccountModal(){
         <section class="acct-card acct-danger">
           <h4>Delete account</h4>
           <p class="acct-hint">This permanently deletes your account and everything tracked in it. This can't be undone.</p>
+          <p class="acct-hint" id="accDeleteBillingHint" hidden>On Pro? Cancel your subscription above first — deleting your account doesn't stop the payments.</p>
           <button type="button" class="account-danger-btn" id="accDeleteBtn">Delete my account</button>
         </section>
       </div>
@@ -10102,6 +10110,36 @@ function renderAccountModal(){
   upgradeModalBody.querySelector('#accCommunityToggle').addEventListener('change', (e)=>{
     communityNotifsOff = !e.target.checked;
     saveProgress();
+  });
+
+  // Subscription: only for people who have actually paid through Stripe (owner, preview and
+  // referral-bonus Pro have nothing to manage there). Asked fresh each time, so it's never stale.
+  const billingCard = upgradeModalBody.querySelector('#accBillingCard');
+  const manageBillingBtn = upgradeModalBody.querySelector('#accManageBillingBtn');
+  apiFetch('/account').then(acc=>{
+    if(!acc || !acc.canManageBilling || !billingCard.isConnected) return;
+    const plan = acc.planType === 'yearly' ? ' (Yearly)' : acc.planType === 'monthly' ? ' (Monthly)' : '';
+    upgradeModalBody.querySelector('#accBillingText').textContent = acc.isPro
+      ? `You're on Pro${plan}. Change your plan, update your card, see invoices or cancel on Stripe's secure page.`
+      : 'See your past invoices or restart your plan on Stripe\'s secure page.';
+    if(!acc.isPro) manageBillingBtn.textContent = 'See invoices';
+    billingCard.hidden = false;
+    if(acc.isPro) upgradeModalBody.querySelector('#accDeleteBillingHint').hidden = false;
+  }).catch(()=>{});
+  manageBillingBtn.addEventListener('click', async ()=>{
+    const billingError = upgradeModalBody.querySelector('#accBillingError');
+    const label = manageBillingBtn.textContent;
+    billingError.textContent = '';
+    manageBillingBtn.disabled = true;
+    manageBillingBtn.textContent = 'One sec…';
+    try{
+      const result = await apiFetch('/billing/portal', { method: 'POST' });
+      window.location.href = result.url; // leaves the app for Stripe's billing page, which links back here
+    }catch(err){
+      billingError.textContent = err.body?.error || 'Could not open the billing page — please try again, or email TheGuide1@gmail.com.';
+      manageBillingBtn.disabled = false;
+      manageBillingBtn.textContent = label;
+    }
   });
 
   upgradeModalBody.querySelector('#accPwSaveBtn').addEventListener('click', async ()=>{
