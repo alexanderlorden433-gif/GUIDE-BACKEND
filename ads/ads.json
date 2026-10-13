@@ -182,6 +182,20 @@
       "website_url": "https://theguide.company",
       "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
       "format": "image"
+    },
+    {
+      "name": "ad15-exploded-view",
+      "angle": "The app comes apart into its 9 parts, each one explained, then snaps back together",
+      "format": "video",
+      "feed_4x5": "ad15-exploded-view-feed-4x5.mp4",
+      "story_9x16": "ad15-exploded-view-story-9x16.mp4",
+      "desktop_16x9": "ad15-exploded-view-desktop-16x9.mp4",
+      "primary_text": "One app that teaches you how to start a real business. 21 business paths, 756 narrated video lessons that each end with a step you can do today, checklists, templates, trackers, an AI mentor, a community, and now live calls for Pro members. Module 1 is free.",
+      "headline": "Nine parts. One plan.",
+      "description": "Free to start. Live calls and more with Pro.",
+      "call_to_action": "SIGN_UP",
+      "website_url": "https://theguide.company",
+      "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}"
     }
   ]
 }
