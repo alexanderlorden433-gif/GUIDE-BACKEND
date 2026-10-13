@@ -228,7 +228,7 @@ def logged_out(browser, base, device, viewport, mobile):
     ctx = browser.new_context(viewport=viewport, is_mobile=mobile, has_touch=mobile, service_workers='block')
     st = new_state()
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if visible(page, '#landingView'):
@@ -280,7 +280,7 @@ def logged_in(browser, base, device, viewport, mobile, pro=True):
     ctx = browser.new_context(viewport=viewport, is_mobile=mobile, has_touch=mobile, service_workers='block')
     st = new_state(pro)
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if not visible(page, '#appScreen', 10000):
@@ -516,7 +516,7 @@ def free_vs_pro(browser, base):
             # a brand-new Pro member: going Pro must open module 2 right away
             st['data']['courseStarts'] = {'ecommerce': TODAY}
         attach_backend(ctx, st)
-        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
         page = ctx.new_page(); watch_errors(page, step)
         page.goto(base + '/', wait_until='load')
         if not visible(page, '#appScreen', 10000):
@@ -587,7 +587,7 @@ def account_menu(browser, base, device, viewport, mobile):
     ctx = browser.new_context(viewport=viewport, is_mobile=mobile, has_touch=mobile, service_workers='block')
     st = new_state(True)
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if not visible(page, '#appScreen', 10000):
@@ -654,7 +654,7 @@ def business_results(browser, base):
         st['data']['business'] = biz
         st['joinedAt'] = join
         attach_backend(ctx, st)
-        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
         page = ctx.new_page(); watch_errors(page, step)
         page.goto(base + '/', wait_until='load')
         if not visible(page, '#appScreen', 10000):
@@ -699,7 +699,7 @@ def quiet_community(browser, base):
                        'authorName': 'Someone', 'isMine': False, 'createdAt': TODAY,
                        'reactions': []} for i in range(posts)]
         attach_backend(ctx, st)
-        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
         page = ctx.new_page(); watch_errors(page, step)
         page.goto(base + '/', wait_until='load')
         if not visible(page, '#appScreen', 10000):
@@ -728,7 +728,7 @@ def returning_learner(browser, base):
     st['data']['bookmarks'] = ['video|' + old_titles[0]]
     st['data']['lastVisited'] = {'nicheId': 'video', 'title': old_titles[0]}
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if not visible(page, '#appScreen', 10000):
@@ -784,7 +784,7 @@ def business_ledger(browser, base):
         st = new_state(True)
         st['data']['business'] = biz
         attach_backend(ctx, st)
-        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
         page = ctx.new_page(); watch_errors(page, step)
         page.goto(base + '/', wait_until='load')
         if not visible(page, '#appScreen', 10000):
@@ -915,7 +915,7 @@ def business_ledger(browser, base):
     st = new_state(True)
     st['data']['business'] = {}
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if visible(page, '#appScreen', 10000):
@@ -946,7 +946,7 @@ def new_chapters(browser, base):
     ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
     st = new_state(False)
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if not visible(page, '#appScreen', 10000):
@@ -1042,7 +1042,7 @@ def smoother(browser, base):
     ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
     st = new_state(False)
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if not visible(page, '#appScreen', 10000):
@@ -1122,7 +1122,7 @@ def smoother(browser, base):
     ctx.close()
     ctx2 = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block', reduced_motion='reduce')
     attach_backend(ctx2, new_state(False))
-    ctx2.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    ctx2.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
     pg2 = ctx2.new_page(); pg2.goto(base + '/', wait_until='load')
     if visible(pg2, '#appScreen', 10000):
         anim = pg2.evaluate("getComputedStyle(document.getElementById('homeView')).animationName")
@@ -1169,7 +1169,7 @@ def new_look(browser, base):
     ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
     st = new_state(False)
     attach_backend(ctx, st)
-    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load')
     if not visible(page, '#appScreen', 10000):
@@ -1216,7 +1216,7 @@ def new_look(browser, base):
     for look in ('forest', 'purple'):
         ctx = browser.new_context(viewport={'width': 1280, 'height': 800}, service_workers='block')
         attach_backend(ctx, new_state(False))
-        ctx.add_init_script(f"try{{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_look','{look}');}}catch(e){{}}")
+        ctx.add_init_script(f"try{{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');localStorage.setItem('guide_look','{look}');}}catch(e){{}}")
         page = ctx.new_page(); watch_errors(page, step)
         page.goto(base + '/', wait_until='load')
         page.wait_for_timeout(800)
@@ -1229,6 +1229,197 @@ def new_look(browser, base):
         else:
             ok(step[0], f'{look}: all {r["n"]} landing pictures are the {look} set and load')
         ctx.close()
+
+
+def daily_step(browser, base):
+    """The daily step loop: Today's step on Home, the "step done" card, and the path map of a chapter."""
+    step = ['daily step']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False)
+    st['data']['streak'] = {'count': 0, 'lastDate': None}      # a brand-new learner
+    st['data']['niches'] = ['video', 'photo']
+    attach_backend(ctx, st)
+    # no guide_course_view here: the path is what a new learner sees
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'the app did not open'); ctx.close(); return
+    page.wait_for_timeout(700)
+
+    # 1) a brand-new learner sees one clear first step on Home, not a "Continue" card
+    first = page.evaluate("(()=>{ const n = NICHES.find(x=>x.id==='video'); return {title: n.guides[0].title, action: n.guides[0].action}; })()")
+    card = page.evaluate("""(()=>{ const c = document.getElementById('todayStepCard'); if(!c) return null;
+      return {label: c.querySelector('.ts-label').textContent, title: c.querySelector('.ts-title').textContent,
+              doText: (c.querySelector('.ts-do')||{}).textContent || '', go: c.querySelector('.ts-go').textContent,
+              continueCard: !!document.getElementById('continueCard')}; })()""")
+    if not card:
+        problem(step[0], "Home has no Today's step card"); ctx.close(); return
+    if card['label'] != 'Your first step' or card['title'] != first['title'] or first['action'] not in card['doText']:
+        problem(step[0], "a new learner's card should show the first lesson and what to do", card)
+    elif card['continueCard']:
+        problem(step[0], "Today's step and 'Continue where you left off' should not both show", card)
+    else:
+        ok(step[0], "a new learner sees one first step on Home: the first lesson and what to do")
+    no_sideways_scroll(page, step[0]); shot(page, 'phone-10-today-step')
+
+    # 2) tapping it opens that lesson, ready to read, in the list
+    page.locator('#todayStepGo').click(timeout=3000); page.wait_for_timeout(500)
+    opened = page.evaluate("""(()=>{ const g = document.querySelector('#nicheView .guide.open');
+      return {chapter: !!document.getElementById('nicheView').offsetParent, list: document.getElementById('nicheView').dataset.course,
+              title: g ? g.querySelector('.guide-title').textContent : null, mark: !!(g && g.querySelector('.mark-btn') && g.querySelector('.mark-btn').offsetParent)}; })()""")
+    if not (opened['chapter'] and opened['list'] == 'list' and opened['title'] == first['title'] and opened['mark']):
+        problem(step[0], "tapping Today's step should open the lesson, ready to finish", opened)
+    else:
+        ok(step[0], "tapping Today's step opens the lesson in the list")
+
+    # 3) finishing it shows the "step done" card with the next step; the next step opens the next lesson
+    page.locator('#nicheView .guide.open .mark-btn').click(timeout=3000); page.wait_for_timeout(700)
+    done = page.evaluate("""(()=>{ const L = document.querySelector('.step-layer.open'); if(!L) return null;
+      const r = L.querySelector('.step-card').getBoundingClientRect();
+      return {badge: !!L.querySelector('.sc-badge'), streak: (L.querySelector('.sc-streak')||{}).textContent || '', next: (L.querySelector('.sc-next .nt')||{}).textContent || '',
+              count: L.querySelector('.sc-sub').textContent, inScreen: r.bottom <= innerHeight + 1 && r.left >= 0 && r.right <= innerWidth + 1,
+              streakNow: streak.count}; })()""")
+    nxt = page.evaluate("NICHES.find(x=>x.id==='video').guides[1].title")
+    if not done:
+        problem(step[0], 'finishing a lesson should show the "step done" card'); ctx.close(); return
+    if not (done['badge'] and 'Streak started' in done['streak'] and done['next'] == nxt and '1 of' in done['count'] and done['streakNow'] == 1):
+        problem(step[0], 'the "step done" card should show progress, the streak and the next step', done)
+    elif not done['inScreen']:
+        problem(step[0], 'the "step done" card does not fit on a phone screen', done)
+    else:
+        ok(step[0], 'finishing a lesson shows the "step done" card with the streak and the next step')
+    shot(page, 'phone-11-step-done')
+    page.wait_for_timeout(1200)
+    saved = st['data'].get('completed', [])
+    if 'video|' + first['title'] not in saved:
+        problem(step[0], 'a finished step was not saved', saved)
+    page.locator('.step-layer [data-act=next]').click(timeout=3000); page.wait_for_timeout(500)
+    now = page.evaluate("""(()=>{ const g = document.querySelector('#nicheView .guide.open');
+      return {layer: !!document.querySelector('.step-layer.open'), title: g ? g.querySelector('.guide-title').textContent : null}; })()""")
+    if now['layer'] or now['title'] != nxt:
+        problem(step[0], '"Next step" should close the card and open the next lesson', now)
+    else:
+        ok(step[0], '"Next step" opens the next lesson')
+
+    # 4) a second step on the same day keeps the streak at 1 day (no double counting)
+    page.locator('#nicheView .guide.open .mark-btn').click(timeout=3000); page.wait_for_timeout(500)
+    if page.evaluate("streak.count") != 1:
+        problem(step[0], 'two steps in one day should still be a 1-day streak', page.evaluate("streak.count"))
+    page.locator('.step-layer [data-act=close]').click(timeout=3000); page.wait_for_timeout(300)
+    if page.evaluate("!!document.querySelector('.step-layer.open')"):
+        problem(step[0], '"That\'s enough for today" should close the card')
+    else:
+        ok(step[0], 'two steps in a day count once on the streak, and the card closes')
+
+    # 5) a free learner who finishes Module 1 meets Pro right there, and Home moves on to another chapter
+    page.evaluate("""(()=>{ const n = NICHES.find(x=>x.id==='video'); const m0 = n.guides.filter(g=>g.mod===0);
+      m0.slice(0, -1).forEach(g=>completed.add('video|'+g.title)); markStepDone(n, m0[m0.length-1]); })()""")
+    page.wait_for_timeout(600)
+    pro = page.evaluate("""(()=>{ const L = document.querySelector('.step-layer.open'); if(!L) return null;
+      return {title: L.querySelector('.sc-title').textContent, btn: (L.querySelector('[data-act=pro]')||{}).textContent || ''}; })()""")
+    if not pro or 'Module 1 complete' not in pro['title'] or 'Pro' not in pro['btn']:
+        problem(step[0], 'finishing Module 1 should celebrate it and offer Pro', pro)
+    else:
+        ok(step[0], 'finishing Module 1 celebrates it and offers Pro')
+    shot(page, 'phone-12-module-done')
+    page.locator('.step-layer [data-act=pro]').click(timeout=3000); page.wait_for_timeout(500)
+    if not page.evaluate("document.getElementById('upgradeOverlay').classList.contains('open')"):
+        problem(step[0], '"See what Pro opens" should open the upgrade window')
+    close_paywall(page)
+    page.evaluate("showHome()"); page.wait_for_timeout(500)
+    home = page.evaluate("""(()=>{ const c = document.getElementById('todayStepCard'); const n = document.getElementById('todayProNote');
+      return {title: c ? c.querySelector('.ts-title').textContent : null, chap: c ? c.querySelector('.ts-chap').textContent : '', note: n ? n.textContent : ''}; })()""")
+    photo = page.evaluate("NICHES.find(x=>x.id==='photo').guides[0].title")
+    if home['title'] != photo or 'Videography' not in home['note']:
+        problem(step[0], "once a chapter's free part is done, Today's step should move on and say what Pro opens", home)
+    else:
+        ok(step[0], "Home moves on to another chapter and quietly says what Pro opens")
+    shot(page, 'phone-13-home-after-module')
+
+    # 6) the chapter path: one node per lesson, your step marked, the list hidden until asked for
+    page.evaluate("openNiche('photo')"); page.wait_for_timeout(500)
+    path = page.evaluate("""(()=>{ const n = NICHES.find(x=>x.id==='photo'); const labs = [...document.querySelectorAll('#pathMap .pm-lab')];
+      return {nodes: document.querySelectorAll('#pathMap .pm-step').length, lessons: n.guides.length, cur: document.querySelectorAll('#pathMap .st-cur').length,
+              listHidden: !document.getElementById('guideList').offsetParent, pathShown: !!document.getElementById('pathMap').offsetParent,
+              spill: labs.filter(l => { const r = l.getBoundingClientRect(); return r.left < 0 || r.right > innerWidth + 1; }).length,
+              locked: document.querySelectorAll('#pathMap .st-lock').length}; })()""")
+    if path['nodes'] != path['lessons'] or path['cur'] != 1 or not path['listHidden'] or not path['pathShown']:
+        problem(step[0], 'the chapter should open as a path with one node per lesson and one current step', path)
+    elif path['spill']:
+        problem(step[0], 'some path labels run off the screen', path)
+    else:
+        ok(step[0], f"a chapter opens as a path: {path['nodes']} steps, one marked as yours")
+    no_sideways_scroll(page, step[0])
+    page.evaluate("document.querySelector('#pathMap .st-cur').scrollIntoView({block:'center'})"); page.wait_for_timeout(200)
+    shot(page, 'phone-14-path')
+
+    # 7) tapping steps: a waiting step explains itself and shows no lesson text; a Pro step offers Pro; yours opens
+    page.evaluate("document.querySelector('#pathMap .pm-step[data-i=\"1\"]').click()"); page.wait_for_timeout(400)
+    waiting = page.evaluate("""(()=>{ const L = document.querySelector('.step-layer.open'); return L ? {text: L.textContent, doBox: !!L.querySelector('.sc-do')} : null; })()""")
+    if not waiting or 'first' not in waiting['text'] or waiting['doBox']:
+        problem(step[0], 'a step you have not reached should say so and not show its lesson', waiting)
+    else:
+        ok(step[0], 'a step you have not reached explains why and shows no lesson text')
+    page.locator('.step-layer .step-x').click(timeout=3000); page.wait_for_timeout(200)
+    pro_i = page.evaluate("NICHES.find(x=>x.id==='photo').guides.findIndex(g=>g.mod>0)")
+    page.evaluate(f"document.querySelector('#pathMap .pm-step[data-i=\"{pro_i}\"]').click()"); page.wait_for_timeout(400)
+    proSheet = page.evaluate("""(()=>{ const L = document.querySelector('.step-layer.open'); return L ? {btn: (L.querySelector('[data-act=pro]')||{}).textContent || '', doBox: !!L.querySelector('.sc-do')} : null; })()""")
+    if not proSheet or 'Pro' not in proSheet['btn'] or proSheet['doBox']:
+        problem(step[0], 'a Pro step should offer Pro and not show its lesson', proSheet)
+    else:
+        ok(step[0], 'a Pro step offers Pro and shows no lesson text')
+    page.keyboard.press('Escape'); page.wait_for_timeout(200)
+    if page.evaluate("!!document.querySelector('.step-layer.open')"):
+        problem(step[0], 'Escape should close the step sheet')
+    page.evaluate("document.querySelector('#pathMap .st-cur').click()"); page.wait_for_timeout(400)
+    shot(page, 'phone-15-step-sheet')
+    page.locator('.step-layer [data-act=open]').click(timeout=3000); page.wait_for_timeout(500)
+    cur = page.evaluate("""(()=>{ const g = document.querySelector('#nicheView .guide.open');
+      return {list: document.getElementById('nicheView').dataset.course, title: g ? g.querySelector('.guide-title').textContent : null,
+              pref: localStorage.getItem('guide_course_view')}; })()""")
+    pt = page.evaluate("NICHES.find(x=>x.id==='photo').guides[0].title")
+    if cur['list'] != 'list' or cur['title'] != pt or cur['pref']:
+        problem(step[0], 'opening a lesson from the path should show it in the list without changing the saved view', cur)
+    else:
+        ok(step[0], 'opening a lesson from the path shows it in the list')
+
+    # 8) the Path / List switch is remembered, and the path comes back for the next chapter
+    page.locator('#courseViewBar [data-v=path]').click(timeout=3000); page.wait_for_timeout(200)
+    page.locator('#courseViewBar [data-v=list]').click(timeout=3000); page.wait_for_timeout(200)
+    sw = page.evaluate("({list: !!document.getElementById('guideList').offsetParent, path: !!document.getElementById('pathMap').offsetParent, pref: localStorage.getItem('guide_course_view')})")
+    if not (sw['list'] and not sw['path'] and sw['pref'] == 'list'):
+        problem(step[0], 'the Path / List switch should show one or the other and remember the choice', sw)
+    else:
+        ok(step[0], 'the Path / List switch works and is remembered')
+    page.locator('#nicheView [data-sub=checklists]').click(timeout=3000); page.wait_for_timeout(300)
+    if page.evaluate("!!document.getElementById('pathMap').offsetParent || !!document.getElementById('courseViewBar').offsetParent"):
+        problem(step[0], 'the path and the switch should only show on the Course tab')
+    page.locator('#nicheView [data-sub=guides]').click(timeout=3000)
+    page.locator('#courseViewBar [data-v=path]').click(timeout=3000)
+
+    # 9) the video's own "Mark complete" goes through the same door: card above the player, nothing counted twice
+    page.evaluate("""(()=>{ const n = NICHES.find(x=>x.id==='photo'); window.__before = nicheCompleted(n);
+      gvCtx(n, n.guides[0], n.guides).onComplete(); })()""")
+    page.wait_for_timeout(500)
+    vid = page.evaluate("""(()=>{ const n = NICHES.find(x=>x.id==='photo'); const L = document.querySelector('.step-layer.open');
+      return {layer: !!L, z: L ? +getComputedStyle(L).zIndex : 0, count: nicheCompleted(n) - window.__before}; })()""")
+    if not vid['layer'] or vid['z'] <= 5000 or vid['count'] != 1:
+        problem(step[0], 'finishing from the video should show the card above the player, once', vid)
+    else:
+        ok(step[0], 'finishing from the video shows the same card, above the player')
+    page.keyboard.press('Escape')
+
+    # 10) the new styles use the look's colour variables only (both looks must work)
+    html = open(os.path.join(ROOT, 'web', 'index.html'), encoding='utf-8').read()
+    css = html[html.index('Daily step loop: Today'):html.index('</style>', html.index('Daily step loop: Today'))]
+    hard = re.findall(r'#[0-9a-fA-F]{3,8}\b|rgba?\(\s*\d', css)
+    if hard:
+        problem(step[0], 'the Daily step loop styles hard-code colours; use the colour variables', hard[:5])
+    else:
+        ok(step[0], 'the new styles use only the look colour variables')
+    finish(st, step[0])
+    ctx.close()
 
 
 def main():
@@ -1254,6 +1445,7 @@ def main():
         smoother(browser, base)
         quiet_community(browser, base)
         returning_learner(browser, base)
+        daily_step(browser, base)
         browser.close()
     srv.shutdown()
     # de-duplicate
