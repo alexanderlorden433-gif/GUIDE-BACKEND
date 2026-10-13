@@ -1231,6 +1231,71 @@ def new_look(browser, base):
         ctx.close()
 
 
+def niche_burst(browser, base):
+    """Tapping a chapter card: it opens at once, pieces gather into the chapter's icon, then everything is gone.
+    Nothing plays for people who asked for less motion."""
+    step = ['chapter burst']
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    for reduced in (False, True):
+        step[0] = 'chapter burst' + (' (less motion)' if reduced else '')
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block',
+                                  reduced_motion='reduce' if reduced else 'no-preference')
+        st = new_state(False)
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'the app did not open'); ctx.close(); continue
+        page.evaluate("showHome()"); page.wait_for_timeout(800)
+        page.locator('.niche-card').first.click(timeout=4000)
+        page.wait_for_timeout(140)
+        early = page.evaluate("""(()=>{ const ic = document.querySelector('#nicheHeaderBlock .niche-icon');
+          return {open: !!document.getElementById('nicheView').offsetParent, bits: document.querySelectorAll('#nicheBurst .nb-bit').length,
+                  waiting: !!(ic && ic.classList.contains('nb-wait'))}; })()""")
+        if not early['open']:
+            problem(step[0], 'the chapter should open straight away when its card is tapped', early)
+        elif reduced:
+            if early['bits'] or early['waiting']:
+                problem(step[0], 'with less motion turned on, nothing should fly or fade in', early)
+            else:
+                ok(step[0], 'with less motion turned on, the chapter just opens')
+        elif early['bits'] < 12 or not early['waiting']:
+            problem(step[0], 'tapping a chapter should scatter pieces toward its icon', early)
+        else:
+            ok(step[0], f"the chapter opens at once and {early['bits']} pieces gather into its icon")
+            page.wait_for_timeout(200)
+            shot(page, 'phone-15-chapter-burst')
+        page.wait_for_timeout(1700)
+        late = page.evaluate("""(()=>{ const ic = document.querySelector('#nicheHeaderBlock .niche-icon');
+          return {layer: !!document.getElementById('nicheBurst'), cls: ic ? ic.className : '', op: ic ? getComputedStyle(ic).opacity : ''}; })()""")
+        if late['layer'] or 'nb-' in late['cls'] or late['op'] != '1':
+            problem(step[0], 'after the burst, the pieces should be gone and the icon fully shown', late)
+        else:
+            ok(step[0], 'afterwards the pieces are gone and the icon is back to normal')
+        no_sideways_scroll(page, step[0])
+        if not reduced:
+            # tapping a second chapter right away must not leave pieces behind
+            page.evaluate("showHome()"); page.wait_for_timeout(500)
+            page.locator('.niche-card').nth(1).click(timeout=4000); page.wait_for_timeout(100)
+            page.evaluate("showHome()"); page.wait_for_timeout(300)
+            page.locator('.niche-card').first.click(timeout=4000); page.wait_for_timeout(1800)
+            left = page.evaluate("document.querySelectorAll('#nicheBurst').length")
+            if left:
+                problem(step[0], 'quick taps on two chapters left pieces on the screen', left)
+            else:
+                ok(step[0], 'quick taps on two chapters leave nothing behind')
+            html = open(os.path.join(ROOT, 'web', 'index.html'), encoding='utf-8').read()
+            css = html[html.index('/* ---------- Chapter burst'):html.index('</style>', html.index('/* ---------- Chapter burst'))]
+            hard = re.findall(r'#[0-9a-fA-F]{3,8}\b|rgba?\(\s*\d', css)
+            if hard:
+                problem(step[0], 'the chapter burst styles hard-code colours; use the colour variables', hard[:5])
+            else:
+                ok(step[0], 'the burst styles use only the look colour variables')
+        finish(st, step[0])
+        ctx.close()
+
+
 def daily_step(browser, base):
     """The daily step loop: Today's step on Home, the "step done" card, and the path map of a chapter."""
     step = ['daily step']
@@ -1446,6 +1511,7 @@ def main():
         quiet_community(browser, base)
         returning_learner(browser, base)
         daily_step(browser, base)
+        niche_burst(browser, base)
         browser.close()
     srv.shutdown()
     # de-duplicate

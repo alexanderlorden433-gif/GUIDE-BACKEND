@@ -26,6 +26,7 @@ SCREENS = {
     'reset':       (False, "document.getElementById('landingLoginBtn').click(); document.getElementById('forgotBtn').click()"),
     'home':        (True,  "showHome()"),
     'chapter':     (True,  "openNiche(NICHES[0].id)"),
+    'chapter-burst': (True, "showHome(); document.querySelector('.niche-card').click()"),
     'guide':       (True,  "openNiche(NICHES[0].id); setCourseView('list'); document.querySelector('#nicheView .guide .guide-title').click()"),
     'checklists':  (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=checklists]').click()"),
     'templates-pro': (True, "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=templates]').click()"),
