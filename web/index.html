@@ -3057,6 +3057,27 @@
     transform:scaleY(0); transform-origin:top; transition:transform .9s ease .25s;
   }
 
+  /* --- tour video (landing) --- */
+  .lp-section.lp-tour{padding-top:8px;}
+  .lp-tour .lp-lead{margin-bottom:26px;}
+  .lp-tour-frame{position:relative; aspect-ratio:16/9; border-radius:22px; overflow:hidden; background:var(--bg-raised); border:1px solid var(--line-2); box-shadow:0 24px 70px rgba(var(--accent-rgb),.10);}
+  .lp-tour-video{display:block; width:100%; height:100%; object-fit:contain; background:var(--bg);}
+  .lp-tour-play{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; width:100%; border:0; padding:0; background:none; color:var(--on-accent); cursor:pointer; touch-action:manipulation;}
+  .lp-tour-btn{display:flex; align-items:center; justify-content:center; width:78px; height:78px; border-radius:50%; background:var(--grape); transition:transform .15s ease;}
+  .lp-tour-btn svg{width:30px; height:30px; margin-left:4px; fill:currentColor;}
+  .lp-tour-play:hover .lp-tour-btn{transform:scale(1.06);}
+  .lp-tour-play:active .lp-tour-btn{transform:scale(.97);}
+  .lp-tour-play:focus-visible{outline:3px solid var(--grape); outline-offset:-6px; border-radius:22px;}
+  .lp-tour-len{position:absolute; left:14px; bottom:14px; padding:6px 11px; border-radius:999px; background:var(--card); border:1px solid var(--line-2); color:var(--ink-2); font:600 12.5px 'Inter',sans-serif;}
+  .lp-tour-frame.playing .lp-tour-play{display:none;}
+  .lp-tour-note{margin:12px 2px 0; font-size:13px; color:var(--ink-soft);}
+  @media (max-width:560px){
+    .lp-tour-frame{border-radius:16px;}
+    .lp-tour-btn{width:64px; height:64px;}
+    .lp-tour-btn svg{width:24px; height:24px;}
+  }
+  @media (prefers-reduced-motion: reduce){ .lp-tour-btn{transition:none;} }
+
   /* --- slideshow --- */
   .lp-show{position:relative;}
   .lp-stage{
@@ -5068,6 +5089,23 @@
       </div>
     </div>
   </header>
+
+  <section class="lp-section lp-tour" id="lpTour">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">See it in under a minute.</h2>
+      <p class="lp-lead">Four of the courses, a real lesson, and the tools that come with them.</p>
+      <div class="lp-tour-frame" id="lpTourFrame">
+        <video id="lpTourVideo" class="lp-tour-video" poster="media/the-guide-tour.webp" preload="none" playsinline controlslist="nodownload" aria-label="A 53-second tour of The Guide">
+          <source src="media/the-guide-tour.mp4" type="video/mp4">
+        </video>
+        <button type="button" class="lp-tour-play" id="lpTourPlay" aria-label="Play the 53-second tour">
+          <span class="lp-tour-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></span>
+          <span class="lp-tour-len">0:53 · AI voice</span>
+        </button>
+      </div>
+      <p class="lp-tour-note">Narrated by an AI voice. Educational content only, not financial advice.</p>
+    </div>
+  </section>
 
   <section class="lp-section" id="lpStepOne">
     <div class="lp-wrap lp-try-grid">
@@ -7564,6 +7602,30 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
   view.querySelectorAll('[data-lp-signup]').forEach(b=>{
     b.addEventListener('click', ()=> document.getElementById('landingSignupBtn').click());
   });
+
+  // the 53-second tour video: nothing downloads until someone taps play
+  const tourFrame = document.getElementById('lpTourFrame');
+  const tourVideo = document.getElementById('lpTourVideo');
+  const tourPlay = document.getElementById('lpTourPlay');
+  if(tourFrame && tourVideo && tourPlay){
+    tourPlay.addEventListener('click', ()=>{
+      tourVideo.controls = true;
+      tourFrame.classList.add('playing');
+      const p = tourVideo.play();
+      if(p && p.catch) p.catch(()=>{}); // the controls are on, so they can press play themselves
+    });
+    tourVideo.addEventListener('ended', ()=>{
+      tourVideo.controls = false;
+      tourFrame.classList.remove('playing');
+      tourVideo.load(); // back to the cover picture, ready to watch again
+    });
+    // stop the sound when the video scrolls out of view or the landing page is hidden (signing up, logging in)
+    if('IntersectionObserver' in window){
+      new IntersectionObserver((entries)=>{
+        entries.forEach(e=>{ if(!e.isIntersecting && !tourVideo.paused) tourVideo.pause(); });
+      }, { threshold: 0 }).observe(tourFrame);
+    }
+  }
 
   // scattered lessons settle into an ordered course, once, when it comes into view
   const stack = document.getElementById('lpStack');
