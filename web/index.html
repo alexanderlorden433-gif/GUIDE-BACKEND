@@ -551,7 +551,34 @@
     cursor:pointer;
     color:var(--ink-soft);
   }
-  .bottom-tab-icon{ font-size:20px; }
+  .ico{width:1.2em; height:1.2em; fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; flex:none; vertical-align:-0.2em;}
+  .bottom-tab-icon{display:flex; align-items:center; justify-content:center; height:24px;}
+  .bottom-tab-icon .ico{width:23px; height:23px; vertical-align:baseline;}
+  .bottom-tab.active .ico{stroke-width:2.1;}
+  .notif-bell-trigger{color:var(--ink-soft);}
+  .notif-bell-trigger .ico{width:21px; height:21px; vertical-align:baseline;}
+  .streak-badge{display:inline-flex; align-items:center; gap:4px;}
+  .streak-badge .ico{width:13px; height:13px; vertical-align:baseline;}
+  .niche-icon .ico{width:24px; height:24px; vertical-align:baseline;}
+  .niche-header .niche-icon .ico{width:28px; height:28px;}
+  .digest-icon{display:flex; align-items:center; color:var(--ink-soft);}
+  .digest-icon.hot{color:var(--gold);}
+  .digest-icon .ico{width:24px; height:24px; vertical-align:baseline;}
+  .ts-streak{display:inline-flex; align-items:center; gap:4px;}
+  .ts-streak .ico{width:14px; height:14px; vertical-align:baseline;}
+  .sub-tab{display:inline-flex; align-items:center; gap:7px;}
+  .sub-tab .ico{width:16px; height:16px; vertical-align:baseline;}
+  .edit-niches-btn{display:inline-flex; align-items:center; gap:6px;}
+  .edit-niches-btn .ico{width:13px; height:13px; vertical-align:baseline;}
+  .lp-chip em .ico, .np-icon .ico{width:20px; height:20px; vertical-align:baseline;}
+  .guide-check .ico{width:14px; height:14px; vertical-align:baseline; stroke-width:2.6;}
+  .guide-check{display:flex; align-items:center; justify-content:center;}
+  .guide-check .ico{color:var(--ink-soft);}
+  .guide-check.done .ico{color:var(--on-accent);}
+  .pm-node .ico{width:1em; height:1em; vertical-align:baseline; stroke-width:2.2;}
+  .lock-tag .ico, .module-locked .ico, .pm-k .ico{width:12px; height:12px; vertical-align:-1px; margin-right:1px;}
+  .pro-preview-icon .ico{width:1em; height:1em; vertical-align:baseline;}
+  .mark-btn .ico{width:15px; height:15px; vertical-align:-2px;}
   .bottom-tab-label{
     font-family:'Inter',sans-serif;
     font-weight:600;
@@ -2682,7 +2709,11 @@
   .streak-flame{
     font-size:48px;
     line-height:1;
+    color:var(--gold);
   }
+  .streak-flame .ico{width:44px; height:44px; vertical-align:baseline; stroke-width:1.5;}
+  .progress-hero-card .ph-icon{color:var(--grape);}
+  .progress-hero-card .ph-icon .ico{width:28px; height:28px; vertical-align:baseline; stroke-width:1.6;}
   .streak-info .streak-count{
     font-family:'Space Grotesk',sans-serif;
     font-weight:700;
@@ -5333,7 +5364,7 @@
         <button type="button" class="topbar-search" id="topbarSearchBtn" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-3.6-3.6"/></svg></button>
         <div class="notif-bell-wrap">
           <button class="notif-bell-trigger" id="notifBellTrigger">
-            🔔<span class="notif-bell-badge" id="notifBellBadge" style="display:none;"></span>
+            <span data-ico="bell"></span><span class="notif-bell-badge" id="notifBellBadge" style="display:none;"></span>
           </button>
           <div class="notif-dropdown" id="notifDropdown">
             <div class="notif-dropdown-head">
@@ -5384,19 +5415,19 @@
 
   <div class="bottom-tab-bar" id="bottomTabBar">
     <button class="bottom-tab active" id="bottomTabHome">
-      <span class="bottom-tab-icon">🏠</span><span class="bottom-tab-label">Home</span>
+      <span class="bottom-tab-icon" data-ico="home"></span><span class="bottom-tab-label">Home</span>
     </button>
     <button class="bottom-tab" id="bottomTabChapters">
-      <span class="bottom-tab-icon">📖</span><span class="bottom-tab-label">Chapters</span>
+      <span class="bottom-tab-icon" data-ico="chapters"></span><span class="bottom-tab-label">Chapters</span>
     </button>
     <button class="bottom-tab" id="bottomTabEarn">
-      <span class="bottom-tab-icon">💰</span><span class="bottom-tab-label">Earn</span>
+      <span class="bottom-tab-icon" data-ico="earn"></span><span class="bottom-tab-label">Earn</span>
     </button>
     <button class="bottom-tab" id="bottomTabGuider">
-      <span class="bottom-tab-icon">✨</span><span class="bottom-tab-label">The Guider</span>
+      <span class="bottom-tab-icon" data-ico="guider"></span><span class="bottom-tab-label">The Guider</span>
     </button>
     <button class="bottom-tab" id="bottomTabCommunity">
-      <span class="bottom-tab-icon">🏆</span><span class="bottom-tab-label">Community</span>
+      <span class="bottom-tab-icon" data-ico="community"></span><span class="bottom-tab-label">Community</span>
     </button>
   </div>
 
@@ -5425,7 +5456,7 @@
       <div id="weeklyChallengeWrap"></div>
       <div class="section-head" id="yourChaptersHead" style="display:none;">
         <h3>Your chapters</h3>
-        <button class="edit-niches-btn" id="editNichesBtn">✏️ Edit</button>
+        <button class="edit-niches-btn" id="editNichesBtn"><span data-ico="pencil"></span>Edit</button>
       </div>
       <div class="niche-grid" id="nicheGrid"></div>
       <div class="section-head" id="moreChaptersHead" style="display:none;">
@@ -5442,16 +5473,16 @@
       <div id="nicheDisclaimer"></div>
       <div id="subNav">
         <div class="sub-nav">
-          <button class="sub-tab active" data-sub="guides">📚 Course</button>
-          <button class="sub-tab" data-sub="checklists">✅ Checklists</button>
+          <button class="sub-tab active" data-sub="guides"><span data-ico="chapters"></span>Course</button>
+          <button class="sub-tab" data-sub="checklists"><span data-ico="checklist"></span>Checklists</button>
         </div>
         <div class="sub-nav-group-label">Toolkit</div>
         <div class="sub-nav sub-nav-secondary">
-          <button class="sub-tab sub-tab-secondary" data-sub="templates">📄 Templates <span class="pro-tag" id="templatesProTag" style="display:none;">PRO</span></button>
-          <button class="sub-tab sub-tab-secondary" data-sub="tools" id="toolsSubTab" style="display:none;">🛠️ Tools <span class="pro-tag" id="toolsProTag" style="display:none;">PRO</span></button>
+          <button class="sub-tab sub-tab-secondary" data-sub="templates"><span data-ico="file"></span>Templates <span class="pro-tag" id="templatesProTag" style="display:none;">PRO</span></button>
+          <button class="sub-tab sub-tab-secondary" data-sub="tools" id="toolsSubTab" style="display:none;"><span data-ico="tools"></span>Tools <span class="pro-tag" id="toolsProTag" style="display:none;">PRO</span></button>
           <button class="sub-tab sub-tab-secondary" data-sub="aichat">The Guider</button>
           <button class="sub-tab sub-tab-secondary" data-sub="mentors">Mentors</button>
-          <button class="sub-tab sub-tab-secondary" data-sub="discussion">💬 Discussion</button>
+          <button class="sub-tab sub-tab-secondary" data-sub="discussion"><span data-ico="chat"></span>Discussion</button>
         </div>
       </div>
       <div id="courseViewBar"><div class="cv-seg" role="group" aria-label="How to see this course"><button type="button" data-v="path">Path</button><button type="button" data-v="list">List</button></div></div>
@@ -5467,14 +5498,14 @@
 
     <div id="todayView" style="display:none;">
       <button class="back-btn" id="todayBackBtn">← All chapters</button>
-      <h2 class="page-title">📅 Today</h2>
+      <h2 class="page-title">Today</h2>
       <p class="page-sub">Everything due today or overdue, pulled from every chapter's tools.</p>
       <div id="todayContent"></div>
     </div>
 
     <div id="businessView" class="biz-wide" style="display:none;">
       <button class="back-btn" id="businessBackBtn">← All chapters</button>
-      <h2 class="page-title">💼 Business</h2>
+      <h2 class="page-title">Business</h2>
       <p class="page-sub">Cross-chapter tools that work across everything you track — not tied to one niche.</p>
       <div class="sub-nav-scroller">
       <div class="sub-nav" id="businessSubNav">
@@ -5494,7 +5525,7 @@
         <button class="sub-tab" data-biz="mileage">Mileage <span class="pro-tag">PRO</span></button>
         <button class="sub-tab" data-biz="timetrack">Time Tracker <span class="pro-tag">PRO</span></button>
         <button class="sub-tab" data-biz="leads">Lead Pipeline <span class="pro-tag">PRO</span></button>
-        <button class="sub-tab" data-biz="incomering">Income Goal 📊</button>
+        <button class="sub-tab" data-biz="incomering">Income Goal</button>
         <button class="sub-tab" data-biz="backup">Data Backup <span class="pro-tag" style="background:var(--grape);">YEARLY</span></button>
         <button class="sub-tab" data-biz="portal">Client Portal <span class="pro-tag" style="background:var(--grape);">YEARLY</span></button>
       </div>
@@ -5504,7 +5535,7 @@
 
     <div id="statsView" style="display:none;">
       <button class="back-btn" id="statsBackBtn">← All chapters</button>
-      <h2 class="page-title">📊 My Progress</h2>
+      <h2 class="page-title">My Progress</h2>
       <p class="page-sub">What your business has done so far, and how far through the courses you are.</p>
 
       <!-- Progress Overview Cards -->
@@ -5537,28 +5568,28 @@
 
     <div id="adminView" style="display:none;">
       <button class="back-btn" id="adminBackBtn">← All chapters</button>
-      <h2 class="page-title">📈 Owner Dashboard</h2>
+      <h2 class="page-title">Owner Dashboard</h2>
       <p class="page-sub">Live — updates the moment someone visits, signs up or upgrades.</p>
       <div id="adminContent"><div class="tool-empty">Loading…</div></div>
     </div>
 
     <div id="marketingView" style="display:none;">
       <button class="back-btn" id="marketingBackBtn">← All chapters</button>
-      <h2 class="page-title">📣 Marketing Dashboard</h2>
+      <h2 class="page-title">Marketing Dashboard</h2>
       <p class="page-sub">Where visitors come from — ads, social, creators, search — and which channels turn into signups and Pro.</p>
       <div id="marketingContent"><div class="tool-empty">Loading…</div></div>
     </div>
 
     <div id="partnersView" style="display:none;">
       <button class="back-btn" id="partnersBackBtn">← All chapters</button>
-      <h2 class="page-title">🤝 Partners</h2>
+      <h2 class="page-title">Partners</h2>
       <p class="page-sub">The businesses and people we work with to make The Guide better.</p>
       <div id="partnersOwnerFormWrap"></div>
       <div id="partnersList"><div class="tool-empty">Loading…</div></div>
     </div>
 
     <div id="earnView" style="display:none;">
-      <h2 class="page-title">💰 Earn</h2>
+      <h2 class="page-title">Earn</h2>
       <p class="page-sub">Grow your income — promote affiliate products and invite friends for free Pro.</p>
       <div class="community-tabs" id="earnTabs">
         <button class="community-tab active" data-etab="affiliates">💰 Affiliates</button>
@@ -5576,7 +5607,7 @@
 
     <div id="winsView" class="wins-view" style="display:none;">
       <button class="back-btn" id="winsBackBtn">← Home</button>
-      <h2 class="page-title">🏆 Wins Board</h2>
+      <h2 class="page-title">Wins Board</h2>
       <p class="page-sub">Celebrate your milestones — and cheer on everyone else's.</p>
       <div id="winPostArea"></div>
       <div id="winsFeed"><div class="tool-empty">Loading…</div></div>
@@ -5584,7 +5615,7 @@
 
     <div id="leaderboardView" class="lb-view" style="display:none;">
       <button class="back-btn" id="lbBackBtn">← Home</button>
-      <h2 class="page-title">🥇 Leaderboard</h2>
+      <h2 class="page-title">Leaderboard</h2>
       <p class="page-sub">See who's putting in the work across The Guide community.</p>
       <div class="lb-tabs" id="lbTabs">
         <button class="lb-tab active" data-lb="streak">🔥 Streaks</button>
@@ -5596,7 +5627,7 @@
 
     <div id="networkView" class="network-view" style="display:none;">
       <button class="back-btn" id="networkBackBtn">← Home</button>
-      <h2 class="page-title">🤝 Connect</h2>
+      <h2 class="page-title">Connect</h2>
       <p class="page-sub">People in your niche to learn from, team up with, or refer work to.</p>
       <div id="networkContent"><div class="tool-empty">Loading…</div></div>
     </div>
@@ -5632,7 +5663,7 @@
 
     <div id="helpView" style="display:none;">
       <button class="back-btn" id="helpBackBtn">← All chapters</button>
-      <h2 class="page-title">❓ Help & FAQ</h2>
+      <h2 class="page-title">Help & FAQ</h2>
       <p class="page-sub">A quick guide to everything in The Guide.</p>
       <div class="faq-list" id="faqList"></div>
       <div class="biz-card" style="margin-top:20px;">
@@ -5741,6 +5772,57 @@
 // Look helpers: read the live colours of the current look (Forest & Gold or Purple).
 function themeVar(name, fb){ try{ const v=getComputedStyle(document.documentElement).getPropertyValue(name).trim(); return v||fb; }catch(e){ return fb; } }
 function themeRgba(name, alpha, fb){ return 'rgba('+themeVar(name, fb)+','+alpha+')'; }
+// Icons: one set of line icons (Lucide, ISC licence) drawn in the current text colour, so the interface doesn't lean on emoji.
+const ICO = {
+  home:`<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /> <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />`,
+  chapters:`<path d="M12 7v14" /> <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />`,
+  earn:`<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" /> <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />`,
+  guider:`<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" /> <path d="M20 3v4" /> <path d="M22 5h-4" /> <path d="M4 17v2" /> <path d="M5 18H3" />`,
+  community:`<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /> <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /> <path d="M4 22h16" /> <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /> <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /> <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />`,
+  bell:`<path d="M10.268 21a2 2 0 0 0 3.464 0" /> <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" />`,
+  flame:`<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />`,
+  clock:`<circle cx="12" cy="13" r="8" /> <path d="M12 9v4l2 2" /> <path d="M5 3 2 6" /> <path d="m22 6-3-3" /> <path d="M6.38 18.7 4 21" /> <path d="M17.64 18.67 20 21" />`,
+  pencil:`<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /> <path d="m15 5 4 4" />`,
+  checklist:`<path d="m3 17 2 2 4-4" /> <path d="m3 7 2 2 4-4" /> <path d="M13 6h8" /> <path d="M13 12h8" /> <path d="M13 18h8" />`,
+  file:`<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /> <path d="M14 2v4a2 2 0 0 0 2 2h4" /> <path d="M10 9H8" /> <path d="M16 13H8" /> <path d="M16 17H8" />`,
+  tools:`<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />`,
+  chat:`<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />`,
+  lock:`<rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" />`,
+  bookmark:`<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />`,
+  chart:`<path d="M3 3v16a2 2 0 0 0 2 2h16" /> <path d="M18 17V9" /> <path d="M13 17V5" /> <path d="M8 17v-3" />`,
+  user:`<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" />`,
+  target:`<circle cx="12" cy="12" r="10" /> <circle cx="12" cy="12" r="6" /> <circle cx="12" cy="12" r="2" />`,
+  video:`<path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" /> <rect x="2" y="6" width="14" height="12" rx="2" />`,
+  camera:`<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /> <circle cx="12" cy="13" r="3" />`,
+  megaphone:`<path d="m3 11 18-5v12L3 14v-3z" /> <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />`,
+  candles:`<path d="M9 5v4" /> <rect width="4" height="6" x="7" y="9" rx="1" /> <path d="M9 15v2" /> <path d="M17 3v2" /> <rect width="4" height="8" x="15" y="5" rx="1" /> <path d="M17 13v3" /> <path d="M3 3v16a2 2 0 0 0 2 2h16" />`,
+  bag:`<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /> <path d="M3 6h18" /> <path d="M16 10a4 4 0 0 1-8 0" />`,
+  pentool:`<path d="M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z" /> <path d="m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18" /> <path d="m2.3 2.3 7.286 7.286" /> <circle cx="11" cy="11" r="2" />`,
+  penline:`<path d="M12 20h9" /> <path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z" />`,
+  phone:`<rect width="14" height="20" x="5" y="2" rx="2" ry="2" /> <path d="M12 18h.01" />`,
+  star:`<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />`,
+  compass:`<path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /> <circle cx="12" cy="12" r="10" />`,
+  folders:`<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /> <path d="M8 10v4" /> <path d="M12 10v2" /> <path d="M16 10v6" />`,
+  wrench2:`<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />`,
+  clapper:`<path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" /> <path d="m6.2 5.3 3.1 3.9" /> <path d="m12.4 3.4 3.1 4" /> <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />`,
+  briefcase:`<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /> <rect width="20" height="14" x="2" y="6" rx="2" />`,
+  handshake:`<path d="m11 17 2 2a1 1 0 1 0 3-3" /> <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" /> <path d="m21 3 1 11h-2" /> <path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" /> <path d="M3 4h8" />`,
+  spray:`<path d="M3 3h.01" /> <path d="M7 5h.01" /> <path d="M11 7h.01" /> <path d="M3 7h.01" /> <path d="M7 9h.01" /> <path d="M3 11h.01" /> <rect width="4" height="4" x="15" y="5" /> <path d="m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2" /> <path d="m13 14 8-2" /> <path d="m13 19 8-2" />`,
+  leaf:`<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" /> <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />`,
+  car:`<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /> <circle cx="7" cy="17" r="2" /> <path d="M9 17h6" /> <circle cx="17" cy="17" r="2" />`,
+  hammer:`<path d="m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9" /> <path d="m18 15 4-4" /> <path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5" />`,
+  paw:`<circle cx="11" cy="4" r="2" /> <circle cx="18" cy="8" r="2" /> <circle cx="20" cy="16" r="2" /> <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z" />`,
+  check:`<path d="M20 6 9 17l-5-5" />`,
+  zap:`<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />`,
+  repeat:`<path d="m17 2 4 4-4 4" /> <path d="M3 11v-1a4 4 0 0 1 4-4h14" /> <path d="m7 22-4-4 4-4" /> <path d="M21 13v1a4 4 0 0 1-4 4H3" />`,
+  trending:`<polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /> <polyline points="16 7 22 7 22 13" />`
+};
+const ICON_FOR_CHAPTER = {'🎥':'video','📷':'camera','📈':'megaphone','📊':'candles','🛒':'bag','🎨':'pentool','✍':'penline','📱':'phone','🌟':'star','🧭':'compass','🗂':'folders','🔧':'tools','🏠':'home','🎬':'clapper','💼':'briefcase','💰':'handshake','🧽':'spray','🌿':'leaf','🚗':'car','🛠':'hammer','🐾':'paw'};
+function ico(name, cls){ return '<svg class="ico' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (ICO[name] || '') + '</svg>'; }
+// A chapter's icon: the matching line icon, or the chapter's own emoji if it has no match.
+function nicheIco(n, cls){ const k = ICON_FOR_CHAPTER[String((n && n.icon) || '').replace(/️/g, '')]; return k ? ico(k, cls) : String((n && n.icon) || '').replace(/[&<>"']/g, ''); }
+function hydrateIcons(root){ (root || document).querySelectorAll('[data-ico]').forEach(el=>{ if(!el.firstChild) el.innerHTML = ico(el.dataset.ico); }); }
+hydrateIcons();
 // The original chapters come from web/niches/base.js (loaded just before this script).
 const NICHES = window.GUIDE_NICHES || [];
 
@@ -5953,7 +6035,7 @@ function buildRecToolsBlock(nicheId){
   div.className = 'rec-tools-section';
   div.innerHTML = `
     <div class="rec-tools-header">
-      <h4>🛠 Recommended Tools</h4>
+      <h4>Recommended Tools</h4>
       <span class="rec-badge">Partner picks</span>
     </div>
     <div class="rec-tools-grid">
@@ -6977,11 +7059,11 @@ async function openGuideVideo(niche, guide, ctx){
   root.style.setProperty('--gv-acc', acc);
   root.style.setProperty('--gv-acc-a', acc + '70');
   root.innerHTML = `
-    <div class="gv-top"><div class="gv-ttl">${gvEsc(niche.icon)} ${gvEsc(niche.name)} · ${gvEsc(guide.title)}</div><button class="gv-x" aria-label="Close">✕</button></div>
+    <div class="gv-top"><div class="gv-ttl">${nicheIco(niche)} ${gvEsc(niche.name)} · ${gvEsc(guide.title)}</div><button class="gv-x" aria-label="Close">✕</button></div>
     <div class="gv-frame"><div class="gv-canvas">
       <div class="gv-bg"><div class="gv-blob b1"></div><div class="gv-blob b2"></div><div class="gv-grid"></div><div class="gv-dots">${dots}</div></div>
       <div class="gv-segs"></div>
-      <div class="gv-chip">${gvEsc(niche.icon)} ${gvEsc(niche.name)}</div>
+      <div class="gv-chip">${nicheIco(niche)} ${gvEsc(niche.name)}</div>
       <div class="gv-brand">${GV_LOGO}The Guide</div>
       <div class="gv-stage">
         <div class="gv-bignum"></div>
@@ -7378,7 +7460,7 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
   // the chapters, straight from NICHES
   const grid = document.getElementById('lpChapters');
   if(grid && typeof NICHES !== 'undefined'){
-    grid.innerHTML = NICHES.map(n=> `<div class="lp-chip"><em>${n.icon}</em>${n.name}</div>`).join('');
+    grid.innerHTML = NICHES.map(n=> `<div class="lp-chip"><em>${nicheIco(n)}</em>${n.name}</div>`).join('');
     const c = document.getElementById('lpOurCourses');
     if(c) c.textContent = `${countWord(NICHES.length, true)} courses`;
     document.querySelectorAll('[data-count-word]').forEach(el => { el.textContent = countWord(NICHES.length, el.dataset.countWord === 'cap'); });
@@ -7391,7 +7473,7 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
     const real = (n)=> n && n.guides && n.guides[0] && n.guides[0].action;
     let list = FEATURED.map(id=> NICHES.find(n=> n.id === id)).filter(real);
     if(list.length < 4) list = NICHES.filter(real).slice(0, 8);
-    pick.innerHTML = list.map(n=> `<button type="button" data-id="${gvEsc(n.id)}" aria-pressed="false"><em>${gvEsc(n.icon)}</em>${gvEsc(n.name)}</button>`).join('');
+    pick.innerHTML = list.map(n=> `<button type="button" data-id="${gvEsc(n.id)}" aria-pressed="false"><em>${nicheIco(n)}</em>${gvEsc(n.name)}</button>`).join('');
     const show = (n, chosen)=>{
       if(chosen){ try{ sessionStorage.setItem('guide_demo_pick', n.id); }catch(e){} }   // sign-up starts them on this business
       pick.querySelectorAll('button').forEach(b=> b.setAttribute('aria-pressed', String(b.dataset.id === n.id)));
@@ -7399,7 +7481,7 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
       const free = n.guides.filter(x=> x.mod === 0).length;
       demo.className = 'lp-demo';
       demo.innerHTML = `
-        <div class="dm-k">Step one · ${gvEsc(n.icon)} ${gvEsc(n.name)}</div>
+        <div class="dm-k">Step one · ${nicheIco(n)} ${gvEsc(n.name)}</div>
         <div class="dm-title">${gvEsc(g.title)}</div>
         <div class="dm-do"><b>Your step</b>${gvEsc(g.action)}</div>
         <div class="dm-meta">Lesson 1 of ${n.guides.length} · ${gvEsc(g.time)} read${mod ? ' · ' + gvEsc(mod.title) : ''}</div>
@@ -8041,7 +8123,7 @@ function showOnboardingStep(){
     const on = onboardSelection.has(niche.id);
     item.className = 'niche-pick-item' + (on ? ' selected' : '');
     item.innerHTML = `
-      <span class="np-icon">${niche.icon}</span>
+      <span class="np-icon">${nicheIco(niche)}</span>
       <span class="np-name">${niche.name}</span>
       <span class="np-check">${on ? '✓' : ''}</span>
     `;
@@ -9517,7 +9599,7 @@ async function showMarketing(){
       </div>
     </div>
     <div class="dx-card">
-      <div class="dx-card-head"><h4>🔗 Tracked link builder</h4><span class="dx-sub">so every post, creator and ad shows up by name</span></div>
+      <div class="dx-card-head"><h4>Tracked link builder</h4><span class="dx-sub">so every post, creator and ad shows up by name</span></div>
       <div class="dx-presets" id="mkPresets">
         <button class="dx-btn" data-p="ig">Instagram bio</button><button class="dx-btn" data-p="tt">TikTok bio</button>
         <button class="dx-btn" data-p="creator">Creator / UGC</button><button class="dx-btn" data-p="meta">Meta ad</button>
@@ -9776,7 +9858,7 @@ function makeNicheCard(niche){
   card.style.setProperty('--shadow-color', niche.color);
   card.innerHTML = `
     <div class="niche-top">
-      <div class="niche-icon" style="background:${niche.color}22;">${niche.icon}</div>
+      <div class="niche-icon" style="background:${niche.color}22;color:${niche.color};">${nicheIco(niche)}</div>
       <div class="niche-count">${niche.modules ? niche.modules.length + " modules · " : ""}${niche.guides.length} lessons</div>
     </div>
     <h3>${niche.name}</h3>
@@ -9866,14 +9948,14 @@ function renderDailyDigest(){
   digestWrap.innerHTML = `
     <div class="digest-card">
       <div class="digest-item">
-        <span class="digest-icon">🔥</span>
+        <span class="digest-icon hot">${ico('flame')}</span>
         <div class="digest-text">
           <div class="digest-num">${streak.count} day${streak.count===1?'':'s'}</div>
           <div class="digest-lbl">Current streak</div>
         </div>
       </div>
       <div class="digest-item">
-        <span class="digest-icon">⏰</span>
+        <span class="digest-icon">${ico('clock')}</span>
         <div class="digest-text">
           <div class="digest-num">${dueCount}</div>
           <div class="digest-lbl">Due today or overdue</div>
@@ -9917,7 +9999,7 @@ function renderHome(){
         <div class="continue-card" id="continueCard">
           <div>
             <div class="cc-label">Continue where you left off</div>
-            <div class="cc-title">${niche.icon} ${guide.title}</div>
+            <div class="cc-title">${nicheIco(niche)} ${guide.title}</div>
           </div>
           <div class="cc-arrow">→</div>
         </div>
@@ -9977,7 +10059,7 @@ editNichesBtn.addEventListener('click', ()=>{
     const item = document.createElement('div');
     item.className = 'niche-pick-item' + (selection.has(niche.id) ? ' selected' : '');
     item.innerHTML = `
-      <span class="np-icon">${niche.icon}</span>
+      <span class="np-icon">${nicheIco(niche)}</span>
       <span class="np-name">${niche.name}</span>
       <span class="np-check">${selection.has(niche.id) ? '✓' : ''}</span>
     `;
@@ -10163,13 +10245,13 @@ function openNiche(id){
   searchInput.value = "";
 
   nicheHeaderBlock.innerHTML = `
-    <div class="niche-icon" style="background:${niche.color}22;">${niche.icon}</div>
+    <div class="niche-icon" style="background:${niche.color}22;color:${niche.color};">${nicheIco(niche)}</div>
     <div class="niche-header-text">
       <h2>${niche.name}</h2>
       <p>${niche.description}</p>
     </div>
-    <button type="button" class="ai-chat-clear-btn" id="chapterListenBtn" style="background:var(--bg);color:var(--ink-soft);border-color:var(--line);white-space:nowrap;">🔊 Listen to chapter</button>
-    <button type="button" class="ai-chat-clear-btn" id="chapterPdfBtn" style="background:var(--bg);color:var(--ink-soft);border-color:var(--line);white-space:nowrap;">📄 Save chapter as PDF ${isPro ? '' : '🔒'}</button>
+    <button type="button" class="ai-chat-clear-btn" id="chapterListenBtn" style="background:var(--bg);color:var(--ink-soft);border-color:var(--line);white-space:nowrap;">Listen to chapter</button>
+    <button type="button" class="ai-chat-clear-btn" id="chapterPdfBtn" style="background:var(--bg);color:var(--ink-soft);border-color:var(--line);white-space:nowrap;">Save chapter as PDF ${isPro ? '' : ico('lock')}</button>
   `;
   document.getElementById('chapterPdfBtn').addEventListener('click', ()=>{
     if(!isPro){ openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }); return; }
@@ -10242,7 +10324,7 @@ function renderNicheDetail(){
   renderPathMap(niche);
 
   const filters = ['all','todo','short','bookmarked'];
-  const filterLabels = {all:'Whole course', todo:'Still to do', short:'Quick wins', bookmarked:'🔖 Bookmarked'};
+  const filterLabels = {all:'Whole course', todo:'Still to do', short:'Quick wins', bookmarked:'Bookmarked'};
   let filterRow = guideList.previousElementSibling;
   if(!filterRow || !filterRow.classList.contains('guide-filter-row')){
     filterRow = document.createElement('div');
@@ -10296,7 +10378,7 @@ function renderNicheDetail(){
         <div class="module-goal">${gvEsc(m.goal)}</div>
         ${proLocked
           ? `<button type="button" class="module-unlock">Unlock the rest of this course with Pro</button>`
-          : left > 0 ? `<div class="module-locked">🔒 Opens in ${left} day${left === 1 ? '' : 's'}</div>` : ''}`;
+          : left > 0 ? `<div class="module-locked">${ico('lock')} Opens in ${left} day${left === 1 ? '' : 's'}</div>` : ''}`;
       const unlockBtn = head.querySelector('.module-unlock');
       if(unlockBtn) unlockBtn.addEventListener('click', ()=> openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }));
       guideList.appendChild(head);
@@ -10309,13 +10391,13 @@ function renderNicheDetail(){
       : (lock === 'order' && idx === firstOpen + 1) ? 'Finish the lesson above first' : '';
     g.innerHTML = `
       <div class="guide-row">
-        <div class="guide-check ${isDone?'done':''}">${isDone?'✓':lock?'🔒':''}</div>
+        <div class="guide-check ${isDone?'done':''}">${isDone?ico('check'):lock?ico('lock'):''}</div>
         <div class="guide-main">
           <div class="guide-title">${guide.title}</div>
           <div class="guide-meta">
             <span class="level-badge ${guide.kind==='short' ? 'quick' : ''}">${guide.kind==='short' ? 'Quick win' : 'Lesson'}</span>
             <span>${guide.time} read</span>
-            ${lock ? `<span class="lock-tag">🔒 ${lock === 'pro' ? 'Pro' : 'Locked'}</span>` : ''}
+            ${lock ? `<span class="lock-tag">${ico('lock')} ${lock === 'pro' ? 'Pro' : 'Locked'}</span>` : ''}
           </div>
           ${lockNote ? `<div class="lock-note">${lockNote}</div>` : ''}
         </div>
@@ -10368,11 +10450,11 @@ function renderNicheDetail(){
         <div class="view-mode-row">
           <button class="view-mode-btn" data-mode="walkthrough">🖼️ Walkthrough</button>
           <button class="view-mode-btn" data-mode="summary">⚡ Quick summary</button>
-          <button class="view-mode-btn guide-listen-btn">🔊 Listen</button>
+          <button class="view-mode-btn guide-listen-btn">Listen</button>
         </div>
         <div class="view-mode-row">
-          <button class="mark-btn ${isDone?'done':''}" style="flex:1;">${isDone ? '✓ Marked complete' : 'Mark as complete'}</button>
-          <button class="view-mode-btn guide-pdf-btn">📄 PDF ${isPro ? '' : '🔒'}</button>
+          <button class="mark-btn ${isDone?'done':''}" style="flex:1;">${isDone ? ico('check') + ' Marked complete' : 'Mark as complete'}</button>
+          <button class="view-mode-btn guide-pdf-btn">Save as PDF ${isPro ? '' : ico('lock')}</button>
         </div>
         <div class="guide-quiz-slot"></div>
       `;
@@ -10474,7 +10556,7 @@ function renderTodayStep(clearOnly){
   const today = todayStr();
   const doneToday = streak.lastDate === today;
   const alive = streak.count > 0 && (doneToday || streak.lastDate === dateMinusDays(today, 1));
-  const streakBit = alive ? `<span class="ts-streak">🔥 ${streak.count} day${streak.count === 1 ? '' : 's'}</span>` : '';
+  const streakBit = alive ? `<span class="ts-streak">${ico('flame')} ${streak.count} day${streak.count === 1 ? '' : 's'}</span>` : '';
   let html = '', onGo = null;
   const step = p.step;
   if(step){
@@ -10482,7 +10564,7 @@ function renderTodayStep(clearOnly){
     const first = completed.size === 0;
     html = `<div class="today-step${doneToday ? ' quiet' : ''}" id="todayStepCard">
         <div class="ts-top"><span class="ts-label">${doneToday ? 'Done for today ✓' : first ? 'Your first step' : "Today's step"}</span>${streakBit}</div>
-        <div class="ts-chap">${doneToday ? 'Next up · ' : ''}${gvEsc(n.icon)} ${gvEsc(n.name)} · lesson ${step.idx + 1} of ${n.guides.length}</div>
+        <div class="ts-chap">${doneToday ? 'Next up · ' : ''}${nicheIco(n)} ${gvEsc(n.name)} · lesson ${step.idx + 1} of ${n.guides.length}</div>
         <div class="ts-title">${gvEsc(g.title)}</div>
         ${g.action ? `<div class="ts-do"><b>Your step:</b> ${gvEsc(g.action)}</div>` : ''}
         <button type="button" class="ts-go" id="todayStepGo">${doneToday ? 'Keep going →' : first ? 'Start step one →' : 'Start this step →'}</button>
@@ -10490,13 +10572,13 @@ function renderTodayStep(clearOnly){
       </div>`;
     onGo = ()=> goToLesson(n.id, g.title);
     if(p.pro){
-      html += `<button type="button" class="ts-pro-note" id="todayProNote"><span>🔒 ${gvEsc(p.pro.niche.name)}: the free part is done</span><b>See Pro →</b></button>`;
+      html += `<button type="button" class="ts-pro-note" id="todayProNote"><span>${ico('lock')} ${gvEsc(p.pro.niche.name)}: the free part is done</span><b>See Pro →</b></button>`;
     }
   } else if(p.pro){
     const n = p.pro.niche, mod = (n.modules || [])[p.pro.guide.mod];
     html = `<div class="today-step quiet" id="todayStepCard">
         <div class="ts-top"><span class="ts-label">You finished the free part</span>${streakBit}</div>
-        <div class="ts-chap">${gvEsc(n.icon)} ${gvEsc(n.name)}</div>
+        <div class="ts-chap">${nicheIco(n)} ${gvEsc(n.name)}</div>
         <div class="ts-title">${mod ? 'Next: ' + gvEsc(mod.title) : 'The rest of this course is in Pro'}</div>
         <div class="ts-do">Nice work. Module 1 of every course is free; Pro opens the rest.</div>
         <button type="button" class="ts-go" id="todayStepGo">See what Pro opens →</button>
@@ -10617,7 +10699,7 @@ function celebrateStep(niche, guide, before){
     <div class="sc-done">
       <div class="sc-badge" aria-hidden="true">✓</div>
       <div class="sc-title" role="status">${title}</div>
-      <div class="sc-sub">${gvEsc(niche.icon)} ${gvEsc(niche.name)} · ${doneNow} of ${total} done</div>
+      <div class="sc-sub">${nicheIco(niche)} ${gvEsc(niche.name)} · ${doneNow} of ${total} done</div>
       <div class="sc-bar" style="--from:${from}%"><i></i></div>
       ${streakLine ? `<div class="sc-streak">${streakLine}</div>` : ''}
       ${nextHtml}
@@ -10672,7 +10754,7 @@ function renderPathMap(niche){
       const lock = guideLock(niche, g, i, firstOpen);
       const cur = !done && !lock && i === firstOpen;
       const cls = done ? 'st-done' : cur ? 'st-cur' : 'st-lock' + (lock === 'pro' ? ' st-pro' : '');
-      const glyph = done ? '✓' : cur ? (g.kind === 'short' ? '⚡' : '★') : '🔒';
+      const glyph = done ? ico('check') : cur ? (g.kind === 'short' ? ico('zap') : ico('star')) : ico('lock');
       const x = xs[k], gap = cur ? 46 : 38;
       const side = x < 50 ? `left:calc(${x}% + ${gap}px);right:6px;` : `left:6px;right:calc(${100 - x}% + ${gap}px);text-align:right;`;
       const state = done ? 'done' : cur ? 'your step' : lock === 'pro' ? 'part of Pro' : lock === 'week' ? 'opens later' : 'locked until you finish the one before';
@@ -10683,7 +10765,7 @@ function renderPathMap(niche){
       </button>`;
     }).join('');
     out += `<div class="pm-head${modDone === idxs.length ? ' done' : ''}">
-        <div class="pm-k"><span>Module ${m + 1}${m === 0 && !isPro ? ' · Free' : ''}</span><em>${modDone}/${idxs.length}${proLocked ? ' · 🔒 Pro' : left > 0 ? ` · 🔒 opens in ${left} day${left === 1 ? '' : 's'}` : ''}</em></div>
+        <div class="pm-k"><span>Module ${m + 1}${m === 0 && !isPro ? ' · Free' : ''}</span><em>${modDone}/${idxs.length}${proLocked ? ` · ${ico('lock')} Pro` : left > 0 ? ` · ${ico('lock')} opens in ${left} day${left === 1 ? '' : 's'}` : ''}</em></div>
         ${info ? `<div class="pm-t">${gvEsc(info.title)}</div><div class="pm-g">${gvEsc(info.goal)}</div>` : ''}
       </div>
       <div class="pm-track" style="height:${H}px">
@@ -10825,7 +10907,7 @@ function buildQuizSection(nicheId, guideTitle){
   if(!questions || questions.length === 0) return null;
   const wrap = document.createElement('div');
   wrap.className = 'quiz-section';
-  wrap.innerHTML = '<h4>📝 Quick knowledge check</h4>';
+  wrap.innerHTML = '<h4>Quick knowledge check</h4>';
   const letters = ['A','B','C','D'];
   let score = 0;
   let answered = 0;
@@ -11552,7 +11634,7 @@ function registerCompletionForStreak(){
 function renderStreakBadge(){
   if(streak.count > 0){
     streakBadge.style.display = '';
-    streakBadge.textContent = `🔥 ${streak.count} day${streak.count===1?'':'s'}`;
+    streakBadge.innerHTML = `${ico('flame')} ${streak.count} day${streak.count===1?'':'s'}`;
   } else {
     streakBadge.style.display = 'none';
   }
@@ -11648,7 +11730,7 @@ function renderTemplatesPanel(){
     const overlay = document.createElement('div');
     overlay.className = 'pro-preview-overlay';
     overlay.innerHTML = `
-      <div class="pro-preview-icon">🔒</div>
+      <div class="pro-preview-icon">${ico('lock')}</div>
       <p class="pro-preview-title">Unlock ready-to-send templates</p>
       <p class="pro-preview-text">Contracts, pitch emails, and estimates for ${niche.name} -- copy, fill in, and send the same day.</p>
       <button type="button" class="pro-preview-btn">Upgrade to Pro</button>
@@ -11710,7 +11792,7 @@ function renderToolsPanel(){
     const overlay = document.createElement('div');
     overlay.className = 'pro-preview-overlay';
     overlay.innerHTML = `
-      <div class="pro-preview-icon">🔒</div>
+      <div class="pro-preview-icon">${ico('lock')}</div>
       <p class="pro-preview-title">Unlock the business tools</p>
       <p class="pro-preview-text">Track clients, follow-ups, and more for ${niche.name} -- right in the app, no spreadsheet needed.</p>
       <button type="button" class="pro-preview-btn">Upgrade to Pro</button>
@@ -11781,7 +11863,7 @@ function buildClientsPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>👤 Client Tracker</h4>
+      <h4>Client Tracker</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -11812,7 +11894,7 @@ function buildClientsPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.clients.length;
     list.innerHTML = '';
-    if(data.clients.length===0){ list.innerHTML = '<div class="tool-empty">👋 No clients yet — add your first lead above to start tracking them here.</div>'; return; }
+    if(data.clients.length===0){ list.innerHTML = '<div class="tool-empty">No clients yet — add your first lead above to start tracking them here.</div>'; return; }
     getSorted().forEach((c)=>{
       const idx = data.clients.indexOf(c);
       const row = document.createElement('div');
@@ -11853,7 +11935,7 @@ function openClientDetail(nicheId, data, client){
     <p class="auth-sub">${client.project ? client.project + ' · ' : ''}${client.status}</p>
 
     <div class="client-detail-section">
-      <h4>⏰ Follow-ups (${relatedFollowups.length})</h4>
+      <h4>Follow-ups (${relatedFollowups.length})</h4>
       ${relatedFollowups.length===0
         ? '<div class="tool-empty">No follow-ups logged for this client yet. Use their exact name in the Follow-Ups panel to link one.</div>'
         : relatedFollowups.map(f=>`
@@ -11866,7 +11948,7 @@ function openClientDetail(nicheId, data, client){
     </div>
 
     <div class="client-detail-section">
-      <h4>💰 Quotes (${relatedQuotes.length})</h4>
+      <h4>Quotes (${relatedQuotes.length})</h4>
       ${relatedQuotes.length===0
         ? '<div class="tool-empty">No quotes logged for this client yet.</div>'
         : relatedQuotes.map(q=>`
@@ -11888,7 +11970,7 @@ function buildFollowupsPanel(nicheId, data){
   const listId = 'clientNames-'+nicheId+'-fu';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>⏰ Follow-Ups</h4>
+      <h4>Follow-Ups</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -11919,7 +12001,7 @@ function buildFollowupsPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.followups.length;
     list.innerHTML = '';
-    if(data.followups.length===0){ list.innerHTML = '<div class="tool-empty">⏰ Nothing scheduled — add a follow-up so it shows up on your Today view.</div>'; return; }
+    if(data.followups.length===0){ list.innerHTML = '<div class="tool-empty">Nothing scheduled — add a follow-up so it shows up on your Today view.</div>'; return; }
     getSorted().forEach((f)=>{
       const idx = data.followups.indexOf(f);
       const row = document.createElement('div');
@@ -11953,7 +12035,7 @@ function buildQuotesPanel(nicheId, data){
   const listId = 'clientNames-'+nicheId+'-qt';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>💰 Quotes & Pricing</h4>
+      <h4>Quotes & Pricing</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -11987,7 +12069,7 @@ function buildQuotesPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.quotes.length;
     list.innerHTML = '';
-    if(data.quotes.length===0){ list.innerHTML = '<div class="tool-empty">💰 No quotes yet — log one when you send a client a price.</div>'; return; }
+    if(data.quotes.length===0){ list.innerHTML = '<div class="tool-empty">No quotes yet — log one when you send a client a price.</div>'; return; }
     getSorted().forEach((q)=>{
       const idx = data.quotes.indexOf(q);
       const row = document.createElement('div');
@@ -12021,7 +12103,7 @@ function buildUpdatesPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>📝 Company Updates</h4>
+      <h4>Company Updates</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -12047,7 +12129,7 @@ function buildUpdatesPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.updates.length;
     list.innerHTML = '';
-    if(data.updates.length===0){ list.innerHTML = '<div class="tool-empty">📝 No updates yet — log a note after your next check-in with a company.</div>'; return; }
+    if(data.updates.length===0){ list.innerHTML = '<div class="tool-empty">No updates yet — log a note after your next check-in with a company.</div>'; return; }
     getSorted().forEach((u)=>{
       const idx = data.updates.indexOf(u);
       const row = document.createElement('div');
@@ -12088,7 +12170,7 @@ function buildGoalsToolPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🎯 Goals</h4><span class="tool-panel-count">${data.goals.length}</span></div>
+    <div class="tool-panel-head"><h4>Goals</h4><span class="tool-panel-count">${data.goals.length}</span></div>
     ${didReset ? '<p class="video-source-note">🔄 Progress reset for the new month.</p>' : ''}
     <div class="tool-form">
       <input type="text" class="tp-name" placeholder="Goal name">
@@ -12101,7 +12183,7 @@ function buildGoalsToolPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.goals.length;
     list.innerHTML = '';
-    if(data.goals.length===0){ list.innerHTML = '<div class="tool-empty">🎯 No goals set yet — add one to track progress toward a number that matters.</div>'; return; }
+    if(data.goals.length===0){ list.innerHTML = '<div class="tool-empty">No goals set yet — add one to track progress toward a number that matters.</div>'; return; }
     data.goals.forEach((g,i)=>{
       const pct = Math.min(100, Math.round((g.current/g.target)*100));
       const item = document.createElement('div');
@@ -12257,7 +12339,7 @@ function buildTradingPanel(nicheId, data){
   const maxVal = Math.max(1, ...weekRows.map(h=>Math.max(h.loss,h.profit)));
 
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>📊 Daily Trading Limits</h4></div>
+    <div class="tool-panel-head"><h4>Daily Trading Limits</h4></div>
     <div class="trading-meter">
       <div class="trading-meter-box">
         <h5>Daily Loss Limit</h5>
@@ -12333,7 +12415,7 @@ function buildInventoryPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>📦 Inventory</h4>
+      <h4>Inventory</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -12362,7 +12444,7 @@ function buildInventoryPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.inventory.length;
     list.innerHTML = '';
-    if(data.inventory.length===0){ list.innerHTML = '<div class="tool-empty">📦 No products tracked yet — add one to get low-stock alerts on your Today view.</div>'; return; }
+    if(data.inventory.length===0){ list.innerHTML = '<div class="tool-empty">No products tracked yet — add one to get low-stock alerts on your Today view.</div>'; return; }
     getSorted().forEach((p)=>{
       const idx = data.inventory.indexOf(p);
       const low = p.stock <= p.reorder;
@@ -12400,7 +12482,7 @@ function buildAdSpendPanel(nicheId, data){
   const total = data.adspend.reduce((s,a)=>s+a.amount,0);
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>📣 Ad Spend</h4>
+      <h4>Ad Spend</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -12427,7 +12509,7 @@ function buildAdSpendPanel(nicheId, data){
     const t = data.adspend.reduce((s,a)=>s+a.amount,0);
     panel.querySelector('.tool-panel-count').textContent = '$'+t.toLocaleString();
     list.innerHTML = '';
-    if(data.adspend.length===0){ list.innerHTML = '<div class="tool-empty">📣 No ad spend logged yet — track it here to see true cost per order.</div>'; return; }
+    if(data.adspend.length===0){ list.innerHTML = '<div class="tool-empty">No ad spend logged yet — track it here to see true cost per order.</div>'; return; }
     getSorted().forEach((a)=>{
       const idx = data.adspend.indexOf(a);
       const row = document.createElement('div');
@@ -12461,7 +12543,7 @@ function buildOrdersPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>🧾 Orders</h4>
+      <h4>Orders</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -12490,7 +12572,7 @@ function buildOrdersPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.orders.length;
     list.innerHTML = '';
-    if(data.orders.length===0){ list.innerHTML = '<div class="tool-empty">🧾 No orders yet — log one to start tracking fulfillment status.</div>'; return; }
+    if(data.orders.length===0){ list.innerHTML = '<div class="tool-empty">No orders yet — log one to start tracking fulfillment status.</div>'; return; }
     getSorted().forEach((o)=>{
       const idx = data.orders.indexOf(o);
       const row = document.createElement('div');
@@ -12524,7 +12606,7 @@ function buildContentCalendarPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>🗓️ Content Calendar</h4>
+      <h4>Content Calendar</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -12553,7 +12635,7 @@ function buildContentCalendarPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.calendar.length;
     list.innerHTML = '';
-    if(data.calendar.length===0){ list.innerHTML = '<div class="tool-empty">🗓️ Nothing planned yet — add your next post idea above.</div>'; return; }
+    if(data.calendar.length===0){ list.innerHTML = '<div class="tool-empty">Nothing planned yet — add your next post idea above.</div>'; return; }
     getSorted().forEach((c)=>{
       const idx = data.calendar.indexOf(c);
       const row = document.createElement('div');
@@ -12586,7 +12668,7 @@ function buildBrandDealsPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>🤝 Brand Deals</h4>
+      <h4>Brand Deals</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -12618,7 +12700,7 @@ function buildBrandDealsPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.deals.length;
     list.innerHTML = '';
-    if(data.deals.length===0){ list.innerHTML = '<div class="tool-empty">🤝 No brand deals logged yet — add one when a sponsorship comes in.</div>'; return; }
+    if(data.deals.length===0){ list.innerHTML = '<div class="tool-empty">No brand deals logged yet — add one when a sponsorship comes in.</div>'; return; }
     getSorted().forEach((d)=>{
       const idx = data.deals.indexOf(d);
       const row = document.createElement('div');
@@ -12652,7 +12734,7 @@ function buildPlatformGrowthPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>📈 Platform Growth</h4><span class="tool-panel-count">${data.growth.length}</span></div>
+    <div class="tool-panel-head"><h4>Platform Growth</h4><span class="tool-panel-count">${data.growth.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-platform" placeholder="Platform">
       <input type="number" class="tp-followers" placeholder="Followers">
@@ -12667,7 +12749,7 @@ function buildPlatformGrowthPanel(nicheId, data){
     panel.querySelector('.tool-panel-count').textContent = data.growth.length;
     list.innerHTML = '';
     summaryEl.innerHTML = '';
-    if(data.growth.length===0){ list.innerHTML = '<div class="tool-empty">📈 No growth logged yet — log your follower count on each platform periodically to track it over time.</div>'; return; }
+    if(data.growth.length===0){ list.innerHTML = '<div class="tool-empty">No growth logged yet — log your follower count on each platform periodically to track it over time.</div>'; return; }
 
     const byPlatform = {};
     data.growth.forEach(g=>{
@@ -12714,7 +12796,7 @@ function buildIdeasBankPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>💡 Ideas Bank</h4><span class="tool-panel-count">${data.ideas.length}</span></div>
+    <div class="tool-panel-head"><h4>Ideas Bank</h4><span class="tool-panel-count">${data.ideas.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-idea" placeholder="Quick content idea…" style="flex:3 1 200px;">
       <button type="button" class="tp-add">Add</button>
@@ -12725,7 +12807,7 @@ function buildIdeasBankPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.ideas.length;
     list.innerHTML = '';
-    if(data.ideas.length===0){ list.innerHTML = '<div class="tool-empty">💡 No ideas saved yet — jot one down whenever inspiration hits.</div>'; return; }
+    if(data.ideas.length===0){ list.innerHTML = '<div class="tool-empty">No ideas saved yet — jot one down whenever inspiration hits.</div>'; return; }
     data.ideas.slice().reverse().forEach((idea)=>{
       const idx = data.ideas.indexOf(idea);
       const row = document.createElement('div');
@@ -12754,7 +12836,7 @@ function buildCoachingRosterPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>👤 Client Roster</h4><span class="tool-panel-count">${data.roster.length}</span></div>
+    <div class="tool-panel-head"><h4>Client Roster</h4><span class="tool-panel-count">${data.roster.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-name" placeholder="Client name">
       <input type="text" class="tp-package" placeholder="Package (e.g. 6-session)">
@@ -12767,7 +12849,7 @@ function buildCoachingRosterPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.roster.length;
     list.innerHTML = '';
-    if(data.roster.length===0){ list.innerHTML = '<div class="tool-empty">👤 No clients yet — add one when you sign your first package.</div>'; return; }
+    if(data.roster.length===0){ list.innerHTML = '<div class="tool-empty">No clients yet — add one when you sign your first package.</div>'; return; }
     data.roster.slice().reverse().forEach((c)=>{
       const idx = data.roster.indexOf(c);
       const remaining = Math.max(0, c.total - c.used);
@@ -12804,7 +12886,7 @@ function buildDiscoveryCallsPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>📞 Discovery Calls</h4>
+      <h4>Discovery Calls</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -12833,7 +12915,7 @@ function buildDiscoveryCallsPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.calls.length;
     list.innerHTML = '';
-    if(data.calls.length===0){ list.innerHTML = '<div class="tool-empty">📞 No discovery calls logged yet — add one when a prospect books.</div>'; return; }
+    if(data.calls.length===0){ list.innerHTML = '<div class="tool-empty">No discovery calls logged yet — add one when a prospect books.</div>'; return; }
     getSorted().forEach((c)=>{
       const idx = data.calls.indexOf(c);
       const row = document.createElement('div');
@@ -12866,7 +12948,7 @@ function buildSessionNotesPanel(nicheId, data){
   panel.className = 'tool-panel';
   const listId = 'clientNames-'+nicheId+'-notes';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>📝 Session Notes</h4><span class="tool-panel-count">${data.notes.length}</span></div>
+    <div class="tool-panel-head"><h4>Session Notes</h4><span class="tool-panel-count">${data.notes.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-client" placeholder="Client" list="${listId}">
       <datalist id="${listId}"></datalist>
@@ -12881,7 +12963,7 @@ function buildSessionNotesPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.notes.length;
     list.innerHTML = '';
-    if(data.notes.length===0){ list.innerHTML = '<div class="tool-empty">📝 No notes yet — jot one down after each session so context carries forward.</div>'; return; }
+    if(data.notes.length===0){ list.innerHTML = '<div class="tool-empty">No notes yet — jot one down after each session so context carries forward.</div>'; return; }
     data.notes.slice().reverse().forEach((n)=>{
       const idx = data.notes.indexOf(n);
       const row = document.createElement('div');
@@ -12913,7 +12995,7 @@ function buildClientOutcomesPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🎯 Client Outcomes</h4><span class="tool-panel-count">${data.goals.length}</span></div>
+    <div class="tool-panel-head"><h4>Client Outcomes</h4><span class="tool-panel-count">${data.goals.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-client" placeholder="Client">
       <input type="text" class="tp-goal" placeholder="Their goal">
@@ -12928,7 +13010,7 @@ function buildClientOutcomesPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.goals.length;
     list.innerHTML = '';
-    if(data.goals.length===0){ list.innerHTML = '<div class="tool-empty">🎯 No outcomes tracked yet — add each client’s goal so you can measure real progress.</div>'; return; }
+    if(data.goals.length===0){ list.innerHTML = '<div class="tool-empty">No outcomes tracked yet — add each client’s goal so you can measure real progress.</div>'; return; }
     data.goals.slice().reverse().forEach((g)=>{
       const idx = data.goals.indexOf(g);
       const row = document.createElement('div');
@@ -12969,7 +13051,7 @@ function buildVARosterPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>👤 Retainer Roster</h4><span class="tool-panel-count">${data.roster.length}</span></div>
+    <div class="tool-panel-head"><h4>Retainer Roster</h4><span class="tool-panel-count">${data.roster.length}</span></div>
     ${didReset ? '<p class="video-source-note">🔄 Hours reset for the new month.</p>' : ''}
     <div class="tool-form">
       <input type="text" class="tp-name" placeholder="Client name">
@@ -12982,7 +13064,7 @@ function buildVARosterPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.roster.length;
     list.innerHTML = '';
-    if(data.roster.length===0){ list.innerHTML = '<div class="tool-empty">👤 No retainer clients yet — add one to start tracking monthly hours.</div>'; return; }
+    if(data.roster.length===0){ list.innerHTML = '<div class="tool-empty">No retainer clients yet — add one to start tracking monthly hours.</div>'; return; }
     data.roster.slice().reverse().forEach((c)=>{
       const idx = data.roster.indexOf(c);
       const over = c.used > c.total;
@@ -13020,7 +13102,7 @@ function buildVATaskPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>✅ Task Tracker</h4>
+      <h4>Task Tracker</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -13049,7 +13131,7 @@ function buildVATaskPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.tasks.length;
     list.innerHTML = '';
-    if(data.tasks.length===0){ list.innerHTML = '<div class="tool-empty">✅ Nothing tracked yet — add a task to get started.</div>'; return; }
+    if(data.tasks.length===0){ list.innerHTML = '<div class="tool-empty">Nothing tracked yet — add a task to get started.</div>'; return; }
     getSorted().forEach((t)=>{
       const idx = data.tasks.indexOf(t);
       const row = document.createElement('div');
@@ -13127,7 +13209,7 @@ function buildVARecurringPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🔁 Recurring Tasks</h4><span class="tool-panel-count">${data.recurring.length}</span></div>
+    <div class="tool-panel-head"><h4>Recurring Tasks</h4><span class="tool-panel-count">${data.recurring.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-task" placeholder="Recurring task">
       <input type="text" class="tp-client" placeholder="Client">
@@ -13143,7 +13225,7 @@ function buildVARecurringPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.recurring.length;
     list.innerHTML = '';
-    if(data.recurring.length===0){ list.innerHTML = '<div class="tool-empty">🔁 No recurring tasks yet — add the tasks you repeat every cycle so nothing gets missed.</div>'; return; }
+    if(data.recurring.length===0){ list.innerHTML = '<div class="tool-empty">No recurring tasks yet — add the tasks you repeat every cycle so nothing gets missed.</div>'; return; }
     const today = todayStr();
     data.recurring.forEach((r, idx)=>{
       const due = r.nextDue && r.nextDue <= today && !r.done;
@@ -13186,7 +13268,7 @@ function buildJobSchedulerPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>🗓️ Job Scheduler</h4>
+      <h4>Job Scheduler</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -13218,7 +13300,7 @@ function buildJobSchedulerPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.jobs.length;
     list.innerHTML = '';
-    if(data.jobs.length===0){ list.innerHTML = '<div class="tool-empty">🗓️ No jobs scheduled yet — add your next booking above.</div>'; return; }
+    if(data.jobs.length===0){ list.innerHTML = '<div class="tool-empty">No jobs scheduled yet — add your next booking above.</div>'; return; }
     getSorted().forEach((j)=>{
       const idx = data.jobs.indexOf(j);
       const row = document.createElement('div');
@@ -13252,7 +13334,7 @@ function buildEstimatesPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>💰 Estimates</h4>
+      <h4>Estimates</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -13284,7 +13366,7 @@ function buildEstimatesPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.estimates.length;
     list.innerHTML = '';
-    if(data.estimates.length===0){ list.innerHTML = '<div class="tool-empty">💰 No estimates logged yet — add one when you quote a job.</div>'; return; }
+    if(data.estimates.length===0){ list.innerHTML = '<div class="tool-empty">No estimates logged yet — add one when you quote a job.</div>'; return; }
     getSorted().forEach((e)=>{
       const idx = data.estimates.indexOf(e);
       const row = document.createElement('div');
@@ -13318,7 +13400,7 @@ function buildMaintenancePanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🔁 Maintenance Customers</h4><span class="tool-panel-count">${data.maintenance.length}</span></div>
+    <div class="tool-panel-head"><h4>Maintenance Customers</h4><span class="tool-panel-count">${data.maintenance.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-customer" placeholder="Customer">
       <select class="tp-freq">
@@ -13333,7 +13415,7 @@ function buildMaintenancePanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.maintenance.length;
     list.innerHTML = '';
-    if(data.maintenance.length===0){ list.innerHTML = '<div class="tool-empty">🔁 No recurring customers yet — add one to track when their next service is due.</div>'; return; }
+    if(data.maintenance.length===0){ list.innerHTML = '<div class="tool-empty">No recurring customers yet — add one to track when their next service is due.</div>'; return; }
     const today = todayStr();
     data.maintenance.slice().reverse().forEach((m)=>{
       const idx = data.maintenance.indexOf(m);
@@ -13366,7 +13448,7 @@ function buildSuppliesPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🧰 Equipment & Supplies</h4><span class="tool-panel-count">${data.supplies.length}</span></div>
+    <div class="tool-panel-head"><h4>Equipment & Supplies</h4><span class="tool-panel-count">${data.supplies.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-item" placeholder="Item">
       <input type="number" class="tp-qty" placeholder="Quantity">
@@ -13379,7 +13461,7 @@ function buildSuppliesPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.supplies.length;
     list.innerHTML = '';
-    if(data.supplies.length===0){ list.innerHTML = '<div class="tool-empty">🧰 No supplies tracked yet — add your key items so you never show up unprepared.</div>'; return; }
+    if(data.supplies.length===0){ list.innerHTML = '<div class="tool-empty">No supplies tracked yet — add your key items so you never show up unprepared.</div>'; return; }
     data.supplies.slice().reverse().forEach((s)=>{
       const idx = data.supplies.indexOf(s);
       const low = s.qty <= s.reorder;
@@ -13415,7 +13497,7 @@ function buildClientPipelinePanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>👤 Client Pipeline</h4>
+      <h4>Client Pipeline</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -13446,7 +13528,7 @@ function buildClientPipelinePanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.pipeline.length;
     list.innerHTML = '';
-    if(data.pipeline.length===0){ list.innerHTML = '<div class="tool-empty">👤 No clients yet — add a buyer or seller to start your pipeline.</div>'; return; }
+    if(data.pipeline.length===0){ list.innerHTML = '<div class="tool-empty">No clients yet — add a buyer or seller to start your pipeline.</div>'; return; }
     getSorted().forEach((p)=>{
       const idx = data.pipeline.indexOf(p);
       const row = document.createElement('div');
@@ -13478,7 +13560,7 @@ function buildListingsPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>🏷️ Listings</h4>
+      <h4>Listings</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="tp-sort">
           <option value="recent">Most recent</option>
@@ -13507,7 +13589,7 @@ function buildListingsPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.listings.length;
     list.innerHTML = '';
-    if(data.listings.length===0){ list.innerHTML = '<div class="tool-empty">🏷️ No listings yet — add one to start tracking it.</div>'; return; }
+    if(data.listings.length===0){ list.innerHTML = '<div class="tool-empty">No listings yet — add one to start tracking it.</div>'; return; }
     getSorted().forEach((l)=>{
       const idx = data.listings.indexOf(l);
       const row = document.createElement('div');
@@ -13541,7 +13623,7 @@ function buildShowingsPanel(nicheId, data){
   panel.className = 'tool-panel';
   const listId = 'clientNames-'+nicheId+'-showings';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🔑 Showings</h4><span class="tool-panel-count">${data.showings.length}</span></div>
+    <div class="tool-panel-head"><h4>Showings</h4><span class="tool-panel-count">${data.showings.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-client" placeholder="Client" list="${listId}">
       <datalist id="${listId}"></datalist>
@@ -13557,7 +13639,7 @@ function buildShowingsPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.showings.length;
     list.innerHTML = '';
-    if(data.showings.length===0){ list.innerHTML = '<div class="tool-empty">🔑 No showings scheduled yet — add one when you book a viewing.</div>'; return; }
+    if(data.showings.length===0){ list.innerHTML = '<div class="tool-empty">No showings scheduled yet — add one when you book a viewing.</div>'; return; }
     data.showings.slice().reverse().forEach((s)=>{
       const idx = data.showings.indexOf(s);
       const row = document.createElement('div');
@@ -13589,7 +13671,7 @@ function buildDealsPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>💰 Deals & Commission</h4><span class="tool-panel-count">${data.deals.length}</span></div>
+    <div class="tool-panel-head"><h4>Deals & Commission</h4><span class="tool-panel-count">${data.deals.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-address" placeholder="Property">
       <input type="number" class="tp-price" placeholder="Sale price">
@@ -13605,7 +13687,7 @@ function buildDealsPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.deals.length;
     list.innerHTML = '';
-    if(data.deals.length===0){ list.innerHTML = '<div class="tool-empty">💰 No deals logged yet — add one to track your commission.</div>'; return; }
+    if(data.deals.length===0){ list.innerHTML = '<div class="tool-empty">No deals logged yet — add one to track your commission.</div>'; return; }
     data.deals.slice().reverse().forEach((d)=>{
       const idx = data.deals.indexOf(d);
       const commission = (d.price * d.pct) / 100;
@@ -13643,7 +13725,7 @@ function buildTradeJournalPanel(nicheId, data){
   panel.className = 'tool-panel';
   panel.innerHTML = `
     <div class="tool-panel-head">
-      <h4>📓 Trade Journal</h4>
+      <h4>Trade Journal</h4>
       <div style="display:flex;align-items:center;gap:8px;">
         <button type="button" class="tp-csv view-mode-btn" style="padding:4px 10px;font-size:12px;" title="Export CSV">⬇ CSV</button>
         <span class="tool-panel-count">${data.journal.length}</span>
@@ -13664,7 +13746,7 @@ function buildTradeJournalPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.journal.length;
     list.innerHTML = '';
-    if(data.journal.length===0){ list.innerHTML = '<div class="tool-empty">📓 No trades journaled yet — log your first one to start building a track record.</div>'; return; }
+    if(data.journal.length===0){ list.innerHTML = '<div class="tool-empty">No trades journaled yet — log your first one to start building a track record.</div>'; return; }
     data.journal.slice().reverse().forEach((t)=>{
       const idx = data.journal.indexOf(t);
       const color = t.pnl >= 0 ? 'background:rgba(34,197,94,0.15);border-color:#22C55E;color:#6EE7B7;' : 'background:rgba(239,68,68,0.15);border-color:#EF4444;color:#FCA5A5;';
@@ -13704,7 +13786,7 @@ function buildWatchlistPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>👁️ Watchlist</h4><span class="tool-panel-count">${data.watchlist.length}</span></div>
+    <div class="tool-panel-head"><h4>Watchlist</h4><span class="tool-panel-count">${data.watchlist.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-ticker" placeholder="Ticker / pair">
       <input type="text" class="tp-target" placeholder="Target price">
@@ -13717,7 +13799,7 @@ function buildWatchlistPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.watchlist.length;
     list.innerHTML = '';
-    if(data.watchlist.length===0){ list.innerHTML = '<div class="tool-empty">👁️ Nothing on your watchlist yet — add tickers you\'re eyeing.</div>'; return; }
+    if(data.watchlist.length===0){ list.innerHTML = '<div class="tool-empty">Nothing on your watchlist yet — add tickers you\'re eyeing.</div>'; return; }
     data.watchlist.slice().reverse().forEach((w)=>{
       const idx = data.watchlist.indexOf(w);
       const row = document.createElement('div');
@@ -13747,7 +13829,7 @@ function buildReturnsPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🔄 Returns</h4><span class="tool-panel-count">${data.returns.length}</span></div>
+    <div class="tool-panel-head"><h4>Returns</h4><span class="tool-panel-count">${data.returns.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-customer" placeholder="Customer">
       <input type="text" class="tp-item" placeholder="Item">
@@ -13761,7 +13843,7 @@ function buildReturnsPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.returns.length;
     list.innerHTML = '';
-    if(data.returns.length===0){ list.innerHTML = '<div class="tool-empty">🔄 No returns logged — track them here so refund requests don\'t fall through.</div>'; return; }
+    if(data.returns.length===0){ list.innerHTML = '<div class="tool-empty">No returns logged — track them here so refund requests don\'t fall through.</div>'; return; }
     data.returns.slice().reverse().forEach((r)=>{
       const idx = data.returns.indexOf(r);
       const row = document.createElement('div');
@@ -13793,7 +13875,7 @@ function buildCouponsPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🏷️ Coupons & Promos</h4><span class="tool-panel-count">${data.coupons.length}</span></div>
+    <div class="tool-panel-head"><h4>Coupons & Promos</h4><span class="tool-panel-count">${data.coupons.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-code" placeholder="Code (e.g. SAVE20)">
       <input type="text" class="tp-discount" placeholder="Discount (e.g. 20% off)">
@@ -13807,7 +13889,7 @@ function buildCouponsPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.coupons.length;
     list.innerHTML = '';
-    if(data.coupons.length===0){ list.innerHTML = '<div class="tool-empty">🏷️ No promos yet — add a coupon code to track what\'s running.</div>'; return; }
+    if(data.coupons.length===0){ list.innerHTML = '<div class="tool-empty">No promos yet — add a coupon code to track what\'s running.</div>'; return; }
     data.coupons.slice().reverse().forEach((c)=>{
       const idx = data.coupons.indexOf(c);
       const expired = c.expires && c.expires < todayStr();
@@ -13839,7 +13921,7 @@ function buildCreatorRateCardPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>💲 Rate Card</h4><span class="tool-panel-count">${data.ratecard.length}</span></div>
+    <div class="tool-panel-head"><h4>Rate Card</h4><span class="tool-panel-count">${data.ratecard.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-type" placeholder="Deliverable (e.g. 60s Reel)">
       <input type="number" class="tp-rate" placeholder="Rate ($)">
@@ -13852,7 +13934,7 @@ function buildCreatorRateCardPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.ratecard.length;
     list.innerHTML = '';
-    if(data.ratecard.length===0){ list.innerHTML = '<div class="tool-empty">💲 No rates set yet — build your rate card so you\'re ready when brands ask.</div>'; return; }
+    if(data.ratecard.length===0){ list.innerHTML = '<div class="tool-empty">No rates set yet — build your rate card so you\'re ready when brands ask.</div>'; return; }
     data.ratecard.slice().reverse().forEach((r)=>{
       const idx = data.ratecard.indexOf(r);
       const row = document.createElement('div');
@@ -13883,7 +13965,7 @@ function buildProgramBuilderPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🗂️ Programs & Packages</h4><span class="tool-panel-count">${data.programs.length}</span></div>
+    <div class="tool-panel-head"><h4>Programs & Packages</h4><span class="tool-panel-count">${data.programs.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-name" placeholder="Program name">
       <input type="number" class="tp-sessions" placeholder="# sessions">
@@ -13897,7 +13979,7 @@ function buildProgramBuilderPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.programs.length;
     list.innerHTML = '';
-    if(data.programs.length===0){ list.innerHTML = '<div class="tool-empty">🗂️ No programs yet — outline your coaching packages here.</div>'; return; }
+    if(data.programs.length===0){ list.innerHTML = '<div class="tool-empty">No programs yet — outline your coaching packages here.</div>'; return; }
     data.programs.slice().reverse().forEach((p)=>{
       const idx = data.programs.indexOf(p);
       const row = document.createElement('div');
@@ -13927,7 +14009,7 @@ function buildSOPLibraryPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>📋 SOP Library</h4><span class="tool-panel-count">${data.sops.length}</span></div>
+    <div class="tool-panel-head"><h4>SOP Library</h4><span class="tool-panel-count">${data.sops.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-client" placeholder="Client">
       <input type="text" class="tp-task" placeholder="Task (e.g. Weekly email blast)">
@@ -13940,7 +14022,7 @@ function buildSOPLibraryPanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.sops.length;
     list.innerHTML = '';
-    if(data.sops.length===0){ list.innerHTML = '<div class="tool-empty">📋 No SOPs yet — document a recurring task so you can hand it off or do it faster.</div>'; return; }
+    if(data.sops.length===0){ list.innerHTML = '<div class="tool-empty">No SOPs yet — document a recurring task so you can hand it off or do it faster.</div>'; return; }
     data.sops.slice().reverse().forEach((s)=>{
       const idx = data.sops.indexOf(s);
       const row = document.createElement('div');
@@ -13971,7 +14053,7 @@ function buildReviewTrackerPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>⭐ Review Tracker</h4><span class="tool-panel-count">${data.reviews.length}</span></div>
+    <div class="tool-panel-head"><h4>Review Tracker</h4><span class="tool-panel-count">${data.reviews.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-platform" placeholder="Platform (Google, Yelp…)">
       <input type="text" class="tp-customer" placeholder="Customer name">
@@ -13991,7 +14073,7 @@ function buildReviewTrackerPanel(nicheId, data){
       const avg = data.reviews.reduce((s,r)=>s+r.rating,0)/data.reviews.length;
       summaryEl.innerHTML = `<div class="call-stats"><span class="call-chip"><span class="call-chip-num">${avg.toFixed(1)}</span> avg rating</span><span class="call-chip"><span class="call-chip-num">${data.reviews.length}</span> reviews</span></div>`;
     } else { summaryEl.innerHTML = ''; }
-    if(data.reviews.length===0){ list.innerHTML = '<div class="tool-empty">⭐ No reviews tracked yet — log them here to watch your reputation grow.</div>'; return; }
+    if(data.reviews.length===0){ list.innerHTML = '<div class="tool-empty">No reviews tracked yet — log them here to watch your reputation grow.</div>'; return; }
     data.reviews.slice().reverse().forEach((r)=>{
       const idx = data.reviews.indexOf(r);
       const row = document.createElement('div');
@@ -14025,7 +14107,7 @@ function buildOpenHousePanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🏠 Open House Log</h4><span class="tool-panel-count">${data.openhouses.length}</span></div>
+    <div class="tool-panel-head"><h4>Open House Log</h4><span class="tool-panel-count">${data.openhouses.length}</span></div>
     <div class="tool-form">
       <input type="text" class="tp-address" placeholder="Property address">
       <input type="date" class="tp-date">
@@ -14039,7 +14121,7 @@ function buildOpenHousePanel(nicheId, data){
   function render(){
     panel.querySelector('.tool-panel-count').textContent = data.openhouses.length;
     list.innerHTML = '';
-    if(data.openhouses.length===0){ list.innerHTML = '<div class="tool-empty">🏠 No open houses logged yet — track attendance and follow-up notes here.</div>'; return; }
+    if(data.openhouses.length===0){ list.innerHTML = '<div class="tool-empty">No open houses logged yet — track attendance and follow-up notes here.</div>'; return; }
     data.openhouses.slice().reverse().forEach((oh)=>{
       const idx = data.openhouses.indexOf(oh);
       const row = document.createElement('div');
@@ -14069,7 +14151,7 @@ function buildCommissionCalcPanel(nicheId, data){
   const panel = document.createElement('div');
   panel.className = 'tool-panel';
   panel.innerHTML = `
-    <div class="tool-panel-head"><h4>🧮 Commission Calculator</h4></div>
+    <div class="tool-panel-head"><h4>Commission Calculator</h4></div>
     <div style="padding:12px 0;">
       <div class="biz-form" style="margin-bottom:12px;">
         <input type="number" id="commSalePrice-${nicheId}" placeholder="Sale price ($)" step="any">
@@ -14433,9 +14515,9 @@ function guideSpeechText(guide){
 }
 
 function resetAllListenButtons(){
-  document.querySelectorAll('.guide-listen-btn').forEach(b=> b.textContent = '🔊 Listen');
+  document.querySelectorAll('.guide-listen-btn').forEach(b=> b.textContent = 'Listen');
   const chapterBtn = document.getElementById('chapterListenBtn');
-  if(chapterBtn) chapterBtn.textContent = '🔊 Listen to chapter';
+  if(chapterBtn) chapterBtn.textContent = 'Listen to chapter';
 }
 
 function stopAllSpeech(){
@@ -14482,12 +14564,12 @@ function toggleSpeech(key, text, btn, pauseLabel, resumeLabel, idleLabel){
 }
 
 function toggleGuideSpeech(guide, key, btn){
-  toggleSpeech('guide:' + key, guideSpeechText(guide), btn, '⏸️ Pause', '▶️ Resume', '🔊 Listen');
+  toggleSpeech('guide:' + key, guideSpeechText(guide), btn, 'Pause', 'Resume', 'Listen');
 }
 
 function toggleChapterSpeech(niche, btn){
   const text = niche.guides.map(g => g.title + '. ' + guideSpeechText(g)).join(' ... Next guide: ');
-  toggleSpeech('chapter:' + niche.id, text, btn, '⏸️ Pause chapter', '▶️ Resume chapter', '🔊 Listen to chapter');
+  toggleSpeech('chapter:' + niche.id, text, btn, 'Pause chapter', 'Resume chapter', 'Listen to chapter');
 }
 
 function printGuidePDF(guide, niche){
@@ -14544,7 +14626,7 @@ function printInvoice(inv){
 function renderExpensesPanel(){
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>💸 Log an Expense</h4>
+      <h4>Log an Expense</h4>
       <div class="biz-form">
         <input type="text" id="expDesc" placeholder="Description">
         <select id="expCategory">
@@ -14559,7 +14641,7 @@ function renderExpensesPanel(){
       </label>
     </div>
     <div class="biz-card">
-      <h4>📊 Expenses</h4>
+      <h4>Expenses</h4>
       <div class="biz-summary-grid" id="expSummary"></div>
       <div id="expList"></div>
     </div>
@@ -14610,7 +14692,7 @@ function renderExpenseList(){
     <div class="biz-summary-stat"><div class="num">$${monthTotal.toFixed(0)}</div><div class="lbl">This month</div></div>
   `;
   if(businessData.expenses.length===0){
-    listEl.innerHTML = '<div class="tool-empty">💸 No expenses logged yet.</div>';
+    listEl.innerHTML = '<div class="tool-empty">No expenses logged yet.</div>';
     return;
   }
   listEl.innerHTML = '';
@@ -14638,7 +14720,7 @@ function renderBusinessGoalPanel(){
   const pct = g.target > 0 ? Math.min(100, Math.round((paidTotal/g.target)*100)) : 0;
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>🎯 Business Goal</h4>
+      <h4>Business Goal</h4>
       <div class="biz-form">
         <input type="text" id="goalLabel" placeholder="Goal (e.g. Reach $5k/month)" value="${g.label||''}">
         <input type="number" id="goalTarget" placeholder="Target $" value="${g.target||''}">
@@ -14673,14 +14755,14 @@ function renderTopClientsPanel(){
   const ranked = Object.entries(byClient).sort((a,b)=> b[1]-a[1]);
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>🏆 Top Clients</h4>
+      <h4>Top Clients</h4>
       <p class="calc-note" style="margin-top:0;margin-bottom:16px;">Ranked by total invoiced amount from Business ▸ Invoicing.</p>
       <div id="topClientsList"></div>
     </div>
   `;
   const listEl = document.getElementById('topClientsList');
   if(ranked.length===0){
-    listEl.innerHTML = '<div class="tool-empty">🏆 No invoices yet — create some in Invoicing to see your top clients here.</div>';
+    listEl.innerHTML = '<div class="tool-empty">No invoices yet — create some in Invoicing to see your top clients here.</div>';
     return;
   }
   listEl.innerHTML = ranked.map(([client, total], i)=>`
@@ -14694,7 +14776,7 @@ function renderTopClientsPanel(){
 function renderReportsPanel(){
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>📋 Business Snapshot</h4>
+      <h4>Business Snapshot</h4>
       <p class="calc-note" style="margin-top:0;">A one-page PDF summary of everything you've tracked so far.</p>
       <button type="button" id="genReportBtn" style="width:100%;">Generate Report (PDF)</button>
     </div>
@@ -14760,7 +14842,7 @@ function renderTaxPanel(){
 function renderRemindersPanel(){
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>📌 Reminders</h4>
+      <h4>Reminders</h4>
       <div class="biz-form">
         <input type="text" id="remText" placeholder="Reminder">
         <input type="date" id="remDate">
@@ -14785,7 +14867,7 @@ function renderReminderList(){
   const listEl = document.getElementById('remList');
   if(!listEl) return;
   if(businessData.reminders.length===0){
-    listEl.innerHTML = '<div class="tool-empty">📌 No reminders yet.</div>';
+    listEl.innerHTML = '<div class="tool-empty">No reminders yet.</div>';
     return;
   }
   listEl.innerHTML = '';
@@ -14816,7 +14898,7 @@ function renderReminderList(){
 function renderRevenuePanel(){
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>📈 Recurring Revenue</h4>
+      <h4>Recurring Revenue</h4>
       <div class="biz-form">
         <input type="text" id="revName" placeholder="Client or source">
         <input type="number" id="revAmount" placeholder="Monthly amount">
@@ -14845,7 +14927,7 @@ function renderRevenueList(){
   const total = (businessData.recurring||[]).reduce((s,r)=> s+r.amount, 0);
   summaryEl.innerHTML = `<div class="biz-summary-stat"><div class="num">$${total.toFixed(0)}</div><div class="lbl">Monthly recurring revenue</div></div>`;
   if(!businessData.recurring || businessData.recurring.length===0){
-    listEl.innerHTML = '<div class="tool-empty">📈 No recurring revenue logged yet.</div>';
+    listEl.innerHTML = '<div class="tool-empty">No recurring revenue logged yet.</div>';
     return;
   }
   listEl.innerHTML = '';
@@ -14989,7 +15071,7 @@ function renderNonprofitPanel(){
 function renderBrandingPanel(){
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>🎨 Branding</h4>
+      <h4>Branding</h4>
       <p class="calc-note" style="margin-top:0;">Your business name appears on every invoice and report PDF instead of the default branding.</p>
       <div class="biz-form">
         <input type="text" id="brandNameInput" placeholder="Your business name" value="${businessData.businessName||''}">
@@ -15103,14 +15185,14 @@ function renderRecurringInvoicesPanel(){
   const recurring = businessData.invoices.filter(i=>i.recurring);
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>🔁 Recurring Invoices</h4>
+      <h4>Recurring Invoices</h4>
       <p class="calc-note" style="margin-top:0;">Mark any invoice as recurring from the Invoicing tab, and a fresh copy gets generated automatically once a month -- perfect for retainer clients.</p>
       <div id="recurringList"></div>
     </div>
   `;
   const listEl = document.getElementById('recurringList');
   if(recurring.length===0){
-    listEl.innerHTML = '<div class="tool-empty">🔁 No recurring invoices set up yet. Open an invoice in the Invoicing tab and mark it "Repeat monthly."</div>';
+    listEl.innerHTML = '<div class="tool-empty">No recurring invoices set up yet. Open an invoice in the Invoicing tab and mark it "Repeat monthly."</div>';
     return;
   }
   listEl.innerHTML = recurring.map(inv=>`
@@ -15137,7 +15219,7 @@ function renderContractsPanel(){
   const contracts = businessData.contracts;
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>📝 Contracts & Agreements</h4>
+      <h4>Contracts & Agreements</h4>
       <p class="calc-note" style="margin-top:0;">Keep track of every agreement you send — who signed, who hasn't, and when they expire.</p>
       <div class="biz-form">
         <input type="text" id="ctClient" placeholder="Client name">
@@ -15154,7 +15236,7 @@ function renderContractsPanel(){
     const listEl = document.getElementById('ctList');
     if(!listEl) return;
     listEl.innerHTML = '';
-    if(contracts.length===0){ listEl.innerHTML = '<div class="tool-empty">📝 No contracts tracked yet — add one above.</div>'; return; }
+    if(contracts.length===0){ listEl.innerHTML = '<div class="tool-empty">No contracts tracked yet — add one above.</div>'; return; }
     contracts.slice().reverse().forEach((c)=>{
       const idx = contracts.indexOf(c);
       const expired = c.expires && c.expires < todayStr() && c.status !== 'Expired';
@@ -15186,7 +15268,7 @@ function renderMileagePanel(){
   const ratePerMile = 0.67; // 2024 IRS standard rate
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>🚗 Mileage Log</h4>
+      <h4>Mileage Log</h4>
       <p class="calc-note" style="margin-top:0;">Log business trips for your tax deduction. Uses the IRS standard rate ($${ratePerMile}/mile).</p>
       <div class="biz-form">
         <input type="date" id="mlDate">
@@ -15206,7 +15288,7 @@ function renderMileagePanel(){
     const deduction = totalMiles * ratePerMile;
     summaryEl.innerHTML = trips.length ? `<div class="call-stats"><span class="call-chip"><span class="call-chip-num">${totalMiles.toFixed(1)}</span> miles</span><span class="call-chip"><span class="call-chip-num">$${deduction.toFixed(0)}</span> deduction</span></div>` : '';
     listEl.innerHTML = '';
-    if(trips.length===0){ listEl.innerHTML = '<div class="tool-empty">🚗 No trips logged yet — start tracking your business mileage.</div>'; return; }
+    if(trips.length===0){ listEl.innerHTML = '<div class="tool-empty">No trips logged yet — start tracking your business mileage.</div>'; return; }
     trips.slice().reverse().forEach((t)=>{
       const idx = trips.indexOf(t);
       const row = document.createElement('div');
@@ -15289,7 +15371,7 @@ function renderLeadPipelinePanel(){
   const stages = ['New','Contacted','Proposal','Negotiation','Won','Lost'];
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>🎯 Lead Pipeline</h4>
+      <h4>Lead Pipeline</h4>
       <p class="calc-note" style="margin-top:0;">Track every lead from first contact to close. See where your deals are at a glance.</p>
       <div class="biz-form">
         <input type="text" id="lpName" placeholder="Lead name">
@@ -15312,7 +15394,7 @@ function renderLeadPipelinePanel(){
     const activeVal = leads.filter(l=>l.stage!=='Won'&&l.stage!=='Lost').reduce((s,l)=>s+(l.value||0),0);
     summaryEl.innerHTML = leads.length ? `<div class="call-stats">${stages.filter(s=>byStage[s]>0).map(s=>`<span class="call-chip"><span class="call-chip-num">${byStage[s]}</span> ${s}</span>`).join('')}<span class="call-chip"><span class="call-chip-num">$${activeVal.toLocaleString()}</span> pipeline</span></div>` : '';
     listEl.innerHTML = '';
-    if(leads.length===0){ listEl.innerHTML = '<div class="tool-empty">🎯 No leads yet — add your first prospect above.</div>'; return; }
+    if(leads.length===0){ listEl.innerHTML = '<div class="tool-empty">No leads yet — add your first prospect above.</div>'; return; }
     leads.slice().reverse().forEach((l)=>{
       const idx = leads.indexOf(l);
       const stageColor = l.stage==='Won' ? 'background:rgba(34,197,94,0.15);border-color:#22C55E;color:#6EE7B7;' : l.stage==='Lost' ? 'background:rgba(239,68,68,0.15);border-color:#EF4444;color:#FCA5A5;' : '';
@@ -15346,7 +15428,7 @@ function renderLeadPipelinePanel(){
 function renderBackupPanel(){
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>💾 Data Backup</h4>
+      <h4>Data Backup</h4>
       <p class="calc-note" style="margin-top:0;">Download everything -- every niche's clients, tools, invoices, expenses, completed guides, and bookmarks -- as one JSON file you keep for yourself.</p>
       <button type="button" id="backupDownloadBtn" style="width:100%;">Download my data</button>
       <p class="calc-note" id="backupNote"></p>
@@ -15373,7 +15455,7 @@ let clientPortalPages = [];
 async function renderClientPortalPanel(){
   businessPanelWrap.innerHTML = `
     <div class="biz-card">
-      <h4>🔗 New Client Status Page</h4>
+      <h4>New Client Status Page</h4>
       <p class="calc-note" style="margin-top:0;">Give a client a clean link to check project status themselves -- no login, no thread to dig through.</p>
       <div class="biz-form">
         <input type="text" id="cpClient" placeholder="Client name">
@@ -15385,7 +15467,7 @@ async function renderClientPortalPanel(){
       <p class="calc-note" id="cpCreateNote"></p>
     </div>
     <div class="biz-card">
-      <h4>📋 Your Status Pages</h4>
+      <h4>Your Status Pages</h4>
       <div id="cpList">Loading...</div>
     </div>
   `;
@@ -15408,7 +15490,7 @@ async function renderClientPortalPanel(){
   function renderList(){
     const listEl = document.getElementById('cpList');
     if(clientPortalPages.length === 0){
-      listEl.innerHTML = '<div class="tool-empty">🔗 No status pages yet -- create one above for a client you want to keep updated.</div>';
+      listEl.innerHTML = '<div class="tool-empty">No status pages yet -- create one above for a client you want to keep updated.</div>';
       return;
     }
     listEl.innerHTML = clientPortalPages.map(p=>`
@@ -15951,9 +16033,9 @@ function showToday(){
   const totalG = totalGuides();
   const doneG = completed.size;
   const pctG = totalG > 0 ? Math.round((doneG/totalG)*100) : 0;
-  const streakEmoji = streak.count >= 7 ? '🔥' : '✨';
+  const streakEmoji = streak.count >= 7 ? ico('flame') : ico('guider');
   progressSnap.innerHTML = `
-    <h4>📈 Your progress</h4>
+    <h4>Your progress</h4>
     <div style="display:flex;gap:12px;flex-wrap:wrap;">
       <div style="flex:1;min-width:120px;background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:12px;text-align:center;">
         <div style="font-size:24px;font-weight:800;color:var(--grape);">${doneG}/${totalG}</div>
@@ -15974,7 +16056,7 @@ function showToday(){
   // Everything due today or overdue, across all chapters
   const followupGroup = document.createElement('div');
   followupGroup.className = 'today-group';
-  followupGroup.innerHTML = '<h4>⏰ Due today or overdue</h4>';
+  followupGroup.innerHTML = '<h4>Due today or overdue</h4>';
   const dueItems = collectDueItems();
   if(dueItems.length===0){
     followupGroup.innerHTML += '<div class="today-empty">Nothing due — you\'re all caught up.</div>';
@@ -16026,7 +16108,7 @@ function showToday(){
     const totalLoss = (t.lossEntries||[]).reduce((s,e)=>s+e,0);
     const totalProfit = (t.profitEntries||[]).reduce((s,e)=>s+e,0);
     tGroup.innerHTML = `
-      <h4>📊 Today's trading</h4>
+      <h4>Today's trading</h4>
       <div class="tool-row" style="margin-bottom:8px;">
         <div class="tr-main"><div class="tr-title">Loss so far</div></div>
         <span class="tr-badge" style="${totalLoss >= t.lossLimit && t.lossLimit>0 ? 'background:rgba(239,68,68,0.15);border-color:#EF4444;color:#FCA5A5;' : ''}">$${totalLoss.toFixed(0)} / $${t.lossLimit}</span>
@@ -16044,7 +16126,7 @@ function showToday(){
     const lowStock = (toolsData.ecommerce.inventory||[]).filter(p=>p.stock<=p.reorder);
     const sGroup = document.createElement('div');
     sGroup.className = 'today-group';
-    sGroup.innerHTML = '<h4>📦 Low stock alerts</h4>';
+    sGroup.innerHTML = '<h4>Low stock alerts</h4>';
     if(lowStock.length===0){
       sGroup.innerHTML += '<div class="today-empty">Everything is stocked above its reorder point.</div>';
     } else {
@@ -16156,39 +16238,39 @@ function showStats(){
   const sinceJoined = joinedAt ? ` since you joined` : '';
   progressHero.innerHTML = o.hasAnything ? `
     <div class="progress-hero-card accent">
-      <div class="ph-icon">💵</div>
+      <div class="ph-icon">${ico('earn')}</div>
       <div class="ph-num">${outMoney(o.invoiced)}</div>
       <div class="ph-label">Invoiced${sinceJoined}${o.outstanding > 0 ? ` · ${outMoney(o.outstanding)} unpaid` : ''}</div>
     </div>
     <div class="progress-hero-card">
-      <div class="ph-icon">👥</div>
+      <div class="ph-icon">${ico('user')}</div>
       <div class="ph-num">${o.clients}</div>
       <div class="ph-label">${o.clients === 1 ? 'Client' : 'Clients'}</div>
     </div>
     ${o.daysToFirstPaid ? `
     <div class="progress-hero-card">
-      <div class="ph-icon">🎉</div>
+      <div class="ph-icon">${ico('check')}</div>
       <div class="ph-num">Day ${o.daysToFirstPaid}</div>
       <div class="ph-label">Your first paid invoice</div>
     </div>` : o.daysToFirstInvoice ? `
     <div class="progress-hero-card">
-      <div class="ph-icon">🧾</div>
+      <div class="ph-icon">${ico('file')}</div>
       <div class="ph-num">Day ${o.daysToFirstInvoice}</div>
       <div class="ph-label">Your first invoice sent</div>
     </div>` : `
     <div class="progress-hero-card">
-      <div class="ph-icon">🧾</div>
+      <div class="ph-icon">${ico('file')}</div>
       <div class="ph-num">${o.invoiceCount}</div>
       <div class="ph-label">${o.invoiceCount === 1 ? 'Invoice raised' : 'Invoices raised'}</div>
     </div>`}
     ${o.mrr > 0 ? `
     <div class="progress-hero-card">
-      <div class="ph-icon">🔁</div>
+      <div class="ph-icon">${ico('repeat')}</div>
       <div class="ph-num">${outMoney(o.mrr)}</div>
       <div class="ph-label">Recurring, every month</div>
     </div>` : `
     <div class="progress-hero-card">
-      <div class="ph-icon">📈</div>
+      <div class="ph-icon">${ico('trending')}</div>
       <div class="ph-num">${outMoney(o.profit)}</div>
       <div class="ph-label">Paid in, minus expenses</div>
     </div>`}
@@ -16210,7 +16292,7 @@ function showStats(){
     if(o.goalTarget > 0){
       goalWrap.style.display = '';
       goalWrap.innerHTML = `
-        <h3>🎯 ${gvEsc(o.goalLabel || 'Your goal')}</h3>
+        <h3>${gvEsc(o.goalLabel || 'Your goal')}</h3>
         <div class="outcome-goal-row">
           <span>${outMoney(o.paid)} of ${outMoney(o.goalTarget)}</span>
           <span>${o.goalPct}%</span>
@@ -16225,7 +16307,7 @@ function showStats(){
   const learnWrap = document.getElementById('learningStats');
   if(learnWrap){
     learnWrap.innerHTML = `
-      <h3>📚 Your learning</h3>
+      <h3>Your learning</h3>
       <div class="learn-row">
         <div><b>${completedCount}</b><span>Lessons done (${pctComplete}%)</span></div>
         <div><b>${streak.count}</b><span>Day streak</span></div>
@@ -16236,13 +16318,13 @@ function showStats(){
 
   // --- Streak Section ---
   const streakSection = document.getElementById('streakSection');
-  const streakEmoji = streak.count >= 30 ? '🔥🔥🔥' : streak.count >= 7 ? '🔥🔥' : '🔥';
+  const streakEmoji = ico('flame').repeat(streak.count >= 30 ? 3 : streak.count >= 7 ? 2 : 1);
   const streakMsg = streak.count === 0 ? 'Complete a guide today to start your streak!'
     : streak.count < 7 ? 'Keep it up — consistency is everything.'
     : streak.count < 30 ? 'You\'re on fire! Don\'t break the chain.'
     : 'Legendary streak — you\'re in the top tier.';
   streakSection.innerHTML = `
-    <h3>🔥 Your Streak</h3>
+    <h3>Your streak</h3>
     <div class="streak-display">
       <div class="streak-flame">${streakEmoji}</div>
       <div class="streak-info">
@@ -16284,7 +16366,7 @@ function showStats(){
 
   if(bizRows){
     bizSection.style.display = '';
-    bizSection.innerHTML = `<h3>💼 Business Stats</h3>${bizRows}`;
+    bizSection.innerHTML = `<h3>Business stats</h3>${bizRows}`;
   } else {
     bizSection.style.display = 'none';
   }
@@ -16308,7 +16390,7 @@ function showStats(){
     { icon:'📌', name:'Bookworm', earned: bookmarkCount >= 5 },
   ];
   achievementsSection.innerHTML = `
-    <h3>🏅 Achievements</h3>
+    <h3>Achievements</h3>
     <div class="achievement-grid">
       ${achievements.map(a=>`
         <div class="achievement-badge ${a.earned ? 'earned' : 'locked'}">
@@ -16342,7 +16424,7 @@ function renderCompletionChart(){
     chartBlock.id = 'completionChartBlock';
     statGrid.insertAdjacentElement('afterend', chartBlock);
   }
-  chartBlock.innerHTML = '<h4>📚 Lessons completed by chapter</h4>' + NICHES.map(niche=>{
+  chartBlock.innerHTML = '<h4>Lessons completed by chapter</h4>' + NICHES.map(niche=>{
     const done = nicheCompleted(niche);
     const pct = Math.round((done/niche.guides.length)*100);
     return `
