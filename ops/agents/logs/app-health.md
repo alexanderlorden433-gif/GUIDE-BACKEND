@@ -41,3 +41,14 @@
 - 2-PR cap reached (#2, #5). Queue: manage-subscription (branch 58b669d, may need merge of main) → delete-cancels-subscription (needs Alexander OK) → account.id.
 - Step 5 area: partners.js + admin.js auth → OK (requireAuth + server-side OWNER_EMAIL check on every write/admin route; email can't be changed via account PUT). Only issue was missing async error handling → covered by #5.
 - Next step-5 area: src/routes/aiChat.js (input limits, Pro gating, error handling).
+
+## 2026-10-13 (Tue)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway/Netlify status on main d195896 = success.
+- Since last notes: #2 (timeAgo) and #5 (route errors) MERGED. #3 closed. Lots of claude-agent PRs merged (#6–#20: courses, Pro/trial, new look, account settings redesign…). No open PRs before tonight.
+- check.sh on main: only the 4 known /client-status calls (still waiting on Alexander). Backend/lint OK, smoke PASS 0 problems.
+- Opened PR #21 [sensitive] agent/app-health/2026-10-13-manage-subscription: "Your subscription" card in Account settings → POST /billing/portal; backend adds canManageBilling (=has stripeCustomerId); delete card reminds paying users to cancel first. Smoke step manage_subscription (fails on main) + shots.py screen 'account-pro'. Old branch 58b669d superseded.
+- Opened PR #22 [sensitive] agent/app-health/2026-10-13-startup-account: GET /api/account returns id; both login paths pass trialEligible to loginApp (was dropped → ex-subscribers offered the trial, then billed). Smoke step startup_account (fails on main). Fixture supports state['account'] overrides.
+- #21 and #22 merge together cleanly (tested locally). If one merges first, the other should still be clean.
+- Step 5 area: src/routes/aiChat.js → 2 hardening items queued (details in private report 2026-10-13). Next PR when a slot frees.
+- Still open: delete account vs Stripe subscription (asked Alexander 10-06); terms.html old prices (asked 10-06); /client-status build vs hide.
+- Next step-5 area: src/routes/discussion.js + mentors.js input validation.
