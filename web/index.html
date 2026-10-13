@@ -4894,6 +4894,40 @@
   .niche-icon.nb-pop{animation:nbPop .5s cubic-bezier(.3,1.6,.5,1);}
   @keyframes nbPop{0%{transform:scale(.8); opacity:.35;}45%{transform:scale(1.22); opacity:1; box-shadow:0 0 0 10px rgba(var(--accent-rgb),.22);}100%{transform:scale(1); opacity:1; box-shadow:0 0 0 0 rgba(var(--accent-rgb),0);}}
   @media (prefers-reduced-motion: reduce){ .nb-layer{display:none;} .niche-icon.nb-wait{transform:none; opacity:1;} .niche-icon.nb-pop{animation:none;} }
+  /* =====================================================================
+     Calmer look. Flat buttons (no glow), plain labels instead of small capitals,
+     underline tabs instead of rows of pills, a quieter landing page.
+     This block comes last on purpose: it overrides the louder rules above.
+     ===================================================================== */
+  .lp-cta, .lp-cta:hover, .ts-go, .sc-btn, .modal-cta, .modal-cta:hover, .module-unlock, .module-unlock:hover,
+  .export-btn, .welcome-next, .welcome-next:hover, .dm-done, #onboardContinueBtn, #introContinueBtn,
+  .auth-card button[type="submit"], .auth-card .auth-primary-btn,
+  .auth-card button[type="submit"]:hover, .auth-card .auth-primary-btn:hover,
+  .guide-content .mark-btn, .guide-content .mark-btn:hover, .sub-tab.active, .streak-badge,
+  .gv-watch, .gv-watch:hover, .gv-ebtn.primary, .pm-step.st-done .pm-node,
+  .survey-next-btn, .pro-preview-btn, .biz-primary-btn, .biz-primary-btn:hover{box-shadow:none;}
+  .lp-cta:hover, .module-unlock:hover, .guide-content .mark-btn:hover, .welcome-next:hover{filter:brightness(1.07);}
+
+  /* labels: plain sentence case */
+  .module-label, .next-step b, .sub-nav-group-label, .continue-card .cc-label, .dm-k, .dm-do b, .ts-label,
+  .sc-kicker, .sc-do b, .pm-k, .faq-category, .slideshow-step-label,
+  .auth-card label, .profile-field label, .acct-field > span{text-transform:none; letter-spacing:0; font-size:13px; font-weight:600;}
+  .section-head h3{text-transform:none; letter-spacing:-0.01em; font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; color:var(--ink);}
+
+  /* chapter tabs: text with an underline */
+  .sub-nav{gap:2px; margin:18px 0 10px; border-bottom:1px solid var(--line);}
+  .sub-nav .sub-tab{background:none; border:0; border-bottom:2px solid transparent; border-radius:0; padding:10px 14px; margin-bottom:-1px; color:var(--ink-soft); font-size:14px; font-weight:600;}
+  .sub-nav .sub-tab:hover{color:var(--ink);}
+  .sub-nav .sub-tab.active{background:none; color:var(--ink); border-bottom-color:var(--grape);}
+  .sub-nav .sub-tab-secondary{font-size:13.5px; padding:8px 12px;}
+  .sub-nav .sub-tab-secondary.active{background:none; color:var(--ink);}
+  .sub-nav .sub-tab:first-child{padding-left:0;}
+  .sub-nav.sub-nav-secondary{border-bottom:0; margin:0 0 14px;}
+  .sub-nav-group-label{margin-top:14px;}
+
+  /* landing: flat headline, quiet background */
+  .lp-grad{background:none; -webkit-background-clip:border-box; background-clip:border-box; color:inherit;}
+  .lp-aurora i{opacity:.16;}
 </style>
 </head>
 <body>
