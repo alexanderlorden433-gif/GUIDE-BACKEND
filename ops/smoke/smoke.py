@@ -121,6 +121,48 @@ def fixture(state, method, path, body):
         return 201, {'id': 'nr_1', 'status': 'pending'}
     if p == '/api/network/connections':
         return 200, {'sent': [], 'received': []}
+    # live calls: a test sets state['live'] = {'canHost':…, 'isOwner':…, 'calls':[…], 'hosts':[…]}; with nothing set there are no calls
+    if p == '/api/live' and method == 'GET':
+        lv = state.get('live')
+        if not lv:
+            return 200, {'isPro': state['pro'], 'canHost': False, 'isOwner': False, 'calls': []}
+        calls = []
+        for c in lv.get('calls', []):
+            c = dict(c)
+            c['canJoin'] = bool(c.get('canJoin')) and (state['pro'] or bool(c.get('mine')))
+            c.pop('join', None)
+            calls.append(c)
+        return 200, {'isPro': state['pro'], 'canHost': lv.get('canHost', False), 'isOwner': lv.get('isOwner', False), 'calls': calls}
+    if p == '/api/live' and method == 'POST':
+        state.setdefault('live_posts', []).append(body)
+        if not (body or {}).get('joinUrl'):
+            return 400, {'error': 'Paste the call link. It must start with https://'}
+        return 201, {'id': 'lc_new'}
+    if p == '/api/live/hosts' and method == 'GET':
+        return 200, {'hosts': (state.get('live') or {}).get('hosts', [])}
+    if p == '/api/live/hosts' and method == 'POST':
+        state.setdefault('live_host_posts', []).append(body)
+        return 201, {'ok': True, 'accountFound': False}
+    if re.match(r'^/api/live/hosts/[^/]+$', p) and method == 'DELETE':
+        state.setdefault('live_host_deletes', []).append(p.rsplit('/', 1)[1])
+        return 200, {'ok': True}
+    m = re.match(r'^/api/live/([^/]+)/(join|rsvp)$', p)
+    if m:
+        call = next((c for c in (state.get('live') or {}).get('calls', []) if c['id'] == m.group(1)), None)
+        if m.group(2) == 'rsvp':
+            state.setdefault('live_rsvps', []).append((method, m.group(1)))
+            if not state['pro']:
+                return 403, {'error': 'Live calls are for Pro members.', 'upgrade': True}
+            return (201 if method == 'POST' else 200), {'ok': True}
+        if not call:
+            return 404, {'error': 'That call is not on the schedule anymore.'}
+        if not state['pro'] and not call.get('mine'):
+            return 403, {'error': 'Live calls are for Pro members.', 'upgrade': True}
+        return 200, {'joinUrl': call['join'], 'title': call['title'], 'hostName': call['hostName']}
+    m = re.match(r'^/api/live/([^/]+)$', p)
+    if m and method in ('PATCH', 'DELETE'):
+        state.setdefault('live_changes', []).append((method, m.group(1), body))
+        return 200, {'ok': True}
     if p == '/api/analytics/config':
         return 200, {'metaPixelId': None}
     if p == '/api/analytics/access':
@@ -768,6 +810,274 @@ def quiet_community(browser, base):
             ok(step[0], f'{posts} posts — Community tab {"shown" if expect else "stays hidden"}')
         finish(st, step[0])
         ctx.close()
+
+
+def live_iso_in(minutes):
+    return time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(time.time() + minutes * 60))
+
+
+def live_demo_calls():
+    """Three example calls: two on right now (one Daily room, one Zoom link) and one tomorrow. Also used by shots.py."""
+    iso_in = live_iso_in
+    return [
+        {'id': 'lc_a', 'title': 'Real estate Q&A: your first deal', 'description': 'Bring your questions.\nWe go through licensing and take-home pay.',
+         'nicheId': 'video', 'hostName': 'Sam Rivera', 'hostHeadline': 'Real estate investor', 'startsAt': iso_in(-5), 'durationMin': 45,
+         'going': 3, 'iGo': False, 'mine': False, 'canJoin': True, 'join': 'https://acme.daily.co/guide-room'},
+        {'id': 'lc_b', 'title': 'Trading risk rules', 'description': '', 'nicheId': None, 'hostName': 'Alex Chen', 'hostHeadline': None,
+         'startsAt': iso_in(-2), 'durationMin': 30, 'going': 0, 'iGo': False, 'mine': False, 'canJoin': True, 'join': 'https://zoom.us/j/123456789'},
+        {'id': 'lc_c', 'title': 'Cold outreach teardown', 'description': '', 'nicheId': 'photo', 'hostName': 'Sam Rivera', 'hostHeadline': 'Real estate investor',
+         'startsAt': iso_in(60 * 26), 'durationMin': 60, 'going': 12, 'iGo': False, 'mine': False, 'canJoin': False, 'join': 'https://acme.daily.co/guide-room2'},
+    ]
+
+
+def live_calls(browser, base):
+    """Live calls: Pro members see the schedule and join, free members see it locked, hosts schedule and
+    edit their own calls, and the owner approves hosts."""
+    iso_in, demo_calls = live_iso_in, live_demo_calls
+
+    def open_app(label, pro, live, wide=False):
+        step = [f'live calls ({label})']
+        viewport = {'width': 1280, 'height': 900} if wide else {'width': 390, 'height': 844}
+        ctx = browser.new_context(viewport=viewport, is_mobile=not wide, has_touch=not wide, service_workers='block', accept_downloads=True)
+        st = new_state(pro)
+        st['wins'] = []          # nobody has posted yet, so the Wins board stays hidden
+        st['live'] = live
+        attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(1200)
+        return step, ctx, st, page
+
+    # 1) a Pro member, with nobody having posted yet
+    got = open_app('Pro member', True, {'calls': demo_calls()})
+    if got:
+        step, ctx, st, page = got
+        tab = page.evaluate("getComputedStyle(document.getElementById('bottomTabCommunity')).display !== 'none'")
+        only = page.evaluate("document.getElementById('communityView').classList.contains('live-only')")
+        if not (tab and only):
+            problem(step[0], 'with live calls scheduled the Community tab should show (as "Live calls") even with no posts', {'tab': tab, 'liveOnly': only})
+        else:
+            ok(step[0], 'calls are scheduled, so the tab shows as "Live calls" even with no posts yet')
+        if visible(page, '#livePill', 6000):
+            pill = page.inner_text('#livePill')
+            if 'Live now' in pill and 'Sam Rivera' in pill:
+                ok(step[0], 'Home shows one line about the call that is on right now')
+            else:
+                problem(step[0], 'the Home line should say which call is live now', pill)
+        else:
+            problem(step[0], 'Home has no line about the live call')
+        shot(page, 'phone-20-live-home')
+        page.click('#livePill')
+        if not visible(page, '.live-card', 4000):
+            problem(step[0], 'tapping the line on Home did not open the live calls')
+        else:
+            cards = page.evaluate("[...document.querySelectorAll('.live-card')].map(c=>({title:c.querySelector('.live-title').innerText,acts:[...c.querySelectorAll('[data-live]')].map(b=>b.dataset.live)}))")
+            title = page.inner_text('#communityTitle')
+            tabrow = page.evaluate("getComputedStyle(document.getElementById('communityTabs')).display")
+            if len(cards) != 3 or title != 'Live calls' or tabrow != 'none':
+                problem(step[0], 'the live screen should show 3 calls under "Live calls" with no tab row', {'cards': len(cards), 'title': title, 'tabrow': tabrow})
+            elif not ({'join', 'cal'} <= set(cards[0]['acts']) and {'remind', 'cal'} <= set(cards[2]['acts']) and 'join' not in cards[2]['acts']):
+                problem(step[0], 'Join should show for a call that is open, and Remind me for one that is not', cards)
+            else:
+                ok(step[0], 'the live call has Join; tomorrow\'s call has Remind me and Add to calendar')
+            no_sideways_scroll(page, step[0])
+            shot(page, 'phone-21-live-list')
+            # Remind me
+            page.click('[data-live="remind"][data-id="lc_c"]')
+            page.wait_for_timeout(400)
+            label = page.inner_text('[data-live="remind"][data-id="lc_c"]')
+            if st.get('live_rsvps') == [('POST', 'lc_c')] and 'Reminder set' in label:
+                ok(step[0], 'Remind me is saved and the button says so')
+            else:
+                problem(step[0], 'Remind me did not save', {'sent': st.get('live_rsvps'), 'button': label})
+            # Join: a Daily room opens inside the app
+            page.click('[data-live="join"][data-id="lc_a"]')
+            if visible(page, '#liveRoom iframe', 4000):
+                src = page.get_attribute('#liveRoom iframe', 'src')
+                allow = page.get_attribute('#liveRoom iframe', 'allow') or ''
+                shot(page, 'phone-22-live-room')
+                if src.startswith('https://acme.daily.co/') and 'camera' in allow and 'microphone' in allow:
+                    ok(step[0], 'Join opens the Daily room inside the app, with camera and microphone allowed')
+                else:
+                    problem(step[0], 'the room did not open the right link inside the app', {'src': src, 'allow': allow})
+                page.click('#liveRoomLeave')
+                page.wait_for_timeout(200)
+                left = page.evaluate("document.getElementById('liveRoom').style.display === 'none' && !document.querySelector('#liveRoom iframe')")
+                if left:
+                    ok(step[0], 'Leave closes the room and drops the call')
+                else:
+                    problem(step[0], 'Leave did not close the room')
+            else:
+                problem(step[0], 'Join did not open the room inside the app')
+            # Join: a Zoom link opens in a new tab
+            page.evaluate("(()=>{window.__opened=[]; window.open=(u)=>{window.__opened.push(u); return {};};})()")
+            page.click('[data-live="join"][data-id="lc_b"]')
+            page.wait_for_timeout(400)
+            opened = page.evaluate("window.__opened")
+            if opened == ['https://zoom.us/j/123456789']:
+                ok(step[0], 'a Zoom link opens in a new tab')
+            else:
+                problem(step[0], 'a Zoom link should open in a new tab', opened)
+            # Add to calendar
+            try:
+                with page.expect_download(timeout=4000) as dl:
+                    page.click('[data-live="cal"][data-id="lc_c"]')
+                ics = open(dl.value.path(), encoding='utf-8').read()
+                if (dl.value.suggested_filename.endswith('.ics') and 'BEGIN:VEVENT' in ics and 'DTSTART:' in ics
+                        and 'SUMMARY:The Guide Live: Cold outreach teardown' in ics and 'TRIGGER:-PT15M' in ics):
+                    ok(step[0], 'Add to calendar gives a calendar file with the right title and a 15-minute alert')
+                else:
+                    problem(step[0], 'the calendar file is wrong', ics[:300])
+            except Exception as e:
+                problem(step[0], 'Add to calendar did not download a file', e)
+        finish(st, step[0]); ctx.close()
+
+    # 2) a free member sees the schedule, locked
+    got = open_app('free member', False, {'calls': demo_calls()})
+    if got:
+        step, ctx, st, page = got
+        if visible(page, '#livePill', 6000) and 'Live now' in page.inner_text('#livePill'):
+            ok(step[0], 'a free member sees the live call on Home too')
+        else:
+            problem(step[0], 'a free member should still see the call on Home', page.evaluate("(document.getElementById('liveHomeWrap')||{}).innerText"))
+        page.click('#livePill')
+        if visible(page, '.live-card', 4000):
+            acts = page.evaluate("[...document.querySelectorAll('.live-card [data-live]')].map(b=>b.dataset.live)")
+            note = page.locator('.live-pro-note').count()
+            if 'join' in acts or 'remind' in acts or 'cal' in acts or acts.count('unlock') != 3 or not note:
+                problem(step[0], 'a free member should see only "Unlock with Pro" and a Pro note, never Join', {'acts': acts, 'note': note})
+            else:
+                ok(step[0], 'a free member sees the schedule with "Unlock with Pro" on every call and no Join')
+            shot(page, 'phone-23-live-free')
+            page.click('[data-live="unlock"]')
+            if visible(page, '#upgradeOverlay', 3000):
+                ok(step[0], '"Unlock with Pro" opens the upgrade window')
+                close_paywall(page)
+            else:
+                problem(step[0], '"Unlock with Pro" did not open the upgrade window')
+        else:
+            problem(step[0], 'the live calls did not open for a free member')
+        finish(st, step[0]); ctx.close()
+
+    # 3) a host: schedules, edits and cancels their own call, but cannot touch someone else's
+    mine = dict(demo_calls()[2], id='lc_mine', mine=True, joinUrl='https://acme.daily.co/mine')
+    got = open_app('host', True, {'canHost': True, 'isOwner': False, 'calls': [mine, dict(demo_calls()[0], startsAt=iso_in(300), canJoin=False)]}, wide=True)
+    if got:
+        step, ctx, st, page = got
+        page.evaluate("showLive()")
+        if not visible(page, '[data-live="new"]', 4000):
+            problem(step[0], 'a host should see "Schedule a call"')
+        else:
+            mine_acts = page.evaluate("[...document.querySelectorAll('.live-card')[0].querySelectorAll('[data-live]')].map(b=>b.dataset.live)")
+            other_acts = page.evaluate("[...document.querySelectorAll('.live-card')[1].querySelectorAll('[data-live]')].map(b=>b.dataset.live)")
+            if 'edit' in mine_acts and 'cancel' in mine_acts and 'edit' not in other_acts and 'cancel' not in other_acts:
+                ok(step[0], 'a host can edit and cancel their own call, not someone else\'s')
+            else:
+                problem(step[0], 'Edit and Cancel should show only on the host\'s own call', {'mine': mine_acts, 'other': other_acts})
+            page.click('[data-live="new"]')
+            page.wait_for_selector('#liveForm', timeout=3000)
+            future = time.strftime('%Y-%m-%dT%H:%M', time.localtime(time.time() + 3 * 24 * 3600))
+            page.fill('#lfTitle', 'Pricing your first package')
+            page.fill('#lfDesc', 'How to price with three tiers.')
+            page.select_option('#lfNiche', 'video')
+            page.select_option('#lfLen', '60')
+            page.fill('#lfWhen', future)
+            shot(page, 'desktop-24-live-form')
+            page.click('[data-live="form-save"]')
+            page.wait_for_timeout(500)
+            err = page.inner_text('#lfMsg')
+            if 'Paste the call link' in err and page.evaluate("document.getElementById('lfMsg').classList.contains('err')"):
+                ok(step[0], 'a missing call link is explained, and the form stays open')
+            else:
+                problem(step[0], 'saving without a link should show the reason', err)
+            page.fill('#lfLink', 'https://zoom.us/j/999')
+            page.click('[data-live="form-save"]')
+            page.wait_for_timeout(700)
+            posts = st.get('live_posts', [])
+            body = posts[-1] if posts else {}
+            good = (body.get('title') == 'Pricing your first package' and body.get('joinUrl') == 'https://zoom.us/j/999'
+                    and body.get('durationMin') == 60 and body.get('nicheId') == 'video'
+                    and re.match(r'^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$', body.get('startsAt', '')))
+            closed = page.evaluate("!document.getElementById('liveForm')")
+            note = page.inner_text('#liveNote')
+            if good and closed and 'scheduled' in note:
+                ok(step[0], 'the call is sent with its title, time (as UTC), length, chapter and link, and the form closes')
+            else:
+                problem(step[0], 'scheduling a call did not send the right details', {'body': body, 'closed': closed, 'note': note})
+            # edit
+            page.click('[data-live="edit"][data-id="lc_mine"]')
+            page.wait_for_selector('#liveForm', timeout=3000)
+            pre = page.evaluate("({t:document.getElementById('lfTitle').value, l:document.getElementById('lfLink').value})")
+            page.fill('#lfTitle', 'Cold outreach teardown (new time)')
+            page.click('[data-live="form-save"]')
+            page.wait_for_timeout(600)
+            ch = [c for c in st.get('live_changes', []) if c[0] == 'PATCH']
+            if pre == {'t': 'Cold outreach teardown', 'l': 'https://acme.daily.co/mine'} and ch and ch[0][1] == 'lc_mine' and ch[0][2].get('title') == 'Cold outreach teardown (new time)':
+                ok(step[0], 'editing opens the call as it is, and saves the change')
+            else:
+                problem(step[0], 'editing a call did not work', {'pre': pre, 'sent': ch})
+            # cancel
+            page.once('dialog', lambda d: d.accept())
+            page.click('[data-live="cancel"][data-id="lc_mine"]')
+            page.wait_for_timeout(600)
+            if ('DELETE', 'lc_mine', None) in st.get('live_changes', []):
+                ok(step[0], 'cancelling asks first, then cancels')
+            else:
+                problem(step[0], 'cancelling a call did not work', st.get('live_changes'))
+        finish(st, step[0]); ctx.close()
+
+    # 4) the owner: approves and removes hosts, and can schedule on a host's behalf
+    got = open_app('owner', True, {'canHost': True, 'isOwner': True, 'calls': [demo_calls()[2]],
+                                   'hosts': [{'email': 'sam@example.com', 'name': 'Sam Rivera', 'headline': 'Real estate investor'}]}, wide=True)
+    if got:
+        step, ctx, st, page = got
+        page.evaluate("showLive()")
+        if not visible(page, '.live-hosts summary', 4000):
+            problem(step[0], 'the owner should see the list of approved hosts')
+        else:
+            summary = page.inner_text('.live-hosts summary')
+            page.click('.live-hosts summary')
+            page.fill('#lhEmail', 'new.expert@example.com')
+            page.fill('#lhName', 'Jordan Lee')
+            page.fill('#lhHead', 'Ads buyer')
+            page.click('[data-live="host-add"]')
+            page.wait_for_timeout(600)
+            added = st.get('live_host_posts', [])
+            msg = page.inner_text('#lhMsg')
+            if 'Approved hosts (1)' in summary and added == [{'email': 'new.expert@example.com', 'name': 'Jordan Lee', 'headline': 'Ads buyer'}] and 'Approved' in msg:
+                ok(step[0], 'the owner approves a host with their email, name and one line about them')
+            else:
+                problem(step[0], 'approving a host did not work', {'summary': summary, 'sent': added, 'msg': msg})
+            page.click('[data-live="host-remove"]')
+            page.wait_for_timeout(500)
+            if st.get('live_host_deletes') == ['sam%40example.com']:
+                ok(step[0], 'the owner can remove a host')
+            else:
+                problem(step[0], 'removing a host did not work', st.get('live_host_deletes'))
+            page.click('[data-live="new"]')
+            page.wait_for_selector('#liveForm', timeout=3000)
+            opts = page.evaluate("[...document.querySelectorAll('#lfHost option')].map(o=>o.textContent)")
+            if opts and opts[0] == 'Me':
+                ok(step[0], 'the owner can pick who hosts a new call')
+            else:
+                problem(step[0], 'the owner should be able to pick the host', opts)
+            edit_all = page.evaluate("[...document.querySelectorAll('.live-card')].every(c=>c.querySelector('[data-live=edit]'))")
+            if not edit_all:
+                problem(step[0], 'the owner should be able to edit every call')
+        finish(st, step[0]); ctx.close()
+
+    # 5) the styles use only the look's colour variables
+    step = ['live calls (styles)']
+    html = open(os.path.join(ROOT, 'web', 'index.html'), encoding='utf-8').read()
+    css = html[html.index('/* Live calls: the Live tab in Community'):html.index('</style>', html.index('/* Live calls: the Live tab in Community'))]
+    hard = re.findall(r'#[0-9a-fA-F]{3,8}\b|rgba?\(\s*\d', css)
+    if hard:
+        problem(step[0], 'the live call styles hard-code colours; use the colour variables', hard[:5])
+    else:
+        ok(step[0], 'the live call styles use only the look colour variables')
 
 
 def returning_learner(browser, base):
@@ -1879,6 +2189,7 @@ def main():
         new_chapters(browser, base)
         smoother(browser, base)
         quiet_community(browser, base)
+        live_calls(browser, base)
         returning_learner(browser, base)
         daily_step(browser, base)
         niche_burst(browser, base)

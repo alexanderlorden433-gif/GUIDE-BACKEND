@@ -21,6 +21,11 @@ DEMO = ("NICHES[0].guides.slice(0,4).forEach(g=>completed.add(NICHES[0].id+'|'+g
 # name -> (signed_in, javascript to reach the screen)
 SCREENS = {
     'landing':     (False, ''),
+    # live calls: 'live' is a free member, the '-pro' ones are Pro members; calls come from smoke.live_demo_calls()
+    'live':        (True,  "showLive()"),
+    'live-pro':    (True,  "showLive()"),
+    'live-home-pro': (True, "showHome()"),
+    'live-host-pro': (True, "showLive(); setTimeout(()=>document.querySelector('[data-live=new]').click(), 500)"),
     'landing-tour': (False, "document.getElementById('lpTour').scrollIntoView()"),
     'landing-demo': (False,"document.getElementById('lpStepOne').scrollIntoView()"),
     'landing-demo-done': (False, "document.querySelector('#lpPick button:nth-child(2)').click(); document.querySelector('.dm-done').click(); document.getElementById('lpStepOne').scrollIntoView()"),
@@ -75,6 +80,9 @@ def main():
                 for theme in (('dark', 'light') if '--light' in sys.argv else ('dark',)):
                     ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
                     st = smoke.new_state(pro=name.endswith('-pro'))
+                    if name.startswith('live'):
+                        st['wins'] = []
+                        st['live'] = {'canHost': 'host' in name, 'isOwner': False, 'calls': smoke.live_demo_calls()}
                     smoke.attach_backend(ctx, st)
                     init = f"try{{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_theme','{theme}');localStorage.setItem('guide_look','{look}');"
                     if signed_in:
@@ -88,7 +96,7 @@ def main():
                             page.evaluate(js)
                         except Exception as e:
                             print(f'  ! {name}: {e}')
-                        page.wait_for_timeout(1500 if name == 'video' else 600)
+                        page.wait_for_timeout(1500 if name == 'video' else (1100 if name.startswith('live') else 600))
                     f = os.path.join(out, f'{name}-{dev}-{theme}.png')
                     page.screenshot(path=f)
                     made.append(os.path.relpath(f, smoke.ROOT))

@@ -45,6 +45,7 @@ model User {
   winReactions         WinReaction[]
   networkRequests      NetworkRequest[]   @relation("NetworkFrom")
   networkReceived      NetworkRequest[]   @relation("NetworkTo")
+  liveRsvps            LiveRsvp[]
 
   @@index([stripeCustomerId])
   @@index([referredByCode])
@@ -292,4 +293,47 @@ model AdMatch {
   ua        String?
   ip        String?
   updatedAt DateTime @default(now())
+}
+
+// ---------- Live calls (scheduled group calls with the community) ----------
+// These three tables are also created automatically when the server starts
+// (see src/live.js), so they exist even if the schema isn't pushed.
+// The app reads/writes them with SQL rather than these models.
+
+// Experts the owner has approved to schedule calls (the owner can always host).
+model LiveHost {
+  email    String   @id
+  name     String
+  headline String?
+  addedAt  DateTime @default(now())
+}
+
+// One scheduled call. Times are UTC. The call link is only given to Pro members.
+model LiveCall {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  nicheId     String?
+  hostEmail   String
+  hostName    String
+  startsAt    DateTime
+  durationMin Int       @default(45)
+  joinUrl     String
+  status      String    @default("scheduled") // "scheduled" | "cancelled"
+  remindedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  rsvps       LiveRsvp[]
+
+  @@index([startsAt])
+}
+
+// "Remind me" -- who said they will come to a call.
+model LiveRsvp {
+  callId    String
+  userId    String
+  createdAt DateTime @default(now())
+  call      LiveCall @relation(fields: [callId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([callId, userId])
 }

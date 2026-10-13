@@ -4956,6 +4956,70 @@
   .overall .lbl{font-size:13px;}
   .overall-bar{flex:1; height:4px; margin:0 0 0 6px; border:0; background:var(--line);}
   .edit-niches-btn{color:var(--ink-soft);}
+
+  /* Live calls: the Live tab in Community, the line on Home, and the call room. */
+  #communityTabs .community-tab{display:flex; align-items:center; justify-content:center; gap:6px;}
+  #communityTabs .community-tab .ico{width:16px; height:16px; flex:none;}
+  #communityView.live-only #communityTabs{display:none;}
+  .live-list{display:flex; flex-direction:column; gap:12px;}
+  .live-hostbar{margin:0 0 14px;}
+  .live-card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 16px 14px;}
+  .live-card.is-live{border-color:rgba(var(--accent-rgb),.5);}
+  .live-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; font-size:13px; font-weight:600; color:var(--ink-soft);}
+  .live-badge{display:inline-flex; align-items:center; gap:6px; padding:3px 9px; border-radius:99px; font-size:12px; font-weight:700; background:rgba(var(--accent-rgb),.16); color:var(--grape-soft);}
+  .live-dot{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--grape); animation:livePulse 1.6s ease-in-out infinite;}
+  @keyframes livePulse{50%{opacity:.35;}}
+  .live-title{margin:0 0 4px; font:700 19px 'Space Grotesk',sans-serif; letter-spacing:-.01em; color:var(--ink);}
+  .live-host{margin-bottom:8px; font-size:14px; color:var(--ink-soft);}
+  .live-host b{font-weight:600; color:var(--ink-2);}
+  .live-desc{margin:0 0 10px; font-size:14.5px; line-height:1.55; color:var(--ink-2); white-space:pre-line;}
+  .live-meta{display:flex; flex-wrap:wrap; gap:6px 16px; margin-bottom:12px; font-size:13px; color:var(--ink-soft);}
+  .live-meta .ico{width:14px; height:14px; margin-right:5px; vertical-align:-2px;}
+  .live-actions{display:flex; flex-wrap:wrap; gap:8px;}
+  .live-btn{display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:10px 14px; border-radius:11px; border:1px solid var(--line-2); background:var(--card-2); color:var(--ink); font:600 14px 'Inter',sans-serif; text-decoration:none; cursor:pointer; touch-action:manipulation;}
+  .live-btn .ico{width:16px; height:16px;}
+  .live-btn.primary{background:var(--grape); border-color:transparent; color:var(--on-accent);}
+  .live-btn.on{border-color:rgba(var(--accent-rgb),.5); color:var(--grape-soft);}
+  .live-btn[disabled]{opacity:.6; cursor:default;}
+  .live-pro-note{display:flex; gap:10px; align-items:flex-start; margin:0 0 14px; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:var(--card); font-size:13.5px; line-height:1.5; color:var(--ink-soft);}
+  .live-pro-note .ico{width:16px; height:16px; margin-top:2px; flex:none; color:var(--grape-soft);}
+  .live-msg{margin:10px 0 0; font-size:13.5px; color:var(--ink-soft);}
+  .live-msg.err{color:rgb(var(--danger-rgb));}
+  .live-msg:empty{display:none;}
+  .live-form textarea{font-family:'Inter',sans-serif; font-size:16px; padding:9px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); outline:none; width:100%; min-height:76px; resize:vertical;}
+  .live-form textarea:focus{box-shadow:0 0 0 3px rgba(var(--accent-rgb),.2);}
+  .live-form .biz-form select{font-size:16px; width:100%;}
+  .live-form .biz-form > div{flex:1 1 200px; min-width:0;}
+  .live-form .biz-form > div.wide{flex:1 1 100%;}
+  .live-form .biz-form input, .live-form .biz-form select{width:100%;}
+  .live-form .live-hint{margin:6px 0 0; font-size:12.5px; color:var(--ink-soft); line-height:1.45;}
+  .live-hosts{margin-top:22px; border-top:1px solid var(--line); padding-top:14px;}
+  .live-hosts summary{cursor:pointer; font:600 14px 'Inter',sans-serif; color:var(--ink-2);}
+  .live-host-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14px;}
+  .live-host-row small{display:block; color:var(--ink-soft);}
+  .live-pill{display:flex; align-items:center; gap:12px; width:100%; margin:0 0 20px; padding:12px 14px; text-align:left; border-radius:14px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; font-family:'Inter',sans-serif;}
+  .live-pill.is-live{border-color:rgba(var(--accent-rgb),.5);}
+  .live-pill-ico{display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; flex:none; background:rgba(var(--accent-rgb),.14); color:var(--grape-soft);}
+  .live-pill-ico .ico{width:18px; height:18px;}
+  .live-pill-text{flex:1; min-width:0;}
+  .live-pill-text b{display:block; font:600 14.5px 'Inter',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .live-pill-text small{display:block; font-size:12.5px; color:var(--ink-soft);}
+  .live-pill-go{font:600 13px 'Inter',sans-serif; color:var(--grape-soft); flex:none;}
+  .live-room{position:fixed; inset:0; z-index:2000; display:flex; flex-direction:column; background:var(--bg);}
+  .live-room-bar{display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised);}
+  .live-room-title{display:flex; align-items:center; gap:8px; flex:1; min-width:0; font:600 15px 'Space Grotesk',sans-serif; color:var(--ink);}
+  .live-room-title span:last-child{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .live-room-body{flex:1; min-height:0; display:flex; align-items:center; justify-content:center; padding:0;}
+  .live-room-body iframe{width:100%; height:100%; border:0; background:var(--bg);}
+  .live-room-fallback{max-width:360px; padding:24px; text-align:center; color:var(--ink-soft); line-height:1.55;}
+  .live-room-fallback .live-btn{margin-top:14px;}
+  @media (max-width:560px){
+    #communityTabs .community-tab{flex-direction:column; gap:3px; padding:8px 2px; font-size:11.5px;}
+    #communityTabs .community-tab .ico{width:18px; height:18px;}
+    .live-room-bar .live-btn{padding:9px 10px; font-size:13px;}
+    .live-room-bar #liveRoomOpen{display:none;}
+  }
+  @media (prefers-reduced-motion: reduce){ .live-dot{animation:none;} }
 </style>
 </head>
 <body>
@@ -5531,6 +5595,7 @@
     <div id="homeView">
       <div id="todayStepWrap"></div>
       <div id="dailyDigestWrap"></div>
+      <div id="liveHomeWrap"></div>
       <div id="continueCardWrap"></div>
       <div id="weeklyChallengeWrap"></div>
       <div class="section-head" id="yourChaptersHead" style="display:none;">
@@ -5712,14 +5777,21 @@
     </div>
 
     <div id="communityView" style="display:none;">
-      <h2 class="page-title">Community</h2>
-      <p class="page-sub">Celebrate wins, climb the ranks, and connect with fellow entrepreneurs.</p>
+      <h2 class="page-title" id="communityTitle">Community</h2>
+      <p class="page-sub" id="communitySub">Celebrate wins, climb the ranks, and connect with fellow entrepreneurs.</p>
       <div class="community-tabs" id="communityTabs">
-        <button class="community-tab active" data-ctab="wins">🏆 Wins</button>
-        <button class="community-tab" data-ctab="leaderboard">🥇 Leaderboard</button>
-        <button class="community-tab" data-ctab="connect">🤝 Connect</button>
+        <button class="community-tab active" data-ctab="wins"><span data-ico="community"></span>Wins</button>
+        <button class="community-tab" data-ctab="leaderboard"><span data-ico="trending"></span>Leaderboard</button>
+        <button class="community-tab" data-ctab="connect"><span data-ico="handshake"></span>Connect</button>
+        <button class="community-tab" data-ctab="live" id="ctabLiveBtn" style="display:none;"><span data-ico="live"></span>Live</button>
       </div>
       <div id="communityTabContent">
+        <div id="ctabLive" class="ctab-pane" style="display:none;">
+          <p class="live-msg" id="liveNote" role="status" style="margin:0 0 12px;"></p>
+          <div id="liveHostBar"></div>
+          <div id="liveList" class="live-list"></div>
+          <div id="liveHostsAdmin"></div>
+        </div>
         <div id="ctabWins" class="ctab-pane">
           <div id="ctabWinPostArea"></div>
           <div id="ctabWinsFeed"><div class="tool-empty">Loading…</div></div>
@@ -5760,6 +5832,15 @@
 
 <div class="modal-overlay" id="upgradeOverlay">
   <div class="modal-box" id="upgradeModalBody"></div>
+</div>
+
+<div class="live-room" id="liveRoom" role="dialog" aria-modal="true" aria-label="Live call" style="display:none;">
+  <div class="live-room-bar">
+    <div class="live-room-title"><span class="live-dot" aria-hidden="true"></span><span id="liveRoomTitle">Live call</span></div>
+    <a class="live-btn" id="liveRoomOpen" target="_blank" rel="noopener noreferrer" href="#"><span data-ico="external"></span>Open in a new tab</a>
+    <button type="button" class="live-btn primary" id="liveRoomLeave"><span data-ico="x"></span>Leave</button>
+  </div>
+  <div class="live-room-body" id="liveRoomBody"></div>
 </div>
 
 <div class="modal-overlay" id="exportOverlay">
@@ -5894,7 +5975,13 @@ const ICO = {
   check:`<path d="M20 6 9 17l-5-5" />`,
   zap:`<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />`,
   repeat:`<path d="m17 2 4 4-4 4" /> <path d="M3 11v-1a4 4 0 0 1 4-4h14" /> <path d="m7 22-4-4 4-4" /> <path d="M21 13v1a4 4 0 0 1-4 4H3" />`,
-  trending:`<polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /> <polyline points="16 7 22 7 22 13" />`
+  trending:`<polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /> <polyline points="16 7 22 7 22 13" />`,
+  live:`<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/> <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/> <circle cx="12" cy="12" r="2"/> <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/> <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/>`,
+  calendarPlus:`<path d="M8 2v4"/> <path d="M16 2v4"/> <path d="M21 13V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8"/> <path d="M3 10h18"/> <path d="M16 19h6"/> <path d="M19 16v6"/>`,
+  users:`<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/> <circle cx="9" cy="7" r="4"/> <path d="M22 21v-2a4 4 0 0 0-3-3.87"/> <path d="M16 3.13a4 4 0 0 1 0 7.75"/>`,
+  x:`<path d="M18 6 6 18"/> <path d="m6 6 12 12"/>`,
+  plus:`<path d="M5 12h14"/> <path d="M12 5v14"/>`,
+  external:`<path d="M15 3h6v6"/> <path d="M10 14 21 3"/> <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>`,
 };
 const ICON_FOR_CHAPTER = {'🎥':'video','📷':'camera','📈':'megaphone','📊':'candles','🛒':'bag','🎨':'pentool','✍':'penline','📱':'phone','🌟':'star','🧭':'compass','🗂':'folders','🔧':'tools','🏠':'home','🎬':'clapper','💼':'briefcase','💰':'handshake','🧽':'spray','🌿':'leaf','🚗':'car','🛠':'hammer','🐾':'paw'};
 function ico(name, cls){ return '<svg class="ico' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (ICO[name] || '') + '</svg>'; }
@@ -8388,6 +8475,7 @@ function goToNotificationTarget(link){
   if(!link) return;
   if(link.view === 'invite') showInvite();
   else if(link.view === 'partners') showPartners();
+  else if(link.view === 'live') showLive();
   else if(link.view === 'network'){
     // "Someone wants to connect" / "Connection accepted" → Community → Connect
     const tabs = document.getElementById('communityTabs');
@@ -8503,21 +8591,38 @@ document.getElementById('bottomTabGuider').addEventListener('click', ()=>{
 // sight until the Wins board has real posts in it. Checked once per sign-in; the
 // moment there are enough, the tab and the Mentors directory appear on their own.
 const COMMUNITY_MIN_POSTS = 5;
-function applyCommunityVisibility(show){
+// Live calls are a reason for the tab to exist even before there are posts: with calls scheduled (or
+// for a host who can schedule one) the tab shows up as just "Live calls", without the empty Wins board.
+let communityFull = false;
+const COMMUNITY_SUB_DEFAULT = 'Celebrate wins, climb the ranks, and connect with fellow entrepreneurs.';
+function applyCommunityVisibility(show, liveOn){
+  communityFull = !!show;
   const tab = document.getElementById('bottomTabCommunity');
-  if(tab) tab.style.display = show ? '' : 'none';
+  if(tab) tab.style.display = (show || liveOn) ? '' : 'none';
   document.querySelectorAll('[data-sub="mentors"]').forEach(el=>{ el.style.display = show ? '' : 'none'; });
+  const view = document.getElementById('communityView');
+  if(view) view.classList.toggle('live-only', !show && !!liveOn);
+  const liveBtn = document.getElementById('ctabLiveBtn');
+  if(liveBtn) liveBtn.style.display = liveOn ? '' : 'none';
+  const title = document.getElementById('communityTitle'), sub = document.getElementById('communitySub');
+  if(title) title.textContent = (!show && liveOn) ? 'Live calls' : 'Community';
+  if(sub) sub.textContent = (!show && liveOn) ? 'Group calls with experts, open to Pro members.' : COMMUNITY_SUB_DEFAULT;
 }
 let communityChecked = false;
 async function checkCommunityActivity(){
   if(communityChecked) return;
   communityChecked = true;
-  applyCommunityVisibility(false);
+  applyCommunityVisibility(false, false);
+  let wins = [], liveOn = false;
   try{
     const data = await apiFetch('/wins');
-    const wins = (data && data.wins) || [];
-    applyCommunityVisibility(wins.length >= COMMUNITY_MIN_POSTS);
+    wins = (data && data.wins) || [];
   }catch(e){ /* leave it hidden if we can't tell */ }
+  try{
+    const l = await loadLive();
+    liveOn = l.calls.length > 0 || l.canHost;
+  }catch(e){ /* no live calls, or the server isn't ready for them yet */ }
+  applyCommunityVisibility(wins.length >= COMMUNITY_MIN_POSTS, liveOn);
 }
 
 document.getElementById('bottomTabCommunity').addEventListener('click', ()=>{
@@ -8535,6 +8640,7 @@ logoutBtn.addEventListener('click', ()=>{
   completed = new Set();
   currentNicheId = null;
   streak = { count: 0, lastDate: null };
+  liveInfo = null; liveHosts = null; communityChecked = false; // the next person to sign in starts fresh
   appScreen.style.display = 'none';
   authScreen.style.display = 'none';
   landingView.style.display = '';
@@ -8858,6 +8964,7 @@ async function handlePostCheckoutReturn(){
   if(action.type === 'today') showToday();
   else if(action.type === 'business') showBusiness();
   else if(action.type === 'stats') showStats();
+  else if(action.type === 'live') showLive();
   else if(action.type === 'tab' && action.nicheId){
     openNiche(action.nicheId);
     setTimeout(()=>{
@@ -10071,6 +10178,8 @@ function renderHome(){
     // clutter, no Your/More split, just everything in one place to jump
     // to quickly.
     renderDailyDigest();
+    const liveWrapEl = document.getElementById('liveHomeWrap');
+    if(liveWrapEl) liveWrapEl.innerHTML = '';
     continueWrap.innerHTML = '';
     renderTodayStep(true);
     yourChaptersHead.style.display = 'none';
@@ -10083,6 +10192,7 @@ function renderHome(){
   }
 
   renderDailyDigest();
+  renderLiveHome();
   // Today's step is the one thing to do next. When it is there, it takes the place of "Continue where you left off".
   const hasStep = renderTodayStep();
   if(hasStep){
@@ -11214,8 +11324,11 @@ function renderCommunityCards(){
 // ---------- Community tab view ----------
 function showCommunityTab(){
   hideAllViews();
-  document.getElementById('communityView').style.display = '';
+  const view = document.getElementById('communityView');
+  view.style.display = '';
   setActiveBottomTab('bottomTabCommunity');
+  // With only live calls to show, there is no tab row: go straight to them
+  if(view.classList.contains('live-only')){ switchCommunityPane('live'); return; }
   // Load the active sub-tab
   const activeTab = document.getElementById('communityTabs').querySelector('.community-tab.active');
   if(activeTab) switchCommunityPane(activeTab.dataset.ctab);
@@ -11244,7 +11357,339 @@ function switchCommunityPane(which){
     document.getElementById('ctabConnect').style.animation = 'none';
     requestAnimationFrame(()=>{ document.getElementById('ctabConnect').style.animation = ''; });
     loadCommunityNetwork();
+  } else if(which === 'live'){
+    document.getElementById('ctabLive').style.display = '';
+    loadLivePane(true);
   }
+}
+
+// ---------- Live calls ----------
+// Scheduled group calls with the owner and the experts the owner approves. Everyone can see the
+// schedule; Pro members join. The server decides who may join and only hands out the call link
+// once the room is open, so nothing here can open a call for someone who shouldn't be in it.
+let liveInfo = null, liveInfoAt = 0, liveHosts = null, liveRoomOpener = null;
+const LIVE_OPENS_MIN = 10; // the room opens this many minutes before the start (the server checks it too)
+const LIVE_EMBED_HOSTS = /(^|\.)(daily\.co|whereby\.com|jit\.si)$/i; // room links that can be shown inside the app
+const liveEsc = (v)=> String(v == null ? '' : v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function loadLive(force){
+  if(!force && liveInfo && Date.now() - liveInfoAt < 30000) return liveInfo;
+  const d = await apiFetch('/live');
+  liveInfo = { isPro: !!(d && d.isPro), canHost: !!(d && d.canHost), isOwner: !!(d && d.isOwner), calls: (d && Array.isArray(d.calls)) ? d.calls : [] };
+  liveInfoAt = Date.now();
+  return liveInfo;
+}
+function liveStart(c){ return new Date(c.startsAt).getTime(); }
+function liveEnd(c){ return liveStart(c) + c.durationMin * 60000; }
+function liveState(c){ const n = Date.now(); return (n >= liveStart(c) && n < liveEnd(c)) ? 'live' : (n < liveStart(c) ? 'soon' : 'over'); }
+function liveCanOpen(c){ return !!c.canJoin || Date.now() >= liveStart(c) - LIVE_OPENS_MIN * 60000; }
+function liveWhen(c){
+  const d = new Date(c.startsAt), now = new Date(), tomorrow = new Date(now.getTime() + 864e5);
+  const day = d.toDateString() === now.toDateString() ? 'Today'
+    : d.toDateString() === tomorrow.toDateString() ? 'Tomorrow'
+    : d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+  return day + ' · ' + d.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+}
+function liveCountdown(c){
+  const m = Math.round((liveStart(c) - Date.now()) / 60000);
+  if(m <= 0 || m >= 360) return '';
+  return 'Starts in ' + (m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : ''));
+}
+function liveNote(text, isErr){
+  const el = document.getElementById('liveNote');
+  if(!el) return;
+  el.textContent = text || '';
+  el.classList.toggle('err', !!isErr);
+}
+
+function liveCardHtml(c, info){
+  const st = liveState(c), open = liveCanOpen(c), member = info.isPro || c.mine;
+  const niche = c.nicheId ? NICHES.find(n => n.id === c.nicheId) : null;
+  const count = liveCountdown(c);
+  const badge = st === 'live' ? `<span class="live-badge"><span class="live-dot"></span>Live now</span>`
+    : (count ? `<span class="live-badge">${liveEsc(count)}</span>` : '');
+  let actions = '';
+  if(member && open) actions += `<button type="button" class="live-btn primary" data-live="join" data-id="${liveEsc(c.id)}">Join call</button>`;
+  if(member && !open) actions += `<button type="button" class="live-btn${c.iGo ? ' on' : ''}" data-live="remind" data-id="${liveEsc(c.id)}">${ico(c.iGo ? 'check' : 'bell')} ${c.iGo ? 'Reminder set' : 'Remind me'}</button>`;
+  if(member) actions += `<button type="button" class="live-btn" data-live="cal" data-id="${liveEsc(c.id)}">${ico('calendarPlus')} Add to calendar</button>`;
+  if(!member) actions += `<button type="button" class="live-btn primary" data-live="unlock">${ico('lock')} Unlock with Pro</button>`;
+  if(c.mine || info.isOwner){
+    actions += `<button type="button" class="live-btn" data-live="edit" data-id="${liveEsc(c.id)}">${ico('pencil')} Edit</button>`
+             + `<button type="button" class="live-btn" data-live="cancel" data-id="${liveEsc(c.id)}">Cancel call</button>`;
+  }
+  return `<article class="live-card${st === 'live' ? ' is-live' : ''}">
+    <div class="live-top"><span>${liveEsc(liveWhen(c))} · ${c.durationMin} min</span>${badge}</div>
+    <h3 class="live-title">${liveEsc(c.title)}</h3>
+    <div class="live-host">with <b>${liveEsc(c.hostName)}</b>${c.hostHeadline ? ' · ' + liveEsc(c.hostHeadline) : ''}</div>
+    ${c.description ? `<p class="live-desc">${liveEsc(c.description)}</p>` : ''}
+    <div class="live-meta">
+      ${niche ? `<span>${nicheIco(niche)} ${liveEsc(niche.name)}</span>` : ''}
+      ${member && c.going > 0 ? `<span>${ico('users')} ${c.going} going</span>` : ''}
+    </div>
+    <div class="live-actions">${actions}</div>
+  </article>`;
+}
+
+function renderLiveList(){
+  const list = document.getElementById('liveList');
+  if(!list || !liveInfo) return;
+  const info = liveInfo;
+  let html = '';
+  if(!info.isPro && info.calls.length){
+    html += `<div class="live-pro-note">${ico('lock')}<span>Live calls are for Pro members. You can see what is coming up, and Pro members join in one tap.</span></div>`;
+  }
+  html += info.calls.length
+    ? info.calls.map(c => liveCardHtml(c, info)).join('')
+    : `<div class="tool-empty">${info.canHost ? 'No calls scheduled yet. Tap "Schedule a call" to add the first one.' : 'No calls are scheduled right now. When a host schedules one, you will get a notification.'}</div>`;
+  list.innerHTML = html;
+}
+function renderLiveHostBar(){
+  const bar = document.getElementById('liveHostBar');
+  if(!bar || !liveInfo || document.getElementById('liveForm')) return; // leave an open form alone
+  bar.innerHTML = liveInfo.canHost
+    ? `<div class="live-hostbar"><button type="button" class="biz-primary-btn" data-live="new">${ico('plus')} Schedule a call</button></div>` : '';
+}
+async function renderLiveHostsAdmin(){
+  const wrap = document.getElementById('liveHostsAdmin');
+  if(!wrap) return;
+  if(!liveInfo || !liveInfo.isOwner){ wrap.innerHTML = ''; return; }
+  const det = wrap.querySelector('details');
+  const keepOpen = !!(det && det.open);
+  const typed = ['lhEmail', 'lhName', 'lhHead'].map(id => { const e = document.getElementById(id); return e ? e.value : ''; });
+  try{ liveHosts = (await apiFetch('/live/hosts')).hosts || []; }catch(e){ liveHosts = liveHosts || []; }
+  wrap.innerHTML = `<details class="live-hosts"${keepOpen ? ' open' : ''}>
+    <summary>Approved hosts (${liveHosts.length})</summary>
+    ${liveHosts.map(h => `<div class="live-host-row"><div><b>${liveEsc(h.name)}</b><small>${liveEsc(h.email)}${h.headline ? ' · ' + liveEsc(h.headline) : ''}</small></div><button type="button" class="tr-act" data-live="host-remove" data-email="${liveEsc(h.email)}">Remove</button></div>`).join('')}
+    <div class="ledger-form live-form" style="margin-top:14px;">
+      <div class="biz-form">
+        <div><label class="ledger-field-lbl" for="lhEmail">Their email (the one they sign in with)</label><input type="email" id="lhEmail" autocomplete="off" value="${liveEsc(typed[0])}"></div>
+        <div><label class="ledger-field-lbl" for="lhName">Name members see</label><input type="text" id="lhName" maxlength="60" autocomplete="off" value="${liveEsc(typed[1])}"></div>
+        <div class="wide"><label class="ledger-field-lbl" for="lhHead">One line about them (optional)</label><input type="text" id="lhHead" maxlength="80" autocomplete="off" placeholder="e.g. Real estate investor, 12 years" value="${liveEsc(typed[2])}"></div>
+      </div>
+      <button type="button" class="biz-primary-btn" data-live="host-add" style="width:100%;">Approve as a host</button>
+      <p class="live-msg" id="lhMsg" role="status"></p>
+    </div>
+  </details>`;
+}
+async function loadLivePane(force){
+  const list = document.getElementById('liveList');
+  if(!list) return;
+  if(!liveInfo) list.innerHTML = skeletonCards(2);
+  try{ await loadLive(force); }
+  catch(e){
+    list.innerHTML = '<div class="tool-empty">Could not load the live calls. Check your connection and try again.</div>';
+    return;
+  }
+  const liveBtn = document.getElementById('ctabLiveBtn');
+  if(liveBtn && (liveInfo.calls.length || liveInfo.canHost)) liveBtn.style.display = '';
+  renderLiveHostBar(); renderLiveList(); renderLiveHostsAdmin();
+}
+// keeps "Starts in 20 min", "Live now" and the Join button fresh while the Live screen is open
+setInterval(()=>{
+  const pane = document.getElementById('ctabLive');
+  if(pane && pane.offsetParent && liveInfo && !document.hidden) renderLiveList();
+}, 30000);
+
+function liveLocalInput(iso){
+  const d = new Date(iso), p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+async function openLiveForm(c){
+  const bar = document.getElementById('liveHostBar');
+  if(!bar || !liveInfo) return;
+  liveNote('');
+  if(liveInfo.isOwner && !c && !liveHosts){
+    try{ liveHosts = (await apiFetch('/live/hosts')).hosts || []; }catch(e){ liveHosts = []; }
+  }
+  const lens = [30, 45, 60, 90];
+  if(c && !lens.includes(c.durationMin)) lens.push(c.durationMin);
+  const niches = '<option value="">Any chapter</option>' + NICHES.map(n => `<option value="${liveEsc(n.id)}"${c && c.nicheId === n.id ? ' selected' : ''}>${liveEsc(n.name)}</option>`).join('');
+  const hostPick = (liveInfo.isOwner && !c)
+    ? `<div><label class="ledger-field-lbl" for="lfHost">Host</label><select id="lfHost"><option value="">Me</option>${(liveHosts || []).map(h => `<option value="${liveEsc(h.email)}">${liveEsc(h.name)}</option>`).join('')}</select></div>` : '';
+  bar.innerHTML = `<div class="ledger-form live-form" id="liveForm" data-edit="${c ? liveEsc(c.id) : ''}">
+    <div class="ledger-form-head"><h4>${c ? 'Edit call' : 'Schedule a call'}</h4><button type="button" class="tr-act" data-live="form-close">Cancel</button></div>
+    <div class="biz-form">
+      <div class="wide"><label class="ledger-field-lbl" for="lfTitle">Title</label><input type="text" id="lfTitle" maxlength="80" autocomplete="off" placeholder="e.g. Real estate Q&amp;A: your first deal" value="${c ? liveEsc(c.title) : ''}"></div>
+      <div class="wide"><label class="ledger-field-lbl" for="lfDesc">What it covers (optional)</label><textarea id="lfDesc" maxlength="600" placeholder="Who it is for and what you will go through">${c ? liveEsc(c.description || '') : ''}</textarea></div>
+      <div><label class="ledger-field-lbl" for="lfNiche">Chapter</label><select id="lfNiche">${niches}</select></div>
+      <div><label class="ledger-field-lbl" for="lfLen">Length</label><select id="lfLen">${lens.map(m => `<option value="${m}"${(c ? c.durationMin : 45) === m ? ' selected' : ''}>${m} minutes</option>`).join('')}</select></div>
+      <div><label class="ledger-field-lbl" for="lfWhen">Date and time (your time)</label><input type="datetime-local" id="lfWhen" min="${liveLocalInput(new Date().toISOString())}" value="${c ? liveLocalInput(c.startsAt) : ''}"></div>
+      ${hostPick}
+      <div class="wide"><label class="ledger-field-lbl" for="lfLink">Call link</label><input type="url" id="lfLink" autocomplete="off" placeholder="https://" value="${c ? liveEsc(c.joinUrl || '') : ''}">
+        <p class="live-hint">Paste a room link. A Daily or Whereby room opens inside the app; Zoom and Google Meet links open in a new tab. Only Pro members get the link, and only shortly before the call starts.</p></div>
+    </div>
+    <button type="button" class="biz-primary-btn" data-live="form-save" style="width:100%;">${c ? 'Save changes' : 'Schedule call'}</button>
+    <p class="live-msg" id="lfMsg" role="status"></p>
+  </div>`;
+  document.getElementById('lfTitle').focus();
+}
+function closeLiveForm(){
+  const bar = document.getElementById('liveHostBar');
+  if(bar) bar.innerHTML = '';
+  renderLiveHostBar();
+}
+async function saveLiveForm(btn){
+  const form = document.getElementById('liveForm');
+  const msg = document.getElementById('lfMsg');
+  if(!form) return;
+  const editId = form.dataset.edit;
+  const when = document.getElementById('lfWhen').value;
+  const body = {
+    title: document.getElementById('lfTitle').value,
+    description: document.getElementById('lfDesc').value,
+    nicheId: document.getElementById('lfNiche').value,
+    durationMin: parseInt(document.getElementById('lfLen').value, 10),
+    startsAt: when ? new Date(when).toISOString() : '',
+    joinUrl: document.getElementById('lfLink').value,
+  };
+  const hostSel = document.getElementById('lfHost');
+  if(hostSel && hostSel.value) body.hostEmail = hostSel.value;
+  btn.disabled = true; msg.classList.remove('err'); msg.textContent = 'Saving…';
+  try{
+    await apiFetch(editId ? '/live/' + encodeURIComponent(editId) : '/live', { method: editId ? 'PATCH' : 'POST', body: JSON.stringify(body) });
+    closeLiveForm();
+    await loadLivePane(true);
+    liveNote(editId ? 'Saved.' : 'Call scheduled. Pro members have been notified.');
+  }catch(e){
+    msg.classList.add('err'); msg.textContent = e.message || 'Could not save the call.';
+    btn.disabled = false;
+  }
+}
+async function cancelLiveCall(c){
+  if(!c || !confirm('Cancel "' + c.title + '"? Members who set a reminder will be told.')) return;
+  try{
+    await apiFetch('/live/' + encodeURIComponent(c.id), { method: 'DELETE' });
+    await loadLivePane(true);
+    liveNote('Call cancelled.');
+  }catch(e){ liveNote(e.message || 'Could not cancel the call.', true); }
+}
+async function toggleLiveReminder(c, btn){
+  if(!c) return;
+  btn.disabled = true;
+  try{
+    await apiFetch('/live/' + encodeURIComponent(c.id) + '/rsvp', { method: c.iGo ? 'DELETE' : 'POST' });
+    c.iGo = !c.iGo; c.going = Math.max(0, (c.going || 0) + (c.iGo ? 1 : -1));
+    renderLiveList();
+  }catch(e){
+    btn.disabled = false;
+    if(e.status === 403 && e.body && e.body.upgrade) openUpgradeModal({ type: 'live' });
+    else liveNote(e.message || 'Could not set the reminder.', true);
+  }
+}
+// A calendar file, so the call shows up in the phone's own calendar (with an alert 15 minutes before) even when the app is closed.
+function downloadLiveIcs(c){
+  if(!c) return;
+  const stamp = t => new Date(t).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const esc = s => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//The Guide//Live calls//EN', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT',
+    'UID:' + c.id + '@theguide.company', 'DTSTAMP:' + stamp(Date.now()), 'DTSTART:' + stamp(liveStart(c)), 'DTEND:' + stamp(liveEnd(c)),
+    'SUMMARY:' + esc('The Guide Live: ' + c.title),
+    'DESCRIPTION:' + esc('Live call with ' + c.hostName + '. Join from the app at theguide.company: open Community, then Live.'),
+    'BEGIN:VALARM', 'TRIGGER:-PT15M', 'ACTION:DISPLAY', 'DESCRIPTION:Starting soon', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'];
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'the-guide-live-call.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
+}
+
+async function joinLiveCall(id, btn){
+  liveNote('');
+  btn.disabled = true;
+  try{
+    openLiveRoom(await apiFetch('/live/' + encodeURIComponent(id) + '/join'));
+  }catch(e){
+    if(e.status === 403 && e.body && e.body.upgrade) openUpgradeModal({ type: 'live' });
+    else liveNote(e.message || 'Could not open the call.', true);
+  }finally{ btn.disabled = false; }
+}
+// Daily, Whereby and Jitsi rooms open inside the app. Anything else (Zoom, Google Meet) opens in a new tab,
+// because those sites do not allow being shown inside another page.
+function openLiveRoom(r){
+  let host = '';
+  try{ host = new URL(r.joinUrl).hostname; }catch(e){}
+  const embed = LIVE_EMBED_HOSTS.test(host);
+  if(!embed && window.open(r.joinUrl, '_blank', 'noopener')) return;
+  const body = document.getElementById('liveRoomBody');
+  document.getElementById('liveRoomTitle').textContent = r.title || 'Live call';
+  document.getElementById('liveRoomOpen').href = r.joinUrl;
+  if(embed){
+    body.innerHTML = '<iframe title="Live call" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write" referrerpolicy="no-referrer"></iframe>';
+    body.firstChild.src = r.joinUrl;
+  } else {
+    body.innerHTML = `<div class="live-room-fallback">Your browser blocked the new tab. Tap the button to open the call.<br><a class="live-btn primary" href="${liveEsc(r.joinUrl)}" target="_blank" rel="noopener noreferrer">Open the call</a></div>`;
+  }
+  liveRoomOpener = document.activeElement;
+  document.getElementById('liveRoom').style.display = '';
+  document.body.style.overflow = 'hidden';
+}
+function closeLiveRoom(){
+  document.getElementById('liveRoomBody').innerHTML = '';
+  document.getElementById('liveRoom').style.display = 'none';
+  document.body.style.overflow = '';
+  if(liveRoomOpener && liveRoomOpener.focus) liveRoomOpener.focus();
+}
+document.getElementById('liveRoomLeave').addEventListener('click', closeLiveRoom);
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && document.getElementById('liveRoom').style.display !== 'none') closeLiveRoom(); });
+
+document.getElementById('ctabLive').addEventListener('click', async (e)=>{
+  const el = e.target.closest('[data-live]');
+  if(!el) return;
+  const act = el.dataset.live;
+  const call = liveInfo && liveInfo.calls.find(c => c.id === el.dataset.id);
+  if(act === 'join') joinLiveCall(el.dataset.id, el);
+  else if(act === 'unlock') openUpgradeModal({ type: 'live' });
+  else if(act === 'remind') toggleLiveReminder(call, el);
+  else if(act === 'cal') downloadLiveIcs(call);
+  else if(act === 'new') openLiveForm(null);
+  else if(act === 'edit') openLiveForm(call);
+  else if(act === 'cancel') cancelLiveCall(call);
+  else if(act === 'form-close') closeLiveForm();
+  else if(act === 'form-save') saveLiveForm(el);
+  else if(act === 'host-add' || act === 'host-remove'){
+    const msg = document.getElementById('lhMsg');
+    el.disabled = true;
+    try{
+      if(act === 'host-add'){
+        const r = await apiFetch('/live/hosts', { method: 'POST', body: JSON.stringify({
+          email: document.getElementById('lhEmail').value, name: document.getElementById('lhName').value, headline: document.getElementById('lhHead').value }) });
+        ['lhEmail', 'lhName', 'lhHead'].forEach(id => { document.getElementById(id).value = ''; });
+        await renderLiveHostsAdmin();
+        const m = document.getElementById('lhMsg');
+        if(m) m.textContent = r && r.accountFound ? 'Approved. They have been told.' : 'Approved. They can host once they sign up with that email.';
+      } else {
+        await apiFetch('/live/hosts/' + encodeURIComponent(el.dataset.email), { method: 'DELETE' });
+        await renderLiveHostsAdmin();
+      }
+    }catch(err){
+      if(msg){ msg.classList.add('err'); msg.textContent = err.message || 'Something went wrong.'; }
+      el.disabled = false;
+    }
+  }
+});
+
+function showLive(){
+  document.getElementById('communityTabs').querySelectorAll('.community-tab').forEach(t => t.classList.toggle('active', t.dataset.ctab === 'live'));
+  document.getElementById('ctabLiveBtn').style.display = '';
+  showCommunityTab();
+}
+// One line on Home about the next call, so nobody has to go looking for it.
+function renderLiveHome(){
+  const wrap = document.getElementById('liveHomeWrap');
+  if(!wrap) return;
+  const draw = ()=>{
+    const next = liveInfo && liveInfo.calls.filter(c => liveState(c) !== 'over').sort((a, b) => liveStart(a) - liveStart(b))[0];
+    if(!next || liveStart(next) - Date.now() > 7 * 864e5){ wrap.innerHTML = ''; return; }
+    const st = liveState(next);
+    wrap.innerHTML = `<button type="button" class="live-pill${st === 'live' ? ' is-live' : ''}" id="livePill">
+      <span class="live-pill-ico">${ico('live')}</span>
+      <span class="live-pill-text"><b>${liveEsc((st === 'live' ? 'Live now: ' : '') + next.title)}</b><small>${liveEsc((st === 'live' ? '' : liveWhen(next) + ' · ') + 'with ' + next.hostName)}</small></span>
+      <span class="live-pill-go">${st === 'live' ? 'Open' : 'Details'}</span></button>`;
+    document.getElementById('livePill').addEventListener('click', showLive);
+    applyCommunityVisibility(communityFull, true); // there is a call, so there is somewhere to go
+  };
+  if(liveInfo) draw();
+  if(!liveInfo || Date.now() - liveInfoAt >= 30000) loadLive().then(draw).catch(()=>{ if(!liveInfo) wrap.innerHTML = ''; });
 }
 
 // ---------- Earn tab view ----------
