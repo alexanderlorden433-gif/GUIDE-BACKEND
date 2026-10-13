@@ -40,6 +40,7 @@ router.get('/', async (req, res) => {
   ]);
 
   res.json({
+    id: user.id, // the app uses it to mark the person's own posts and reactions
     email: user.email,
     isPro: (isOwner || isPreview) ? true : (user.isPro || hasReferralBonus),
     planType: (isOwner || isPreview) ? 'yearly' : user.planType,

@@ -80,8 +80,13 @@ def new_state(pro=True):
 def fixture(state, method, path, body):
     """Response for a real backend route, shaped like src/routes/*."""
     p = path
+    if p == '/api/account' and method == 'GET' and state.get('account'):
+        # a test can change what the account looks like, e.g. {'trialEligible': False}
+        rest = {k: v for k, v in state.items() if k != 'account'}
+        status, payload = fixture(rest, method, path, body)
+        return status, {**payload, **state['account']}
     if p == '/api/account' and method == 'GET':
-        return 200, {'email': 'smoke@theguide.test', 'isPro': state['pro'], 'planType': 'yearly' if state['pro'] else None,
+        return 200, {'id': 'u_smoke', 'email': 'smoke@theguide.test', 'isPro': state['pro'], 'planType': 'yearly' if state['pro'] else None,
                      'joinedAt': state.get('joinedAt'),
                      'trialEligible': True,
                      'data': state['data'], 'referralCode': 'SMOKE1', 'referredCount': 0, 'referredProCount': 0, 'bonusProUntil': None}
@@ -1379,6 +1384,69 @@ def step_one_demo(browser, base):
         ctx.close()
 
 
+def startup_account(browser, base):
+    """Coming back on a saved login: the app keeps who you are (your own posts say "(you)" and can be deleted)
+    and whether a free trial is still on offer (only for people who have never paid)."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    # 1) own win: marked "(you)" with a delete button; someone else's isn't
+    step = ['returning: own posts']
+    ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
+    st = new_state(True)
+    st['wins'] = [{'id': 'w_mine', 'authorId': 'u_smoke', 'authorName': 'Smoke Test', 'body': 'Booked my first shoot', 'emoji': '🎉',
+                   'createdAt': TODAY, 'reactions': [{'id': 'r1', 'userId': 'u_smoke', 'emoji': '🔥'}]},
+                  {'id': 'w_other', 'authorId': 'u_other', 'authorName': 'Someone', 'body': 'Got my first client', 'emoji': '🏆',
+                   'createdAt': TODAY, 'reactions': []}]
+    attach_backend(ctx, st)
+    ctx.add_init_script(init)
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'the app did not open')
+    else:
+        page.wait_for_timeout(600)
+        page.evaluate("loadWins()"); page.wait_for_timeout(800)
+        got = page.evaluate("""(()=>{ const f = document.getElementById('winsFeed'); const cards = [...f.children];
+          const mine = cards.find(c => c.querySelector('[data-id="w_mine"]')); const other = cards.find(c => c.querySelector('[data-id="w_other"]'));
+          return {id: currentUserId, mineYou: !!mine && mine.innerText.includes("(you)"), mineDel: !!(mine && mine.querySelector('.win-delete-btn')),
+                  mineFire: !!(mine && mine.querySelector('.win-react-btn.active')), otherDel: !!(other && other.querySelector('.win-delete-btn'))}; })()""")
+        if got['id'] != 'u_smoke':
+            problem(step[0], 'after coming back on a saved login the app forgets who you are', got)
+        elif not (got['mineYou'] and got['mineDel'] and got['mineFire']) or got['otherDel']:
+            problem(step[0], 'your own win should say "(you)", show your reaction and have a delete button (and only yours)', got)
+        else:
+            ok(step[0], 'your own win says "(you)", shows your reaction and can be deleted')
+    finish(st, step[0])
+    ctx.close()
+    # 2) trial offer: only for people who have never paid, both after logging in and on a saved login
+    for how in ('saved login', 'log in'):
+        for eligible in (True, False):
+            step = [f'returning ({how}): trial offer, {"never paid" if eligible else "paid before"}']
+            ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+            st = new_state(False); st['account'] = {'trialEligible': eligible}
+            attach_backend(ctx, st)
+            ctx.add_init_script(init if how == 'saved login' else "try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+            page = ctx.new_page(); watch_errors(page, step)
+            page.goto(base + '/', wait_until='load')
+            if how == 'log in':
+                page.evaluate("document.getElementById('landingLoginBtn').click()")
+                page.wait_for_timeout(300)
+                page.fill('#authEmail', 'smoke@theguide.test'); page.fill('#authPassword', 'smoke-pass-123')
+                page.evaluate("document.getElementById('authSubmitBtn').click()")
+            if not visible(page, '#appScreen', 10000):
+                problem(step[0], 'the app did not open'); finish(st, step[0]); ctx.close(); continue
+            page.wait_for_timeout(600)
+            page.evaluate("openUpgradeModal()"); page.wait_for_timeout(900)
+            offer = page.evaluate("!!document.querySelector('#upgradeStart [data-trial=\"1\"]')")
+            if offer != eligible:
+                problem(step[0], 'the free-trial choice should show only to people who have never paid'
+                                 + ('' if eligible else ' — this person would be promised "nothing charged today" and then billed'))
+            else:
+                ok(step[0], 'free-trial choice ' + ('offered' if eligible else 'not offered; billed-today wording instead'))
+            close_paywall(page)
+            finish(st, step[0])
+            ctx.close()
+
+
 def account_settings(browser, base):
     """Account settings: fits the screen, the title and close button stay put, the form scrolls inside the box so
     every part (including Delete) can be reached, and the profile and password forms still work."""
@@ -1697,6 +1765,7 @@ def main():
         returning_learner(browser, base)
         daily_step(browser, base)
         niche_burst(browser, base)
+        startup_account(browser, base)
         step_one_demo(browser, base)
         account_settings(browser, base)
         browser.close()

@@ -7974,7 +7974,7 @@ async function handleAuthSubmit(){
       });
       setAuthToken(result.token);
       const account = await apiFetch('/account');
-      await loginApp(result.user.email, Object.assign({}, account.data, { isPro: account.isPro, planType: account.planType, joinedAt: account.joinedAt }), result.user.id);
+      await loginApp(result.user.email, Object.assign({}, account.data, { isPro: account.isPro, planType: account.planType, joinedAt: account.joinedAt, trialEligible: account.trialEligible }), result.user.id);
     }
   }catch(err){
     authError.textContent = err.body?.error || err.message || "Something went wrong — please try again.";
@@ -8410,7 +8410,7 @@ setLook(currentLook());
   if(!authToken) return;
   try{
     const account = await apiFetch('/account');
-    await loginApp(account.email, Object.assign({}, account.data, { isPro: account.isPro, planType: account.planType, joinedAt: account.joinedAt }), account.id);
+    await loginApp(account.email, Object.assign({}, account.data, { isPro: account.isPro, planType: account.planType, joinedAt: account.joinedAt, trialEligible: account.trialEligible }), account.id);
     await handlePostCheckoutReturn();
   }catch(e){
     // token expired/invalid — clear it and let the landing page show normally
