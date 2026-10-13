@@ -1632,6 +1632,22 @@ def daily_step(browser, base):
     else:
         ok(step[0], "a new learner sees one first step on Home: the first lesson and what to do")
     no_sideways_scroll(page, step[0]); shot(page, 'phone-10-today-step')
+    # Today's step is the first thing on Home: near the top, above the chapters; the "due" line only appears when something is due
+    lead = page.evaluate("""(()=>{ const c = document.getElementById('todayStepCard').getBoundingClientRect();
+      const g = document.getElementById('nicheGrid').getBoundingClientRect();
+      const d = document.getElementById('dailyDigestWrap');
+      const empty = !d.innerHTML.trim();
+      ensureToolsData(); toolsData.video = toolsData.video || {}; const keep = toolsData.video.followups;
+      toolsData.video.followups = [{who: 'Dana', date: '2020-01-01'}]; renderDailyDigest();
+      const due = {text: d.textContent.replace(/\\s+/g, ' ').trim(), below: d.getBoundingClientRect().top >= c.bottom - 1};
+      toolsData.video.followups = keep; renderDailyDigest();
+      return {cardTop: Math.round(c.top), gridTop: Math.round(g.top), emptyWhenNothingDue: empty, due, emptyAgain: !d.innerHTML.trim()}; })()""")
+    if lead['cardTop'] > 260 or lead['cardTop'] >= lead['gridTop']:
+        problem(step[0], "Today's step should be the first thing on Home, above the chapters", lead)
+    elif not lead['emptyWhenNothingDue'] or not lead['emptyAgain'] or 'due today or overdue' not in lead['due']['text'] or not lead['due']['below']:
+        problem(step[0], "the 'due today' line should show under Today's step only when something is due", lead)
+    else:
+        ok(step[0], f"Today's step leads Home ({lead['cardTop']}px from the top, above the chapters); the 'due' line shows only when something is due")
 
     # 2) tapping it opens that lesson, ready to read, in the list
     page.locator('#todayStepGo').click(timeout=3000); page.wait_for_timeout(500)
