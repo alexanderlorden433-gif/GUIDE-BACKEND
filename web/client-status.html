@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Project status</title>
+<link rel="icon" href="icons/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* A client's read-only project page (sent as a link from the Business tab). Forest & Gold, dark. */
+  :root{
+    --bg:#0C1310; --card:#121C17; --line:#1F2E26; --ink:#EAF0EC; --muted:#8CA196;
+    --grape:#3FCB93; --gold:#E8B94A; --accent-rgb:63,203,147; --danger:#FF6B6B;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.55;
+       background-image:radial-gradient(circle at 10% 0%,rgba(var(--accent-rgb),.10) 0,transparent 45%),radial-gradient(circle at 90% 100%,rgba(232,185,74,.06) 0,transparent 45%)}
+  .wrap{max-width:640px;margin:0 auto;padding:28px 18px 60px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--ink);text-decoration:none}
+  .brand svg{width:22px;height:22px;flex:none}
+  .brand span{color:var(--muted);font-weight:500;font-size:14px;margin-left:4px}
+  .card{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .kicker{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  h1{margin:6px 0 2px;font-family:'Space Grotesk',sans-serif;font-size:28px;line-height:1.15;letter-spacing:-.02em}
+  .client{color:var(--muted);font-size:15px;margin:0 0 20px}
+  .status{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;font-weight:700;font-size:15px;
+          background:rgba(var(--accent-rgb),.12);border:1px solid rgba(var(--accent-rgb),.35);color:var(--grape)}
+  .status i{width:10px;height:10px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgba(var(--accent-rgb),.18)}
+  .status.s-waiting{--accent-rgb:232,185,74;color:var(--gold)}
+  .status.s-notstarted{--accent-rgb:140,161,150;color:var(--muted)}
+  .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:22px 0 6px}
+  .steps div{height:6px;border-radius:3px;background:var(--line)}
+  .steps div.on{background:var(--grape)}
+  .steps-labels{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:10.5px;color:var(--muted);text-align:center;line-height:1.2}
+  .note{margin-top:22px;padding:16px 18px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line);white-space:pre-wrap;font-size:15px}
+  .note b{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .updated{margin-top:18px;font-size:13px;color:var(--muted)}
+  .foot{margin-top:26px;font-size:13px;color:var(--muted);text-align:center}
+  .foot a{color:var(--grape);text-decoration:none;font-weight:600}
+  .err{color:var(--danger);font-weight:600}
+  .skeleton{height:18px;border-radius:6px;background:linear-gradient(90deg,var(--line),rgba(255,255,255,.08),var(--line));background-size:200% 100%;animation:sh 1.2s infinite}
+  @keyframes sh{to{background-position:-200% 0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="brand" href="https://theguide.company" rel="noopener">
+    <svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="82" fill="none" stroke="#3FCB93" stroke-width="14"/><path d="M100,32 L114.1,85.9 L168,100 L114.1,114.1 L100,168 L85.9,114.1 L32,100 L85.9,85.9 Z" fill="#2FB884"/><circle cx="100" cy="100" r="14" fill="#E8B94A"/></svg>
+    The Guide <span>· project status</span>
+  </a>
+  <div class="card" id="card">
+    <div class="kicker">Project status</div>
+    <h1 id="project"><span class="skeleton" style="display:block;width:60%"></span></h1>
+    <p class="client" id="client">&nbsp;</p>
+    <div id="body"></div>
+  </div>
+  <p class="foot">This page is updated by the person running your project. Questions? Reply to them directly.</p>
+</div>
+<script>
+(function(){
+  var API = 'https://guide-backend-production.up.railway.app/api';
+  var STEPS = ['Not Started', 'In Progress', 'Awaiting Feedback', 'Final Review', 'Delivered'];
+  var token = new URLSearchParams(location.search).get('t') || '';
+  var el = function(id){ return document.getElementById(id); };
+  function text(node, s){ node.textContent = s; }
+  function fail(msg){
+    text(el('project'), 'Status page not found');
+    text(el('client'), '');
+    el('body').innerHTML = '<p class="err">' + msg + '</p><p class="updated">Ask the person who sent you this link for a new one.</p>';
+  }
+  if(!/^[A-Za-z0-9_-]{20,80}$/.test(token)){ fail('This link is missing its code or is not complete.'); return; }
+  fetch(API + '/client-status/public/' + encodeURIComponent(token))
+    .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
+    .then(function(res){
+      if(!res.ok){ fail((res.d && res.d.error) || 'This status page does not exist.'); return; }
+      var d = res.d;
+      text(el('project'), d.projectName);
+      text(el('client'), 'For ' + d.clientName);
+      var idx = Math.max(0, STEPS.indexOf(d.status));
+      var cls = d.status === 'Awaiting Feedback' ? ' s-waiting' : d.status === 'Not Started' ? ' s-notstarted' : '';
+      var html = '<div class="status' + cls + '"><i></i><span id="st"></span></div>';
+      html += '<div class="steps">' + STEPS.map(function(_, i){ return '<div class="' + (i <= idx ? 'on' : '') + '"></div>'; }).join('') + '</div>';
+      html += '<div class="steps-labels">' + STEPS.map(function(s){ return '<div>' + s + '</div>'; }).join('') + '</div>';
+      if(d.notes){ html += '<div class="note"><b>Note from your project lead</b><span id="note"></span></div>'; }
+      html += '<p class="updated" id="upd"></p>';
+      el('body').innerHTML = html;
+      text(el('st'), d.status);
+      if(d.notes) text(el('note'), d.notes);
+      var when = d.updatedAt ? new Date(d.updatedAt) : null;
+      text(el('upd'), when && !isNaN(when) ? 'Last updated ' + when.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '');
+      document.title = d.projectName + ' — project status';
+    })
+    .catch(function(){ fail('Could not load this page right now. Please try again in a minute.'); });
+})();
+</script>
+</body>
+</html>

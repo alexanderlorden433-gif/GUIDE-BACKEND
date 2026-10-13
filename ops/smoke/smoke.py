@@ -183,6 +183,35 @@ def fixture(state, method, path, body):
         return 200, {'url': 'https://checkout.stripe.com/c/pay/cs_test_smoke'}
     if p == '/api/billing/portal':
         return 200, {'url': 'https://billing.stripe.com/p/session/test_smoke'}
+    # client status pages (Business tab -> Client Portal): state['client_pages'] is the member's list
+    if p == '/api/client-status/mine' and method == 'GET':
+        return 200, {'pages': list(state.get('client_pages', []))}
+    if p == '/api/client-status' and method == 'POST':
+        b = body or {}
+        if not b.get('clientName') or not b.get('projectName'):
+            return 400, {'error': 'Add a client name and a project name.'}
+        pg = {'id': f"cp{len(state.get('client_pages', [])) + 1}", 'token': 'smoketoken_' + 'a' * 24, 'clientName': b['clientName'], 'projectName': b['projectName'],
+              'status': b.get('status') or 'In Progress', 'notes': b.get('notes') or '', 'createdAt': TODAY, 'updatedAt': TODAY}
+        state.setdefault('client_pages', []).insert(0, pg); state.setdefault('client_posts', []).append(b)
+        return 201, pg
+    m = re.match(r'^/api/client-status/public/([^/]+)$', p)
+    if m and method == 'GET':
+        for pg in state.get('client_pages', []):
+            if pg['token'] == m.group(1):
+                return 200, {k: pg[k] for k in ('clientName', 'projectName', 'status', 'notes', 'updatedAt')}
+        return 404, {'error': 'This status page does not exist.'}
+    m = re.match(r'^/api/client-status/([^/]+)$', p)
+    if m and method in ('PUT', 'DELETE'):
+        pages = state.get('client_pages', [])
+        pg = next((x for x in pages if x['id'] == m.group(1)), None)
+        if not pg:
+            return 404, {'error': 'Status page not found.'}
+        if method == 'DELETE':
+            pages.remove(pg); state.setdefault('client_deletes', []).append(pg['id'])
+            return 200, {'message': 'Deleted.'}
+        pg.update({k: v for k, v in (body or {}).items() if k in ('clientName', 'projectName', 'status', 'notes')})
+        state.setdefault('client_puts', []).append(body)
+        return 200, pg
     if p == '/api/health':
         return 200, {'ok': True}
     return 200, {}
@@ -810,6 +839,66 @@ def quiet_community(browser, base):
             ok(step[0], f'{posts} posts — Community tab {"shown" if expect else "stays hidden"}')
         finish(st, step[0])
         ctx.close()
+
+
+def client_status(browser, base):
+    """Business tab -> Client Portal: a Pro (yearly) member makes a status page, edits it, and the client's link opens a clean page."""
+    step = ['client status pages']
+    ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
+    st = new_state(True)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return
+    page.wait_for_timeout(800)
+    page.evaluate("showBusiness()"); page.wait_for_timeout(500)
+    page.click('[data-biz="portal"]'); page.wait_for_timeout(800)
+    if not visible(page, '#cpCreateBtn', 3000):
+        problem(step[0], 'the Client Portal panel did not open for a yearly member'); finish(st, step[0]); ctx.close(); return
+    empty = page.inner_text('#cpList')
+    if 'No status pages yet' not in empty:
+        problem(step[0], 'with no pages yet the list should say so', empty[:120])
+    page.fill('#cpClient', 'Acme Bakery'); page.fill('#cpProject', 'Spring video'); page.select_option('#cpStatus', 'Awaiting Feedback')
+    page.fill('#cpNotes', 'Draft 2 is up.'); page.click('#cpCreateBtn'); page.wait_for_timeout(900)
+    sent = st.get('client_posts', [])
+    if len(sent) != 1 or sent[0].get('clientName') != 'Acme Bakery' or sent[0].get('status') != 'Awaiting Feedback' or sent[0].get('notes') != 'Draft 2 is up.':
+        problem(step[0], 'creating a page should send the client, project, status and note', sent)
+    link = page.evaluate("(()=>{const i=document.querySelector('#cpList .cp-link-input'); return i ? i.value : ''})()")
+    if 'client-status.html?t=smoketoken_' not in link:
+        problem(step[0], 'the new page should list a share link to client-status.html', link)
+    else:
+        ok(step[0], 'a member creates a status page and gets a share link')
+    page.select_option('#cpList .cp-status', 'Delivered'); page.click('#cpList .cp-save'); page.wait_for_timeout(700)
+    puts = st.get('client_puts', [])
+    if len(puts) != 1 or puts[0].get('status') != 'Delivered':
+        problem(step[0], 'saving a page should send the new status', puts)
+    else:
+        ok(step[0], 'changing the status saves it')
+    # the client's view: no login, just the page
+    client = ctx.new_page(); watch_errors(client, step)
+    client.goto(link.replace('https://theguide.company', base) if link.startswith('http') else base + '/client-status.html?t=' + 'smoketoken_' + 'a' * 24, wait_until='load')
+    client.wait_for_timeout(900)
+    got = client.evaluate("(()=>({project: document.getElementById('project').innerText, client: document.getElementById('client').innerText, body: document.getElementById('body').innerText}))()")
+    if 'Spring video' not in got['project'] or 'Acme Bakery' not in got['client'] or 'Delivered' not in got['body'] or 'Draft 2 is up.' not in got['body']:
+        problem(step[0], "the client's page should show the project, client, status and note", got)
+    else:
+        ok(step[0], "the client's link opens a page with the project, status and note, no login needed")
+    client.goto(base + '/client-status.html?t=' + 'b' * 30, wait_until='load'); client.wait_for_timeout(700)
+    if 'not found' not in client.inner_text('#project').lower():
+        problem(step[0], 'a wrong link should say the page was not found', client.inner_text('#card')[:160])
+    else:
+        ok(step[0], 'a wrong link says the page was not found')
+    client.close()
+    page.on('dialog', lambda d: d.accept())
+    page.click('#cpList .cp-del'); page.wait_for_timeout(800)
+    if st.get('client_deletes') != ['cp1'] or 'No status pages yet' not in page.inner_text('#cpList'):
+        problem(step[0], 'deleting a page should remove it and empty the list', st.get('client_deletes'))
+    else:
+        ok(step[0], 'deleting a page removes it')
+    finish(st, step[0])
+    ctx.close()
 
 
 def live_iso_in(minutes):
@@ -2190,6 +2279,7 @@ def main():
         smoother(browser, base)
         quiet_community(browser, base)
         live_calls(browser, base)
+        client_status(browser, base)
         returning_learner(browser, base)
         daily_step(browser, base)
         niche_burst(browser, base)
