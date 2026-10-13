@@ -1231,6 +1231,89 @@ def new_look(browser, base):
         ctx.close()
 
 
+def step_one_demo(browser, base):
+    """The landing page's "Try step one": a visitor picks a business and sees its real first lesson, no signup."""
+    for device, vp, mobile in (('phone', {'width': 390, 'height': 844}, True), ('desktop', {'width': 1280, 'height': 800}, False)):
+        step = [f'{device}: try step one']
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        st = new_state()
+        attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#landingView'):
+            problem(step[0], 'landing page did not appear'); ctx.close(); continue
+        # 1) the hero button takes you to the demo
+        page.locator('.lp-hero .lp-cta-ghost[data-lp-scroll=lpStepOne]').click(timeout=3000); page.wait_for_timeout(1200)
+        top = page.evaluate("Math.round(document.getElementById('lpStepOne').getBoundingClientRect().top)")
+        if abs(top) > 120:
+            problem(step[0], 'the hero button should scroll to "Try step one"', top)
+        else:
+            ok(step[0], 'the hero button scrolls to "Try step one"')
+        # 2) it lists real businesses and shows a real first lesson, with its next step, before any signup
+        demo = page.evaluate("""(()=>{ const chips = [...document.querySelectorAll('#lpPick button')];
+          const on = chips.filter(b => b.getAttribute('aria-pressed') === 'true');
+          const n = NICHES.find(x => x.id === (on[0] || {}).dataset.id);
+          return {chips: chips.length, on: on.length, ok: !!n && n.guides[0].action && true,
+                  title: (document.querySelector('#lpDemo .dm-title') || {}).textContent, want: n ? n.guides[0].title : null,
+                  doText: (document.querySelector('#lpDemo .dm-do') || {}).textContent || '', action: n ? n.guides[0].action : null,
+                  after: !!document.querySelector('#lpDemo .dm-after') && getComputedStyle(document.querySelector('#lpDemo .dm-after')).display}; })()""")
+        if demo['chips'] < 4 or demo['on'] != 1 or demo['title'] != demo['want'] or not demo['action'] or demo['action'] not in demo['doText']:
+            problem(step[0], 'the demo should list businesses and show the real first lesson and its step', demo)
+        elif demo['after'] != 'none':
+            problem(step[0], 'the sign-up nudge should wait until the visitor says they will do the step', demo)
+        else:
+            ok(step[0], f"{demo['chips']} businesses to pick from; the real first lesson and its step show with no signup")
+        # 3) picking another business swaps the lesson
+        page.locator('#lpPick button').nth(1).click(timeout=3000); page.wait_for_timeout(500)
+        sw = page.evaluate("""(()=>{ const b = document.querySelectorAll('#lpPick button')[1]; const n = NICHES.find(x => x.id === b.dataset.id);
+          return {pressed: b.getAttribute('aria-pressed'), title: document.querySelector('#lpDemo .dm-title').textContent, want: n.guides[0].title, kicker: document.querySelector('#lpDemo .dm-k').textContent.includes(n.name),
+                  first: document.querySelectorAll('#lpPick button[aria-pressed=true]').length, id: n.id, saved: sessionStorage.getItem('guide_demo_pick')}; })()""")
+        if sw['pressed'] != 'true' or sw['first'] != 1 or sw['title'] != sw['want'] or not sw['kicker'] or sw['saved'] != sw['id']:
+            problem(step[0], 'picking another business should swap in its first lesson', sw)
+        else:
+            ok(step[0], 'picking another business swaps in its first lesson')
+        # 4) "I'll do this today" shows the nudge: free Module 1 first, Pro as one quiet line, a sign-up button
+        page.locator('#lpDemo .dm-done').click(timeout=3000); page.wait_for_timeout(500)
+        nudge = page.evaluate("""(()=>{ const d = document.getElementById('lpDemo'); const a = d.querySelector('.dm-after'); const r = a.getBoundingClientRect();
+          const pro = d.querySelector('.dm-pro'); return {done: d.classList.contains('is-done'), shown: getComputedStyle(a).display !== 'none', text: a.textContent,
+            btn: !!d.querySelector('.dm-go') && d.querySelector('.dm-go').getBoundingClientRect().width > 150, onScreen: r.top < innerHeight && r.bottom > 0,
+            proAfterFree: !!pro && a.textContent.indexOf('free') < a.textContent.indexOf('Pro opens')}; })()""")
+        if not (nudge['done'] and nudge['shown'] and nudge['btn']):
+            problem(step[0], 'after "I\'ll do this today" the sign-up nudge should show', nudge)
+        elif 'Module 1' not in nudge['text'] or not nudge['proAfterFree'] or '$' in nudge['text']:
+            problem(step[0], 'the nudge should lead with the free Module 1, mention Pro after it, and quote no price', nudge)
+        elif not nudge['onScreen']:
+            problem(step[0], 'the nudge should be scrolled into view', nudge)
+        else:
+            ok(step[0], 'the nudge leads with free Module 1, mentions Pro after it, quotes no price')
+        no_sideways_scroll(page, step[0]); shot(page, f'{device}-20-try-step-one')
+        # 5) its button opens sign-up, and sign-up starts them on the business they tried
+        picked = page.evaluate("sessionStorage.getItem('guide_demo_pick')")
+        page.locator('#lpDemo .dm-go').click(timeout=3000)
+        if not visible(page, '#authScreen', 3000):
+            problem(step[0], '"Start free and open it" should open sign-up')
+        else:
+            page.evaluate("showOnboardingStep()"); page.wait_for_timeout(300)
+            pre = page.evaluate("""[...document.querySelectorAll('#nichePicker .niche-pick-item.selected')].map(e => e.querySelector('.np-name').textContent)""")
+            want = page.evaluate(f"NICHES.find(x => x.id === {json.dumps(picked)}).name")
+            if pre != [want]:
+                problem(step[0], 'sign-up should start with the business they tried already ticked', {'ticked': pre, 'want': want})
+            else:
+                ok(step[0], 'sign-up opens with the business they tried already ticked')
+        # 6) the new styles use the look's colour variables only
+        if device == 'phone':
+            html = open(os.path.join(ROOT, 'web', 'index.html'), encoding='utf-8').read()
+            css = html[html.index('/* --- try step one (landing) --- */'):html.index('/* ---------- Streak & nav badges ---------- */')]
+            hard = re.findall(r'#[0-9a-fA-F]{3,8}\b|rgba?\(\s*\d', css)
+            if hard:
+                problem(step[0], 'the "Try step one" styles hard-code colours; use the colour variables', hard[:5])
+            else:
+                ok(step[0], 'the new styles use only the look colour variables')
+        finish(st, step[0])
+        ctx.close()
+
+
 def main():
     srv, base = serve_web()
     t0 = time.time()
@@ -1254,6 +1337,7 @@ def main():
         smoother(browser, base)
         quiet_community(browser, base)
         returning_learner(browser, base)
+        step_one_demo(browser, base)
         browser.close()
     srv.shutdown()
     # de-duplicate

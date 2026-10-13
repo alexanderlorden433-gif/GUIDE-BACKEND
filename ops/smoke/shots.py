@@ -17,6 +17,8 @@ from playwright.sync_api import sync_playwright  # noqa: E402
 # name -> (signed_in, javascript to reach the screen)
 SCREENS = {
     'landing':     (False, ''),
+    'landing-demo': (False, "document.getElementById('lpStepOne').scrollIntoView()"),
+    'landing-demo-done': (False, "document.querySelector('#lpPick button:nth-child(2)').click(); document.querySelector('.dm-done').click(); document.getElementById('lpStepOne').scrollIntoView()"),
     'signup':      (False, "document.getElementById('landingSignupBtn').click()"),
     'login':       (False, "document.getElementById('landingLoginBtn').click()"),
     'reset':       (False, "document.getElementById('landingLoginBtn').click(); document.getElementById('forgotBtn').click()"),
