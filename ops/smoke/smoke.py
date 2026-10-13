@@ -105,6 +105,21 @@ def fixture(state, method, path, body):
         return 200, {'leaderboard': [{'rank': 1, 'displayName': 'Smoke Test', 'value': 3, 'isMe': True}], 'type': 'streak'}
     if p == '/api/wins' and method == 'GET':
         return 200, {'wins': state.get('wins', [])}
+    if p == '/api/wins' and method == 'POST':
+        # shaped like src/routes/wins.js: the text must arrive as "body"
+        text = str((body or {}).get('body') or '').strip()
+        if not text:
+            return 400, {'error': 'Win text is required (max 500 chars).'}
+        w = {'id': 'w_new', 'body': text, 'emoji': (body or {}).get('emoji') or '🎉', 'authorId': 'u_smoke', 'authorEmail': 'smoke@example.com',
+             'authorInitial': 'S', 'createdAt': TODAY, 'reactions': []}
+        state.setdefault('wins', []).insert(0, w); state.setdefault('win_posts', []).append(body)
+        return 201, w
+    if re.match(r'^/api/wins/[^/]+/react$', p) and method == 'POST':
+        emoji = (body or {}).get('emoji')
+        if emoji not in ('🔥', '👏', '💪', '❤️'):
+            return 400, {'error': 'Invalid reaction emoji.'}
+        state.setdefault('win_reacts', []).append((p.split('/')[3], emoji))
+        return 200, {'action': 'added'}
     if re.match(r'^/api/discussion/[^/]+$', p) and method == 'GET':
         return 200, {'posts': [], 'isOwner': False}
     if re.match(r'^/api/mentors/[^/]+$', p) and method == 'GET':
@@ -792,8 +807,8 @@ def quiet_community(browser, base):
         step = [f'community ({label})']
         ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
         st = new_state(True)
-        st['wins'] = [{'id': f'w{i}', 'body': 'Got my first client', 'emoji': '🎉',
-                       'authorName': 'Someone', 'isMine': False, 'createdAt': TODAY,
+        st['wins'] = [{'id': f'w{i}', 'body': 'Got my first client', 'emoji': '🎉', 'authorId': f'u{i}',
+                       'authorEmail': 'someone@example.com', 'authorInitial': 'S', 'createdAt': TODAY,
                        'reactions': []} for i in range(posts)]
         attach_backend(ctx, st)
         ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
@@ -808,6 +823,28 @@ def quiet_community(browser, base):
                              f'{"shown" if expect else "hidden"} but was not')
         else:
             ok(step[0], f'{posts} posts — Community tab {"shown" if expect else "stays hidden"}')
+        if expect and shown:
+            # the Wins board inside the Community tab: real names and text, posting, reacting
+            page.click('#bottomTabCommunity'); page.wait_for_timeout(900)
+            got = page.evaluate("""(()=>{ const f = document.getElementById('ctabWinsFeed'); const c = f && f.querySelector('.win-card');
+              return {cards: f ? f.querySelectorAll('.win-card').length : 0, text: c ? c.innerText : ''}; })()""")
+            if got['cards'] != posts or 'Got my first client' not in got['text'] or 'someone' not in got['text'] or 'undefined' in got['text'] or 'Anon' in got['text']:
+                problem(step[0], 'the Community tab should show each win with who posted it and what they wrote', got)
+            else:
+                ok(step[0], 'the Community tab shows every win with the poster and the text')
+            page.fill('#ctabWinInput', 'Landed my first client today'); page.click('#ctabWinPostBtn'); page.wait_for_timeout(800)
+            sent = st.get('win_posts', [])
+            if len(sent) != 1 or (sent[0] or {}).get('body') != 'Landed my first client today':
+                problem(step[0], 'posting a win from the Community tab should send the text the server expects', sent)
+            elif page.locator('#ctabWinsFeed .win-card').count() != posts + 1:
+                problem(step[0], 'a win posted from the Community tab should show up in the list')
+            else:
+                ok(step[0], 'a win posted from the Community tab is sent correctly and shows up')
+            page.click('#ctabWinsFeed .win-card:nth-child(2) .win-react-btn[data-emoji="🔥"]'); page.wait_for_timeout(700)
+            if st.get('win_reacts') != [('w0', '🔥')]:
+                problem(step[0], 'the fire button on a win should send the reaction', st.get('win_reacts'))
+            else:
+                ok(step[0], 'reacting to a win from the Community tab works')
         finish(st, step[0])
         ctx.close()
 
