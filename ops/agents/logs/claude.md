@@ -71,3 +71,24 @@ Things worth remembering:
 - `.guide-list` is also the class of bullet lists inside lesson text; the lesson list is styled by `#guideList`.
 - The analytics script (sensitive, left alone) spends ~14ms real on `Intl...resolvedOptions()` at startup; a later
   job could defer it.
+
+## 2026-10-13 — live calls, exploded-view ad, fixes
+- **Live calls** (`src/live.js`, `src/routes/live.js`, Community → Live). Tables are created at startup with
+  CREATE TABLE IF NOT EXISTS and also declared in `prisma/schema.prisma`; routes use raw SQL. Follow-ups
+  (replays, questions) only ADD a column/table. The room link only goes to Pro members, 10 min before start.
+- Real-database route tests live outside the repo: `/tmp/pgt/harness*.js` with `embedded-postgres` (run as
+  user `claude`, port 54329; `start.js` boots it). They stub `./db` with raw `pg`. Rebuild if /tmp is gone.
+- **Video ads** are built in the scratchpad `reels/<name>/`: `capture.py` (real phone screenshots via the smoke
+  fake backend, fonts from `social/render.py`), `lines.json` → `kit2/kit_vo.py` (voice + word timings),
+  `index.html` with `render(t)`, `audio.py` (kit2 mixer), `render.py full <mode>`. Chromium can't play H.264,
+  so videos are checked frame by frame (`kit2/review.py`). A `let READY` is not `window.READY`.
+- The Community tab's Wins board had its own renderer with the wrong field names (fixed; both boards now share
+  `buildWinCard`). When two renderers exist for one thing, make them share code.
+- `ops/api_routes.py` is fully green once the client-status routes exist (`src/routes/clientStatus.js`,
+  public page `web/client-status.html`).
+- Push notifications (`src/push.js`) are off until `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` are set; only `live_*`
+  notification types are pushed. The smoke test stubs the browser's push API (`PUSH_STUB` in smoke.py).
+- Prices: CLAUDE.md says $28.99/$325.99, but `src/prices.js` and every ad say $24.99/$149. Stripe is the truth;
+  asked Alexander which is right before touching ad copy.
+- Max 2 open PRs: extra branches wait as ready branches; `pr_queue.py` (scratchpad) opens the next ones.
+  Branches that both add smoke fixtures near `/api/health` or the `main()` order will conflict; merge main in.
