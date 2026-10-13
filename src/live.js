@@ -38,6 +38,8 @@ const DDL = [
     CONSTRAINT "LiveCall_pkey" PRIMARY KEY ("id")
   )`,
   `CREATE INDEX IF NOT EXISTS "LiveCall_startsAt_idx" ON "LiveCall"("startsAt")`,
+  // added later: a replay link the host can add after the call (only ever adds a column)
+  `ALTER TABLE "LiveCall" ADD COLUMN IF NOT EXISTS "replayUrl" TEXT`,
   `CREATE TABLE IF NOT EXISTS "LiveRsvp" (
     "callId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -46,6 +48,18 @@ const DDL = [
     CONSTRAINT "LiveRsvp_callId_fkey" FOREIGN KEY ("callId") REFERENCES "LiveCall"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "LiveRsvp_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
   )`,
+  // questions members send in before a call, for the host to answer live
+  `CREATE TABLE IF NOT EXISTS "LiveQuestion" (
+    "id" TEXT NOT NULL,
+    "callId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "LiveQuestion_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "LiveQuestion_callId_fkey" FOREIGN KEY ("callId") REFERENCES "LiveCall"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "LiveQuestion_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+  )`,
+  `CREATE INDEX IF NOT EXISTS "LiveQuestion_callId_idx" ON "LiveQuestion"("callId")`,
 ];
 
 let ready = false;
