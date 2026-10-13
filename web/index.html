@@ -4848,6 +4848,21 @@
   .pm-step.st-pro .pm-node{border-color:rgba(var(--sun-rgb),.55); color:var(--gold);}
   @keyframes pmPulse{0%,100%{box-shadow:0 8px 28px rgba(var(--accent-rgb),.45), 0 0 0 0 rgba(var(--accent-rgb),.5);}50%{box-shadow:0 8px 28px rgba(var(--accent-rgb),.45), 0 0 0 12px rgba(var(--accent-rgb),0);}}
   @media (prefers-reduced-motion: reduce){ .pm-step.st-cur .pm-node{animation:none;} }
+
+  /* ---------- Chapter burst: tapping a chapter scatters pieces that gather into its icon (moves and fades only) ---------- */
+  .nb-layer{position:fixed; inset:0; z-index:9000; pointer-events:none; overflow:hidden;}
+  .nb-bit{position:absolute; left:0; top:0; width:var(--s,10px); height:var(--s,10px); margin:calc(var(--s,10px) / -2) 0 0 calc(var(--s,10px) / -2); border-radius:3px; background:var(--c); opacity:0; will-change:transform,opacity; animation:nbFly .85s both;}
+  .nb-bit.nb-round{border-radius:50%;}
+  @keyframes nbFly{
+    0%{transform:translate(var(--x0),var(--y0)) scale(.3) rotate(0deg); opacity:0; animation-timing-function:cubic-bezier(.15,.8,.3,1);}
+    10%{opacity:1;}
+    42%{transform:translate(calc(var(--x0) + var(--dx)),calc(var(--y0) + var(--dy))) scale(1) rotate(var(--rot)); opacity:1; animation-timing-function:cubic-bezier(.5,0,.8,.4);}
+    100%{transform:translate(var(--x1),var(--y1)) scale(.25) rotate(calc(var(--rot) * 2)); opacity:0;}
+  }
+  .niche-icon.nb-wait{transform:scale(.8); opacity:.35;}
+  .niche-icon.nb-pop{animation:nbPop .5s cubic-bezier(.3,1.6,.5,1);}
+  @keyframes nbPop{0%{transform:scale(.8); opacity:.35;}45%{transform:scale(1.22); opacity:1; box-shadow:0 0 0 10px rgba(var(--accent-rgb),.22);}100%{transform:scale(1); opacity:1; box-shadow:0 0 0 0 rgba(var(--accent-rgb),0);}}
+  @media (prefers-reduced-motion: reduce){ .nb-layer{display:none;} .niche-icon.nb-wait{transform:none; opacity:1;} .niche-icon.nb-pop{animation:none;} }
 </style>
 </head>
 <body>
@@ -9771,8 +9786,48 @@ function makeNicheCard(niche){
       <div class="niche-progress-label">${done}/${niche.guides.length} lessons</div>
     </div>
   `;
-  card.addEventListener('click', ()=> openNiche(niche.id));
+  card.addEventListener('click', ()=>{
+    const ic = card.querySelector('.niche-icon');
+    const from = ic ? ic.getBoundingClientRect() : null;
+    openNiche(niche.id);
+    if(from) requestAnimationFrame(()=> burstNiche(niche, from));
+  });
   return card;
+}
+
+// Tapping a chapter card: the chapter opens at once, and a few pieces scatter from the card and gather into the
+// chapter's icon. Moves and fades only; skipped for people who asked for less motion. Never delays anything.
+function burstNiche(niche, from){
+  try{
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if(document.hidden) return;
+    const icon = document.querySelector('#nicheHeaderBlock .niche-icon');
+    if(!icon || !from) return;
+    const old = document.getElementById('nicheBurst'); if(old) old.remove();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const t = icon.getBoundingClientRect();
+    const x0 = Math.round(from.left + from.width/2), y0 = Math.round(from.top + from.height/2);
+    const x1 = Math.round(Math.min(vw - 20, Math.max(20, t.left + t.width/2)));
+    const y1 = Math.round(Math.min(vh - 20, Math.max(20, t.top + t.height/2)));
+    const colors = [niche.color, niche.color, 'var(--gold)', 'var(--grape)', 'var(--ink)'];
+    const N = 16;
+    let h = '';
+    for(let i=0; i<N; i++){
+      const a = (i/N) * Math.PI * 2 + (Math.random() - .5) * .5;
+      const d = 70 + Math.random() * 70;
+      const s = 6 + Math.random() * 8;
+      h += `<i class="nb-bit${i % 3 === 0 ? ' nb-round' : ''}" style="--c:${colors[i % colors.length]};--s:${s.toFixed(1)}px;--x0:${x0}px;--y0:${y0}px;--dx:${Math.round(Math.cos(a)*d)}px;--dy:${Math.round(Math.sin(a)*d)}px;--x1:${x1}px;--y1:${y1}px;--rot:${Math.round(Math.random()*360 - 180)}deg;animation-delay:${(i % 4) * 18}ms"></i>`;
+    }
+    const layer = document.createElement('div');
+    layer.id = 'nicheBurst'; layer.className = 'nb-layer'; layer.setAttribute('aria-hidden', 'true');
+    layer.innerHTML = h;
+    document.body.appendChild(layer);
+    // a learner who lands part-way down their path has the icon scrolled out of sight: just the pieces, no pop
+    const seen = t.bottom > 0 && t.top < vh;
+    if(seen) icon.classList.add('nb-wait');
+    setTimeout(()=>{ if(seen){ icon.classList.remove('nb-wait'); icon.classList.add('nb-pop'); } }, 760);
+    setTimeout(()=>{ layer.remove(); icon.classList.remove('nb-wait', 'nb-pop'); }, 1350);
+  }catch(e){}
 }
 
 function renderDailyDigest(){
