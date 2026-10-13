@@ -26,6 +26,8 @@ SCREENS = {
     'live-pro':    (True,  "showLive()"),
     'live-home-pro': (True, "showHome()"),
     'live-host-pro': (True, "showLive(); setTimeout(()=>document.querySelector('[data-live=new]').click(), 500)"),
+    'live-ask-pro': (True, "showLive(); setTimeout(()=>{document.querySelector('.live-card[data-call=lc_c] [data-live=ask]').click(); document.querySelector('.live-card[data-call=lc_c]').scrollIntoView()}, 600)"),
+    'live-past-pro': (True, "showLive(); setTimeout(()=>document.querySelector('.live-sec:last-of-type').scrollIntoView(), 600)"),
     'landing-tour': (False, "document.getElementById('lpTour').scrollIntoView()"),
     'landing-demo': (False,"document.getElementById('lpStepOne').scrollIntoView()"),
     'landing-demo-done': (False, "document.querySelector('#lpPick button:nth-child(2)').click(); document.querySelector('.dm-done').click(); document.getElementById('lpStepOne').scrollIntoView()"),
@@ -85,7 +87,8 @@ def main():
                         st['wins'] = [{'id': f'w{i}', 'body': b, 'emoji': e, 'authorId': f'u{i}', 'authorEmail': n + '@example.com', 'authorInitial': n[0].upper(), 'createdAt': smoke.TODAY, 'reactions': [{'id': f'r{i}{k}', 'userId': f'x{k}', 'emoji': '🔥'} for k in range(c)]} for i, (b, e, n, c) in enumerate([('Booked my first paid shoot', '🎉', 'maya', 5), ('Module one done, streak at 3', '💪', 'dev', 3), ('Sent my first contract with the template', '📄', 'sam', 2), ('Got a yes from a wedding client', '🔥', 'luis', 7), ('Finished my pricing sheet', '✅', 'ana', 1)])]
                     if name.startswith('live'):
                         st['wins'] = []
-                        st['live'] = {'canHost': 'host' in name, 'isOwner': False, 'calls': smoke.live_demo_calls()}
+                        st['live'] = {'canHost': 'host' in name or 'past' in name, 'isOwner': False, 'calls': smoke.live_demo_calls(), 'replays': smoke.live_demo_replays(),
+                                      'past': [{'id': 'lc_done', 'title': 'Cold outreach teardown', 'hostName': 'Sam Rivera', 'startsAt': smoke.live_iso_in(-60 * 30), 'replayUrl': None, 'mine': True, 'questions': 3}]}
                     smoke.attach_backend(ctx, st)
                     init = f"try{{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_theme','{theme}');localStorage.setItem('guide_look','{look}');"
                     if signed_in:
