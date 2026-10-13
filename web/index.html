@@ -46,6 +46,7 @@
     --accent2-rgb:232,185,74;
     --accent-deep-rgb:31,157,107;
     --sun-rgb:232,185,74;
+    --danger-rgb:248,113,113;
     --bg-rgb:12,19,16;
     --scrim-rgb:3,8,6;
     --glow:rgba(63,203,147,0.15);
@@ -1745,13 +1746,33 @@
     cursor:pointer;
   }
 
-  /* ---------- Account settings modal reused styling ---------- */
-  .account-section{margin-bottom:20px;}
-  .account-section h4{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:14px;
-    margin:0 0 10px;
-  }
+  /* ---------- Account settings: a tidy sheet that scrolls inside itself ---------- */
+  .modal-box:has(.acct){padding:0; max-width:440px; max-height:calc(100vh - 40px); max-height:calc(100dvh - 40px); display:flex; flex-direction:column; overflow:hidden;}
+  .acct{display:flex; flex-direction:column; min-height:0; flex:1;}
+  .acct-head{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); flex:none;}
+  .acct-avatar{width:44px; height:44px; flex:none; border-radius:50%; background:var(--accent-gradient); color:var(--on-accent); display:flex; align-items:center; justify-content:center; font:800 18px 'Space Grotesk',sans-serif;}
+  .acct-who{min-width:0; flex:1;}
+  .acct-head .acct-who h2{margin:0; font-size:17px; line-height:1.25;}
+  .acct-email{margin:2px 0 0; font-size:12.5px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .acct-x{flex:none; width:36px; height:36px; border-radius:50%; border:1px solid var(--line); background:var(--bg-raised); color:var(--ink-soft); font-size:15px; line-height:1; cursor:pointer;}
+  .acct-x:hover{color:var(--ink); border-color:var(--line-2);}
+  .acct-body{overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:14px 16px 18px; display:grid; gap:12px;}
+  .acct-card{background:var(--bg-raised); border:1px solid var(--line); border-radius:14px; padding:14px;}
+  .acct-card h4{margin:0 0 10px; font:700 13.5px 'Space Grotesk',sans-serif; letter-spacing:.01em;}
+  .acct-field{display:block; margin:0 0 10px;}
+  .acct-field > span{display:block; margin-bottom:5px; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);}
+  .acct-field input, .acct-field textarea{width:100%; box-sizing:border-box; font:16px/1.4 'Inter',sans-serif; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); outline:none; resize:none;}
+  .acct-field input:focus, .acct-field textarea:focus{border-color:var(--grape); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.2);}
+  .acct-card .modal-cta{padding:11px; box-shadow:none;}
+  .acct-note{margin:8px 0 0; font-size:12.5px; font-weight:600; color:rgb(var(--danger-rgb));}
+  .acct-note:empty{display:none;}
+  .acct-note.ok{color:var(--grape);}
+  .acct-card .notif-pref-item{padding:10px 0;}
+  .acct-card .notif-pref-item:first-of-type{padding-top:0;}
+  .acct-card .notif-pref-item:last-child{padding-bottom:0;}
+  .acct-hint{margin:0 0 10px; font-size:12.5px; line-height:1.5; color:var(--ink-soft);}
+  .acct-danger{border-color:rgba(var(--danger-rgb),.3); background:rgba(var(--danger-rgb),.05);}
+  .acct-danger h4{color:rgb(var(--danger-rgb));}
   .account-danger-btn{
     width:100%;
     font-family:'Inter',sans-serif;
@@ -1759,10 +1780,14 @@
     font-size:13px;
     padding:10px;
     border-radius:10px;
-    border:1px solid #EF4444;
-    background:#FEF2F2;
-    color:#B91C1C;
+    border:1px solid rgba(var(--danger-rgb),.55);
+    background:rgba(var(--danger-rgb),.1);
+    color:rgb(var(--danger-rgb));
     cursor:pointer;
+  }
+  @media (max-width:520px){
+    .modal-overlay:has(.acct){padding:12px;}
+    .modal-box:has(.acct){max-height:calc(100vh - 24px); max-height:calc(100dvh - 24px);}
   }
 
   /* ---------- Confetti ---------- */
@@ -9982,55 +10007,63 @@ function renderAccountModal(){
   const savedBio = userProfile.bio || '';
   const initial = savedDisplayName ? savedDisplayName[0].toUpperCase() : (currentEmail ? currentEmail[0].toUpperCase() : '?');
   upgradeModalBody.innerHTML = `
-    <button class="modal-close" id="accountCloseBtn">✕</button>
-    <h2>Account settings</h2>
-    <p class="auth-sub">${currentEmail}</p>
+    <div class="acct">
+      <div class="acct-head">
+        <div class="acct-avatar" id="profileAvatarPreview">${escapeHtmlMentor(initial)}</div>
+        <div class="acct-who">
+          <h2>Account settings</h2>
+          <p class="acct-email">${escapeHtmlMentor(currentEmail || '')}</p>
+        </div>
+        <button type="button" class="acct-x" id="accountCloseBtn" aria-label="Close">✕</button>
+      </div>
 
-    <div class="account-section">
-      <h4>Your profile</h4>
-      <div class="profile-avatar-lg" id="profileAvatarPreview">${escapeHtmlMentor(initial)}</div>
-      <div class="profile-field">
-        <label for="accDisplayName">Display name</label>
-        <input type="text" id="accDisplayName" placeholder="How others see you" value="${escapeHtmlMentor(savedDisplayName)}" maxlength="30">
-      </div>
-      <div class="profile-field">
-        <label for="accBio">Short bio</label>
-        <textarea id="accBio" placeholder="What you're working on…" rows="2" maxlength="160">${escapeHtmlMentor(savedBio)}</textarea>
-      </div>
-      <div class="auth-error" id="profileSaveNote" style="color:#166534;"></div>
-      <button type="button" class="modal-cta" id="accProfileSaveBtn" style="margin-top:8px;">Save profile</button>
-    </div>
+      <div class="acct-body">
+        <section class="acct-card">
+          <h4>Your profile</h4>
+          <label class="acct-field" for="accDisplayName"><span>Display name</span>
+            <input type="text" id="accDisplayName" placeholder="How others see you" value="${escapeHtmlMentor(savedDisplayName)}" maxlength="30" autocomplete="nickname">
+          </label>
+          <label class="acct-field" for="accBio"><span>Short bio</span>
+            <textarea id="accBio" placeholder="What you're working on…" rows="2" maxlength="160">${escapeHtmlMentor(savedBio)}</textarea>
+          </label>
+          <button type="button" class="modal-cta" id="accProfileSaveBtn">Save profile</button>
+          <div class="acct-note" id="profileSaveNote" role="status"></div>
+        </section>
 
-    <div class="account-section">
-      <h4>Notification preferences</h4>
-      <div class="notif-pref-item">
-        <div><div class="notif-pref-label">Weekly progress email</div><div class="notif-pref-desc">Monday check-in with your stats</div></div>
-        <label class="toggle-switch"><input type="checkbox" id="accDigestToggle" ${weeklyDigestOptOut ? '' : 'checked'}><span class="slider"></span></label>
-      </div>
-      <div class="notif-pref-item">
-        <div><div class="notif-pref-label">Streak reminders</div><div class="notif-pref-desc">Nudge when your streak is about to lapse</div></div>
-        <label class="toggle-switch"><input type="checkbox" id="accStreakToggle" ${streakReminderOptOut ? '' : 'checked'}><span class="slider"></span></label>
-      </div>
-      <div class="notif-pref-item">
-        <div><div class="notif-pref-label">Community activity</div><div class="notif-pref-desc">Wins reactions, connect requests, new mentors</div></div>
-        <label class="toggle-switch"><input type="checkbox" id="accCommunityToggle" ${communityNotifsOff ? '' : 'checked'}><span class="slider"></span></label>
-      </div>
-    </div>
+        <section class="acct-card">
+          <h4>Notifications</h4>
+          <div class="notif-pref-item">
+            <div><div class="notif-pref-label">Weekly progress email</div><div class="notif-pref-desc">Monday check-in with your stats</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="accDigestToggle" ${weeklyDigestOptOut ? '' : 'checked'}><span class="slider"></span></label>
+          </div>
+          <div class="notif-pref-item">
+            <div><div class="notif-pref-label">Streak reminders</div><div class="notif-pref-desc">Nudge when your streak is about to lapse</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="accStreakToggle" ${streakReminderOptOut ? '' : 'checked'}><span class="slider"></span></label>
+          </div>
+          <div class="notif-pref-item">
+            <div><div class="notif-pref-label">Community activity</div><div class="notif-pref-desc">Wins reactions, connect requests, new mentors</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="accCommunityToggle" ${communityNotifsOff ? '' : 'checked'}><span class="slider"></span></label>
+          </div>
+        </section>
 
-    <div class="account-section">
-      <h4>Change password</h4>
-      <label for="accCurrentPw">Current password</label>
-      <input type="password" id="accCurrentPw" placeholder="••••••••" autocomplete="current-password">
-      <label for="accNewPw">New password</label>
-      <input type="password" id="accNewPw" placeholder="••••••••" autocomplete="new-password">
-      <div class="auth-error" id="accPwError"></div>
-      <button type="button" class="modal-cta" id="accPwSaveBtn" style="margin-top:10px;">Update password</button>
-    </div>
+        <section class="acct-card">
+          <h4>Change password</h4>
+          <label class="acct-field" for="accCurrentPw"><span>Current password</span>
+            <input type="password" id="accCurrentPw" placeholder="••••••••" autocomplete="current-password">
+          </label>
+          <label class="acct-field" for="accNewPw"><span>New password</span>
+            <input type="password" id="accNewPw" placeholder="At least 8 characters" autocomplete="new-password">
+          </label>
+          <button type="button" class="modal-cta" id="accPwSaveBtn">Update password</button>
+          <div class="acct-note" id="accPwError" role="status"></div>
+        </section>
 
-    <div class="account-section">
-      <h4>Delete account</h4>
-      <p class="auth-sub" style="margin-bottom:10px;">This permanently deletes your account and everything tracked in it. This can't be undone.</p>
-      <button type="button" class="account-danger-btn" id="accDeleteBtn">Delete my account</button>
+        <section class="acct-card acct-danger">
+          <h4>Delete account</h4>
+          <p class="acct-hint">This permanently deletes your account and everything tracked in it. This can't be undone.</p>
+          <button type="button" class="account-danger-btn" id="accDeleteBtn">Delete my account</button>
+        </section>
+      </div>
     </div>
   `;
   upgradeModalBody.querySelector('#accountCloseBtn').addEventListener('click', ()=> upgradeOverlay.classList.remove('open'));
@@ -10049,7 +10082,7 @@ function renderAccountModal(){
     userProfile.bio = bio;
     saveProgress();
     const note = upgradeModalBody.querySelector('#profileSaveNote');
-    note.style.color = '#166534';
+    note.className = 'acct-note ok';
     note.textContent = 'Profile saved!';
     // Update the topbar badge
     document.getElementById('userBadge').textContent = name ? name[0].toUpperCase() : (currentEmail ? currentEmail[0].toUpperCase() : '?');
@@ -10073,6 +10106,7 @@ function renderAccountModal(){
 
   upgradeModalBody.querySelector('#accPwSaveBtn').addEventListener('click', async ()=>{
     const pwError = upgradeModalBody.querySelector('#accPwError');
+    pwError.className = 'acct-note';
     pwError.textContent = '';
     const current = upgradeModalBody.querySelector('#accCurrentPw').value;
     const next = upgradeModalBody.querySelector('#accNewPw').value;
@@ -10082,8 +10116,10 @@ function renderAccountModal(){
         method: 'PUT',
         body: JSON.stringify({ currentPassword: current, newPassword: next })
       });
-      pwError.style.color = '#166534';
+      pwError.className = 'acct-note ok';
       pwError.textContent = 'Password updated.';
+      upgradeModalBody.querySelector('#accCurrentPw').value = '';
+      upgradeModalBody.querySelector('#accNewPw').value = '';
     }catch(e){
       pwError.textContent = e.body?.error || e.message || 'Something went wrong — please try again.';
     }
