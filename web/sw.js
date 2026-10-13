@@ -44,6 +44,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Leave video and audio to the browser: it asks for them in pieces (Range
+  // requests), and keeping a whole video here would fill the phone's storage.
+  if (event.request.headers.has('range') ||
+      event.request.destination === 'video' || event.request.destination === 'audio') {
+    return;
+  }
+
   event.respondWith(
     // Network-first for the page itself, so users get updates when online;
     // falls back to the cached shell when offline.

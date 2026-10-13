@@ -21,7 +21,8 @@ DEMO = ("NICHES[0].guides.slice(0,4).forEach(g=>completed.add(NICHES[0].id+'|'+g
 # name -> (signed_in, javascript to reach the screen)
 SCREENS = {
     'landing':     (False, ''),
-    'landing-demo': (False, "document.getElementById('lpStepOne').scrollIntoView()"),
+    'landing-tour': (False, "document.getElementById('lpTour').scrollIntoView()"),
+    'landing-demo': (False,"document.getElementById('lpStepOne').scrollIntoView()"),
     'landing-demo-done': (False, "document.querySelector('#lpPick button:nth-child(2)').click(); document.querySelector('.dm-done').click(); document.getElementById('lpStepOne').scrollIntoView()"),
     'signup':      (False, "document.getElementById('landingSignupBtn').click()"),
     'login':       (False, "document.getElementById('landingLoginBtn').click()"),

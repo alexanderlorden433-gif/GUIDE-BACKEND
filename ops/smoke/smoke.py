@@ -260,6 +260,55 @@ def logged_out(browser, base, device, viewport, mobile):
     else:
         ok(step[0], f"{lp['chapters']} chapters, {lp['slides']}-screen slideshow, {lp['imgs']} pictures all loaded")
     no_sideways_scroll(page, step[0])
+    # the tour video: sits near the top, downloads nothing until someone taps play, its files exist and stay light
+    step[0] = f'{device}: landing tour video'
+    tour = page.evaluate("(()=>{const v=document.getElementById('lpTourVideo'),f=document.getElementById('lpTourFrame'),b=document.getElementById('lpTourPlay');"
+                         "if(!(v&&f&&b)) return {has:false};"
+                         "const r=f.getBoundingClientRect(), s=v.querySelector('source');"
+                         "return {has:true, preload:v.getAttribute('preload'), poster:v.getAttribute('poster'), src:s&&s.getAttribute('src'),"
+                         "ready:v.readyState, top:Math.round(r.top+scrollY), w:Math.round(r.width), h:Math.round(r.height),"
+                         "after:!!(document.querySelector('.lp-hero').compareDocumentPosition(f)&Node.DOCUMENT_POSITION_FOLLOWING)}})()")
+    if not tour['has']:
+        problem(step[0], 'the tour video block is missing from the landing page')
+    else:
+        vid = os.path.join(ROOT, 'web', tour['src'] or 'missing')
+        pst = os.path.join(ROOT, 'web', tour['poster'] or 'missing')
+        poster_ok = page.evaluate("(u)=>fetch(u).then(r=>r.ok&&r.headers.get('content-type').startsWith('image/')).catch(()=>false)", tour['poster'])
+        if tour['preload'] != 'none' or tour['ready'] != 0:
+            problem(step[0], 'the tour video must not download before someone taps play', tour)
+        elif not (os.path.isfile(vid) and os.path.isfile(pst)) or not poster_ok:
+            problem(step[0], 'the tour video file or its cover picture is missing', tour)
+        elif os.path.getsize(vid) > 12 * 1024 * 1024 or os.path.getsize(pst) > 150 * 1024:
+            problem(step[0], 'the tour video or its cover picture got too heavy for phones',
+                    {'video_mb': round(os.path.getsize(vid) / 1048576, 1), 'poster_kb': round(os.path.getsize(pst) / 1024)})
+        elif abs(tour['w'] / max(tour['h'], 1) - 16 / 9) > 0.03 or not tour['after']:
+            problem(step[0], 'the tour video frame is the wrong shape or sits above the hero', tour)
+        else:
+            ok(step[0], f"cover picture and {round(os.path.getsize(vid) / 1048576, 1)} MB video in place, nothing downloads until play")
+        page.evaluate("document.getElementById('lpTour').scrollIntoView()")
+        page.wait_for_timeout(300)
+        shot(page, f'{device}-01b-landing-tour')
+        try:
+            page.click('#lpTourPlay', timeout=4000)
+            after = page.evaluate("(()=>({controls:document.getElementById('lpTourVideo').controls,"
+                                  "playing:document.getElementById('lpTourFrame').classList.contains('playing'),"
+                                  "overlay:getComputedStyle(document.getElementById('lpTourPlay')).display}))()")
+            if after['controls'] and after['playing'] and after['overlay'] == 'none':
+                ok(step[0], 'tapping play turns the video controls on and hides the play button')
+            else:
+                problem(step[0], 'tapping play did not start the tour video', after)
+        except Exception as e:
+            problem(step[0], 'could not tap play on the tour video', e)
+        page.evaluate("(()=>{const v=document.getElementById('lpTourVideo'); v.pause(); scrollTo(0,0);})()")
+        if device == 'phone':
+            html = open(os.path.join(ROOT, 'web', 'index.html'), encoding='utf-8').read()
+            css = html[html.index('/* --- tour video (landing) --- */'):html.index('/* --- slideshow --- */')]
+            hard = re.findall(r'#[0-9a-fA-F]{3,8}\b|rgba?\(\s*\d', css)
+            if hard:
+                problem(step[0], 'the tour video styles hard-code colours; use the colour variables', hard[:5])
+            else:
+                ok(step[0], 'the tour video styles use only the look colour variables')
+    no_sideways_scroll(page, step[0])
     step[0] = f'{device}: sign-up screen'
     try:
         page.click('#landingSignupBtn', timeout=4000)
