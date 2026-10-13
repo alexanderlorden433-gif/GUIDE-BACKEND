@@ -84,6 +84,7 @@ def fixture(state, method, path, body):
         return 200, {'email': 'smoke@theguide.test', 'isPro': state['pro'], 'planType': 'yearly' if state['pro'] else None,
                      'joinedAt': state.get('joinedAt'),
                      'trialEligible': True,
+                     'canManageBilling': state.get('billing', state['pro']),
                      'data': state['data'], 'referralCode': 'SMOKE1', 'referredCount': 0, 'referredProCount': 0, 'bonusProUntil': None}
     if p == '/api/account' and method == 'PUT':
         if isinstance(body, dict) and isinstance(body.get('data'), dict):
@@ -1481,6 +1482,57 @@ def account_settings(browser, base):
         ctx.close()
 
 
+def manage_subscription(browser, base):
+    """Account settings → "Your subscription": people who pay through Stripe can open Stripe's billing page to
+    change plan, card or cancel; people with nothing in Stripe (free, owner/preview/referral-bonus Pro) don't see it."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    cases = (('paying Pro', True, True), ('Pro with nothing in Stripe', True, False), ('free', False, False))
+    for device, vp, mobile in (('phone', {'width': 390, 'height': 844}, True), ('desktop', {'width': 1280, 'height': 800}, False)):
+        for who, pro, billing in cases:
+            if device == 'desktop' and who != 'paying Pro':
+                continue
+            step = [f'{device}: manage subscription ({who})']
+            ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+            st = new_state(pro); st['billing'] = billing
+            attach_backend(ctx, st)
+            ctx.add_init_script(init)
+            page = ctx.new_page(); watch_errors(page, step)
+            page.goto(base + '/', wait_until='load')
+            if not visible(page, '#appScreen', 10000):
+                problem(step[0], 'the app did not open'); ctx.close(); continue
+            page.wait_for_timeout(600)
+            page.evaluate("document.getElementById('accountBtn').click()")
+            if not visible(page, '#accDeleteBtn'):
+                problem(step[0], 'account settings did not open'); ctx.close(); continue
+            page.wait_for_timeout(500)
+            shown = page.evaluate("(()=>{ const c = document.getElementById('accBillingCard'); return !!c && !c.hidden && c.offsetHeight > 0; })()")
+            hint = page.evaluate("(()=>{ const h = document.getElementById('accDeleteBillingHint'); return !!h && !h.hidden; })()")
+            if not billing:
+                if shown or hint:
+                    problem(step[0], 'someone with nothing to manage in Stripe sees the subscription section')
+                else:
+                    ok(step[0], 'no subscription section (nothing to manage)')
+            elif not shown:
+                problem(step[0], 'a paying Pro user has no way to manage or cancel their subscription')
+            else:
+                txt = page.inner_text('#accBillingCard')
+                if 'Yearly' not in txt or 'cancel' not in txt.lower():
+                    problem(step[0], 'the subscription section should name the plan and say they can cancel', txt[:120])
+                if not hint:
+                    problem(step[0], 'the Delete card should remind paying users to cancel first')
+                btn = page.locator('#accManageBillingBtn')
+                btn.scroll_into_view_if_needed(timeout=3000)
+                shot(page, f'{device}-account-subscription')
+                btn.click(timeout=3000)
+                page.wait_for_url(re.compile(r'billing\.stripe\.com'), timeout=8000)
+                if ('POST', '/api/billing/portal') in st['calls']:
+                    ok(step[0], 'the button opens Stripe\'s billing page')
+                else:
+                    problem(step[0], 'the button did not ask the backend for a billing page')
+            finish(st, step[0])
+            ctx.close()
+
+
 def daily_step(browser, base):
     """The daily step loop: Today's step on Home, the "step done" card, and the path map of a chapter."""
     step = ['daily step']
@@ -1699,6 +1751,7 @@ def main():
         niche_burst(browser, base)
         step_one_demo(browser, base)
         account_settings(browser, base)
+        manage_subscription(browser, base)
         browser.close()
     srv.shutdown()
     # de-duplicate
