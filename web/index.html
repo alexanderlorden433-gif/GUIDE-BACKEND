@@ -563,7 +563,7 @@
   .niche-header .niche-icon .ico{width:28px; height:28px;}
   .digest-icon{display:flex; align-items:center; color:var(--ink-soft);}
   .digest-icon.hot{color:var(--gold);}
-  .digest-icon .ico{width:24px; height:24px; vertical-align:baseline;}
+  .digest-icon .ico{width:18px; height:18px; vertical-align:baseline;}
   .ts-streak{display:inline-flex; align-items:center; gap:4px;}
   .ts-streak .ico{width:14px; height:14px; vertical-align:baseline;}
   .sub-tab{display:inline-flex; align-items:center; gap:7px;}
@@ -1661,28 +1661,25 @@
   .digest-card{
     display:flex;
     flex-wrap:wrap;
-    gap:14px;
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:16px;
-    padding:18px 22px;
-    margin-bottom:18px;
+    gap:8px 22px;
+    padding:0 2px;
+    margin:-8px 0 22px;
   }
   .digest-item{
     display:flex;
     align-items:center;
-    gap:10px;
-    flex:1 1 160px;
+    gap:8px;
   }
   .digest-icon{font-size:22px;}
+  .digest-text{display:flex; align-items:baseline; gap:6px;}
   .digest-text .digest-num{
     font-family:'Space Grotesk',sans-serif;
     font-weight:700;
-    font-size:16px;
+    font-size:15px;
     line-height:1.1;
   }
   .digest-text .digest-lbl{
-    font-size:11px;
+    font-size:13px;
     color:var(--ink-soft);
     font-weight:600;
   }
@@ -4928,6 +4925,16 @@
   /* landing: flat headline, quiet background */
   .lp-grad{background:none; -webkit-background-clip:border-box; background-clip:border-box; color:inherit;}
   .lp-aurora i{opacity:.16;}
+  /* Home leads with Today's step: a slim search bar and one thin progress line above it. */
+  header{display:flex; flex-direction:column; padding:14px 0 0;}
+  header #search{order:1; padding:11px 16px; font-size:15px; border-radius:12px;}
+  header .search-results{order:2;}
+  header .brand-row{order:3; margin:12px 0 0; gap:0; flex-wrap:nowrap; flex-direction:row;}
+  .overall{min-width:0; width:100%; display:flex; align-items:center; gap:8px; text-align:left; background:none; border:0; border-radius:0; box-shadow:none; padding:0;}
+  .overall .num{font-size:14px; font-weight:700;}
+  .overall .lbl{font-size:13px;}
+  .overall-bar{flex:1; height:4px; margin:0 0 0 6px; border:0; background:var(--line);}
+  .edit-niches-btn{color:var(--ink-soft);}
 </style>
 </head>
 <body>
@@ -5484,8 +5491,8 @@
 
   <main>
     <div id="homeView">
-      <div id="dailyDigestWrap"></div>
       <div id="todayStepWrap"></div>
+      <div id="dailyDigestWrap"></div>
       <div id="continueCardWrap"></div>
       <div id="weeklyChallengeWrap"></div>
       <div class="section-head" id="yourChaptersHead" style="display:none;">
@@ -9964,7 +9971,7 @@ function renderDailyDigest(){
       const net = totalProfit - totalLoss;
       tradingBit = `
         <div class="digest-item">
-          <span class="digest-icon">📊</span>
+          <span class="digest-icon">${ico('chart')}</span>
           <div class="digest-text">
             <div class="digest-num">${net>=0?'+':''}$${net.toFixed(0)}</div>
             <div class="digest-lbl">Today's trading net</div>
@@ -9974,27 +9981,20 @@ function renderDailyDigest(){
     }
   }
 
-  if(streak.count === 0 && dueCount === 0 && !tradingBit){
+  if(dueCount === 0 && !tradingBit){
     digestWrap.innerHTML = '';
     return;
   }
 
   digestWrap.innerHTML = `
     <div class="digest-card">
-      <div class="digest-item">
-        <span class="digest-icon hot">${ico('flame')}</span>
-        <div class="digest-text">
-          <div class="digest-num">${streak.count} day${streak.count===1?'':'s'}</div>
-          <div class="digest-lbl">Current streak</div>
-        </div>
-      </div>
-      <div class="digest-item">
+      ${dueCount > 0 ? `<div class="digest-item">
         <span class="digest-icon">${ico('clock')}</span>
         <div class="digest-text">
           <div class="digest-num">${dueCount}</div>
-          <div class="digest-lbl">Due today or overdue</div>
+          <div class="digest-lbl">due today or overdue</div>
         </div>
-      </div>
+      </div>` : ''}
       ${tradingBit}
     </div>
   `;
