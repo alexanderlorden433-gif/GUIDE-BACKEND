@@ -49,6 +49,7 @@ SCREENS = {
     'business-pro': (True, "showBusiness()"),
     'stats':       (True,  "showStats()"),
     'community':   (True,  "showWins()"),
+    'community-wins': (True, "document.getElementById('bottomTabCommunity').click()"),
     'video':       (True,  "openNiche(NICHES[0].id); setCourseView('list'); document.querySelector('#nicheView .gv-watch').click()"),
     'privacy':     (False, "GuideMeta.showPrivacy()"),
     # the daily step loop: a learner who has done four lessons and has a 3-day streak
@@ -82,6 +83,8 @@ def main():
                 for theme in (('dark', 'light') if '--light' in sys.argv else ('dark',)):
                     ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
                     st = smoke.new_state(pro=name.endswith('-pro'))
+                    if name == 'community-wins':
+                        st['wins'] = [{'id': f'w{i}', 'body': b, 'emoji': e, 'authorId': f'u{i}', 'authorEmail': n + '@example.com', 'authorInitial': n[0].upper(), 'createdAt': smoke.TODAY, 'reactions': [{'id': f'r{i}{k}', 'userId': f'x{k}', 'emoji': '🔥'} for k in range(c)]} for i, (b, e, n, c) in enumerate([('Booked my first paid shoot', '🎉', 'maya', 5), ('Module one done, streak at 3', '💪', 'dev', 3), ('Sent my first contract with the template', '📄', 'sam', 2), ('Got a yes from a wedding client', '🔥', 'luis', 7), ('Finished my pricing sheet', '✅', 'ana', 1)])]
                     if name.startswith('live'):
                         st['wins'] = []
                         st['live'] = {'canHost': 'host' in name or 'past' in name, 'isOwner': False, 'calls': smoke.live_demo_calls(), 'replays': smoke.live_demo_replays(),

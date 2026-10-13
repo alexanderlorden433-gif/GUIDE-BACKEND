@@ -169,6 +169,19 @@
       "website_url": "https://theguide.company",
       "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
       "format": "video"
+    },
+    {
+      "name": "ad14-live-calls",
+      "angle": "New: live calls for Pro members (Q&As, updates, giveaways)",
+      "feed_4x5": "ad14-live-calls-feed-4x5.png",
+      "story_9x16": "ad14-live-calls-story-9x16.png",
+      "primary_text": "New in The Guide: live calls for Pro members. Join Q&As, product updates and giveaways with the team, and ask your questions live. Free to start.",
+      "headline": "Live calls for Pro members",
+      "description": "Free to start. Live calls are for Pro members.",
+      "call_to_action": "SIGN_UP",
+      "website_url": "https://theguide.company",
+      "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+      "format": "image"
     }
   ]
 }

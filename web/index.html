@@ -12016,7 +12016,7 @@ async function loadCommunityWins(){
     const text = (input.value||'').trim();
     if(!text){ showAppToast('Write something first!','error'); return; }
     try{
-      await apiFetch('/wins', { method:'POST', body: JSON.stringify({ text, emoji: emoji.value }) });
+      await apiFetch('/wins', { method:'POST', body: JSON.stringify({ body: text, emoji: emoji.value }) });
       input.value = '';
       showAppToast('Win posted!','success');
       loadCommunityWins();
@@ -12030,15 +12030,7 @@ async function loadCommunityWins(){
       return;
     }
     feed.innerHTML = '';
-    data.wins.forEach(w => {
-      const card = document.createElement('div');
-      card.className = 'win-card';
-      card.innerHTML = `<div class="win-top"><span class="win-emoji">${w.emoji||'🏆'}</span><span class="win-author">${w.userName||'Anon'}</span><span class="win-date">${new Date(w.createdAt).toLocaleDateString()}</span></div><div class="win-text">${w.text}</div><div class="win-actions"><button class="win-react-btn" data-id="${w.id}">🔥 ${w._count?.reactions||0}</button></div>`;
-      card.querySelector('.win-react-btn').addEventListener('click', async (e)=>{
-        try{ await apiFetch('/wins/'+w.id+'/react',{method:'POST'}); e.target.textContent='🔥 '+(parseInt(e.target.textContent.split(' ')[1]||0)+1); e.target.disabled=true; }catch(err){ showAppToast('Could not react','error'); }
-      });
-      feed.appendChild(card);
-    });
+    data.wins.forEach(w => feed.appendChild(buildWinCard(w, loadCommunityWins)));
   }catch(e){
     console.error('Community wins error:', e);
     feed.innerHTML = '<div class="tool-empty">Could not load wins — '+(e.message||'check your connection')+'<br><button onclick="loadCommunityWins()" style="margin-top:8px;padding:6px 18px;border-radius:8px;background:var(--grape);color:var(--on-accent);border:none;cursor:pointer;font-size:.95rem;">Retry</button></div>';
@@ -12092,6 +12084,56 @@ function showWins(){
 }
 winsBackBtn.addEventListener('click', showHome);
 
+function buildWinCard(w, reload){
+  const card = document.createElement('div');
+  card.className = 'win-card';
+  const time = new Date(w.createdAt);
+  const ago = timeAgo(time);
+  const displayName = (w.authorEmail || '').split('@')[0] || 'Guide User';
+  const initial = w.authorInitial || displayName[0].toUpperCase();
+  // Count reactions by emoji
+  const reactions = w.reactions || [];
+  const fireCount = reactions.filter(r=>r.emoji==='🔥').length;
+  const clapCount = reactions.filter(r=>r.emoji==='👏').length;
+  const strongCount = reactions.filter(r=>r.emoji==='💪').length;
+  const heartCount = reactions.filter(r=>r.emoji==='❤️').length;
+  // Check if current user reacted
+  const myReactions = reactions.filter(r=>r.userId===currentUserId);
+  const myFire = myReactions.some(r=>r.emoji==='🔥');
+  const myClap = myReactions.some(r=>r.emoji==='👏');
+  const myStrong = myReactions.some(r=>r.emoji==='💪');
+  const myHeart = myReactions.some(r=>r.emoji==='❤️');
+  const isAuthor = w.authorId === currentUserId;
+  card.innerHTML = `
+    <div class="win-header">
+      <div class="win-avatar">${initial}</div>
+      <div class="win-name">${escapeHtml(displayName)}${isAuthor ? ' <span style="color:var(--grape);">(you)</span>':''}</div>
+      <div class="win-time">${ago}</div>
+      ${isAuthor ? '<button class="win-delete-btn" data-id="'+w.id+'" title="Delete">✕</button>' : ''}
+    </div>
+    <div class="win-body">${w.emoji || '🏆'} ${escapeHtml(w.body)}</div>
+    <div class="win-emoji-row">
+      <button class="win-react-btn ${myFire?'active':''}" data-id="${w.id}" data-emoji="🔥">🔥 ${fireCount}</button>
+      <button class="win-react-btn ${myClap?'active':''}" data-id="${w.id}" data-emoji="👏">👏 ${clapCount}</button>
+      <button class="win-react-btn ${myStrong?'active':''}" data-id="${w.id}" data-emoji="💪">💪 ${strongCount}</button>
+      <button class="win-react-btn ${myHeart?'active':''}" data-id="${w.id}" data-emoji="❤️">❤️ ${heartCount}</button>
+    </div>
+  `;
+  card.querySelectorAll('.win-react-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try{ await apiFetch('/wins/' + btn.dataset.id + '/react', { method:'POST', body:JSON.stringify({emoji:btn.dataset.emoji}) }); reload(); }catch(e){}
+    });
+  });
+  const delBtn = card.querySelector('.win-delete-btn');
+  if(delBtn){
+    delBtn.addEventListener('click', async () => {
+      if(!confirm('Delete this win?')) return;
+      try{ await apiFetch('/wins/' + delBtn.dataset.id, { method:'DELETE' }); reload(); }catch(e){ alert('Could not delete.'); }
+    });
+  }
+  return card;
+}
+
 async function loadWins(){
   const feed = document.getElementById('winsFeed');
   const postArea = document.getElementById('winPostArea');
@@ -12111,55 +12153,7 @@ async function loadWins(){
       return;
     }
     feed.innerHTML = '';
-    data.wins.forEach(w => {
-      const card = document.createElement('div');
-      card.className = 'win-card';
-      const time = new Date(w.createdAt);
-      const ago = timeAgo(time);
-      const displayName = (w.authorEmail || '').split('@')[0] || 'Guide User';
-      const initial = w.authorInitial || displayName[0].toUpperCase();
-      // Count reactions by emoji
-      const reactions = w.reactions || [];
-      const fireCount = reactions.filter(r=>r.emoji==='🔥').length;
-      const clapCount = reactions.filter(r=>r.emoji==='👏').length;
-      const strongCount = reactions.filter(r=>r.emoji==='💪').length;
-      const heartCount = reactions.filter(r=>r.emoji==='❤️').length;
-      // Check if current user reacted
-      const myReactions = reactions.filter(r=>r.userId===currentUserId);
-      const myFire = myReactions.some(r=>r.emoji==='🔥');
-      const myClap = myReactions.some(r=>r.emoji==='👏');
-      const myStrong = myReactions.some(r=>r.emoji==='💪');
-      const myHeart = myReactions.some(r=>r.emoji==='❤️');
-      const isAuthor = w.authorId === currentUserId;
-      card.innerHTML = `
-        <div class="win-header">
-          <div class="win-avatar">${initial}</div>
-          <div class="win-name">${escapeHtml(displayName)}${isAuthor ? ' <span style="color:var(--grape);">(you)</span>':''}</div>
-          <div class="win-time">${ago}</div>
-          ${isAuthor ? '<button class="win-delete-btn" data-id="'+w.id+'" title="Delete">✕</button>' : ''}
-        </div>
-        <div class="win-body">${w.emoji || '🏆'} ${escapeHtml(w.body)}</div>
-        <div class="win-emoji-row">
-          <button class="win-react-btn ${myFire?'active':''}" data-id="${w.id}" data-emoji="🔥">🔥 ${fireCount}</button>
-          <button class="win-react-btn ${myClap?'active':''}" data-id="${w.id}" data-emoji="👏">👏 ${clapCount}</button>
-          <button class="win-react-btn ${myStrong?'active':''}" data-id="${w.id}" data-emoji="💪">💪 ${strongCount}</button>
-          <button class="win-react-btn ${myHeart?'active':''}" data-id="${w.id}" data-emoji="❤️">❤️ ${heartCount}</button>
-        </div>
-      `;
-      card.querySelectorAll('.win-react-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          try{ await apiFetch('/wins/' + btn.dataset.id + '/react', { method:'POST', body:JSON.stringify({emoji:btn.dataset.emoji}) }); loadWins(); }catch(e){}
-        });
-      });
-      const delBtn = card.querySelector('.win-delete-btn');
-      if(delBtn){
-        delBtn.addEventListener('click', async () => {
-          if(!confirm('Delete this win?')) return;
-          try{ await apiFetch('/wins/' + delBtn.dataset.id, { method:'DELETE' }); loadWins(); }catch(e){ alert('Could not delete.'); }
-        });
-      }
-      feed.appendChild(card);
-    });
+    data.wins.forEach(w => feed.appendChild(buildWinCard(w, loadWins)));
   } catch(e) {
     feed.innerHTML = '<div class="tool-empty">Could not load wins. <button type="button" onclick="loadWins()" style="color:var(--grape);background:none;border:none;cursor:pointer;font-weight:700;">Retry</button></div>';
   }
