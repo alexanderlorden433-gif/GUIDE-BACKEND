@@ -46,6 +46,7 @@ model User {
   networkRequests      NetworkRequest[]   @relation("NetworkFrom")
   networkReceived      NetworkRequest[]   @relation("NetworkTo")
   liveRsvps            LiveRsvp[]
+  liveQuestions        LiveQuestion[]
 
   @@index([stripeCustomerId])
   @@index([referredByCode])
@@ -321,8 +322,10 @@ model LiveCall {
   joinUrl     String
   status      String    @default("scheduled") // "scheduled" | "cancelled"
   remindedAt  DateTime?
+  replayUrl   String?   // added by the host after the call; Pro members get "Watch replay"
   createdAt   DateTime  @default(now())
   rsvps       LiveRsvp[]
+  questions   LiveQuestion[]
 
   @@index([startsAt])
 }
@@ -336,4 +339,17 @@ model LiveRsvp {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([callId, userId])
+}
+
+// A question a Pro member sends in before a call, for the host to answer live.
+model LiveQuestion {
+  id        String   @id @default(uuid())
+  callId    String
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+  call      LiveCall @relation(fields: [callId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([callId])
 }
