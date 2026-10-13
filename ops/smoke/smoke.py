@@ -1314,6 +1314,108 @@ def step_one_demo(browser, base):
         ctx.close()
 
 
+def account_settings(browser, base):
+    """Account settings: fits the screen, the title and close button stay put, the form scrolls inside the box so
+    every part (including Delete) can be reached, and the profile and password forms still work."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    for device, vp, mobile in (('phone', {'width': 390, 'height': 844}, True), ('small phone', {'width': 360, 'height': 560}, True), ('desktop', {'width': 1280, 'height': 700}, False)):
+        step = [f'{device}: account settings']
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        st = new_state(False)
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'the app did not open'); ctx.close(); continue
+        page.wait_for_timeout(600)
+        page.evaluate("document.getElementById('accountBtn').click()"); page.wait_for_timeout(500)
+        geo = page.evaluate("""(()=>{ const box = document.getElementById('upgradeModalBody').getBoundingClientRect();
+          const head = document.querySelector('.acct-head'); const x = document.getElementById('accountCloseBtn').getBoundingClientRect();
+          const body = document.querySelector('.acct-body');
+          return {top: Math.round(box.top), bottom: Math.round(box.bottom), vh: innerHeight, left: Math.round(box.left), right: Math.round(box.right), vw: innerWidth,
+                  headOk: !!head && head.getBoundingClientRect().top >= box.top - 1 && head.getBoundingClientRect().bottom <= box.bottom,
+                  xOk: x.width >= 32 && x.height >= 32 && x.top >= box.top && x.right <= box.right && x.bottom <= box.bottom,
+                  scrolls: body.scrollHeight > body.clientHeight, title: document.querySelector('.acct-who h2').textContent}; })()""")
+        if geo['top'] < 0 or geo['bottom'] > geo['vh'] or geo['left'] < 0 or geo['right'] > geo['vw']:
+            problem(step[0], 'the account settings box does not fit on the screen', geo)
+        elif not geo['headOk'] or not geo['xOk']:
+            problem(step[0], 'the title and the close button should stay in view and be easy to tap', geo)
+        else:
+            ok(step[0], 'the box fits the screen with the title and a big close button in view')
+        if device == 'phone':
+            shot(page, 'phone-16-account-top')
+        # every part can be reached: scroll the form to the bottom and the Delete button is in view inside the box
+        page.evaluate("document.querySelector('.acct-body').scrollTop = 99999"); page.wait_for_timeout(250)
+        end = page.evaluate("""(()=>{ const b = document.getElementById('accDeleteBtn').getBoundingClientRect(); const box = document.getElementById('upgradeModalBody').getBoundingClientRect();
+          return {inView: b.top >= box.top && b.bottom <= box.bottom + 1 && b.bottom <= innerHeight, h: Math.round(b.height)}; })()""")
+        if not end['inView']:
+            problem(step[0], 'the Delete button cannot be scrolled into view', end)
+        else:
+            ok(step[0], 'scrolling to the bottom reaches the Delete button')
+        if device == 'phone':
+            shot(page, 'phone-17-account-bottom')
+        page.evaluate("document.querySelector('.acct-body').scrollTop = 0")
+        # the fields: big enough to tap, text size that stops phones zooming in, labels focus their field
+        fields = page.evaluate("""(()=>[...document.querySelectorAll('.acct-field input, .acct-field textarea')].map(e => {
+          const r = e.getBoundingClientRect(); return {id: e.id, h: Math.round(r.height), fs: parseFloat(getComputedStyle(e).fontSize), w: Math.round(r.width)}; }))()""")
+        bad = [f for f in fields if f['h'] < 40 or f['fs'] < 16 or f['w'] < 200]
+        if len(fields) != 4 or bad:
+            problem(step[0], 'the profile and password fields should be at least 40px tall, 16px text, and wide', fields)
+        else:
+            ok(step[0], 'all four fields are roomy, with 16px text')
+        page.locator('label[for=accCurrentPw] > span').scroll_into_view_if_needed()
+        page.locator('label[for=accCurrentPw] > span').click(); page.wait_for_timeout(100)
+        if page.evaluate("document.activeElement && document.activeElement.id") != 'accCurrentPw':
+            problem(step[0], 'tapping a field label should focus its field')
+        # profile: change the name and save
+        page.evaluate("document.querySelector('.acct-body').scrollTop = 0")
+        page.fill('#accDisplayName', 'Sam Smoke'); page.fill('#accBio', 'Building a lawn business')
+        avatar = page.evaluate("document.getElementById('profileAvatarPreview').textContent")
+        page.click('#accProfileSaveBtn'); page.wait_for_timeout(500)
+        note = page.evaluate("(()=>{ const n = document.getElementById('profileSaveNote'); return {t: n.textContent, ok: n.classList.contains('ok'), badge: document.getElementById('userBadge').textContent, saved: userProfile.displayName}; })()")
+        if avatar != 'S' or note['t'] != 'Profile saved!' or not note['ok'] or note['saved'] != 'Sam Smoke':
+            problem(step[0], 'saving the profile should confirm and keep the new name', {'avatar': avatar, **note})
+        else:
+            ok(step[0], 'the profile saves and says so')
+        # password: too short is refused with a message; a good one goes through and clears the boxes
+        page.fill('#accCurrentPw', 'oldpassword'); page.fill('#accNewPw', 'short')
+        page.click('#accPwSaveBtn'); page.wait_for_timeout(300)
+        msg = page.evaluate("document.getElementById('accPwError').textContent")
+        if '8 characters' not in msg:
+            problem(step[0], 'a too-short new password should be refused with a message', msg)
+        page.fill('#accNewPw', 'a-good-password-1')
+        page.click('#accPwSaveBtn'); page.wait_for_timeout(500)
+        done = page.evaluate("(()=>{ const n = document.getElementById('accPwError'); return {t: n.textContent, ok: n.classList.contains('ok'), cur: document.getElementById('accCurrentPw').value, nw: document.getElementById('accNewPw').value}; })()")
+        if done['t'] != 'Password updated.' or not done['ok'] or done['cur'] or done['nw']:
+            problem(step[0], 'a good password change should confirm and clear the boxes', done)
+        else:
+            ok(step[0], 'the password change confirms and clears the boxes')
+        # the close button works, and a second open still looks right
+        page.click('#accountCloseBtn'); page.wait_for_timeout(300)
+        if page.evaluate("document.getElementById('upgradeOverlay').classList.contains('open')"):
+            problem(step[0], 'the close button should close account settings')
+        # other windows that share this box must not be squeezed by the account styles
+        page.evaluate("openUpgradeModal()"); page.wait_for_timeout(400)
+        up = page.evaluate("(()=>{ const b = document.getElementById('upgradeModalBody'); const cs = getComputedStyle(b); return {acct: !!b.querySelector('.acct'), pad: cs.paddingTop}; })()")
+        if up['acct'] or up['pad'] == '0px':
+            problem(step[0], 'the upgrade window should keep its own look after account settings was open', up)
+        close_paywall(page)
+        no_sideways_scroll(page, step[0])
+        if device == 'phone':
+            html = open(os.path.join(ROOT, 'web', 'index.html'), encoding='utf-8').read()
+            css = html[html.index('/* ---------- Account settings: a tidy sheet'):html.index('/* ---------- Confetti ---------- */')]
+            hard = re.findall(r'#[0-9a-fA-F]{3,8}\b|rgba?\(\s*\d', css)
+            body = html[html.index('function renderAccountModal()'):html.index('function openNiche(id)')]
+            hard_js = re.findall(r"'#[0-9a-fA-F]{3,8}'", body)
+            if hard or hard_js:
+                problem(step[0], 'the account settings styles or script hard-code colours; use the colour variables', (hard + hard_js)[:5])
+            else:
+                ok(step[0], 'account settings use only the look colour variables')
+        finish(st, step[0])
+        ctx.close()
+
+
 def daily_step(browser, base):
     """The daily step loop: Today's step on Home, the "step done" card, and the path map of a chapter."""
     step = ['daily step']
@@ -1530,6 +1632,7 @@ def main():
         returning_learner(browser, base)
         daily_step(browser, base)
         step_one_demo(browser, base)
+        account_settings(browser, base)
         browser.close()
     srv.shutdown()
     # de-duplicate
