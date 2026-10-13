@@ -19,6 +19,8 @@ const winsRoutes = require('./routes/wins');
 const leaderboardRoutes = require('./routes/leaderboard');
 const networkRoutes = require('./routes/networking');
 const analyticsRoutes = require('./routes/analytics');
+const liveRoutes = require('./routes/live');
+const { ensureLiveTables, scheduleLiveReminders } = require('./live');
 const { ensureAnalyticsTables, pruneOldEvents, drain: drainAnalytics } = require('./analytics');
 const { ensureMetaTable } = require('./meta');
 const { scheduleWeeklyDigest } = require('./digest');
@@ -101,6 +103,7 @@ app.use('/api/wins', winsRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/network', networkRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/live', liveRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {
@@ -116,6 +119,8 @@ app.listen(PORT, () => {
   scheduleStreakReminders();
   ensureAnalyticsTables().then(ok => { if (ok) pruneOldEvents(); });
   ensureMetaTable();
+  ensureLiveTables();
+  scheduleLiveReminders(); // does nothing until the tables exist
   setInterval(pruneOldEvents, 24 * 60 * 60 * 1000).unref();
 });
 
