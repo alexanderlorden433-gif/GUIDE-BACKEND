@@ -23,6 +23,8 @@ SCREENS = {
     'landing':     (False, ''),
     # live calls: 'live' is a free member, the '-pro' ones are Pro members; calls come from smoke.live_demo_calls()
     'live':        (True,  "showLive()"),
+    'live-empty':  (True,  "showLive()"),
+    'live-empty-pro': (True, "showLive()"),
     'live-pro':    (True,  "showLive()"),
     'live-home-pro': (True, "showHome()"),
     'live-replay-home': (True, "showHome()"),
@@ -108,7 +110,9 @@ def main():
                             st['wins'] = []; st['live'] = {'canHost': False, 'isOwner': False, 'calls': smoke.live_demo_calls()}
                     if name == 'community-wins':
                         st['wins'] = [{'id': f'w{i}', 'body': b, 'emoji': e, 'authorId': f'u{i}', 'authorName': n, 'authorInitial': n[0].upper(), 'createdAt': smoke.TODAY, 'reactions': [{'id': f'r{i}{k}', 'userId': f'x{k}', 'emoji': '🔥'} for k in range(c)]} for i, (b, e, n, c) in enumerate([('Booked my first paid shoot', '🎉', 'maya', 5), ('Module one done, streak at 3', '💪', 'dev', 3), ('Sent my first contract with the template', '📄', 'sam', 2), ('Got a yes from a wedding client', '🔥', 'luis', 7), ('Finished my pricing sheet', '✅', 'ana', 1)])]
-                    if name == 'live-replay-home':
+                    if name.startswith('live-empty'):
+                        st['wins'] = []; st['live'] = {'canHost': False, 'isOwner': False, 'calls': [], 'replays': [], 'past': []}
+                    elif name == 'live-replay-home':
                         st['wins'] = []; st['live'] = {'canHost': False, 'isOwner': False, 'calls': [], 'replays': smoke.live_demo_replays()}
                     elif name.startswith('live'):
                         st['wins'] = []

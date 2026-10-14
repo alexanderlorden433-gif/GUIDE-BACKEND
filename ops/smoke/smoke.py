@@ -639,7 +639,8 @@ def logged_in(browser, base, device, viewport, mobile, pro=True):
     step[0] = f'{device}: community connect'
     try:
         if page.evaluate('typeof showCommunityTab === "function"'):
-            page.evaluate('showHome && showHome(); showCommunityTab()')
+            # Connect lives in the social part of the tab, which opens once the Wins board has posts
+            page.evaluate('showHome && showHome(); applyCommunityVisibility(true); showCommunityTab()')
             page.locator('#communityTabs [data-ctab="connect"]').click(timeout=3000)
             btn = page.locator('#ctabNetworkContent .network-connect-btn').first
             btn.wait_for(state='visible', timeout=5000)
@@ -885,11 +886,12 @@ def business_results(browser, base):
 
 
 def quiet_community(browser, base):
-    """The social parts stay hidden while they're empty, and come back when they aren't."""
+    """The Community tab is always there. With no posts yet it is just "Live calls" (with a "first call coming soon"
+    note that sells Pro); once the Wins board has 5+ posts the social parts come back."""
     for label, posts, expect in (('empty', 0, False), ('busy', 6, True)):
         step = [f'community ({label})']
         ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
-        st = new_state(True)
+        st = new_state(expect)
         st['wins'] = [{'id': f'w{i}', 'body': 'Got my first client', 'emoji': '🎉', 'authorId': f'u{i}',
                        'authorName': 'someone', 'authorInitial': 'S', 'createdAt': TODAY,
                        'reactions': []} for i in range(posts)]
@@ -901,11 +903,26 @@ def quiet_community(browser, base):
             problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); continue
         page.wait_for_timeout(1400)
         shown = page.evaluate("getComputedStyle(document.getElementById('bottomTabCommunity')).display !== 'none'")
-        if shown != expect:
-            problem(step[0], f'with {posts} posts the Community tab should be '
-                             f'{"shown" if expect else "hidden"} but was not')
+        only = page.evaluate("document.getElementById('communityView').classList.contains('live-only')")
+        if not shown or only == expect:
+            problem(step[0], f'with {posts} posts the Community tab should show as {"Community" if expect else "just Live calls"}', {'shown': shown, 'liveOnly': only})
         else:
-            ok(step[0], f'{posts} posts — Community tab {"shown" if expect else "stays hidden"}')
+            ok(step[0], f'{posts} posts — the tab shows as {"Community" if expect else "just Live calls"}')
+        if not expect and shown:
+            # nothing scheduled, nobody posted: the tab still has something to say
+            page.click('#bottomTabCommunity'); page.wait_for_timeout(900)
+            title = page.inner_text('#communityTitle')
+            soon = page.locator('.live-soon')
+            text = soon.inner_text() if soon.count() else ''
+            if title == 'Live calls' and 'First live call coming soon' in text and 'part of Pro' in text and page.locator('.live-soon [data-live=unlock]').count() == 1:
+                ok(step[0], 'with nothing scheduled, a free member sees "First live call coming soon" and a button to see Pro')
+            else:
+                problem(step[0], 'the empty live screen should say the first call is coming soon', {'title': title, 'text': text[:120]})
+            page.click('.live-soon [data-live=unlock]'); page.wait_for_timeout(500)
+            if visible(page, '#upgradeOverlay', 3000):
+                ok(step[0], 'the button opens the Pro window')
+            else:
+                problem(step[0], 'the "See what Pro includes" button should open the Pro window')
         if expect and shown:
             # the Wins board inside the Community tab: real names and text, posting, reacting
             page.click('#bottomTabCommunity'); page.wait_for_timeout(900)
