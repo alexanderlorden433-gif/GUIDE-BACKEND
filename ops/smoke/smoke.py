@@ -110,7 +110,7 @@ def fixture(state, method, path, body):
         text = str((body or {}).get('body') or '').strip()
         if not text:
             return 400, {'error': 'Win text is required (max 500 chars).'}
-        w = {'id': 'w_new', 'body': text, 'emoji': (body or {}).get('emoji') or '🎉', 'authorId': 'u_smoke', 'authorEmail': 'smoke@example.com',
+        w = {'id': 'w_new', 'body': text, 'emoji': (body or {}).get('emoji') or '🎉', 'authorId': 'u_smoke', 'authorName': 'smoke',
              'authorInitial': 'S', 'createdAt': TODAY, 'reactions': []}
         state.setdefault('wins', []).insert(0, w); state.setdefault('win_posts', []).append(body)
         return 201, w
@@ -121,7 +121,7 @@ def fixture(state, method, path, body):
         state.setdefault('win_reacts', []).append((p.split('/')[3], emoji))
         return 200, {'action': 'added'}
     if re.match(r'^/api/discussion/[^/]+$', p) and method == 'GET':
-        return 200, {'posts': [], 'isOwner': False}
+        return 200, {'posts': state.get('discussion', []), 'isOwner': False}
     if re.match(r'^/api/mentors/[^/]+$', p) and method == 'GET':
         return 200, {'profiles': [], 'mine': None}
     if p == '/api/mentors/all/search':
@@ -889,7 +889,7 @@ def quiet_community(browser, base):
         ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
         st = new_state(True)
         st['wins'] = [{'id': f'w{i}', 'body': 'Got my first client', 'emoji': '🎉', 'authorId': f'u{i}',
-                       'authorEmail': 'someone@example.com', 'authorInitial': 'S', 'createdAt': TODAY,
+                       'authorName': 'someone', 'authorInitial': 'S', 'createdAt': TODAY,
                        'reactions': []} for i in range(posts)]
         attach_backend(ctx, st)
         ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
@@ -2200,6 +2200,44 @@ def step_one_demo(browser, base):
         ctx.close()
 
 
+def community_names(browser, base):
+    """Chapter discussion: each post and reply shows the poster's name (the part before the "@", sent by the
+    backend as authorName) — never a full email address — and your own post says "(you)"."""
+    step = ['chapter discussion: names']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(True)
+    st['discussion'] = [
+        {'id': 'd1', 'body': 'How do you price a first shoot?', 'authorName': 'maya', 'isMine': False, 'canDelete': False, 'createdAt': TODAY,
+         'replies': [{'id': 'd1r1', 'body': 'Start with a half-day rate', 'authorName': 'luis', 'isMine': False, 'canDelete': False, 'createdAt': TODAY}]},
+        {'id': 'd2', 'body': 'My first client said yes', 'authorName': 'smoke', 'isMine': True, 'canDelete': True, 'createdAt': TODAY, 'replies': []},
+    ]
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'the app did not open')
+    else:
+        page.wait_for_timeout(600)
+        try:
+            page.evaluate("openNiche(NICHES[0].id); renderDiscussionPanel()")
+        except Exception as e:
+            problem(step[0], 'the chapter discussion crashed while showing posts', e)
+            finish(st, step[0]); ctx.close(); return
+        page.wait_for_timeout(800)
+        got = page.evaluate("""(()=>{ const l = document.getElementById('discussionList');
+          return {names: [...l.querySelectorAll('.mentor-card-name')].map(e => e.innerText.trim()), text: l.innerText}; })()""")
+        want = ['maya', 'luis', 'smoke (you)']
+        if not all(any(n.startswith(w) for n in got['names']) for w in want):
+            problem(step[0], 'posts and replies should show the poster\'s name', got['names'])
+        elif '@' in got['text'] or 'undefined' in got['text']:
+            problem(step[0], 'the discussion shows an email address or "undefined"', got['text'][:200])
+        else:
+            ok(step[0], 'posts and replies show names (no email addresses) and your own post says "(you)"')
+    finish(st, step[0])
+    ctx.close()
+
+
 def startup_account(browser, base):
     """Coming back on a saved login: the app keeps who you are (your own posts say "(you)" and can be deleted)
     and whether a free trial is still on offer (only for people who have never paid)."""
@@ -2654,6 +2692,7 @@ def main():
         daily_step(browser, base)
         niche_burst(browser, base)
         startup_account(browser, base)
+        community_names(browser, base)
         step_one_demo(browser, base)
         account_settings(browser, base)
         manage_subscription(browser, base)
