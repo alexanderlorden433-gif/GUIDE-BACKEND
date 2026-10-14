@@ -4845,6 +4845,16 @@
   .ts-chap{font-size:12.5px; color:var(--ink-soft); margin-bottom:6px;}
   .ts-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; line-height:1.25; color:var(--ink); margin-bottom:8px;}
   .ts-do{font-size:14.5px; line-height:1.5; color:var(--ink-2); margin-bottom:14px;}
+  .today-step.mod1-done{border-color:rgba(var(--accent2-rgb),.45); background:linear-gradient(160deg, rgba(var(--accent2-rgb),.10), rgba(var(--accent2-rgb),.02) 60%), var(--card);}
+  .today-step.mod1-done .ts-do{margin-bottom:6px;}
+  .ts-next{list-style:none; margin:0 0 10px; padding:0;}
+  .ts-next li{display:flex; align-items:flex-start; gap:8px; padding:7px 0; border-bottom:1px solid var(--line); font-size:14.5px; color:var(--ink);}
+  .ts-next li:last-child{border-bottom:none;}
+  .ts-next li .ico{width:14px; height:14px; margin-top:3px; flex:none; color:var(--gold);}
+  .ts-counts{font-size:13px; color:var(--ink-soft); margin-bottom:12px; line-height:1.45;}
+  .sc-next-list{list-style:none; margin:6px 0 8px; padding:0; font-size:14px; color:var(--ink-2);}
+  .sc-next-list li{padding:3px 0;}
+  .sc-next-list li::before{content:'· '; color:var(--ink-soft);}
   .ts-do b{color:var(--ink); font-weight:700;}
   .ts-go{display:block; width:100%; border:none; border-radius:14px; padding:14px 16px; font:700 15px 'Space Grotesk',sans-serif; background:var(--accent-gradient); color:var(--on-accent); cursor:pointer; box-shadow:0 8px 24px rgba(var(--accent-rgb),.28); transition:transform .15s ease, box-shadow .15s ease; touch-action:manipulation;}
   .ts-go:active{transform:scale(.98); box-shadow:0 3px 12px rgba(var(--accent-rgb),.25);}
@@ -10856,6 +10866,34 @@ function nicheNextStep(niche){
   return { niche, guide, idx, lock: guideLock(niche, guide, idx, idx) };
 }
 
+/** What Pro opens in one chapter, in concrete terms: the next lesson titles and the counts. Used by the
+ *  "you finished Module 1" card on Home and by the step-done sheet. */
+function proUnlockSummary(niche, fromIdx){
+  const guides = niche.guides || [];
+  const start = Number.isFinite(fromIdx) ? fromIdx : guides.findIndex(g => g.mod !== 0);
+  const locked = guides.filter((g, i) => i >= start && g.mod !== 0);
+  const cfg = NICHE_TOOLS[niche.id];
+  const tools = cfg ? (cfg.panels || []).length + (cfg.specialty ? 1 : 0) + (cfg.specialty2 ? 1 : 0) : 0;
+  const started = courseStarts[niche.id];
+  const daysTaken = started ? Math.max(1, dayNum(todayStr()) - dayNum(started) + 1) : null;
+  return {
+    next: locked.slice(0, 3).map(g => g.title),
+    remaining: locked.length,
+    modules: Math.max(0, (niche.modules || []).length - 1),
+    templates: (niche.templates || []).length,
+    checklists: (niche.checklists || []).length,
+    tools,
+    daysTaken,
+  };
+}
+function proUnlockCounts(u){
+  const parts = [`${u.remaining} more lesson${u.remaining === 1 ? '' : 's'}`];
+  if(u.templates) parts.push(`${u.templates} template${u.templates === 1 ? '' : 's'}`);
+  if(u.tools) parts.push(`${u.tools} tracker${u.tools === 1 ? '' : 's'}`);
+  parts.push('unlimited questions to The Guider');
+  return parts.join(' · ');
+}
+
 /** Picks the one step to put in front of the learner: where they were last, then chapters they've started, then the rest. */
 function pickTodayStep(){
   const sel = (selectedNiches || []).filter(id=> NICHES.some(n=> n.id === id));
@@ -10865,8 +10903,10 @@ function pickTodayStep(){
   const byRank = (a, b)=> rank(a) - rank(b);
   const all = NICHES.map(nicheNextStep).filter(Boolean);
   const inMine = all.filter(s=> mine.includes(s.niche));
-  const step = inMine.filter(s=> !s.lock).sort(byRank)[0] || all.filter(s=> !s.lock).sort(byRank)[0] || null;
   const pro = (inMine.length ? inMine : all).filter(s=> s.lock === 'pro').sort(byRank)[0] || null;
+  // A free step in one of their own chapters comes first. When their chapters are at the Pro wall, Home shows
+  // the "Module 1 done" card rather than a lesson from a chapter they never picked (those stay a tap away below).
+  const step = inMine.filter(s=> !s.lock).sort(byRank)[0] || ((pro && !isPro) ? null : all.filter(s=> !s.lock).sort(byRank)[0]) || null;
   const week = all.filter(s=> s.lock === 'week').sort((a, b)=> moduleDaysLeft(a.niche.id, a.guide.mod) - moduleDaysLeft(b.niche.id, b.guide.mod))[0] || null;
   return { step, pro: isPro ? null : pro, week };
 }
@@ -10943,13 +10983,17 @@ function renderTodayStep(clearOnly){
       html += `<button type="button" class="ts-pro-note" id="todayProNote"><span>${ico('lock')} ${gvEsc(p.pro.niche.name)}: the free part is done</span><b>See Pro →</b></button>`;
     }
   } else if(p.pro){
-    const n = p.pro.niche, mod = (n.modules || [])[p.pro.guide.mod];
-    html = `<div class="today-step quiet" id="todayStepCard">
-        <div class="ts-top"><span class="ts-label">You finished the free part</span>${streakBit}</div>
+    const n = p.pro.niche, u = proUnlockSummary(n, p.pro.idx);
+    const took = u.daysTaken ? (u.daysTaken === 1 ? ' in a day' : ` in ${u.daysTaken} days`) : '';
+    html = `<div class="today-step quiet mod1-done" id="todayStepCard">
+        <div class="ts-top"><span class="ts-label">Module 1 done ✓</span>${streakBit}</div>
         <div class="ts-chap">${nicheIco(n)} ${gvEsc(n.name)}</div>
-        <div class="ts-title">${mod ? 'Next: ' + gvEsc(mod.title) : 'The rest of this course is in Pro'}</div>
-        <div class="ts-do">Nice work. Module 1 of every course is free; Pro opens the rest.</div>
-        <button type="button" class="ts-go" id="todayStepGo">See what Pro opens →</button>
+        <div class="ts-title">You finished Module 1 of ${gvEsc(n.name)}${took}.</div>
+        <div class="ts-do">Next up in this chapter:</div>
+        <ul class="ts-next">${u.next.map(t => `<li>${ico('lock')} ${gvEsc(t)}</li>`).join('')}</ul>
+        <div class="ts-counts">${gvEsc(proUnlockCounts(u))}</div>
+        <button type="button" class="ts-go" id="todayStepGo">Keep going with Pro →</button>
+        <div class="ts-meta">Module 1 of every chapter stays free.</div>
       </div>`;
     onGo = ()=> openUpgradeModal({ type: 'tab', nicheId: n.id, tab: 'guides' });
   } else {
@@ -11054,8 +11098,10 @@ function celebrateStep(niche, guide, before){
     primary = `<button type="button" class="sc-btn" data-act="next">Next step →</button>`;
     secondary = `<button type="button" class="sc-text" data-act="close">That's enough for today</button>`;
   } else if(next && next.lock === 'pro'){
-    nextHtml = `<div class="sc-next"><div class="sc-kicker">You finished the free part</div><div class="nt">The rest of ${gvEsc(niche.name)} is in Pro.</div><div class="nm">Module 1 of every course stays free.</div></div>`;
-    primary = `<button type="button" class="sc-btn gold" data-act="pro">See what Pro opens</button>`;
+    const u = proUnlockSummary(niche, next.idx);
+    nextHtml = `<div class="sc-next"><div class="sc-kicker">You finished Module 1 of ${gvEsc(niche.name)}</div><div class="nt">Next up: ${gvEsc(u.next[0] || 'the rest of the chapter')}</div>
+      <ul class="sc-next-list">${u.next.slice(1).map(t => `<li>${gvEsc(t)}</li>`).join('')}</ul><div class="nm">${gvEsc(proUnlockCounts(u))}. Module 1 of every chapter stays free.</div></div>`;
+    primary = `<button type="button" class="sc-btn gold" data-act="pro">Keep going with Pro</button>`;
     secondary = `<button type="button" class="sc-text" data-act="close">Not now</button>`;
   } else {
     const days = next ? moduleDaysLeft(niche.id, next.guide.mod) : 0;

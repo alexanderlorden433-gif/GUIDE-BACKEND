@@ -64,6 +64,8 @@ SCREENS = {
     'path':        (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id)"),
     'step-sheet':  (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); openStepSheet(NICHES[0], 4)"),
     'step-locked': (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); openStepSheet(NICHES[0], 9)"),
+    'mod1-done':   (True,  "selectedNiches=['video']; courseStarts={video: dateMinusDays(todayStr(), 5)}; NICHES[0].guides.filter(g=>g.mod===0).forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); streak={count:6,lastDate:todayStr()}; showHome()"),
+    'mod1-sheet':  (True,  "selectedNiches=['video']; const fr=NICHES[0].guides.filter(g=>g.mod===0); fr.slice(0,-1).forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); openNiche(NICHES[0].id); setTimeout(()=>markStepDone(NICHES[0], fr[fr.length-1]), 400)"),
     'home-pronote': (True, "NICHES[0].guides.filter(g=>g.mod===0).forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); streak={count:2,lastDate:dateMinusDays(todayStr(),1)}; showHome()"),
     'path-start':  (True,  "streak={count:0,lastDate:null}; openNiche(NICHES[1].id)"),
     'step-done':   (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); markStepDone(NICHES[0], NICHES[0].guides[4])"),
