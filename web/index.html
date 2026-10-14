@@ -2026,6 +2026,7 @@
   .template-preview{
     font-size:12.5px;
     line-height:1.6;
+    white-space:pre-wrap;
     color:var(--ink-soft);
     background:var(--bg);
     border:1px solid var(--line);
@@ -2471,6 +2472,18 @@
     max-height:520px;
     overflow:hidden;
   }
+  /* A peek at Pro content: the first lines readable, the rest blurred, the unlock right there. */
+  .peek-blur{filter:blur(4.5px); user-select:none; pointer-events:none; opacity:.8;}
+  .peek-bar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:12px; padding:12px 14px; border-radius:12px; border:1px solid rgba(var(--accent-rgb),.3); background:rgba(var(--accent-rgb),.08); font-size:13.5px; line-height:1.4; color:var(--ink-2);}
+  .peek-bar b{color:var(--ink);}
+  .peek-bar .live-btn{flex:none;}
+  .guide.locked.peeking{opacity:1;}
+  .guide.locked.peeking .guide-title{color:var(--ink);}
+  .guide.locked.peeking .guide-row{cursor:pointer;}
+  .template-card.peek .template-preview{max-height:none;}
+  .template-card.peek .peek-blur{display:block; margin-top:2px;}
+  .templates-peek-note{grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 14px; border-radius:12px; border:1px solid rgba(var(--accent-rgb),.3); background:rgba(var(--accent-rgb),.08); font-size:13.5px; color:var(--ink-2);}
+  .templates-peek-note b{color:var(--ink);}
   .pro-preview-overlay{
     position:absolute;
     inset:0;
@@ -10745,7 +10758,7 @@ function renderNicheDetail(){
     `;
     g.querySelector('.guide-row').addEventListener('click', (e)=>{
       if(e.target.classList.contains('bookmark-star')) return;
-      if(lock === 'pro'){ openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }); return; }
+      if(lock === 'pro'){ togglePeek(); return; }
       if(lock){ g.classList.add('shake'); setTimeout(()=> g.classList.remove('shake'), 450); return; }
       const opening = !g.classList.contains('open');
       if(opening) g._fill();
@@ -10755,6 +10768,24 @@ function renderNicheDetail(){
         saveProgress();
       }
     });
+    // A peek at a Pro lesson: the summary and first paragraph readable, the rest blurred, with the unlock right there.
+    function togglePeek(){
+      const opening = !g.classList.contains('open');
+      if(opening && !g._peeked){
+        g._peeked = true;
+        const paras = String(guide.content || '').replace(/\\n/g, '\n').split(/\n\s*\n/).filter(Boolean);
+        const first = paras[0] || '';
+        const second = paras[1] || '';
+        const inChapter = niche.guides.filter(x => x.mod !== 0).length;
+        g.querySelector('.guide-content').innerHTML = `
+          ${guide.summary ? `<p style="color:var(--ink-soft); font-style:italic;">${guide.summary}</p>` : ''}
+          ${first ? guidePara(first) : ''}
+          <div class="peek-blur" aria-hidden="true">${second ? guidePara(second.slice(0, 260)) : ''}${guide.action ? `<div class="next-step"><b>Your next step</b><span>${gvEsc(guide.action)}</span></div>` : ''}</div>
+          <div class="peek-bar"><span><b>This lesson is part of Pro.</b> Module 1 is free. Pro opens this one and the other ${inChapter - 1} in ${gvEsc(niche.name)}.</span><button type="button" class="live-btn primary peek-unlock">${ico('lock')} Unlock with Pro</button></div>`;
+        g.querySelector('.peek-unlock').addEventListener('click', (e)=>{ e.stopPropagation(); openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }); });
+      }
+      g.classList.toggle('open', opening); g.classList.toggle('peeking', opening);
+    }
     g.dataset.gv = gvId(niche.id, guide.title);
     g._gvOpen = ()=>{ if(lock) return; openGuideVideo(niche, guide, gvCtx(niche, guide, visibleGuides)); };
     gvBindWatch(g);
@@ -12645,40 +12676,38 @@ function renderTemplatesPanel(){
   templatesPanelWrap.appendChild(previewWrap);
 
   const grid = document.createElement('div');
-  grid.className = 'templates-grid' + (isPro ? '' : ' pro-preview-blur');
+  grid.className = 'templates-grid';
   previewWrap.appendChild(grid);
 
   if(!isPro){
-    const overlay = document.createElement('div');
-    overlay.className = 'pro-preview-overlay';
-    overlay.innerHTML = `
-      <div class="pro-preview-icon">${ico('lock')}</div>
-      <p class="pro-preview-title">Unlock ready-to-send templates</p>
-      <p class="pro-preview-text">Contracts, pitch emails, and estimates for ${niche.name} -- copy, fill in, and send the same day.</p>
-      <button type="button" class="pro-preview-btn">Upgrade to Pro</button>
-    `;
-    overlay.querySelector('.pro-preview-btn').addEventListener('click', ()=>{
-      openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'templates' });
-    });
-    previewWrap.appendChild(overlay);
+    // a peek: every template shows its first lines; the rest is blurred, with the unlock right there
+    const note = document.createElement('div');
+    note.className = 'templates-peek-note';
+    note.innerHTML = `<span><b>Templates are part of Pro.</b> ${(niche.templates || []).length} ready-to-send ${niche.name} templates: contracts, pitch emails, estimates. Here is a peek.</span><button type="button" class="live-btn primary">${ico('lock')} Unlock with Pro</button>`;
+    note.querySelector('button').addEventListener('click', ()=> openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'templates' }));
+    grid.appendChild(note);
   }
 
   (niche.templates || []).forEach(t=>{
     const card = document.createElement('div');
-    card.className = 'template-card';
+    card.className = 'template-card' + (isPro ? '' : ' peek');
     const catClass = t.category.toLowerCase();
+    const body = String(t.body || '').replace(/\\n/g, '\n');   // the lesson files write line breaks as \n
+    const nl = body.indexOf('\n', 100);
+    const cut = isPro ? body.length : (nl > 0 ? nl : Math.min(body.length, 180));   // readable up to a line break, then the blur
     card.innerHTML = `
       <div class="template-card-head">
         <div class="template-card-title">${t.title}</div>
         <span class="template-category-tag ${catClass}">${t.category}</span>
       </div>
-      <div class="template-preview">${t.body}</div>
-      <button type="button" class="template-copy-btn">Copy to clipboard</button>
+      <div class="template-preview">${isPro ? escapeHtml(body) : escapeHtml(body.slice(0, cut)) + (body.length > cut ? `<span class="peek-blur" aria-hidden="true">${escapeHtml(body.slice(cut, cut + 220))}</span>` : '')}</div>
+      ${isPro ? '<button type="button" class="template-copy-btn">Copy to clipboard</button>' : `<button type="button" class="template-copy-btn peek-unlock">${ico('lock')} Unlock with Pro</button>`}
     `;
     const btn = card.querySelector('.template-copy-btn');
+    if(!isPro){ btn.addEventListener('click', ()=> openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'templates' })); grid.appendChild(card); return; }
     btn.addEventListener('click', async ()=>{
       try{
-        await navigator.clipboard.writeText(t.body);
+        await navigator.clipboard.writeText(body);
         btn.textContent = '✓ Copied!';
         btn.classList.add('copied');
       }catch(e){

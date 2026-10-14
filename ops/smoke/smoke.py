@@ -742,13 +742,15 @@ def free_vs_pro(browser, base):
                 problem(step[0], 'no "Unlock with Pro" button on the locked modules', r)
             else:
                 ok(step[0], f"Module 1 ({r['mod1']} lessons) free, the other {r['later']} need Pro")
-            # tapping a Pro lesson should offer the upgrade, not just shake
+            # tapping a Pro lesson opens a peek (first paragraph readable, the rest blurred) with the unlock right there
             page.evaluate("""(()=>{const x=[...document.querySelectorAll('#nicheView .guide')]
                 .find(e=>(e.querySelector('.lock-tag')||{}).textContent?.includes('Pro'));
                 if(x) x.querySelector('.guide-row').click();})()""")
             page.wait_for_timeout(500)
+            if page.locator('#nicheView .guide.peeking .peek-unlock').count():
+                page.click('#nicheView .guide.peeking .peek-unlock'); page.wait_for_timeout(500)
             if visible(page, '#upgradeOverlay.open', 2500) or page.locator('#upgradeCta').count():
-                ok(step[0], 'tapping a Pro lesson offers the upgrade')
+                ok(step[0], 'tapping a Pro lesson shows a peek, and its unlock offers the upgrade')
             else:
                 problem(step[0], 'tapping a Pro lesson did nothing')
             page.wait_for_timeout(600)
@@ -1237,6 +1239,69 @@ def chapter_certificate(browser, base):
             else:
                 problem(step[0], 'the certificate name is wrong', {'fallback': fallback})
         finish(st, step[0]); ctx.close()
+
+
+def pro_peeks(browser, base):
+    """Free members get a peek at Pro content: a locked lesson opens with its first paragraph readable and the rest
+    blurred; templates show their first lines; both offer the unlock right there."""
+    step = ['pro peeks (free member)']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return
+    page.wait_for_timeout(800)
+    page.evaluate("openNiche(NICHES[0].id); setCourseView('list')"); page.wait_for_timeout(700)
+    got = page.evaluate("""(()=>{ const g=[...document.querySelectorAll('#nicheView .guide.locked')].find(x=>x.querySelector('.lock-tag') && x.querySelector('.lock-tag').innerText.includes('Pro'));
+      if(!g) return null; g.querySelector('.guide-row').click();
+      const c=g.querySelector('.guide-content'); const modal=document.getElementById('upgradeModal');
+      return {open:g.classList.contains('open'), text:c.innerText, blurred:!!c.querySelector('.peek-blur'), unlock:!!c.querySelector('.peek-unlock'),
+              modalOpen: !!(modal && modal.style.display && modal.style.display !== 'none')}; })()""")
+    if not got:
+        problem(step[0], 'no Pro-locked lesson found to peek at')
+    elif got['open'] and got['blurred'] and got['unlock'] and len(got['text']) > 120 and not got['modalOpen'] and 'part of Pro' in got['text']:
+        ok(step[0], 'a locked lesson opens as a peek: first paragraph readable, the rest blurred, unlock right there')
+        page.click('#nicheView .guide.peeking .peek-unlock'); page.wait_for_timeout(500)
+        if page.locator('.modal-plan').count() > 0:
+            ok(step[0], 'the unlock in the peek opens the Pro window')
+        else:
+            problem(step[0], 'the unlock in the peek should open the Pro window')
+        page.keyboard.press('Escape'); page.wait_for_timeout(300)
+    else:
+        problem(step[0], 'the lesson peek is wrong', {k: (v if k != 'text' else v[:80]) for k, v in got.items()})
+    page.click('#nicheView [data-sub=templates]'); page.wait_for_timeout(700)
+    tp = page.evaluate("""(()=>{ const cards=[...document.querySelectorAll('.template-card.peek')]; const c=cards[0];
+      return {cards:cards.length, note: !!document.querySelector('.templates-peek-note'), readable: c ? c.querySelector('.template-preview').firstChild.textContent.length : 0,
+              blurred: c ? !!c.querySelector('.peek-blur') : false, copy: !!document.querySelector('.template-card .template-copy-btn:not(.peek-unlock)'),
+              literalNewline: c ? c.innerText.includes(String.fromCharCode(92)+'n') : false}; })()""")
+    if tp['cards'] > 0 and tp['note'] and tp['readable'] >= 80 and tp['blurred'] and not tp['copy'] and not tp['literalNewline']:
+        ok(step[0], 'templates show their first lines, blur the rest, and offer the unlock instead of Copy')
+    else:
+        problem(step[0], 'the template peek is wrong', tp)
+    finish(st, step[0])
+    ctx.close()
+    # Pro member: templates copy as before, with real line breaks
+    step = ['pro peeks (Pro member)']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block', permissions=['clipboard-read', 'clipboard-write'])
+    st = new_state(True)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if visible(page, '#appScreen', 10000):
+        page.wait_for_timeout(800)
+        page.evaluate("openNiche(NICHES[0].id)"); page.wait_for_timeout(400)
+        page.click('#nicheView [data-sub=templates]'); page.wait_for_timeout(600)
+        tp = page.evaluate("""(()=>{ const c=document.querySelector('.template-card'); return {peek: !!c.querySelector('.peek-blur'), copy: !!c.querySelector('.template-copy-btn'),
+              literalNewline: c.innerText.includes(String.fromCharCode(92)+'n'), lines: c.querySelector('.template-preview').innerText.split(String.fromCharCode(10)).length}; })()""")
+        if not tp['peek'] and tp['copy'] and not tp['literalNewline'] and tp['lines'] > 1:
+            ok(step[0], 'a Pro member sees whole templates with real line breaks and the Copy button')
+        else:
+            problem(step[0], 'the Pro template view is wrong', tp)
+    finish(st, step[0]); ctx.close()
 
 
 def module_one_moment(browser, base):
@@ -2039,11 +2104,13 @@ def smoother(browser, base):
     page.wait_for_timeout(500)
     r = page.evaluate("""(()=>{ const modal = document.getElementById('upgradeOverlay').classList.contains('open');
       document.getElementById('upgradeOverlay').classList.remove('open');
-      return {modal, opened: window.__locked.classList.contains('open')}; })()""")
-    if not r['modal'] or r['opened']:
-        problem(step[0], 'a Pro lesson opened from search or Continue should show the upgrade box, not open', r)
+      const peek = window.__locked.classList.contains('peeking') && !!window.__locked.querySelector('.peek-unlock');
+      const text = window.__locked.querySelector('.guide-content').innerText;
+      return {modal, peek, hasRest: !!window.__locked.querySelector('.guide-rest'), text: text.slice(0, 60)}; })()""")
+    if r['modal'] or not r['peek'] or r['hasRest']:
+        problem(step[0], 'a Pro lesson opened from search or Continue should show the peek (not the full lesson, not the upgrade box straight away)', r)
     else:
-        ok(step[0], 'a Pro lesson reached from search or Continue shows the upgrade box')
+        ok(step[0], 'a Pro lesson reached from search or Continue shows the peek with its unlock')
     # 5) search stays one tap away from every screen
     page.evaluate("window.scrollTo(0, 600)")
     page.locator('#topbarSearchBtn').click(timeout=3000); page.wait_for_timeout(400)
@@ -2809,6 +2876,7 @@ def main():
         quiet_community(browser, base)
         home_greeting(browser, base)
         chapter_certificate(browser, base)
+        pro_peeks(browser, base)
         module_one_moment(browser, base)
         guider_free_question(browser, base)
         live_calls(browser, base)
