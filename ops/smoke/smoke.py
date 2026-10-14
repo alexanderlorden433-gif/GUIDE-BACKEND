@@ -223,6 +223,22 @@ def fixture(state, method, path, body):
         return 200, {'url': 'https://checkout.stripe.com/c/pay/cs_test_smoke'}
     if p == '/api/billing/portal':
         return 200, {'url': 'https://billing.stripe.com/p/session/test_smoke'}
+    # push notifications: state['push'] = {'enabled': True} switches them on in the fake server
+    if p == '/api/push/key' and method == 'GET':
+        on = bool((state.get('push') or {}).get('enabled'))
+        return 200, {'enabled': on, 'publicKey': 'BPUBLICKEY_smoke_1234567890' if on else None, 'devices': len(state.get('push_subs', []))}
+    if p == '/api/push/subscribe':
+        if method == 'POST':
+            ep = ((body or {}).get('subscription') or {}).get('endpoint')
+            if not ep:
+                return 400, {'error': 'That does not look like a push subscription.'}
+            state.setdefault('push_subs', []).append(ep)
+            return 201, {'ok': True}
+        state.setdefault('push_unsubs', []).append((body or {}).get('endpoint'))
+        state['push_subs'] = [e for e in state.get('push_subs', []) if e != (body or {}).get('endpoint')]
+        return 200, {'ok': True}
+    if p == '/api/push/test':
+        return 200, {'sent': len(state.get('push_subs', []))}
     # client status pages (Business tab -> Client Portal): state['client_pages'] is the member's list
     if p == '/api/client-status/mine' and method == 'GET':
         return 200, {'pages': list(state.get('client_pages', []))}
@@ -903,6 +919,108 @@ def quiet_community(browser, base):
         ctx.close()
 
 
+# A stand-in for the browser's push machinery, so the app's own steps can be checked without a push service.
+PUSH_STUB = """(()=>{
+  const sub = { endpoint: 'https://push.example.com/smoke-device', toJSON(){ return { endpoint: this.endpoint, keys: { p256dh: 'BPqrstuvwxyz0123456789_-abcdefghij', auth: 'abcdefghijklmnop' } }; }, unsubscribe: async ()=>{ window.__pushSub = null; return true; } };
+  window.__pushSub = null;
+  const pm = { getSubscription: async ()=> window.__pushSub, subscribe: async (o)=>{ window.__subscribeOpts = o; window.__pushSub = sub; return sub; } };
+  Object.defineProperty(navigator, 'serviceWorker', { value: { ready: Promise.resolve({ pushManager: pm }), register: ()=> Promise.resolve({}), addEventListener(){}, controller: null }, configurable: true });
+  window.PushManager = function(){};
+  window.Notification = { permission: 'default', requestPermission: async ()=>{ window.Notification.permission = window.__denyPush ? 'denied' : 'granted'; return window.Notification.permission; } };
+})();"""
+
+
+def push_notifications(browser, base):
+    """Push notifications: hidden until the server has keys; turned on from Account; offered on Live after a reminder."""
+    def open_app(label, push_on, live=None, extra_init=''):
+        step = [f'push notifications ({label})']
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(True)
+        st['push'] = {'enabled': push_on}
+        if live:
+            st['wins'] = []; st['live'] = live
+        attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}" + extra_init)
+        ctx.add_init_script(PUSH_STUB)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(1000)
+        return step, ctx, st, page
+
+    # 1) without keys on the server, the row is simply not there
+    got = open_app('off', False)
+    if got:
+        step, ctx, st, page = got
+        page.evaluate("document.getElementById('accountBtn').click()"); page.wait_for_timeout(900)
+        hidden = page.evaluate("(()=>{const e=document.getElementById('accPushItem'); return !e || e.hidden || getComputedStyle(e).display==='none'})()")
+        if hidden:
+            ok(step[0], 'with no push keys on the server, the account shows no push row')
+        else:
+            problem(step[0], 'the push row should be hidden while pushes are off on the server')
+        finish(st, step[0]); ctx.close()
+
+    # 2) with keys: turn on from Account, then off again
+    got = open_app('on', True)
+    if got:
+        step, ctx, st, page = got
+        page.evaluate("document.getElementById('accountBtn').click()"); page.wait_for_timeout(900)
+        if not visible(page, '#accPushItem', 3000):
+            problem(step[0], 'the push row should show when pushes are on')
+        else:
+            page.click('#accPushBtn'); page.wait_for_timeout(900)
+            subs = st.get('push_subs', [])
+            key = page.evaluate("window.__subscribeOpts && window.__subscribeOpts.applicationServerKey && window.__subscribeOpts.applicationServerKey.length")
+            label = page.inner_text('#accPushBtn')
+            if subs == ['https://push.example.com/smoke-device'] and key and label == 'Turn off':
+                ok(step[0], 'Turn on asks the browser, registers this device with the server, and the button flips to Turn off')
+            else:
+                problem(step[0], 'turning pushes on did not go through', {'subs': subs, 'key': key, 'label': label})
+            page.click('#accPushBtn'); page.wait_for_timeout(800)
+            if st.get('push_unsubs') == ['https://push.example.com/smoke-device'] and page.inner_text('#accPushBtn') == 'Turn on':
+                ok(step[0], 'Turn off removes this device and the button flips back')
+            else:
+                problem(step[0], 'turning pushes off did not go through', st.get('push_unsubs'))
+        finish(st, step[0]); ctx.close()
+
+    # 3) if the person says no to the browser, nothing is registered and they are told
+    got = open_app('denied', True, extra_init="window.__denyPush=true;")
+    if got:
+        step, ctx, st, page = got
+        page.evaluate("document.getElementById('accountBtn').click()"); page.wait_for_timeout(900)
+        page.click('#accPushBtn'); page.wait_for_timeout(800)
+        if not st.get('push_subs') and page.inner_text('#accPushBtn') == 'Turn on':
+            ok(step[0], 'when the browser says no, nothing is registered and the button stays on Turn on')
+        else:
+            problem(step[0], 'a refused permission should not register a device', st.get('push_subs'))
+        finish(st, step[0]); ctx.close()
+
+    # 4) on Live: after "Remind me", a one-line offer; Not now hides it; ?open=live opens the Live screen
+    calls = [dict(live_demo_calls()[2])]
+    got = open_app('live offer', True, live={'calls': calls})
+    if got:
+        step, ctx, st, page = got
+        page.evaluate("showLive()"); page.wait_for_timeout(900)
+        if page.locator('#livePushOffer .live-pro-note').count() != 0:
+            problem(step[0], 'no offer should show before a reminder is set')
+        page.click('[data-live="remind"]'); page.wait_for_timeout(900)
+        if page.locator('#livePushOffer [data-live="push-on"]').count() == 1:
+            ok(step[0], 'after Remind me, Live offers to turn on push notifications')
+            page.click('#livePushOffer [data-live="push-on"]'); page.wait_for_timeout(900)
+            if st.get('push_subs') == ['https://push.example.com/smoke-device'] and page.locator('#livePushOffer .live-pro-note').count() == 0:
+                ok(step[0], 'the offer turns pushes on and goes away')
+            else:
+                problem(step[0], 'the offer did not turn pushes on', st.get('push_subs'))
+        else:
+            problem(step[0], 'the push offer did not show after setting a reminder', page.inner_text('#ctabLive')[:200])
+        page.goto(base + '/?open=live', wait_until='load'); page.wait_for_timeout(2200)
+        on_live = page.evaluate("(()=>{const p=document.getElementById('ctabLive'); return !!(p && p.offsetParent) && location.search === ''})()")
+        if on_live:
+            ok(step[0], 'opening the app from a push (?open=live) lands on the Live screen and tidies the address')
+        else:
+            problem(step[0], '?open=live should open the Live screen')
+        finish(st, step[0]); ctx.close()
 def client_status(browser, base):
     """Business tab -> Client Portal: a Pro (yearly) member makes a status page, edits it, and the client's link opens a clean page."""
     step = ['client status pages']
@@ -2393,6 +2511,7 @@ def main():
         smoother(browser, base)
         quiet_community(browser, base)
         live_calls(browser, base)
+        push_notifications(browser, base)
         client_status(browser, base)
         returning_learner(browser, base)
         daily_step(browser, base)

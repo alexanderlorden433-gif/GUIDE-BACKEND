@@ -4983,6 +4983,9 @@
   .live-btn[disabled]{opacity:.6; cursor:default;}
   .live-pro-note{display:flex; gap:10px; align-items:flex-start; margin:0 0 14px; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:var(--card); font-size:13.5px; line-height:1.5; color:var(--ink-soft);}
   .live-pro-note .ico{width:16px; height:16px; margin-top:2px; flex:none; color:var(--grape-soft);}
+  .live-pro-note .link-btn{background:none; border:none; padding:0; font:inherit; font-weight:700; color:var(--grape-soft); cursor:pointer; text-decoration:underline;}
+  .live-pro-note .link-btn.muted{font-weight:500; color:var(--ink-soft); margin-left:8px;}
+  #accPushItem .live-btn{flex:none;}
   .live-msg{margin:10px 0 0; font-size:13.5px; color:var(--ink-soft);}
   .live-msg.err{color:rgb(var(--danger-rgb));}
   .live-msg:empty{display:none;}
@@ -5809,6 +5812,7 @@
       <div id="communityTabContent">
         <div id="ctabLive" class="ctab-pane" style="display:none;">
           <p class="live-msg" id="liveNote" role="status" style="margin:0 0 12px;"></p>
+          <div id="livePushOffer"></div>
           <div id="liveHostBar"></div>
           <div id="liveList" class="live-list"></div>
           <div id="liveHostsAdmin"></div>
@@ -8724,6 +8728,7 @@ setLook(currentLook());
     const account = await apiFetch('/account');
     await loginApp(account.email, Object.assign({}, account.data, { isPro: account.isPro, planType: account.planType, joinedAt: account.joinedAt, trialEligible: account.trialEligible }), account.id);
     await handlePostCheckoutReturn();
+    handleOpenParam();
   }catch(e){
     // token expired/invalid — clear it and let the landing page show normally
     setAuthToken(null);
@@ -10353,6 +10358,10 @@ function renderAccountModal(){
             <div><div class="notif-pref-label">Community activity</div><div class="notif-pref-desc">Wins reactions, connect requests, new mentors</div></div>
             <label class="toggle-switch"><input type="checkbox" id="accCommunityToggle" ${communityNotifsOff ? '' : 'checked'}><span class="slider"></span></label>
           </div>
+          <div class="notif-pref-item" id="accPushItem" hidden>
+            <div><div class="notif-pref-label">Push notifications on this device</div><div class="notif-pref-desc" id="accPushDesc">Live calls: a buzz when one is about to start, and when a new one is scheduled.</div></div>
+            <button type="button" class="live-btn" id="accPushBtn">Turn on</button>
+          </div>
         </section>
 
         <section class="acct-card" id="accBillingCard" hidden>
@@ -10420,6 +10429,7 @@ function renderAccountModal(){
     communityNotifsOff = !e.target.checked;
     saveProgress();
   });
+  renderPushItem(upgradeModalBody.querySelector('#accPushItem'));
 
   // Subscription: only for people who have actually paid through Stripe (owner, preview and
   // referral-bonus Pro have nothing to manage there). Asked fresh each time, so it's never stale.
@@ -11577,7 +11587,7 @@ async function loadLivePane(force){
   }
   const liveBtn = document.getElementById('ctabLiveBtn');
   if(liveBtn && (liveInfo.calls.length || liveInfo.canHost)) liveBtn.style.display = '';
-  renderLiveHostBar(); renderLiveList(); renderLiveHostsAdmin();
+  renderLiveHostBar(); renderLiveList(); renderLiveHostsAdmin(); renderPushOffer();
 }
 // keeps "Starts in 20 min", "Live now" and the Join button fresh while the Live screen is open
 setInterval(()=>{
@@ -11664,7 +11674,7 @@ async function toggleLiveReminder(c, btn){
   try{
     await apiFetch('/live/' + encodeURIComponent(c.id) + '/rsvp', { method: c.iGo ? 'DELETE' : 'POST' });
     c.iGo = !c.iGo; c.going = Math.max(0, (c.going || 0) + (c.iGo ? 1 : -1));
-    renderLiveList();
+    renderLiveList(); renderPushOffer();
   }catch(e){
     btn.disabled = false;
     if(e.status === 403 && e.body && e.body.upgrade) openUpgradeModal({ type: 'live' });
@@ -11736,6 +11746,13 @@ document.getElementById('ctabLive').addEventListener('click', async (e)=>{
   else if(act === 'unlock') openUpgradeModal({ type: 'live' });
   else if(act === 'remind') toggleLiveReminder(call, el);
   else if(act === 'cal') downloadLiveIcs(call);
+  else if(act === 'push-on'){
+    el.disabled = true;
+    try{ await pushTurnOn(); showAppToast('Push notifications are on. We will buzz you before live calls.', 'success'); }
+    catch(err){ showAppToast(err.message || 'Could not turn on push notifications.', 'error'); }
+    renderPushOffer();
+  }
+  else if(act === 'push-later'){ try{ localStorage.setItem('guide_push_dismissed', '1'); }catch(e){} renderPushOffer(); }
   else if(act === 'ask') openLiveAsk(call, el);
   else if(act === 'ask-send') sendLiveQuestion(call, el);
   else if(act === 'questions') showLiveQuestions(call, el);
@@ -11777,6 +11794,92 @@ function showLive(){
   document.getElementById('ctabLiveBtn').style.display = '';
   showCommunityTab();
 }
+// ---------- Push notifications (live calls, on this device) ----------
+// The server says whether pushes are switched on (it needs keys in Railway). The browser asks the
+// person once, and the subscription for this device is kept on the server until they turn it off.
+let pushInfo = null; // {enabled, publicKey, devices}
+function pushSupported(){ return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+async function loadPushInfo(force){
+  if(pushInfo && !force) return pushInfo;
+  try{ pushInfo = await apiFetch('/push/key'); }catch(e){ pushInfo = { enabled: false }; }
+  return pushInfo;
+}
+async function pushSubscription(){
+  try{ const reg = await navigator.serviceWorker.ready; return await reg.pushManager.getSubscription(); }catch(e){ return null; }
+}
+function pushKeyBytes(b64){
+  const pad = '='.repeat((4 - b64.length % 4) % 4), raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(raw, c => c.charCodeAt(0));
+}
+async function pushTurnOn(){
+  const info = await loadPushInfo();
+  if(!info.enabled || !pushSupported()) throw new Error('Push notifications are not available here yet.');
+  const perm = await Notification.requestPermission();
+  if(perm !== 'granted') throw new Error('Notifications were not allowed. You can change that in your browser settings.');
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: pushKeyBytes(info.publicKey) });
+  const device = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+  await apiFetch('/push/subscribe', { method: 'POST', body: JSON.stringify({ subscription: sub.toJSON(), device }) });
+  try{ localStorage.setItem('guide_push', 'on'); }catch(e){}
+  return sub;
+}
+async function pushTurnOff(){
+  const sub = await pushSubscription();
+  if(sub){
+    try{ await apiFetch('/push/subscribe', { method: 'DELETE', body: JSON.stringify({ endpoint: sub.endpoint }) }); }catch(e){}
+    try{ await sub.unsubscribe(); }catch(e){}
+  }
+  try{ localStorage.removeItem('guide_push'); }catch(e){}
+}
+function pushIsOnHere(){
+  try{ return localStorage.getItem('guide_push') === 'on' && (typeof Notification === 'undefined' || Notification.permission === 'granted'); }catch(e){ return false; }
+}
+// the row in Account → Notifications
+async function renderPushItem(item){
+  if(!item) return;
+  const info = await loadPushInfo();
+  if(!info.enabled || !pushSupported()){ item.hidden = true; return; }
+  item.hidden = false;
+  const btn = item.querySelector('#accPushBtn'), desc = item.querySelector('#accPushDesc');
+  const on = pushIsOnHere();
+  btn.textContent = on ? 'Turn off' : 'Turn on';
+  btn.classList.toggle('on', on);
+  desc.textContent = on
+    ? ('On for this device.' + (info.devices > 1 ? ` On ${info.devices} devices in total.` : ''))
+    : 'Live calls: a buzz when one is about to start, and when a new one is scheduled.';
+  btn.onclick = async ()=>{
+    btn.disabled = true;
+    try{
+      if(on){ await pushTurnOff(); showAppToast('Push notifications are off on this device.', 'success'); }
+      else { await pushTurnOn(); showAppToast('Push notifications are on. We will buzz you before live calls.', 'success'); }
+      await loadPushInfo(true);
+    }catch(e){ showAppToast(e.message || 'Could not change push notifications.', 'error'); }
+    btn.disabled = false;
+    renderPushItem(item);
+  };
+}
+// a one-line offer on the Live screen for people who set a reminder but have no pushes on this device
+async function renderPushOffer(){
+  const wrap = document.getElementById('livePushOffer');
+  if(!wrap || !liveInfo) return;
+  let dismissed = false;
+  try{ dismissed = localStorage.getItem('guide_push_dismissed') === '1'; }catch(e){}
+  const wants = liveInfo.calls.some(c => c.iGo);
+  if(!wants || pushIsOnHere() || !pushSupported() || dismissed){ wrap.innerHTML = ''; return; }
+  const info = await loadPushInfo();
+  if(!info.enabled){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `<div class="live-pro-note">${ico('bell')}<span>Want a buzz on your phone before it starts? <button type="button" class="link-btn" data-live="push-on">Turn on push notifications</button> <button type="button" class="link-btn muted" data-live="push-later">Not now</button></span></div>`;
+}
+// ?open=live (from a tapped push notification) opens the Live screen once the app is in
+function handleOpenParam(){
+  const params = new URLSearchParams(window.location.search);
+  const open = params.get('open');
+  if(!open) return;
+  window.history.replaceState({}, '', window.location.pathname);
+  if(open === 'live') setTimeout(()=> showLive(), 300);
+}
+
 // One line on Home about the next call, so nobody has to go looking for it.
 function renderLiveHome(){
   const wrap = document.getElementById('liveHomeWrap');

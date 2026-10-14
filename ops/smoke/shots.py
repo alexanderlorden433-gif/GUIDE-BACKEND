@@ -26,6 +26,8 @@ SCREENS = {
     'live-pro':    (True,  "showLive()"),
     'live-home-pro': (True, "showHome()"),
     'live-host-pro': (True, "showLive(); setTimeout(()=>document.querySelector('[data-live=new]').click(), 500)"),
+    'push-account-pro': (True, "document.getElementById('accountBtn').click(); setTimeout(()=>document.getElementById('accPushItem').scrollIntoView({block:'center'}), 700)"),
+    'push-live-pro': (True, "showLive(); setTimeout(()=>document.querySelector('[data-live=remind]').click(), 700)"),
     'live-ask-pro': (True, "showLive(); setTimeout(()=>{document.querySelector('.live-card[data-call=lc_c] [data-live=ask]').click(); document.querySelector('.live-card[data-call=lc_c]').scrollIntoView()}, 600)"),
     'live-past-pro': (True, "showLive(); setTimeout(()=>document.querySelector('.live-sec:last-of-type').scrollIntoView(), 600)"),
     'landing-tour': (False, "document.getElementById('lpTour').scrollIntoView()"),
@@ -83,6 +85,10 @@ def main():
                 for theme in (('dark', 'light') if '--light' in sys.argv else ('dark',)):
                     ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
                     st = smoke.new_state(pro=name.endswith('-pro'))
+                    if name.startswith('push'):
+                        st['push'] = {'enabled': True}
+                        if 'live' in name:
+                            st['wins'] = []; st['live'] = {'canHost': False, 'isOwner': False, 'calls': smoke.live_demo_calls()}
                     if name == 'community-wins':
                         st['wins'] = [{'id': f'w{i}', 'body': b, 'emoji': e, 'authorId': f'u{i}', 'authorEmail': n + '@example.com', 'authorInitial': n[0].upper(), 'createdAt': smoke.TODAY, 'reactions': [{'id': f'r{i}{k}', 'userId': f'x{k}', 'emoji': '🔥'} for k in range(c)]} for i, (b, e, n, c) in enumerate([('Booked my first paid shoot', '🎉', 'maya', 5), ('Module one done, streak at 3', '💪', 'dev', 3), ('Sent my first contract with the template', '📄', 'sam', 2), ('Got a yes from a wedding client', '🔥', 'luis', 7), ('Finished my pricing sheet', '✅', 'ana', 1)])]
                     if name.startswith('live'):
@@ -94,6 +100,7 @@ def main():
                     if signed_in:
                         init += "localStorage.setItem('guide_token','smoke-token');"
                     ctx.add_init_script(init + "}catch(e){}")
+                    if name.startswith('push'): ctx.add_init_script(smoke.PUSH_STUB)
                     page = ctx.new_page()
                     page.goto(base + '/', wait_until='load')
                     page.wait_for_timeout(1200)
@@ -102,7 +109,7 @@ def main():
                             page.evaluate(js)
                         except Exception as e:
                             print(f'  ! {name}: {e}')
-                        page.wait_for_timeout(1500 if name == 'video' else (1100 if name.startswith('live') else 600))
+                        page.wait_for_timeout(1500 if name == 'video' else (1100 if name.startswith(('live', 'push')) else 600))
                     f = os.path.join(out, f'{name}-{dev}-{theme}.png')
                     page.screenshot(path=f)
                     made.append(os.path.relpath(f, smoke.ROOT))

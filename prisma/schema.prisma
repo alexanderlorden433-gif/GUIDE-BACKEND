@@ -46,6 +46,7 @@ model User {
   networkRequests      NetworkRequest[]   @relation("NetworkFrom")
   networkReceived      NetworkRequest[]   @relation("NetworkTo")
   liveRsvps            LiveRsvp[]
+  pushSubscriptions    PushSubscription[]
   liveQuestions        LiveQuestion[]
 
   @@index([stripeCustomerId])
@@ -339,6 +340,21 @@ model LiveRsvp {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([callId, userId])
+}
+
+// A phone or browser a member turned push notifications on for (see src/push.js).
+// Created at startup; only live-call notifications are pushed today.
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  device    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // A question a Pro member sends in before a call, for the host to answer live.

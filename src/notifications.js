@@ -8,11 +8,21 @@
 
 const prisma = require('./db');
 
+// Live-call notifications also go to the phone, for members who turned pushes on (see push.js).
+function alsoPush(userIds, { type, title, body, link }) {
+  try {
+    const push = require('./push');
+    if (!push.shouldPush(type)) return;
+    push.sendToUsers(userIds, { title, body, link, tag: type }).catch(err => console.error('[push]', err.message));
+  } catch (err) { /* pushes are best-effort */ }
+}
+
 async function notifyUser(userId, { type, title, body, link }) {
   try {
     await prisma.notification.create({
       data: { userId, type, title, body, link: link || undefined },
     });
+    alsoPush([userId], { type, title, body, link });
   } catch (err) {
     // Notifications are best-effort -- never let a failure here break the
     // real action (signup, partner creation, etc.) that triggered it.
@@ -26,6 +36,7 @@ async function notifyUsers(userIds, { type, title, body, link }) {
     await prisma.notification.createMany({
       data: userIds.map(userId => ({ userId, type, title, body, link: link || undefined })),
     });
+    alsoPush(userIds, { type, title, body, link });
   } catch (err) {
     console.error('[notifications] Bulk notify failed:', err.message);
   }
