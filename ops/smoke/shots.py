@@ -47,6 +47,8 @@ SCREENS = {
     'templates-pro': (True, "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=templates]').click()"),
     'tools-pro':   (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=tools]').click()"),
     'mentor-pro':  (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=aichat]').click()"),
+    'guider-free': (True,  "document.getElementById('bottomTabGuider').click()"),
+    'guider-used': (True,  "document.getElementById('bottomTabGuider').click()"),
     'upgrade':     (True,  "openUpgradeModal()"),
     'today':       (True,  "showToday()"),
     'business-pro': (True, "showBusiness()"),
@@ -86,6 +88,8 @@ def main():
                 for theme in (('dark', 'light') if '--light' in sys.argv else ('dark',)):
                     ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
                     st = smoke.new_state(pro=name.endswith('-pro'))
+                    if name == 'guider-used':
+                        st['ai_free_left'] = 0
                     if name == 'greet-ask':
                         st['data']['userProfile'] = {'displayName': '', 'bio': ''}
                     if name.startswith('push'):
