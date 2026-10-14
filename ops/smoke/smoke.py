@@ -1145,6 +1145,47 @@ def home_greeting(browser, base):
         finish(st, step[0]); ctx.close()
 
 
+def module_one_moment(browser, base):
+    """When a free member finishes Module 1 of a chapter they chose, Home says so in concrete terms: the next lesson
+    titles, what Pro opens, and one button. The step-done sheet does the same."""
+    step = ['module 1 moment']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False)
+    st['data']['niches'] = ['video']
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return
+    page.wait_for_timeout(800)
+    # all but the last free lesson done; finish the last one through the real "done" flow
+    page.evaluate("""(()=>{ const n=NICHES[0]; courseStarts={[n.id]: dateMinusDays(todayStr(), 4)}; const fr=n.guides.filter(g=>g.mod===0);
+      fr.slice(0,-1).forEach(g=>completed.add(n.id+'|'+g.title)); openNiche(n.id); window.__last=fr[fr.length-1]; })()""")
+    page.wait_for_timeout(500)
+    page.evaluate("markStepDone(NICHES[0], window.__last)"); page.wait_for_timeout(900)
+    sheet = page.inner_text('.step-card') if page.locator('.step-card').count() else ''
+    nxt = page.evaluate("(()=>{const n=NICHES[0]; return n.guides.filter(g=>g.mod!==0).slice(0,3).map(g=>g.title)})()")
+    if 'You finished Module 1 of Videography' in sheet and all(t in sheet for t in nxt) and 'more lessons' in sheet and 'Keep going with Pro' in sheet:
+        ok(step[0], 'the step-done sheet names the next three lessons and what Pro opens')
+    else:
+        problem(step[0], 'the step-done sheet should spell out what comes next', sheet[:300])
+    page.click('.step-card [data-act="close"]'); page.wait_for_timeout(400)
+    page.evaluate("showHome()"); page.wait_for_timeout(600)
+    card = page.inner_text('#todayStepCard') if page.locator('#todayStepCard').count() else ''
+    if 'You finished Module 1 of Videography in 5 days' in card and all(t in card for t in nxt) and '42 more lessons' in card and 'Keep going with Pro' in card:
+        ok(step[0], 'Home shows the Module 1 card: days taken, the next three lessons, the counts, one button')
+    else:
+        problem(step[0], 'the Home card after Module 1 is wrong', card[:300])
+    page.click('#todayStepGo'); page.wait_for_timeout(500)
+    if page.locator('.modal-plan').count() > 0:
+        ok(step[0], 'its button opens the Pro window')
+    else:
+        problem(step[0], 'the Module 1 card button should open the Pro window')
+    finish(st, step[0])
+    ctx.close()
+
+
 def live_iso_in(minutes):
     return time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(time.time() + minutes * 60))
 
@@ -2575,6 +2616,7 @@ def main():
         smoother(browser, base)
         quiet_community(browser, base)
         home_greeting(browser, base)
+        module_one_moment(browser, base)
         live_calls(browser, base)
         push_notifications(browser, base)
         client_status(browser, base)
