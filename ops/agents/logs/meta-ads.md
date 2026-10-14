@@ -15,3 +15,7 @@
 - Still zero delivery every day Oct 4-13 (FAEV*). FACA*/FADE* still empty. Campaign, ad set and ad all show ACTIVE, budget $5/day, but no delivery — Adspirer does not show billing or review status, so the blocker must be seen in Ads Manager (Billing / Account quality / ad review).
 - Setup gaps unchanged: US only, ad named "New Leads Ad", no URL tags, Multi-advertiser ads enrolled.
 - Next live check: Thu Oct 15.
+
+## 2026-10-14 (Wed)
+- Still zero delivery every day Oct 4-13 (FAEV*). FACA*/FADE* still empty. No Adspirer ad calls (not a check day, nothing changed). Adspirer 3/15, resets Nov 4.
+- Next live check: Thu Oct 15 — confirm whether delivery started and whether setup gaps were fixed.
