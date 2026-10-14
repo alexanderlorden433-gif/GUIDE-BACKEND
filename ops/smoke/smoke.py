@@ -1158,6 +1158,89 @@ def home_greeting(browser, base):
         finish(st, step[0]); ctx.close()
 
 
+def chapter_certificate(browser, base):
+    """Chapter certificates: every chapter shows the goal ("finish all N lessons and earn the certificate, with your
+    name on it") with a preview; a free member's preview carries a PREVIEW mark and an Unlock button that opens the
+    Pro window; a Pro member who finished every lesson gets the banner with Get certificate and Share, and the
+    certificate carries their display name."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    def open_chapter(label, pro, all_done):
+        step = [f'chapter certificate ({label})']
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(pro)
+        st['data']['userProfile'] = {'displayName': 'Alexander Lorden', 'bio': ''}
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(600)
+        page.evaluate(("NICHES[0].guides.forEach(g=>completed.add(NICHES[0].id+'|'+g.title));" if all_done else
+                       "NICHES[0].guides.slice(0,4).forEach(g=>completed.add(NICHES[0].id+'|'+g.title));") + "openNiche(NICHES[0].id); setCourseView('list')")
+        page.wait_for_timeout(500)
+        return step, ctx, st, page
+    # 1) a free member part-way through: the goal row, and a watermarked preview that sells Pro
+    got = open_chapter('free, part-way', False, False)
+    if got:
+        step, ctx, st, page = got
+        if not visible(page, '#certGoal', 3000):
+            problem(step[0], 'an unfinished chapter should show the certificate goal under the progress bar')
+        else:
+            text = page.inner_text('#certGoal')
+            if 'Finish all' in text and 'certificate' in text and 'your name on it' in text and 'Preview' in text:
+                ok(step[0], 'the chapter shows the goal: finish every lesson and earn a certificate with your name on it')
+            else:
+                problem(step[0], 'the certificate goal wording is off', text[:120])
+            page.evaluate("document.getElementById('certGoal').click()"); page.wait_for_timeout(500)
+            if not visible(page, '#certPreview img', 3000):
+                problem(step[0], 'Preview should open the certificate preview')
+            else:
+                note = page.inner_text('#certPreview p')
+                name_on_it = page.evaluate("certificateName()")
+                # the preview is drawn with the PREVIEW mark: compare the two drawings
+                marked = page.evaluate("drawCertificate(NICHES[0], {preview:true}).toDataURL() !== drawCertificate(NICHES[0]).toDataURL()")
+                if name_on_it == 'Alexander Lorden' and marked and '45 more' in note and 'Module 1 is free' in note and page.locator('#certPreviewUnlock').count() == 1:
+                    ok(step[0], 'the preview shows their name on the certificate with a PREVIEW mark, how many lessons are left, and an Unlock with Pro button')
+                else:
+                    problem(step[0], 'the free preview is missing something', {'name': name_on_it, 'marked': marked, 'note': note[:120], 'unlock': page.locator('#certPreviewUnlock').count()})
+                page.evaluate("document.getElementById('certPreviewUnlock').click()"); page.wait_for_timeout(500)
+                if page.locator('#certPreview').count() == 0 and visible(page, '#upgradeOverlay', 3000):
+                    ok(step[0], 'Unlock with Pro closes the preview and opens the Pro window')
+                else:
+                    problem(step[0], 'Unlock with Pro should open the Pro window')
+            if page.locator('#certBanner:visible').count():
+                problem(step[0], 'the finished-chapter banner showed on an unfinished chapter')
+        finish(st, step[0]); ctx.close()
+    # 2) a Pro member who finished the chapter: the banner, Get certificate and Share, their name on it
+    got = open_chapter('pro, finished', True, True)
+    if got:
+        step, ctx, st, page = got
+        if not visible(page, '#certBanner', 3000):
+            problem(step[0], 'a finished chapter should show the certificate banner')
+        else:
+            text = page.inner_text('#certBanner')
+            if 'Chapter complete' in text and 'certificate is ready' in text and page.locator('#certDownloadBtn').count() == 1 and page.locator('#certShareBtn').count() == 1 and page.locator('#certGoal:visible').count() == 0:
+                ok(step[0], 'a finished chapter shows "Chapter complete!" with Get certificate and Share, and the goal row is gone')
+            else:
+                problem(step[0], 'the finished-chapter banner is missing something', text[:140])
+            with page.expect_download(timeout=5000) as dl:
+                page.evaluate("document.getElementById('certDownloadBtn').click()")
+            fname = dl.value.suggested_filename
+            size = page.evaluate("drawCertificate(NICHES[0]).toDataURL('image/png').length")
+            if fname.startswith('TheGuide-Certificate-') and fname.endswith('.png') and size > 20000:
+                ok(step[0], f'Get certificate downloads a PNG ({fname})')
+            else:
+                problem(step[0], 'Get certificate should download a PNG of the certificate', {'file': fname, 'bytes': size})
+            # no name saved: falls back to the start of the email, never blank
+            fallback = page.evaluate("(()=>{const k=userProfile.displayName; userProfile.displayName=''; const n=certificateName(); userProfile.displayName=k; return n;})()")
+            if fallback and fallback != 'Member' and page.evaluate("certificateName()") == 'Alexander Lorden':
+                ok(step[0], 'the certificate carries the display name, or the start of the email when no name is saved')
+            else:
+                problem(step[0], 'the certificate name is wrong', {'fallback': fallback})
+        finish(st, step[0]); ctx.close()
+
+
 def pro_peeks(browser, base):
     """Free members get a peek at Pro content: a locked lesson opens with its first paragraph readable and the rest
     blurred; templates show their first lines; both offer the unlock right there."""
@@ -2792,6 +2875,7 @@ def main():
         smoother(browser, base)
         quiet_community(browser, base)
         home_greeting(browser, base)
+        chapter_certificate(browser, base)
         pro_peeks(browser, base)
         module_one_moment(browser, base)
         guider_free_question(browser, base)

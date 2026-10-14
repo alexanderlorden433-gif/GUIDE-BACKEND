@@ -69,6 +69,10 @@ SCREENS = {
     'home-pronote': (True, "NICHES[0].guides.filter(g=>g.mod===0).forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); streak={count:2,lastDate:dateMinusDays(todayStr(),1)}; showHome()"),
     'path-start':  (True,  "streak={count:0,lastDate:null}; openNiche(NICHES[1].id)"),
     'step-done':   (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); markStepDone(NICHES[0], NICHES[0].guides[4])"),
+    # chapter certificates: the goal row (everyone), its preview, and the finished chapter (Pro)
+    'cert-goal':   (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); setCourseView('list'); setTimeout(()=>window.scrollTo(0,0), 200)"),
+    'cert-preview': (True, "DEMO_PROGRESS(); openNiche(NICHES[0].id); setTimeout(()=>document.getElementById('certGoal').click(), 300)"),
+    'cert-done-pro': (True, "NICHES[0].guides.forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); streak={count:12,lastDate:todayStr()}; openNiche(NICHES[0].id); setCourseView('list'); setTimeout(()=>window.scrollTo(0,0), 200)"),
 }
 SCREENS = {k: (v[0], v[1].replace('DEMO_PROGRESS();', DEMO)) for k, v in SCREENS.items()}
 DEVICES = {'laptop': ({'width': 1280, 'height': 800}, False), 'phone': ({'width': 390, 'height': 844}, True)}

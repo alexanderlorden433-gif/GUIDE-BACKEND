@@ -2791,6 +2791,18 @@
   .cert-banner{
     margin:14px 0;
   }
+  .cert-banner-inner .cert-icon .ico{width:30px; height:30px; color:var(--gold);}
+  .cert-download-btn .ico, .cert-share-btn .ico{width:16px; height:16px; margin-right:6px; vertical-align:-3px;}
+  .cert-share-btn{background:var(--card-2); color:var(--ink); border:1px solid var(--line-2); border-radius:10px; padding:10px 14px; font:600 14px 'Inter',sans-serif; cursor:pointer; white-space:nowrap;}
+  .cert-goal{display:flex; align-items:center; gap:10px; width:100%; margin:10px 0 0; padding:10px 12px; text-align:left; border-radius:12px; border:1px dashed var(--line-2); background:var(--card); color:var(--ink-2); font:500 13px/1.4 'Inter',sans-serif; cursor:pointer;}
+  .cert-goal > .ico{width:18px; height:18px; flex:none; color:var(--gold);}
+  .cert-goal span{flex:1;}
+  .cert-goal span b{color:var(--ink);}
+  .cert-goal .cert-goal-go{color:var(--grape-soft); font-weight:700; white-space:nowrap;}
+  .cert-preview{position:fixed; inset:0; z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:20px; background:rgba(var(--scrim-rgb),.86);}
+  .cert-preview img{width:min(92vw, 720px); border-radius:10px; box-shadow:0 30px 80px rgba(0,0,0,.6); border:1px solid var(--line-2);}
+  .cert-preview p{margin:0; max-width:520px; text-align:center; font-size:14px; line-height:1.5; color:var(--ink-2);}
+  .cert-preview .cert-preview-row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
   .cert-banner-inner{
     display:flex;
     align-items:center;
@@ -2839,8 +2851,12 @@
     .cert-banner-inner{
       flex-wrap:wrap;
     }
-    .cert-download-btn{
-      width:100%;
+    .cert-text{
+      flex:1 1 calc(100% - 60px);
+      min-width:0;
+    }
+    .cert-download-btn, .cert-share-btn{
+      flex:1 1 40%;
       text-align:center;
     }
   }
@@ -6044,6 +6060,8 @@ const ICO = {
   x:`<path d="M18 6 6 18"/> <path d="m6 6 12 12"/>`,
   plus:`<path d="M5 12h14"/> <path d="M12 5v14"/>`,
   external:`<path d="M15 3h6v6"/> <path d="M10 14 21 3"/> <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>`,
+  award:`<path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/> <circle cx="12" cy="8" r="6"/>`,
+  share:`<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/> <polyline points="16 6 12 2 8 6"/> <line x1="12" x2="12" y1="2" y2="15"/>`,
 };
 const ICON_FOR_CHAPTER = {'🎥':'video','📷':'camera','📈':'megaphone','📊':'candles','🛒':'bag','🎨':'pentool','✍':'penline','📱':'phone','🌟':'star','🧭':'compass','🗂':'folders','🔧':'tools','🏠':'home','🎬':'clapper','💼':'briefcase','💰':'handshake','🧽':'spray','🌿':'leaf','🚗':'car','🛠':'hammer','🐾':'paw'};
 function ico(name, cls){ return '<svg class="ico' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (ICO[name] || '') + '</svg>'; }
@@ -10623,18 +10641,34 @@ function renderNicheDetail(){
     }
     certBanner.innerHTML = `
       <div class="cert-banner-inner">
-        <span class="cert-icon">🎓</span>
+        <span class="cert-icon">${ico('award')}</span>
         <div class="cert-text">
-          <strong>Chapter Complete!</strong>
-          <span>You've mastered every guide in ${niche.name}.</span>
+          <strong>Chapter complete!</strong>
+          <span>You finished all ${niche.guides.length} lessons in ${gvEsc(niche.name)}. Your certificate is ready.</span>
         </div>
-        <button class="cert-download-btn" id="certDownloadBtn">📜 Get Certificate</button>
+        <button type="button" class="cert-download-btn" id="certDownloadBtn">${ico('award')} Get certificate</button>
+        <button type="button" class="cert-share-btn" id="certShareBtn">${ico('share')} Share</button>
       </div>
     `;
     certBanner.style.display = '';
     document.getElementById('certDownloadBtn').addEventListener('click', ()=> generateCertificate(niche));
+    document.getElementById('certShareBtn').addEventListener('click', ()=> shareCertificate(niche));
   } else if(certBanner){
     certBanner.style.display = 'none';
+  }
+  // the goal, for everyone: a certificate with your name on it when the chapter is done
+  let certGoal = document.getElementById('certGoal');
+  if(done < niche.guides.length){
+    if(!certGoal){
+      certGoal = document.createElement('button');
+      certGoal.type = 'button'; certGoal.id = 'certGoal'; certGoal.className = 'cert-goal';
+      nicheDetailProgress.insertAdjacentElement('afterend', certGoal);
+    }
+    certGoal.innerHTML = `${ico('award')}<span>Finish all ${niche.guides.length} lessons and earn the <b>${gvEsc(niche.name)}</b> certificate, with your name on it.</span><b class="cert-goal-go">Preview</b>`;
+    certGoal.style.display = '';
+    certGoal.onclick = ()=> previewCertificate(niche);
+  } else if(certGoal){
+    certGoal.style.display = 'none';
   }
 
   renderPathMap(niche);
@@ -17393,7 +17427,37 @@ function renderCompletionChart(){
 }
 
 // ---------- Certificate of Completion ----------
-function generateCertificate(niche){
+// Draws the certificate on a canvas: the member's name, the chapter, the lesson count, the date, and the logo.
+// With {preview:true} it carries a PREVIEW mark (shown to everyone as the goal, before the chapter is done).
+function certificateName(){
+  const n = String(userProfile.displayName || '').trim();
+  if(n) return n;
+  const e = (currentEmail || 'Member').split('@')[0];
+  return e.charAt(0).toUpperCase() + e.slice(1);
+}
+function drawIcoOnCanvas(ctx, name, x, y, size, color){
+  const svg = ICO[name]; if(!svg) return;
+  ctx.save(); ctx.translate(x - size / 2, y - size / 2); ctx.scale(size / 24, size / 24);
+  ctx.strokeStyle = color; ctx.lineWidth = 1.7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  (svg.match(/<path d="([^"]+)"/g) || []).forEach(m => { ctx.stroke(new Path2D(m.slice(9, -1))); });
+  (svg.match(/<circle cx="([\d.]+)" cy="([\d.]+)" r="([\d.]+)"/g) || []).forEach(m => {
+    const [, cx, cy, r] = m.match(/cx="([\d.]+)" cy="([\d.]+)" r="([\d.]+)"/).map(Number); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); });
+  (svg.match(/<polyline points="([^"]+)"/g) || []).forEach(m => { const pts = m.slice(19, -1).trim().split(/\s+/).map(Number); ctx.beginPath(); ctx.moveTo(pts[0], pts[1]); for(let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]); ctx.stroke(); });
+  ctx.restore();
+}
+function drawLogoOnCanvas(ctx, x, y, size){
+  // the compass-star logo: ring, 8-point star, gold centre
+  const g = ctx.createLinearGradient(x - size / 2, y - size / 2, x + size / 2, y + size / 2);
+  g.addColorStop(0, themeVar('--logo-a', '#1F9D6B')); g.addColorStop(1, themeVar('--logo-b', '#3FCB93'));
+  ctx.save(); ctx.translate(x, y); ctx.scale(size / 200, size / 200);
+  ctx.beginPath(); ctx.arc(0, 0, 82, 0, Math.PI * 2); ctx.strokeStyle = g; ctx.lineWidth = 14; ctx.stroke();
+  const pts = [[0,-68],[14.1,-14.1],[68,0],[14.1,14.1],[0,68],[-14.1,14.1],[-68,0],[-14.1,-14.1]];
+  ctx.beginPath(); pts.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fillStyle = themeVar('--gold', '#E8B94A'); ctx.fill();
+  ctx.restore();
+}
+function drawCertificate(niche, opts){
+  opts = opts || {};
   const canvas = document.createElement('canvas');
   canvas.width = 1200;
   canvas.height = 850;
@@ -17428,11 +17492,13 @@ function generateCertificate(niche){
     ctx.stroke();
   });
 
-  // Title
+  // Logo and name of the app
+  drawLogoOnCanvas(ctx, 560, 112, 34);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = themeVar('--ink','#E8E4F0');
+  ctx.font = 'bold 20px "Space Grotesk", sans-serif';
+  ctx.fillText('The Guide', 584, 119);
   ctx.textAlign = 'center';
-  ctx.fillStyle = themeVar('--grape','#A855F7');
-  ctx.font = '16px "Space Grotesk", sans-serif';
-  ctx.fillText('THE GUIDE', 600, 120);
 
   // Certificate text
   ctx.fillStyle = themeVar('--ink','#E8E4F0');
@@ -17456,11 +17522,10 @@ function generateCertificate(niche){
   ctx.font = '18px "Space Grotesk", sans-serif';
   ctx.fillText('This certifies that', 600, 290);
 
-  // User name (email)
-  const displayName = (currentEmail || 'Member').split('@')[0];
+  // The member's name
   ctx.fillStyle = themeVar('--ink','#E8E4F0');
-  ctx.font = 'bold 38px "Space Grotesk", sans-serif';
-  ctx.fillText(displayName.charAt(0).toUpperCase() + displayName.slice(1), 600, 345);
+  ctx.font = 'bold 40px "Space Grotesk", sans-serif';
+  ctx.fillText(certificateName(), 600, 345);
 
   // "has successfully completed"
   ctx.fillStyle = themeVar('--ink-soft','#8B85A3');
@@ -17470,7 +17535,7 @@ function generateCertificate(niche){
   // Chapter name
   ctx.fillStyle = themeVar('--ink','#E8E4F0');
   ctx.font = 'bold 34px "Space Grotesk", sans-serif';
-  ctx.fillText(`${niche.icon} ${niche.name}`, 600, 455);
+  ctx.fillText(niche.name, 600, 455);
 
   // Guide count
   ctx.fillStyle = themeVar('--ink-soft','#8B85A3');
@@ -17494,7 +17559,7 @@ function generateCertificate(niche){
   // Footer
   ctx.fillStyle = themeRgba('--accent-rgb',0.6,'168,85,247');
   ctx.font = '14px "Space Grotesk", sans-serif';
-  ctx.fillText('theguide.app — Build your business, one guide at a time.', 600, 660);
+  ctx.fillText('theguide.company — one real step a day.', 600, 660);
 
   // Glow effect behind the niche icon
   ctx.save();
@@ -17505,16 +17570,53 @@ function generateCertificate(niche){
   ctx.fillRect(540, 670, 120, 120);
   ctx.restore();
 
-  // Large niche icon
-  ctx.font = '50px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(niche.icon, 600, 745);
+  // The chapter's line icon
+  const icoName = ICON_FOR_CHAPTER[String(niche.icon || '').replace(/️/g, '')];
+  if(icoName) drawIcoOnCanvas(ctx, icoName, 600, 735, 64, themeVar('--grape','#3FCB93'));
 
-  // Download
+  if(opts.preview){
+    ctx.save(); ctx.translate(600, 425); ctx.rotate(-0.3); ctx.globalAlpha = 0.22;
+    ctx.fillStyle = themeVar('--ink','#E8E4F0'); ctx.font = 'bold 150px "Space Grotesk", sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('PREVIEW', 0, 50); ctx.restore();
+  }
+  return canvas;
+}
+function certificateFileName(niche){ return `TheGuide-Certificate-${niche.name.replace(/\s+/g,'-')}.png`; }
+function generateCertificate(niche){
+  const canvas = drawCertificate(niche);
   const link = document.createElement('a');
-  link.download = `TheGuide-Certificate-${niche.name.replace(/\s+/g,'-')}.png`;
+  link.download = certificateFileName(niche);
   link.href = canvas.toDataURL('image/png');
   link.click();
+}
+// Share sheet on phones (the image itself); falls back to the download.
+async function shareCertificate(niche){
+  const canvas = drawCertificate(niche);
+  try{
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const file = new File([blob], certificateFileName(niche), { type: 'image/png' });
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file], title: `I finished ${niche.name} on The Guide`, text: `I finished all ${niche.guides.length} lessons in ${niche.name} on The Guide. theguide.company` });
+      return;
+    }
+  }catch(e){ if(e && e.name === 'AbortError') return; }
+  generateCertificate(niche);
+}
+// The goal, shown to everyone: what the certificate will look like with their name on it.
+function previewCertificate(niche){
+  const done = nicheCompleted(niche), left = niche.guides.length - done;
+  const canvas = drawCertificate(niche, { preview: true });
+  const wrap = document.createElement('div');
+  wrap.className = 'cert-preview'; wrap.id = 'certPreview'; wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-label', 'Certificate preview');
+  wrap.innerHTML = `<img alt="Preview of the ${gvEsc(niche.name)} certificate" src="${canvas.toDataURL('image/png')}">
+    <p>${done ? `${done} of ${niche.guides.length} lessons done. ` : ''}${left} more and this is yours, with the date on it.${isPro ? '' : ' Module 1 is free; Pro opens the rest of the chapter.'}</p>
+    <div class="cert-preview-row">${isPro ? '' : `<button type="button" class="live-btn primary" id="certPreviewUnlock">${ico('lock')} Unlock with Pro</button>`}<button type="button" class="live-btn" id="certPreviewClose">Close</button></div>`;
+  document.body.appendChild(wrap);
+  const close = ()=> wrap.remove();
+  wrap.addEventListener('click', (e)=>{ if(e.target === wrap) close(); });
+  document.getElementById('certPreviewClose').addEventListener('click', close);
+  const unlock = document.getElementById('certPreviewUnlock');
+  if(unlock) unlock.addEventListener('click', ()=>{ close(); openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }); });
 }
 
 exportCsvBtn.addEventListener('click', ()=>{
