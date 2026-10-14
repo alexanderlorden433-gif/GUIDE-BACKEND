@@ -19,6 +19,8 @@ const aiChatLimiter = rateLimit({
 });
 router.use(aiChatLimiter);
 
+const MAX_MESSAGE_CHARS = 8000;
+
 // ---------- POST /api/ai-chat ----------
 // This is the ONLY place that ever talks to Anthropic's API — the frontend
 // never sees or holds an API key. It sends the chapter context and the
@@ -41,7 +43,9 @@ router.post('/', async (req, res) => {
   const safeMessages = messages
     .filter(m => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
     .slice(-20)
-    .map(m => ({ role: m.role, content: m.content }));
+    // a Guider answer is at most ~1000 tokens (~5,000 characters); anything longer
+    // is not from the app, so trim it rather than pay to send it
+    .map(m => ({ role: m.role, content: m.content.slice(0, MAX_MESSAGE_CHARS) }));
 
   if (safeMessages.length === 0) {
     return res.status(400).json({ error: 'No valid messages to send.' });

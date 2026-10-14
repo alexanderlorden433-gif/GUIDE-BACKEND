@@ -4,6 +4,7 @@ require('./asyncErrors');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
+const { useJsonParsers } = require('./bodyParsers');
 
 const authRoutes = require('./routes/auth');
 const accountRoutes = require('./routes/account');
@@ -88,7 +89,7 @@ app.use(cors({
 // the signature, so it must be mounted with express.raw() BEFORE the
 // general express.json() parser below (which would otherwise consume it).
 app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
-app.use(express.json({ limit: '16kb' }));
+useJsonParsers(app, express); // 16 KB normally, more for saving progress and Guider chats
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
