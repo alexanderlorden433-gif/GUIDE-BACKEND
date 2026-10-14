@@ -4820,6 +4820,13 @@
   .home-greet-form input{flex:1 1 160px; min-width:0; font-size:16px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); outline:none;}
   .home-greet-form input:focus{box-shadow:0 0 0 3px rgba(var(--accent-rgb),.2);}
   .home-greet-form .biz-primary-btn{width:auto; padding:10px 18px;}
+  /* The free-trial countdown on Home */
+  .trial-card{margin:0 0 16px; padding:14px 16px; border-radius:16px; border:1px solid rgba(var(--accent2-rgb),.45); background:linear-gradient(160deg, rgba(var(--accent2-rgb),.12), rgba(var(--accent2-rgb),.02) 60%), var(--card);}
+  .trial-card .tc-top{font-size:12.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--gold); margin-bottom:4px;}
+  .trial-card .tc-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; line-height:1.25; color:var(--ink); margin-bottom:6px;}
+  .trial-card .tc-sub{font-size:14px; line-height:1.5; color:var(--ink-2); margin-bottom:12px;}
+  .trial-card .tc-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+  .trial-card .tc-row .live-btn{flex:none;}
   .today-step{position:relative; background:linear-gradient(160deg, rgba(var(--accent-rgb),.16), rgba(var(--accent-rgb),.03) 62%), var(--card); border:1px solid rgba(var(--accent-rgb),.3); border-radius:20px; padding:18px 18px 16px; margin-bottom:24px; box-shadow:0 10px 36px rgba(var(--accent-rgb),.10); overflow:hidden;}
   .today-step.quiet{background:var(--card); border-color:var(--line); box-shadow:none;}
   .ts-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
@@ -5627,6 +5634,7 @@
   <main>
     <div id="homeView">
       <div id="homeGreetingWrap"></div>
+      <div id="trialWrap"></div>
       <div id="todayStepWrap"></div>
       <div id="dailyDigestWrap"></div>
       <div id="liveHomeWrap"></div>
@@ -6059,6 +6067,7 @@ let weeklyDigestOptOut = false;
 let streakReminderOptOut = false;
 let communityNotifsOff = false;
 let userProfile = { displayName: '', bio: '' };
+let trialInfo = null; // {startedAt:'YYYY-MM-DD', days} when this member started Pro on the free trial
 let tourIndex = 0;
 const TOUR_STEPS = [
   { selector: '#nicheGrid', title: "Welcome to The Guide! 👋", text: "These are your chapters — each with 40 guides plus real business tools built in. Quick 20-second tour?" },
@@ -8145,7 +8154,8 @@ async function saveProgress(){
           weeklyDigestOptOut: weeklyDigestOptOut,
           streakReminderOptOut: streakReminderOptOut,
           communityNotifsOff: communityNotifsOff,
-          userProfile: userProfile
+          userProfile: userProfile,
+          trial: trialInfo
         }
       })
     });
@@ -8217,6 +8227,7 @@ async function loginApp(email, record, userId){
   streakReminderOptOut = !!record.streakReminderOptOut;
   communityNotifsOff = !!record.communityNotifsOff;
   userProfile = record.userProfile || { displayName: '', bio: '' };
+  trialInfo = (record.trial && record.trial.startedAt) ? record.trial : null;
   ensureToolsData();
   ensureRecurringInvoices();
   checkCommunityActivity();
@@ -8951,6 +8962,7 @@ function openUpgradeModal(resumeAction){
       } else {
         localStorage.removeItem('guide_pending_action');
       }
+      try{ localStorage.setItem('guide_trial_pending', (wantsTrial && trialEligible) ? String((planPrices && planPrices.trialDays) || 4) : ''); }catch(e){}
       GuideAnalytics.event('checkout');
       GuideMeta.begin('chk');
       const result = await apiFetch('/billing/checkout', {
@@ -8988,6 +9000,14 @@ async function handlePostCheckoutReturn(){
       }catch(e){ break; }
     }
     if(isPro) fireConfetti(90);
+    // remember when a trial started, so Home can count down to the end of it
+    let pendingTrial = '';
+    try{ pendingTrial = localStorage.getItem('guide_trial_pending') || ''; localStorage.removeItem('guide_trial_pending'); }catch(e){}
+    if(isPro && pendingTrial){
+      trialInfo = { startedAt: todayStr(), days: Math.max(1, parseInt(pendingTrial, 10) || 4) };
+      saveProgress();
+      if(document.getElementById('homeView').offsetParent) renderTrialCard();
+    }
   }
 
   const raw = localStorage.getItem('guide_pending_action');
@@ -10215,7 +10235,7 @@ function renderHome(){
     // clutter, no Your/More split, just everything in one place to jump
     // to quickly.
     renderDailyDigest();
-    renderHomeGreeting();
+    renderHomeGreeting(); renderTrialCard();
     const liveWrapEl = document.getElementById('liveHomeWrap');
     if(liveWrapEl) liveWrapEl.innerHTML = '';
     continueWrap.innerHTML = '';
@@ -10230,7 +10250,7 @@ function renderHome(){
   }
 
   renderDailyDigest();
-  renderHomeGreeting();
+  renderHomeGreeting(); renderTrialCard();
   renderLiveHome();
   // Today's step is the one thing to do next. When it is there, it takes the place of "Continue where you left off".
   const hasStep = renderTodayStep();
@@ -10838,6 +10858,37 @@ function pickTodayStep(){
 }
 
 /** The card at the top of Home. Returns true when it shows a step to do (it then stands in for "Continue"). */
+// ---------- Free-trial countdown on Home ----------
+// Shows while a trial is running: how many days are left and what the member has done with Pro so far.
+function trialDaysLeft(){
+  if(!isPro || !trialInfo || !trialInfo.startedAt) return null;
+  const left = (trialInfo.days || 4) - (dayNum(todayStr()) - dayNum(trialInfo.startedAt));
+  return left;
+}
+function renderTrialCard(){
+  const wrap = document.getElementById('trialWrap');
+  if(!wrap) return;
+  const left = trialDaysLeft();
+  if(left == null || left < 0 || left > 14 || homeViewMode === 'chapters'){ wrap.innerHTML = ''; return; }
+  const asked = Object.values(aiChatHistory || {}).reduce((t, msgs)=> t + (Array.isArray(msgs) ? msgs.filter(m => m.role === 'user').length : 0), 0);
+  const done = completed.size;
+  const bits = [`${done} lesson${done === 1 ? '' : 's'} done`];
+  if(streak.count > 1) bits.push(`${streak.count}-day streak`);
+  if(asked) bits.push(`${asked} question${asked === 1 ? '' : 's'} to The Guider`);
+  const when = left === 0 ? 'ends today' : left === 1 ? 'ends tomorrow' : `ends in ${left} days`;
+  wrap.innerHTML = `<section class="trial-card" id="trialCard">
+      <div class="tc-top">Free trial</div>
+      <div class="tc-title">Your Pro trial ${when}.</div>
+      <div class="tc-sub">So far: ${escapeHtml(bits.join(' · '))}. After the trial, Pro continues on the plan you picked. You can change or cancel any time under Manage subscription.</div>
+      <div class="tc-row"><button type="button" class="live-btn primary" id="trialKeepBtn">Keep going →</button><button type="button" class="live-btn" id="trialManageBtn">Manage subscription</button></div>
+    </section>`;
+  document.getElementById('trialKeepBtn').addEventListener('click', ()=>{
+    const card = document.getElementById('todayStepCard'); const go = document.getElementById('todayStepGo');
+    if(go){ go.click(); } else if(card){ card.scrollIntoView({ behavior: 'smooth', block: 'center' }); } else showHome('chapters');
+  });
+  document.getElementById('trialManageBtn').addEventListener('click', ()=>{ const b = document.getElementById('accountBtn'); if(b) b.click(); });
+}
+
 // ---------- Greeting on Home ----------
 // "Welcome back, Alexander." the first time Home shows after logging in, then "Good morning, Alexander."
 // Someone with no name yet is asked once, right on Home, what we should call them.

@@ -60,6 +60,7 @@ SCREENS = {
     'path':        (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id)"),
     'step-sheet':  (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); openStepSheet(NICHES[0], 4)"),
     'step-locked': (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); openStepSheet(NICHES[0], 9)"),
+    'trial-pro':   (True,  "trialInfo={startedAt: dateMinusDays(todayStr(), 2), days: 4}; NICHES[0].guides.slice(0,6).forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); aiChatHistory={video:[{role:'user',content:'q'},{role:'assistant',content:'a'},{role:'user',content:'q2'},{role:'assistant',content:'a2'}]}; streak={count:3,lastDate:todayStr()}; showHome()"),
     'home-pronote': (True, "NICHES[0].guides.filter(g=>g.mod===0).forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); streak={count:2,lastDate:dateMinusDays(todayStr(),1)}; showHome()"),
     'path-start':  (True,  "streak={count:0,lastDate:null}; openNiche(NICHES[1].id)"),
     'step-done':   (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); markStepDone(NICHES[0], NICHES[0].guides[4])"),
