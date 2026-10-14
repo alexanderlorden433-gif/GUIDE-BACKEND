@@ -110,7 +110,7 @@ def fixture(state, method, path, body):
         text = str((body or {}).get('body') or '').strip()
         if not text:
             return 400, {'error': 'Win text is required (max 500 chars).'}
-        w = {'id': 'w_new', 'body': text, 'emoji': (body or {}).get('emoji') or '🎉', 'authorId': 'u_smoke', 'authorEmail': 'smoke@example.com',
+        w = {'id': 'w_new', 'body': text, 'emoji': (body or {}).get('emoji') or '🎉', 'authorId': 'u_smoke', 'authorName': 'smoke',
              'authorInitial': 'S', 'createdAt': TODAY, 'reactions': []}
         state.setdefault('wins', []).insert(0, w); state.setdefault('win_posts', []).append(body)
         return 201, w
@@ -121,7 +121,7 @@ def fixture(state, method, path, body):
         state.setdefault('win_reacts', []).append((p.split('/')[3], emoji))
         return 200, {'action': 'added'}
     if re.match(r'^/api/discussion/[^/]+$', p) and method == 'GET':
-        return 200, {'posts': [], 'isOwner': False}
+        return 200, {'posts': state.get('discussion', []), 'isOwner': False}
     if re.match(r'^/api/mentors/[^/]+$', p) and method == 'GET':
         return 200, {'profiles': [], 'mine': None}
     if p == '/api/mentors/all/search':
@@ -211,8 +211,19 @@ def fixture(state, method, path, body):
         return 200, {'ok': True}
     if p.startswith('/api/admin/'):
         return 403, {'error': 'Not authorized.'}
+    if p == '/api/ai-chat/free' and method == 'GET':
+        if state['pro']:
+            return 200, {'pro': True, 'unlimited': True, 'left': None, 'limit': None}
+        return 200, {'pro': False, 'unlimited': False, 'left': state.get('ai_free_left', 1), 'limit': 1}
     if p == '/api/ai-chat':
-        return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.'}
+        if not state['pro']:
+            left = state.get('ai_free_left', 1)
+            if left <= 0:
+                return 403, {'error': "You've used today's free question. It comes back tomorrow, or go Pro for unlimited questions.", 'upgrade': True, 'left': 0, 'limit': 1}
+            state['ai_free_left'] = left - 1
+            state.setdefault('ai_posts', []).append(body)
+            return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': left - 1, 'limit': 1}
+        return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': None, 'limit': None}
     if p == '/api/billing/prices' and method == 'GET':
         # the real route reads these from Stripe; the numbers here are only a stand-in
         return 200, {'monthly': {'amount': 24.99, 'currency': 'USD', 'interval': 'month'},
@@ -880,7 +891,7 @@ def quiet_community(browser, base):
         ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
         st = new_state(True)
         st['wins'] = [{'id': f'w{i}', 'body': 'Got my first client', 'emoji': '🎉', 'authorId': f'u{i}',
-                       'authorEmail': 'someone@example.com', 'authorInitial': 'S', 'createdAt': TODAY,
+                       'authorName': 'someone', 'authorInitial': 'S', 'createdAt': TODAY,
                        'reactions': []} for i in range(posts)]
         attach_backend(ctx, st)
         ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
@@ -1208,6 +1219,66 @@ def pro_peeks(browser, base):
         else:
             problem(step[0], 'the Pro template view is wrong', tp)
     finish(st, step[0]); ctx.close()
+
+
+def guider_free_question(browser, base):
+    """Free members get one question a day to The Guider; after it, the box says so and offers Pro."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    def open_guider(label, pro, left=1):
+        step = [f'guider free question ({label})']
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(pro); st['ai_free_left'] = left
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(800)
+        page.click('#bottomTabGuider'); page.wait_for_timeout(1000)
+        return step, ctx, st, page
+    got = open_guider('free member, question ready', False)
+    if got:
+        step, ctx, st, page = got
+        if not visible(page, '#aiChatInput', 3000):
+            problem(step[0], 'the Guider tab should open for a free member (it used to be blocked)')
+        else:
+            banner = page.inner_text('#aiChatFree')
+            if 'free question for today is ready' not in banner:
+                problem(step[0], 'the free member should be told their free question is ready', banner[:120])
+            page.fill('#aiChatInput', 'How do I price my first shoot?'); page.click('#aiChatSendBtn'); page.wait_for_timeout(900)
+            sent = st.get('ai_posts', [])
+            msgs = page.inner_text('#aiChatMessages')
+            banner = page.inner_text('#aiChatFree')
+            disabled = page.evaluate("document.getElementById('aiChatSendBtn').disabled")
+            if len(sent) == 1 and 'three packages' in msgs and "used today's free question" in banner and disabled:
+                ok(step[0], 'a free member asks one question, gets the answer, and is then told it comes back tomorrow or with Pro')
+            else:
+                problem(step[0], 'the free question flow is wrong', {'sent': len(sent), 'banner': banner[:100], 'disabled': disabled})
+            page.click('#aiChatUnlock'); page.wait_for_timeout(500)
+            if visible(page, '#upgradeModal', 2000) or page.locator('.modal-plan').count() > 0:
+                ok(step[0], 'the Unlock button opens the Pro window')
+            else:
+                problem(step[0], 'Unlock should open the Pro window')
+        finish(st, step[0]); ctx.close()
+    got = open_guider('free member, already used', False, left=0)
+    if got:
+        step, ctx, st, page = got
+        banner = page.inner_text('#aiChatFree') if page.locator('#aiChatFree').count() else ''
+        disabled = page.evaluate("(()=>{const b=document.getElementById('aiChatSendBtn'); return b ? b.disabled : null})()")
+        if "used today's free question" in banner and disabled:
+            ok(step[0], 'with the free question used, the box is closed until tomorrow')
+        else:
+            problem(step[0], 'a used-up free member should see the closed box', {'banner': banner[:100], 'disabled': disabled})
+        finish(st, step[0]); ctx.close()
+    got = open_guider('Pro member', True)
+    if got:
+        step, ctx, st, page = got
+        if page.locator('#aiChatFree').count() and page.inner_text('#aiChatFree').strip():
+            problem(step[0], 'a Pro member should see no free-question banner', page.inner_text('#aiChatFree')[:80])
+        else:
+            ok(step[0], 'a Pro member sees no limit')
+        finish(st, step[0]); ctx.close()
 
 
 def live_iso_in(minutes):
@@ -2196,6 +2267,44 @@ def step_one_demo(browser, base):
         ctx.close()
 
 
+def community_names(browser, base):
+    """Chapter discussion: each post and reply shows the poster's name (the part before the "@", sent by the
+    backend as authorName) — never a full email address — and your own post says "(you)"."""
+    step = ['chapter discussion: names']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(True)
+    st['discussion'] = [
+        {'id': 'd1', 'body': 'How do you price a first shoot?', 'authorName': 'maya', 'isMine': False, 'canDelete': False, 'createdAt': TODAY,
+         'replies': [{'id': 'd1r1', 'body': 'Start with a half-day rate', 'authorName': 'luis', 'isMine': False, 'canDelete': False, 'createdAt': TODAY}]},
+        {'id': 'd2', 'body': 'My first client said yes', 'authorName': 'smoke', 'isMine': True, 'canDelete': True, 'createdAt': TODAY, 'replies': []},
+    ]
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'the app did not open')
+    else:
+        page.wait_for_timeout(600)
+        try:
+            page.evaluate("openNiche(NICHES[0].id); renderDiscussionPanel()")
+        except Exception as e:
+            problem(step[0], 'the chapter discussion crashed while showing posts', e)
+            finish(st, step[0]); ctx.close(); return
+        page.wait_for_timeout(800)
+        got = page.evaluate("""(()=>{ const l = document.getElementById('discussionList');
+          return {names: [...l.querySelectorAll('.mentor-card-name')].map(e => e.innerText.trim()), text: l.innerText}; })()""")
+        want = ['maya', 'luis', 'smoke (you)']
+        if not all(any(n.startswith(w) for n in got['names']) for w in want):
+            problem(step[0], 'posts and replies should show the poster\'s name', got['names'])
+        elif '@' in got['text'] or 'undefined' in got['text']:
+            problem(step[0], 'the discussion shows an email address or "undefined"', got['text'][:200])
+        else:
+            ok(step[0], 'posts and replies show names (no email addresses) and your own post says "(you)"')
+    finish(st, step[0])
+    ctx.close()
+
+
 def startup_account(browser, base):
     """Coming back on a saved login: the app keeps who you are (your own posts say "(you)" and can be deleted)
     and whether a free trial is still on offer (only for people who have never paid)."""
@@ -2643,6 +2752,7 @@ def main():
         quiet_community(browser, base)
         home_greeting(browser, base)
         pro_peeks(browser, base)
+        guider_free_question(browser, base)
         live_calls(browser, base)
         push_notifications(browser, base)
         client_status(browser, base)
@@ -2650,6 +2760,7 @@ def main():
         daily_step(browser, base)
         niche_burst(browser, base)
         startup_account(browser, base)
+        community_names(browser, base)
         step_one_demo(browser, base)
         account_settings(browser, base)
         manage_subscription(browser, base)

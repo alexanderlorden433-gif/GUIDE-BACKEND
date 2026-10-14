@@ -3885,6 +3885,10 @@
     flex-shrink:0;
   }
   .ai-chat-clear-btn:hover{background:rgba(255,255,255,0.25);}
+  .ai-chat-free{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 10px; padding:10px 14px; border-radius:12px; border:1px solid rgba(var(--accent-rgb),.3); background:rgba(var(--accent-rgb),.08); font-size:13.5px; line-height:1.4; color:var(--ink-2);}
+  .ai-chat-free b{color:var(--ink);}
+  .ai-chat-free.used{border-color:var(--line); background:var(--card);}
+  .ai-chat-free .live-btn{flex:none; padding:8px 12px; font-size:13px;}
   .ai-chat-intro{
     padding:10px 18px;
     font-size:11.5px;
@@ -8626,7 +8630,6 @@ document.getElementById('bottomTabChapters').addEventListener('click', ()=>{
   showHome('chapters');
 });
 document.getElementById('bottomTabGuider').addEventListener('click', ()=>{
-  if(!isPro){ openUpgradeModal({ type: 'tab', nicheId: currentNicheId || (selectedNiches[0] || null), tab: 'aichat' }); return; }
   const targetNicheId = currentNicheId || selectedNiches[0];
   if(!targetNicheId){ showHome(); return; }
   setActiveBottomTab('bottomTabGuider');
@@ -8925,7 +8928,7 @@ function openUpgradeModal(resumeAction){
   upgradeModalBody.innerHTML = `
     <button class="modal-close" id="upgradeCloseBtn">✕</button>
     <h2>Unlock the full course</h2>
-    <p class="auth-sub">Module 1 of all ${NICHES.length} courses is free forever. Pro opens the other ${proLessonCount()} lessons, plus the AI mentor, templates, client trackers and PDF exports.</p>
+    <p class="auth-sub">Module 1 of all ${NICHES.length} courses is free forever. Pro opens the other ${proLessonCount()} lessons, plus unlimited questions to the AI mentor, templates, client trackers and PDF exports.</p>
     <div class="modal-plans">
       <div class="modal-plan selected" data-plan="monthly">
         <div><div class="mp-name">Monthly</div><div class="mp-sub">Cancel anytime</div></div>
@@ -9033,7 +9036,7 @@ subNav.querySelectorAll('.sub-tab').forEach(tab=>{
     // response, or other users' real profile data), so there's nothing safe
     // to show non-Pro users a "preview" of without either spending money on
     // their behalf or leaking real user data to a non-paying account.
-    if((tab.dataset.sub === 'aichat' || tab.dataset.sub === 'mentors') && !isPro){
+    if(tab.dataset.sub === 'mentors' && !isPro){
       openUpgradeModal({ type: 'tab', nicheId: currentNicheId, tab: tab.dataset.sub });
       return;
     }
@@ -12282,7 +12285,7 @@ function buildWinCard(w, reload){
   card.className = 'win-card';
   const time = new Date(w.createdAt);
   const ago = timeAgo(time);
-  const displayName = (w.authorEmail || '').split('@')[0] || 'Guide User';
+  const displayName = w.authorName || (w.authorEmail || '').split('@')[0] || 'Guide User';
   const initial = w.authorInitial || displayName[0].toUpperCase();
   // Count reactions by emoji
   const reactions = w.reactions || [];
@@ -16442,6 +16445,7 @@ function renderAiChatPanel(){
         </div>
         <button type="button" class="ai-chat-clear-btn" id="aiChatClearBtn">Clear chat</button>
       </div>
+      <div id="aiChatFree"></div>
       <div class="ai-chat-intro">
         💬 Ask The Guider anything about running a <strong>${escapeHtmlAi(niche.name)}</strong> business — pricing, clients, workflow, whatever's on your mind. It can see how far you are through this chapter and the figures in your own trackers, so ask about your actual numbers. Answers are AI-generated and won't always be perfect; use judgment.
       </div>
@@ -16454,6 +16458,7 @@ function renderAiChatPanel(){
   `;
 
   renderAiChatMessages();
+  renderAiChatFree();
 
   const input = document.getElementById('aiChatInput');
   const sendBtn = document.getElementById('aiChatSendBtn');
@@ -16505,6 +16510,35 @@ function renderAiChatMessages(){
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
+// Free members: one question a day (the server keeps the count). Pro: unlimited.
+let aiFree = null; // {pro, unlimited, left, limit}
+async function loadAiFree(force){
+  if(isPro) return (aiFree = { pro: true, unlimited: true });
+  if(aiFree && !force && !aiFree.pro) return aiFree;
+  try{ aiFree = await apiFetch('/ai-chat/free'); }catch(e){ aiFree = { pro: false, unlimited: false, left: 1, limit: 1 }; }
+  return aiFree;
+}
+async function renderAiChatFree(){
+  const box = document.getElementById('aiChatFree');
+  if(!box) return;
+  if(isPro){ box.innerHTML = ''; return; }
+  const f = await loadAiFree();
+  if(!box.isConnected || f.unlimited){ box.innerHTML = ''; return; }
+  const sendBtn = document.getElementById('aiChatSendBtn'), input = document.getElementById('aiChatInput');
+  if(f.left > 0){
+    box.className = 'ai-chat-free';
+    box.innerHTML = `<span><b>Your free question for today is ready.</b> Free members get ${f.limit} a day. Pro members ask as much as they like.</span>`;
+    if(sendBtn) sendBtn.disabled = false;
+    if(input) input.disabled = false;
+  } else {
+    box.className = 'ai-chat-free used';
+    box.innerHTML = `<span><b>You've used today's free question.</b> It comes back tomorrow, or go Pro for unlimited.</span><button type="button" class="live-btn primary" id="aiChatUnlock">${ico('lock')} Unlock</button>`;
+    if(sendBtn) sendBtn.disabled = true;
+    if(input) input.disabled = true;
+    document.getElementById('aiChatUnlock').addEventListener('click', ()=> openUpgradeModal({ type: 'tab', nicheId: currentNicheId, tab: 'aichat' }));
+  }
+}
+
 async function sendAiChatMessage(niche, text){
   const sendBtn = document.getElementById('aiChatSendBtn');
   const messagesEl = document.getElementById('aiChatMessages');
@@ -16537,8 +16571,14 @@ async function sendAiChatMessage(niche, text){
       })
     });
     aiChatHistory[niche.id].push({role:'assistant', content: result.reply});
+    if(!isPro && result && result.left != null) aiFree = { pro: false, unlimited: false, left: result.left, limit: result.limit || 1 };
   }catch(e){
-    aiChatHistory[niche.id].push({role:'assistant', content: "⚠️ Couldn't reach The Guider right now. Please check your connection and try again."});
+    if(e.status === 403 && e.body && e.body.upgrade){
+      aiFree = { pro: false, unlimited: false, left: 0, limit: (e.body.limit || 1) };
+      aiChatHistory[niche.id].push({role:'assistant', content: e.body.error || "You've used today's free question. It comes back tomorrow, or go Pro for unlimited."});
+    } else {
+      aiChatHistory[niche.id].push({role:'assistant', content: "⚠️ Couldn't reach The Guider right now. Please check your connection and try again."});
+    }
   }
 
   // cap stored history so it doesn't grow unbounded
@@ -16548,6 +16588,7 @@ async function sendAiChatMessage(niche, text){
 
   sendBtn.disabled = false;
   renderAiChatMessages();
+  renderAiChatFree();
   saveProgress();
 }
 
@@ -16760,7 +16801,7 @@ function buildDiscussionPostCard(niche, post){
   const repliesHtml = post.replies.map(r=>`
     <div class="mentor-card" style="margin:10px 0 0 20px;background:var(--bg);">
       <div class="mentor-card-head">
-        <div class="mentor-card-name" style="font-size:12.5px;">${escapeHtmlMentor(r.authorEmail.split('@')[0])}${r.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
+        <div class="mentor-card-name" style="font-size:12.5px;">${escapeHtmlMentor(r.authorName || (r.authorEmail || '').split('@')[0])}${r.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
         ${r.canDelete ? `<button type="button" class="ai-chat-clear-btn discussion-delete-btn" data-id="${r.id}" style="background:var(--bg);color:var(--ink-soft);border-color:var(--line);">Delete</button>` : ''}
       </div>
       <div class="mentor-card-bio" style="font-size:12.5px;">${escapeHtmlMentor(r.body)}</div>
@@ -16768,7 +16809,7 @@ function buildDiscussionPostCard(niche, post){
   `).join('');
   card.innerHTML = `
     <div class="mentor-card-head">
-      <div class="mentor-card-name">${escapeHtmlMentor(post.authorEmail.split('@')[0])}${post.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
+      <div class="mentor-card-name">${escapeHtmlMentor(post.authorName || (post.authorEmail || '').split('@')[0])}${post.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
       ${post.canDelete ? `<button type="button" class="ai-chat-clear-btn discussion-delete-btn" data-id="${post.id}" style="background:var(--bg);color:var(--ink-soft);border-color:var(--line);">Delete</button>` : ''}
     </div>
     <div class="mentor-card-bio">${escapeHtmlMentor(post.body)}</div>
