@@ -44,6 +44,8 @@ SCREENS = {
     'account-pro': (True,  "document.getElementById('accountBtn').click(); setTimeout(()=>document.getElementById('accBillingCard').scrollIntoView(), 400)"),
     'guide':       (True,  "openNiche(NICHES[0].id); setCourseView('list'); document.querySelector('#nicheView .guide .guide-title').click()"),
     'checklists':  (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=checklists]').click()"),
+    'templates-free': (True, "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=templates]').click()"),
+    'guide-peek':  (True,  "openNiche(NICHES[0].id); setCourseView('list'); setTimeout(()=>{const g=[...document.querySelectorAll('#nicheView .guide.locked')].find(x=>x.innerText.includes('Pro')); g.querySelector('.guide-row').click(); setTimeout(()=>g.scrollIntoView({block:'start'}),200)}, 400)"),
     'templates-pro': (True, "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=templates]').click()"),
     'tools-pro':   (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=tools]').click()"),
     'mentor-pro':  (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=aichat]').click()"),
