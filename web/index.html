@@ -2026,6 +2026,7 @@
   .template-preview{
     font-size:12.5px;
     line-height:1.6;
+    white-space:pre-wrap;
     color:var(--ink-soft);
     background:var(--bg);
     border:1px solid var(--line);
@@ -2471,6 +2472,18 @@
     max-height:520px;
     overflow:hidden;
   }
+  /* A peek at Pro content: the first lines readable, the rest blurred, the unlock right there. */
+  .peek-blur{filter:blur(4.5px); user-select:none; pointer-events:none; opacity:.8;}
+  .peek-bar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:12px; padding:12px 14px; border-radius:12px; border:1px solid rgba(var(--accent-rgb),.3); background:rgba(var(--accent-rgb),.08); font-size:13.5px; line-height:1.4; color:var(--ink-2);}
+  .peek-bar b{color:var(--ink);}
+  .peek-bar .live-btn{flex:none;}
+  .guide.locked.peeking{opacity:1;}
+  .guide.locked.peeking .guide-title{color:var(--ink);}
+  .guide.locked.peeking .guide-row{cursor:pointer;}
+  .template-card.peek .template-preview{max-height:none;}
+  .template-card.peek .peek-blur{display:block; margin-top:2px;}
+  .templates-peek-note{grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 14px; border-radius:12px; border:1px solid rgba(var(--accent-rgb),.3); background:rgba(var(--accent-rgb),.08); font-size:13.5px; color:var(--ink-2);}
+  .templates-peek-note b{color:var(--ink);}
   .pro-preview-overlay{
     position:absolute;
     inset:0;
@@ -2778,6 +2791,18 @@
   .cert-banner{
     margin:14px 0;
   }
+  .cert-banner-inner .cert-icon .ico{width:30px; height:30px; color:var(--gold);}
+  .cert-download-btn .ico, .cert-share-btn .ico{width:16px; height:16px; margin-right:6px; vertical-align:-3px;}
+  .cert-share-btn{background:var(--card-2); color:var(--ink); border:1px solid var(--line-2); border-radius:10px; padding:10px 14px; font:600 14px 'Inter',sans-serif; cursor:pointer; white-space:nowrap;}
+  .cert-goal{display:flex; align-items:center; gap:10px; width:100%; margin:10px 0 0; padding:10px 12px; text-align:left; border-radius:12px; border:1px dashed var(--line-2); background:var(--card); color:var(--ink-2); font:500 13px/1.4 'Inter',sans-serif; cursor:pointer;}
+  .cert-goal > .ico{width:18px; height:18px; flex:none; color:var(--gold);}
+  .cert-goal span{flex:1;}
+  .cert-goal span b{color:var(--ink);}
+  .cert-goal .cert-goal-go{color:var(--grape-soft); font-weight:700; white-space:nowrap;}
+  .cert-preview{position:fixed; inset:0; z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:20px; background:rgba(var(--scrim-rgb),.86);}
+  .cert-preview img{width:min(92vw, 720px); border-radius:10px; box-shadow:0 30px 80px rgba(0,0,0,.6); border:1px solid var(--line-2);}
+  .cert-preview p{margin:0; max-width:520px; text-align:center; font-size:14px; line-height:1.5; color:var(--ink-2);}
+  .cert-preview .cert-preview-row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
   .cert-banner-inner{
     display:flex;
     align-items:center;
@@ -2826,8 +2851,12 @@
     .cert-banner-inner{
       flex-wrap:wrap;
     }
-    .cert-download-btn{
-      width:100%;
+    .cert-text{
+      flex:1 1 calc(100% - 60px);
+      min-width:0;
+    }
+    .cert-download-btn, .cert-share-btn{
+      flex:1 1 40%;
       text-align:center;
     }
   }
@@ -3872,6 +3901,10 @@
     flex-shrink:0;
   }
   .ai-chat-clear-btn:hover{background:rgba(255,255,255,0.25);}
+  .ai-chat-free{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 10px; padding:10px 14px; border-radius:12px; border:1px solid rgba(var(--accent-rgb),.3); background:rgba(var(--accent-rgb),.08); font-size:13.5px; line-height:1.4; color:var(--ink-2);}
+  .ai-chat-free b{color:var(--ink);}
+  .ai-chat-free.used{border-color:var(--line); background:var(--card);}
+  .ai-chat-free .live-btn{flex:none; padding:8px 12px; font-size:13px;}
   .ai-chat-intro{
     padding:10px 18px;
     font-size:11.5px;
@@ -4835,6 +4868,16 @@
   .ts-chap{font-size:12.5px; color:var(--ink-soft); margin-bottom:6px;}
   .ts-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; line-height:1.25; color:var(--ink); margin-bottom:8px;}
   .ts-do{font-size:14.5px; line-height:1.5; color:var(--ink-2); margin-bottom:14px;}
+  .today-step.mod1-done{border-color:rgba(var(--accent2-rgb),.45); background:linear-gradient(160deg, rgba(var(--accent2-rgb),.10), rgba(var(--accent2-rgb),.02) 60%), var(--card);}
+  .today-step.mod1-done .ts-do{margin-bottom:6px;}
+  .ts-next{list-style:none; margin:0 0 10px; padding:0;}
+  .ts-next li{display:flex; align-items:flex-start; gap:8px; padding:7px 0; border-bottom:1px solid var(--line); font-size:14.5px; color:var(--ink);}
+  .ts-next li:last-child{border-bottom:none;}
+  .ts-next li .ico{width:14px; height:14px; margin-top:3px; flex:none; color:var(--gold);}
+  .ts-counts{font-size:13px; color:var(--ink-soft); margin-bottom:12px; line-height:1.45;}
+  .sc-next-list{list-style:none; margin:6px 0 8px; padding:0; font-size:14px; color:var(--ink-2);}
+  .sc-next-list li{padding:3px 0;}
+  .sc-next-list li::before{content:'· '; color:var(--ink-soft);}
   .ts-do b{color:var(--ink); font-weight:700;}
   .ts-go{display:block; width:100%; border:none; border-radius:14px; padding:14px 16px; font:700 15px 'Space Grotesk',sans-serif; background:var(--accent-gradient); color:var(--on-accent); cursor:pointer; box-shadow:0 8px 24px rgba(var(--accent-rgb),.28); transition:transform .15s ease, box-shadow .15s ease; touch-action:manipulation;}
   .ts-go:active{transform:scale(.98); box-shadow:0 3px 12px rgba(var(--accent-rgb),.25);}
@@ -6025,6 +6068,8 @@ const ICO = {
   x:`<path d="M18 6 6 18"/> <path d="m6 6 12 12"/>`,
   plus:`<path d="M5 12h14"/> <path d="M12 5v14"/>`,
   external:`<path d="M15 3h6v6"/> <path d="M10 14 21 3"/> <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>`,
+  award:`<path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/> <circle cx="12" cy="8" r="6"/>`,
+  share:`<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/> <polyline points="16 6 12 2 8 6"/> <line x1="12" x2="12" y1="2" y2="15"/>`,
 };
 const ICON_FOR_CHAPTER = {'🎥':'video','📷':'camera','📈':'megaphone','📊':'candles','🛒':'bag','🎨':'pentool','✍':'penline','📱':'phone','🌟':'star','🧭':'compass','🗂':'folders','🔧':'tools','🏠':'home','🎬':'clapper','💼':'briefcase','💰':'handshake','🧽':'spray','🌿':'leaf','🚗':'car','🛠':'hammer','🐾':'paw'};
 function ico(name, cls){ return '<svg class="ico' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (ICO[name] || '') + '</svg>'; }
@@ -8624,7 +8669,6 @@ document.getElementById('bottomTabChapters').addEventListener('click', ()=>{
   showHome('chapters');
 });
 document.getElementById('bottomTabGuider').addEventListener('click', ()=>{
-  if(!isPro){ openUpgradeModal({ type: 'tab', nicheId: currentNicheId || (selectedNiches[0] || null), tab: 'aichat' }); return; }
   const targetNicheId = currentNicheId || selectedNiches[0];
   if(!targetNicheId){ showHome(); return; }
   setActiveBottomTab('bottomTabGuider');
@@ -8923,7 +8967,7 @@ function openUpgradeModal(resumeAction){
   upgradeModalBody.innerHTML = `
     <button class="modal-close" id="upgradeCloseBtn">✕</button>
     <h2>Unlock the full course</h2>
-    <p class="auth-sub">Module 1 of all ${NICHES.length} courses is free forever. Pro opens the other ${proLessonCount()} lessons, plus the AI mentor, templates, client trackers and PDF exports.</p>
+    <p class="auth-sub">Module 1 of all ${NICHES.length} courses is free forever. Pro opens the other ${proLessonCount()} lessons, plus unlimited questions to the AI mentor, templates, client trackers and PDF exports.</p>
     <div class="modal-plans">
       <div class="modal-plan selected" data-plan="monthly">
         <div><div class="mp-name">Monthly</div><div class="mp-sub">Cancel anytime</div></div>
@@ -9040,7 +9084,7 @@ subNav.querySelectorAll('.sub-tab').forEach(tab=>{
     // response, or other users' real profile data), so there's nothing safe
     // to show non-Pro users a "preview" of without either spending money on
     // their behalf or leaking real user data to a non-paying account.
-    if((tab.dataset.sub === 'aichat' || tab.dataset.sub === 'mentors') && !isPro){
+    if(tab.dataset.sub === 'mentors' && !isPro){
       openUpgradeModal({ type: 'tab', nicheId: currentNicheId, tab: tab.dataset.sub });
       return;
     }
@@ -10617,18 +10661,34 @@ function renderNicheDetail(){
     }
     certBanner.innerHTML = `
       <div class="cert-banner-inner">
-        <span class="cert-icon">🎓</span>
+        <span class="cert-icon">${ico('award')}</span>
         <div class="cert-text">
-          <strong>Chapter Complete!</strong>
-          <span>You've mastered every guide in ${niche.name}.</span>
+          <strong>Chapter complete!</strong>
+          <span>You finished all ${niche.guides.length} lessons in ${gvEsc(niche.name)}. Your certificate is ready.</span>
         </div>
-        <button class="cert-download-btn" id="certDownloadBtn">📜 Get Certificate</button>
+        <button type="button" class="cert-download-btn" id="certDownloadBtn">${ico('award')} Get certificate</button>
+        <button type="button" class="cert-share-btn" id="certShareBtn">${ico('share')} Share</button>
       </div>
     `;
     certBanner.style.display = '';
     document.getElementById('certDownloadBtn').addEventListener('click', ()=> generateCertificate(niche));
+    document.getElementById('certShareBtn').addEventListener('click', ()=> shareCertificate(niche));
   } else if(certBanner){
     certBanner.style.display = 'none';
+  }
+  // the goal, for everyone: a certificate with your name on it when the chapter is done
+  let certGoal = document.getElementById('certGoal');
+  if(done < niche.guides.length){
+    if(!certGoal){
+      certGoal = document.createElement('button');
+      certGoal.type = 'button'; certGoal.id = 'certGoal'; certGoal.className = 'cert-goal';
+      nicheDetailProgress.insertAdjacentElement('afterend', certGoal);
+    }
+    certGoal.innerHTML = `${ico('award')}<span>Finish all ${niche.guides.length} lessons and earn the <b>${gvEsc(niche.name)}</b> certificate, with your name on it.</span><b class="cert-goal-go">Preview</b>`;
+    certGoal.style.display = '';
+    certGoal.onclick = ()=> previewCertificate(niche);
+  } else if(certGoal){
+    certGoal.style.display = 'none';
   }
 
   renderPathMap(niche);
@@ -10718,7 +10778,7 @@ function renderNicheDetail(){
     `;
     g.querySelector('.guide-row').addEventListener('click', (e)=>{
       if(e.target.classList.contains('bookmark-star')) return;
-      if(lock === 'pro'){ openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }); return; }
+      if(lock === 'pro'){ togglePeek(); return; }
       if(lock){ g.classList.add('shake'); setTimeout(()=> g.classList.remove('shake'), 450); return; }
       const opening = !g.classList.contains('open');
       if(opening) g._fill();
@@ -10728,6 +10788,24 @@ function renderNicheDetail(){
         saveProgress();
       }
     });
+    // A peek at a Pro lesson: the summary and first paragraph readable, the rest blurred, with the unlock right there.
+    function togglePeek(){
+      const opening = !g.classList.contains('open');
+      if(opening && !g._peeked){
+        g._peeked = true;
+        const paras = String(guide.content || '').replace(/\\n/g, '\n').split(/\n\s*\n/).filter(Boolean);
+        const first = paras[0] || '';
+        const second = paras[1] || '';
+        const inChapter = niche.guides.filter(x => x.mod !== 0).length;
+        g.querySelector('.guide-content').innerHTML = `
+          ${guide.summary ? `<p style="color:var(--ink-soft); font-style:italic;">${guide.summary}</p>` : ''}
+          ${first ? guidePara(first) : ''}
+          <div class="peek-blur" aria-hidden="true">${second ? guidePara(second.slice(0, 260)) : ''}${guide.action ? `<div class="next-step"><b>Your next step</b><span>${gvEsc(guide.action)}</span></div>` : ''}</div>
+          <div class="peek-bar"><span><b>This lesson is part of Pro.</b> Module 1 is free. Pro opens this one and the other ${inChapter - 1} in ${gvEsc(niche.name)}.</span><button type="button" class="live-btn primary peek-unlock">${ico('lock')} Unlock with Pro</button></div>`;
+        g.querySelector('.peek-unlock').addEventListener('click', (e)=>{ e.stopPropagation(); openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }); });
+      }
+      g.classList.toggle('open', opening); g.classList.toggle('peeking', opening);
+    }
     g.dataset.gv = gvId(niche.id, guide.title);
     g._gvOpen = ()=>{ if(lock) return; openGuideVideo(niche, guide, gvCtx(niche, guide, visibleGuides)); };
     gvBindWatch(g);
@@ -10842,6 +10920,34 @@ function nicheNextStep(niche){
   return { niche, guide, idx, lock: guideLock(niche, guide, idx, idx) };
 }
 
+/** What Pro opens in one chapter, in concrete terms: the next lesson titles and the counts. Used by the
+ *  "you finished Module 1" card on Home and by the step-done sheet. */
+function proUnlockSummary(niche, fromIdx){
+  const guides = niche.guides || [];
+  const start = Number.isFinite(fromIdx) ? fromIdx : guides.findIndex(g => g.mod !== 0);
+  const locked = guides.filter((g, i) => i >= start && g.mod !== 0);
+  const cfg = NICHE_TOOLS[niche.id];
+  const tools = cfg ? (cfg.panels || []).length + (cfg.specialty ? 1 : 0) + (cfg.specialty2 ? 1 : 0) : 0;
+  const started = courseStarts[niche.id];
+  const daysTaken = started ? Math.max(1, dayNum(todayStr()) - dayNum(started) + 1) : null;
+  return {
+    next: locked.slice(0, 3).map(g => g.title),
+    remaining: locked.length,
+    modules: Math.max(0, (niche.modules || []).length - 1),
+    templates: (niche.templates || []).length,
+    checklists: (niche.checklists || []).length,
+    tools,
+    daysTaken,
+  };
+}
+function proUnlockCounts(u){
+  const parts = [`${u.remaining} more lesson${u.remaining === 1 ? '' : 's'}`];
+  if(u.templates) parts.push(`${u.templates} template${u.templates === 1 ? '' : 's'}`);
+  if(u.tools) parts.push(`${u.tools} tracker${u.tools === 1 ? '' : 's'}`);
+  parts.push('unlimited questions to The Guider');
+  return parts.join(' · ');
+}
+
 /** Picks the one step to put in front of the learner: where they were last, then chapters they've started, then the rest. */
 function pickTodayStep(){
   const sel = (selectedNiches || []).filter(id=> NICHES.some(n=> n.id === id));
@@ -10851,8 +10957,10 @@ function pickTodayStep(){
   const byRank = (a, b)=> rank(a) - rank(b);
   const all = NICHES.map(nicheNextStep).filter(Boolean);
   const inMine = all.filter(s=> mine.includes(s.niche));
-  const step = inMine.filter(s=> !s.lock).sort(byRank)[0] || all.filter(s=> !s.lock).sort(byRank)[0] || null;
   const pro = (inMine.length ? inMine : all).filter(s=> s.lock === 'pro').sort(byRank)[0] || null;
+  // A free step in one of their own chapters comes first. When their chapters are at the Pro wall, Home shows
+  // the "Module 1 done" card rather than a lesson from a chapter they never picked (those stay a tap away below).
+  const step = inMine.filter(s=> !s.lock).sort(byRank)[0] || ((pro && !isPro) ? null : all.filter(s=> !s.lock).sort(byRank)[0]) || null;
   const week = all.filter(s=> s.lock === 'week').sort((a, b)=> moduleDaysLeft(a.niche.id, a.guide.mod) - moduleDaysLeft(b.niche.id, b.guide.mod))[0] || null;
   return { step, pro: isPro ? null : pro, week };
 }
@@ -10960,13 +11068,17 @@ function renderTodayStep(clearOnly){
       html += `<button type="button" class="ts-pro-note" id="todayProNote"><span>${ico('lock')} ${gvEsc(p.pro.niche.name)}: the free part is done</span><b>See Pro →</b></button>`;
     }
   } else if(p.pro){
-    const n = p.pro.niche, mod = (n.modules || [])[p.pro.guide.mod];
-    html = `<div class="today-step quiet" id="todayStepCard">
-        <div class="ts-top"><span class="ts-label">You finished the free part</span>${streakBit}</div>
+    const n = p.pro.niche, u = proUnlockSummary(n, p.pro.idx);
+    const took = u.daysTaken ? (u.daysTaken === 1 ? ' in a day' : ` in ${u.daysTaken} days`) : '';
+    html = `<div class="today-step quiet mod1-done" id="todayStepCard">
+        <div class="ts-top"><span class="ts-label">Module 1 done ✓</span>${streakBit}</div>
         <div class="ts-chap">${nicheIco(n)} ${gvEsc(n.name)}</div>
-        <div class="ts-title">${mod ? 'Next: ' + gvEsc(mod.title) : 'The rest of this course is in Pro'}</div>
-        <div class="ts-do">Nice work. Module 1 of every course is free; Pro opens the rest.</div>
-        <button type="button" class="ts-go" id="todayStepGo">See what Pro opens →</button>
+        <div class="ts-title">You finished Module 1 of ${gvEsc(n.name)}${took}.</div>
+        <div class="ts-do">Next up in this chapter:</div>
+        <ul class="ts-next">${u.next.map(t => `<li>${ico('lock')} ${gvEsc(t)}</li>`).join('')}</ul>
+        <div class="ts-counts">${gvEsc(proUnlockCounts(u))}</div>
+        <button type="button" class="ts-go" id="todayStepGo">Keep going with Pro →</button>
+        <div class="ts-meta">Module 1 of every chapter stays free.</div>
       </div>`;
     onGo = ()=> openUpgradeModal({ type: 'tab', nicheId: n.id, tab: 'guides' });
   } else {
@@ -11071,8 +11183,10 @@ function celebrateStep(niche, guide, before){
     primary = `<button type="button" class="sc-btn" data-act="next">Next step →</button>`;
     secondary = `<button type="button" class="sc-text" data-act="close">That's enough for today</button>`;
   } else if(next && next.lock === 'pro'){
-    nextHtml = `<div class="sc-next"><div class="sc-kicker">You finished the free part</div><div class="nt">The rest of ${gvEsc(niche.name)} is in Pro.</div><div class="nm">Module 1 of every course stays free.</div></div>`;
-    primary = `<button type="button" class="sc-btn gold" data-act="pro">See what Pro opens</button>`;
+    const u = proUnlockSummary(niche, next.idx);
+    nextHtml = `<div class="sc-next"><div class="sc-kicker">You finished Module 1 of ${gvEsc(niche.name)}</div><div class="nt">Next up: ${gvEsc(u.next[0] || 'the rest of the chapter')}</div>
+      <ul class="sc-next-list">${u.next.slice(1).map(t => `<li>${gvEsc(t)}</li>`).join('')}</ul><div class="nm">${gvEsc(proUnlockCounts(u))}. Module 1 of every chapter stays free.</div></div>`;
+    primary = `<button type="button" class="sc-btn gold" data-act="pro">Keep going with Pro</button>`;
     secondary = `<button type="button" class="sc-text" data-act="close">Not now</button>`;
   } else {
     const days = next ? moduleDaysLeft(niche.id, next.guide.mod) : 0;
@@ -11569,7 +11683,7 @@ function liveCardHtml(c, info){
     ${c.description ? `<p class="live-desc">${liveEsc(c.description)}</p>` : ''}
     <div class="live-meta">
       ${niche ? `<span>${nicheIco(niche)} ${liveEsc(niche.name)}</span>` : ''}
-      ${member && c.going > 0 ? `<span>${ico('users')} ${c.going} going</span>` : ''}
+      ${c.going > 0 ? `<span>${ico('users')} ${c.going} going</span>` : ''}
       ${!host && c.questions > 0 ? `<span>${ico('chat')} ${c.questions} question${c.questions === 1 ? '' : 's'} sent in</span>` : ''}
     </div>
     <div class="live-actions">${actions}</div>
@@ -11596,8 +11710,8 @@ function renderLiveList(){
   if(!list || !liveInfo) return;
   const info = liveInfo;
   let html = '';
-  if(!info.isPro && info.calls.length){
-    html += `<div class="live-pro-note">${ico('lock')}<span>Live calls are for Pro members. You can see what is coming up, and Pro members join in one tap.</span></div>`;
+  if(!info.isPro && (info.calls.length || info.replays.length)){
+    html += `<div class="live-pro-note">${ico('lock')}<span>Live calls are for Pro members. You can see what is coming up${info.replays.length ? ' and what was recorded' : ''}; Pro members join in one tap${info.replays.length ? ' and watch the replays' : ''}.</span></div>`;
   }
   html += info.calls.length
     ? info.calls.map(c => liveCardHtml(c, info)).join('')
@@ -11996,7 +12110,18 @@ function renderLiveHome(){
   if(!wrap) return;
   const draw = ()=>{
     const next = liveInfo && liveInfo.calls.filter(c => liveState(c) !== 'over').sort((a, b) => liveStart(a) - liveStart(b))[0];
-    if(!next || liveStart(next) - Date.now() > 7 * 864e5){ wrap.innerHTML = ''; return; }
+    if(!next || liveStart(next) - Date.now() > 7 * 864e5){
+      // nothing coming up soon: a fresh replay (last two weeks) is worth a line too
+      const rep = liveInfo && (liveInfo.replays || []).filter(r => Date.now() - liveStart(r) < 14 * 864e5).sort((a, b) => liveStart(b) - liveStart(a))[0];
+      if(!rep){ wrap.innerHTML = ''; return; }
+      wrap.innerHTML = `<button type="button" class="live-pill" id="livePill">
+        <span class="live-pill-ico">${ico('video')}</span>
+        <span class="live-pill-text"><b>${liveEsc('Replay: ' + rep.title)}</b><small>${liveEsc('with ' + rep.hostName + (liveInfo.isPro ? ' · watch it back any time' : ' · Pro members can watch it back'))}</small></span>
+        <span class="live-pill-go">${liveInfo.isPro ? 'Watch' : 'Details'}</span></button>`;
+      document.getElementById('livePill').addEventListener('click', showLive);
+      applyCommunityVisibility(communityFull, true);
+      return;
+    }
     const st = liveState(next);
     wrap.innerHTML = `<button type="button" class="live-pill${st === 'live' ? ' is-live' : ''}" id="livePill">
       <span class="live-pill-ico">${ico('live')}</span>
@@ -12302,7 +12427,7 @@ function buildWinCard(w, reload){
   card.className = 'win-card';
   const time = new Date(w.createdAt);
   const ago = timeAgo(time);
-  const displayName = (w.authorEmail || '').split('@')[0] || 'Guide User';
+  const displayName = w.authorName || (w.authorEmail || '').split('@')[0] || 'Guide User';
   const initial = w.authorInitial || displayName[0].toUpperCase();
   // Count reactions by emoji
   const reactions = w.reactions || [];
@@ -12613,40 +12738,38 @@ function renderTemplatesPanel(){
   templatesPanelWrap.appendChild(previewWrap);
 
   const grid = document.createElement('div');
-  grid.className = 'templates-grid' + (isPro ? '' : ' pro-preview-blur');
+  grid.className = 'templates-grid';
   previewWrap.appendChild(grid);
 
   if(!isPro){
-    const overlay = document.createElement('div');
-    overlay.className = 'pro-preview-overlay';
-    overlay.innerHTML = `
-      <div class="pro-preview-icon">${ico('lock')}</div>
-      <p class="pro-preview-title">Unlock ready-to-send templates</p>
-      <p class="pro-preview-text">Contracts, pitch emails, and estimates for ${niche.name} -- copy, fill in, and send the same day.</p>
-      <button type="button" class="pro-preview-btn">Upgrade to Pro</button>
-    `;
-    overlay.querySelector('.pro-preview-btn').addEventListener('click', ()=>{
-      openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'templates' });
-    });
-    previewWrap.appendChild(overlay);
+    // a peek: every template shows its first lines; the rest is blurred, with the unlock right there
+    const note = document.createElement('div');
+    note.className = 'templates-peek-note';
+    note.innerHTML = `<span><b>Templates are part of Pro.</b> ${(niche.templates || []).length} ready-to-send ${niche.name} templates: contracts, pitch emails, estimates. Here is a peek.</span><button type="button" class="live-btn primary">${ico('lock')} Unlock with Pro</button>`;
+    note.querySelector('button').addEventListener('click', ()=> openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'templates' }));
+    grid.appendChild(note);
   }
 
   (niche.templates || []).forEach(t=>{
     const card = document.createElement('div');
-    card.className = 'template-card';
+    card.className = 'template-card' + (isPro ? '' : ' peek');
     const catClass = t.category.toLowerCase();
+    const body = String(t.body || '').replace(/\\n/g, '\n');   // the lesson files write line breaks as \n
+    const nl = body.indexOf('\n', 100);
+    const cut = isPro ? body.length : (nl > 0 ? nl : Math.min(body.length, 180));   // readable up to a line break, then the blur
     card.innerHTML = `
       <div class="template-card-head">
         <div class="template-card-title">${t.title}</div>
         <span class="template-category-tag ${catClass}">${t.category}</span>
       </div>
-      <div class="template-preview">${t.body}</div>
-      <button type="button" class="template-copy-btn">Copy to clipboard</button>
+      <div class="template-preview">${isPro ? escapeHtml(body) : escapeHtml(body.slice(0, cut)) + (body.length > cut ? `<span class="peek-blur" aria-hidden="true">${escapeHtml(body.slice(cut, cut + 220))}</span>` : '')}</div>
+      ${isPro ? '<button type="button" class="template-copy-btn">Copy to clipboard</button>' : `<button type="button" class="template-copy-btn peek-unlock">${ico('lock')} Unlock with Pro</button>`}
     `;
     const btn = card.querySelector('.template-copy-btn');
+    if(!isPro){ btn.addEventListener('click', ()=> openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'templates' })); grid.appendChild(card); return; }
     btn.addEventListener('click', async ()=>{
       try{
-        await navigator.clipboard.writeText(t.body);
+        await navigator.clipboard.writeText(body);
         btn.textContent = '✓ Copied!';
         btn.classList.add('copied');
       }catch(e){
@@ -16464,6 +16587,7 @@ function renderAiChatPanel(){
         </div>
         <button type="button" class="ai-chat-clear-btn" id="aiChatClearBtn">Clear chat</button>
       </div>
+      <div id="aiChatFree"></div>
       <div class="ai-chat-intro">
         💬 Ask The Guider anything about running a <strong>${escapeHtmlAi(niche.name)}</strong> business — pricing, clients, workflow, whatever's on your mind. It can see how far you are through this chapter and the figures in your own trackers, so ask about your actual numbers. Answers are AI-generated and won't always be perfect; use judgment.
       </div>
@@ -16476,6 +16600,7 @@ function renderAiChatPanel(){
   `;
 
   renderAiChatMessages();
+  renderAiChatFree();
 
   const input = document.getElementById('aiChatInput');
   const sendBtn = document.getElementById('aiChatSendBtn');
@@ -16527,6 +16652,35 @@ function renderAiChatMessages(){
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
+// Free members: one question a day (the server keeps the count). Pro: unlimited.
+let aiFree = null; // {pro, unlimited, left, limit}
+async function loadAiFree(force){
+  if(isPro) return (aiFree = { pro: true, unlimited: true });
+  if(aiFree && !force && !aiFree.pro) return aiFree;
+  try{ aiFree = await apiFetch('/ai-chat/free'); }catch(e){ aiFree = { pro: false, unlimited: false, left: 1, limit: 1 }; }
+  return aiFree;
+}
+async function renderAiChatFree(){
+  const box = document.getElementById('aiChatFree');
+  if(!box) return;
+  if(isPro){ box.innerHTML = ''; return; }
+  const f = await loadAiFree();
+  if(!box.isConnected || f.unlimited){ box.innerHTML = ''; return; }
+  const sendBtn = document.getElementById('aiChatSendBtn'), input = document.getElementById('aiChatInput');
+  if(f.left > 0){
+    box.className = 'ai-chat-free';
+    box.innerHTML = `<span><b>Your free question for today is ready.</b> Free members get ${f.limit} a day. Pro members ask as much as they like.</span>`;
+    if(sendBtn) sendBtn.disabled = false;
+    if(input) input.disabled = false;
+  } else {
+    box.className = 'ai-chat-free used';
+    box.innerHTML = `<span><b>You've used today's free question.</b> It comes back tomorrow, or go Pro for unlimited.</span><button type="button" class="live-btn primary" id="aiChatUnlock">${ico('lock')} Unlock</button>`;
+    if(sendBtn) sendBtn.disabled = true;
+    if(input) input.disabled = true;
+    document.getElementById('aiChatUnlock').addEventListener('click', ()=> openUpgradeModal({ type: 'tab', nicheId: currentNicheId, tab: 'aichat' }));
+  }
+}
+
 async function sendAiChatMessage(niche, text){
   const sendBtn = document.getElementById('aiChatSendBtn');
   const messagesEl = document.getElementById('aiChatMessages');
@@ -16559,8 +16713,14 @@ async function sendAiChatMessage(niche, text){
       })
     });
     aiChatHistory[niche.id].push({role:'assistant', content: result.reply});
+    if(!isPro && result && result.left != null) aiFree = { pro: false, unlimited: false, left: result.left, limit: result.limit || 1 };
   }catch(e){
-    aiChatHistory[niche.id].push({role:'assistant', content: "⚠️ Couldn't reach The Guider right now. Please check your connection and try again."});
+    if(e.status === 403 && e.body && e.body.upgrade){
+      aiFree = { pro: false, unlimited: false, left: 0, limit: (e.body.limit || 1) };
+      aiChatHistory[niche.id].push({role:'assistant', content: e.body.error || "You've used today's free question. It comes back tomorrow, or go Pro for unlimited."});
+    } else {
+      aiChatHistory[niche.id].push({role:'assistant', content: "⚠️ Couldn't reach The Guider right now. Please check your connection and try again."});
+    }
   }
 
   // cap stored history so it doesn't grow unbounded
@@ -16570,6 +16730,7 @@ async function sendAiChatMessage(niche, text){
 
   sendBtn.disabled = false;
   renderAiChatMessages();
+  renderAiChatFree();
   saveProgress();
 }
 
@@ -16782,7 +16943,7 @@ function buildDiscussionPostCard(niche, post){
   const repliesHtml = post.replies.map(r=>`
     <div class="mentor-card" style="margin:10px 0 0 20px;background:var(--bg);">
       <div class="mentor-card-head">
-        <div class="mentor-card-name" style="font-size:12.5px;">${escapeHtmlMentor(r.authorEmail.split('@')[0])}${r.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
+        <div class="mentor-card-name" style="font-size:12.5px;">${escapeHtmlMentor(r.authorName || (r.authorEmail || '').split('@')[0])}${r.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
         ${r.canDelete ? `<button type="button" class="ai-chat-clear-btn discussion-delete-btn" data-id="${r.id}" style="background:var(--bg);color:var(--ink-soft);border-color:var(--line);">Delete</button>` : ''}
       </div>
       <div class="mentor-card-bio" style="font-size:12.5px;">${escapeHtmlMentor(r.body)}</div>
@@ -16790,7 +16951,7 @@ function buildDiscussionPostCard(niche, post){
   `).join('');
   card.innerHTML = `
     <div class="mentor-card-head">
-      <div class="mentor-card-name">${escapeHtmlMentor(post.authorEmail.split('@')[0])}${post.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
+      <div class="mentor-card-name">${escapeHtmlMentor(post.authorName || (post.authorEmail || '').split('@')[0])}${post.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
       ${post.canDelete ? `<button type="button" class="ai-chat-clear-btn discussion-delete-btn" data-id="${post.id}" style="background:var(--bg);color:var(--ink-soft);border-color:var(--line);">Delete</button>` : ''}
     </div>
     <div class="mentor-card-bio">${escapeHtmlMentor(post.body)}</div>
@@ -17328,7 +17489,37 @@ function renderCompletionChart(){
 }
 
 // ---------- Certificate of Completion ----------
-function generateCertificate(niche){
+// Draws the certificate on a canvas: the member's name, the chapter, the lesson count, the date, and the logo.
+// With {preview:true} it carries a PREVIEW mark (shown to everyone as the goal, before the chapter is done).
+function certificateName(){
+  const n = String(userProfile.displayName || '').trim();
+  if(n) return n;
+  const e = (currentEmail || 'Member').split('@')[0];
+  return e.charAt(0).toUpperCase() + e.slice(1);
+}
+function drawIcoOnCanvas(ctx, name, x, y, size, color){
+  const svg = ICO[name]; if(!svg) return;
+  ctx.save(); ctx.translate(x - size / 2, y - size / 2); ctx.scale(size / 24, size / 24);
+  ctx.strokeStyle = color; ctx.lineWidth = 1.7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  (svg.match(/<path d="([^"]+)"/g) || []).forEach(m => { ctx.stroke(new Path2D(m.slice(9, -1))); });
+  (svg.match(/<circle cx="([\d.]+)" cy="([\d.]+)" r="([\d.]+)"/g) || []).forEach(m => {
+    const [, cx, cy, r] = m.match(/cx="([\d.]+)" cy="([\d.]+)" r="([\d.]+)"/).map(Number); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); });
+  (svg.match(/<polyline points="([^"]+)"/g) || []).forEach(m => { const pts = m.slice(19, -1).trim().split(/\s+/).map(Number); ctx.beginPath(); ctx.moveTo(pts[0], pts[1]); for(let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]); ctx.stroke(); });
+  ctx.restore();
+}
+function drawLogoOnCanvas(ctx, x, y, size){
+  // the compass-star logo: ring, 8-point star, gold centre
+  const g = ctx.createLinearGradient(x - size / 2, y - size / 2, x + size / 2, y + size / 2);
+  g.addColorStop(0, themeVar('--logo-a', '#1F9D6B')); g.addColorStop(1, themeVar('--logo-b', '#3FCB93'));
+  ctx.save(); ctx.translate(x, y); ctx.scale(size / 200, size / 200);
+  ctx.beginPath(); ctx.arc(0, 0, 82, 0, Math.PI * 2); ctx.strokeStyle = g; ctx.lineWidth = 14; ctx.stroke();
+  const pts = [[0,-68],[14.1,-14.1],[68,0],[14.1,14.1],[0,68],[-14.1,14.1],[-68,0],[-14.1,-14.1]];
+  ctx.beginPath(); pts.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fillStyle = themeVar('--gold', '#E8B94A'); ctx.fill();
+  ctx.restore();
+}
+function drawCertificate(niche, opts){
+  opts = opts || {};
   const canvas = document.createElement('canvas');
   canvas.width = 1200;
   canvas.height = 850;
@@ -17363,11 +17554,13 @@ function generateCertificate(niche){
     ctx.stroke();
   });
 
-  // Title
+  // Logo and name of the app
+  drawLogoOnCanvas(ctx, 560, 112, 34);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = themeVar('--ink','#E8E4F0');
+  ctx.font = 'bold 20px "Space Grotesk", sans-serif';
+  ctx.fillText('The Guide', 584, 119);
   ctx.textAlign = 'center';
-  ctx.fillStyle = themeVar('--grape','#A855F7');
-  ctx.font = '16px "Space Grotesk", sans-serif';
-  ctx.fillText('THE GUIDE', 600, 120);
 
   // Certificate text
   ctx.fillStyle = themeVar('--ink','#E8E4F0');
@@ -17391,11 +17584,10 @@ function generateCertificate(niche){
   ctx.font = '18px "Space Grotesk", sans-serif';
   ctx.fillText('This certifies that', 600, 290);
 
-  // User name (email)
-  const displayName = (currentEmail || 'Member').split('@')[0];
+  // The member's name
   ctx.fillStyle = themeVar('--ink','#E8E4F0');
-  ctx.font = 'bold 38px "Space Grotesk", sans-serif';
-  ctx.fillText(displayName.charAt(0).toUpperCase() + displayName.slice(1), 600, 345);
+  ctx.font = 'bold 40px "Space Grotesk", sans-serif';
+  ctx.fillText(certificateName(), 600, 345);
 
   // "has successfully completed"
   ctx.fillStyle = themeVar('--ink-soft','#8B85A3');
@@ -17405,7 +17597,7 @@ function generateCertificate(niche){
   // Chapter name
   ctx.fillStyle = themeVar('--ink','#E8E4F0');
   ctx.font = 'bold 34px "Space Grotesk", sans-serif';
-  ctx.fillText(`${niche.icon} ${niche.name}`, 600, 455);
+  ctx.fillText(niche.name, 600, 455);
 
   // Guide count
   ctx.fillStyle = themeVar('--ink-soft','#8B85A3');
@@ -17429,7 +17621,7 @@ function generateCertificate(niche){
   // Footer
   ctx.fillStyle = themeRgba('--accent-rgb',0.6,'168,85,247');
   ctx.font = '14px "Space Grotesk", sans-serif';
-  ctx.fillText('theguide.app — Build your business, one guide at a time.', 600, 660);
+  ctx.fillText('theguide.company — one real step a day.', 600, 660);
 
   // Glow effect behind the niche icon
   ctx.save();
@@ -17440,16 +17632,53 @@ function generateCertificate(niche){
   ctx.fillRect(540, 670, 120, 120);
   ctx.restore();
 
-  // Large niche icon
-  ctx.font = '50px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(niche.icon, 600, 745);
+  // The chapter's line icon
+  const icoName = ICON_FOR_CHAPTER[String(niche.icon || '').replace(/️/g, '')];
+  if(icoName) drawIcoOnCanvas(ctx, icoName, 600, 735, 64, themeVar('--grape','#3FCB93'));
 
-  // Download
+  if(opts.preview){
+    ctx.save(); ctx.translate(600, 425); ctx.rotate(-0.3); ctx.globalAlpha = 0.22;
+    ctx.fillStyle = themeVar('--ink','#E8E4F0'); ctx.font = 'bold 150px "Space Grotesk", sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('PREVIEW', 0, 50); ctx.restore();
+  }
+  return canvas;
+}
+function certificateFileName(niche){ return `TheGuide-Certificate-${niche.name.replace(/\s+/g,'-')}.png`; }
+function generateCertificate(niche){
+  const canvas = drawCertificate(niche);
   const link = document.createElement('a');
-  link.download = `TheGuide-Certificate-${niche.name.replace(/\s+/g,'-')}.png`;
+  link.download = certificateFileName(niche);
   link.href = canvas.toDataURL('image/png');
   link.click();
+}
+// Share sheet on phones (the image itself); falls back to the download.
+async function shareCertificate(niche){
+  const canvas = drawCertificate(niche);
+  try{
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const file = new File([blob], certificateFileName(niche), { type: 'image/png' });
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file], title: `I finished ${niche.name} on The Guide`, text: `I finished all ${niche.guides.length} lessons in ${niche.name} on The Guide. theguide.company` });
+      return;
+    }
+  }catch(e){ if(e && e.name === 'AbortError') return; }
+  generateCertificate(niche);
+}
+// The goal, shown to everyone: what the certificate will look like with their name on it.
+function previewCertificate(niche){
+  const done = nicheCompleted(niche), left = niche.guides.length - done;
+  const canvas = drawCertificate(niche, { preview: true });
+  const wrap = document.createElement('div');
+  wrap.className = 'cert-preview'; wrap.id = 'certPreview'; wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-label', 'Certificate preview');
+  wrap.innerHTML = `<img alt="Preview of the ${gvEsc(niche.name)} certificate" src="${canvas.toDataURL('image/png')}">
+    <p>${done ? `${done} of ${niche.guides.length} lessons done. ` : ''}${left} more and this is yours, with the date on it.${isPro ? '' : ' Module 1 is free; Pro opens the rest of the chapter.'}</p>
+    <div class="cert-preview-row">${isPro ? '' : `<button type="button" class="live-btn primary" id="certPreviewUnlock">${ico('lock')} Unlock with Pro</button>`}<button type="button" class="live-btn" id="certPreviewClose">Close</button></div>`;
+  document.body.appendChild(wrap);
+  const close = ()=> wrap.remove();
+  wrap.addEventListener('click', (e)=>{ if(e.target === wrap) close(); });
+  document.getElementById('certPreviewClose').addEventListener('click', close);
+  const unlock = document.getElementById('certPreviewUnlock');
+  if(unlock) unlock.addEventListener('click', ()=>{ close(); openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }); });
 }
 
 exportCsvBtn.addEventListener('click', ()=>{
