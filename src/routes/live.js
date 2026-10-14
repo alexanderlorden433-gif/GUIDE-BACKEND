@@ -64,10 +64,11 @@ const NOW_UTC = `(now() at time zone 'UTC')`;
 async function findCall(id) {
   const rows = await prisma.$queryRawUnsafe(
     `SELECT c."id", c."title", c."description", c."nicheId", c."hostEmail", c."hostName", c."durationMin",
-            c."joinUrl", c."status", ${ISO} AS "startsAt",
+            c."joinUrl", c."replayUrl", c."status", ${ISO} AS "startsAt",
             (c."startsAt" - interval '${OPENS_MIN_BEFORE} minutes' <= ${NOW_UTC}
               AND c."startsAt" + (c."durationMin" + ${STAYS_OPEN_MIN_AFTER}) * interval '1 minute' > ${NOW_UTC}) AS "open",
-            (c."startsAt" + (c."durationMin" + ${STAYS_OPEN_MIN_AFTER}) * interval '1 minute' > ${NOW_UTC}) AS "notOver"
+            (c."startsAt" + (c."durationMin" + ${STAYS_OPEN_MIN_AFTER}) * interval '1 minute' > ${NOW_UTC}) AS "notOver",
+            (c."startsAt" + c."durationMin" * interval '1 minute' <= ${NOW_UTC}) AS "ended"
      FROM "LiveCall" c WHERE c."id" = $1::text`, String(id).slice(0, 80));
   return rows[0] || null;
 }
@@ -101,8 +102,16 @@ function readCallFields(b, existing) {
     out.joinUrl = cleanUrl(b.joinUrl);
     if (!out.joinUrl) return { error: 'Paste the call link. It must start with https://' };
   }
+  if (existing && b.replayUrl !== undefined) {
+    const raw = String(b.replayUrl == null ? '' : b.replayUrl).trim();
+    out.replayUrl = raw ? cleanUrl(raw) : null;
+    if (raw && !out.replayUrl) return { error: 'The replay link must start with https://' };
+  }
   return { fields: out };
 }
+
+const MAX_QUESTION = 300;
+const MAX_QUESTIONS_PER_MEMBER = 3;
 
 // ---------- GET /api/live ----------
 // Upcoming and in-progress calls. Free members see the schedule; only Pro members (and the host) can join.
@@ -113,17 +122,47 @@ router.get('/', async (req, res) => {
             ${ISO} AS "startsAt", c."durationMin", c."joinUrl",
             (SELECT count(*)::int FROM "LiveRsvp" r WHERE r."callId" = c."id") AS "going",
             EXISTS (SELECT 1 FROM "LiveRsvp" r WHERE r."callId" = c."id" AND r."userId" = $1::text) AS "iGo",
+            (SELECT count(*)::int FROM "LiveQuestion" q WHERE q."callId" = c."id") AS "questions",
+            (SELECT count(*)::int FROM "LiveQuestion" q WHERE q."callId" = c."id" AND q."userId" = $1::text) AS "myQuestions",
             (c."startsAt" - interval '${OPENS_MIN_BEFORE} minutes' <= ${NOW_UTC}) AS "open"
      FROM "LiveCall" c LEFT JOIN "LiveHost" h ON h."email" = c."hostEmail"
      WHERE c."status" = 'scheduled'
        AND c."startsAt" + (c."durationMin" + ${STAYS_OPEN_MIN_AFTER}) * interval '1 minute' > ${NOW_UTC}
        AND c."startsAt" < ${NOW_UTC} + interval '90 days'
      ORDER BY c."startsAt" ASC LIMIT 60`, v.id);
+  // calls that already happened and have a replay link (last 90 days), newest first
+  const replayRows = await prisma.$queryRawUnsafe(
+    `SELECT c."id", c."title", c."hostEmail", c."hostName", c."nicheId", ${ISO} AS "startsAt", c."durationMin", c."replayUrl"
+     FROM "LiveCall" c
+     WHERE c."status" = 'scheduled' AND c."replayUrl" IS NOT NULL
+       AND c."startsAt" + c."durationMin" * interval '1 minute' <= ${NOW_UTC}
+       AND c."startsAt" > ${NOW_UTC} - interval '90 days'
+     ORDER BY c."startsAt" DESC LIMIT 20`);
+  // a host's own finished calls (the owner sees everyone's) from the last 45 days, so they can add a replay link
+  let past = [];
+  if (v.canHost) {
+    past = await prisma.$queryRawUnsafe(
+      `SELECT c."id", c."title", c."hostEmail", c."hostName", ${ISO} AS "startsAt", c."replayUrl",
+              (SELECT count(*)::int FROM "LiveQuestion" q WHERE q."callId" = c."id") AS "questions"
+       FROM "LiveCall" c
+       WHERE c."status" = 'scheduled'
+         AND c."startsAt" + (c."durationMin" + ${STAYS_OPEN_MIN_AFTER}) * interval '1 minute' <= ${NOW_UTC}
+         AND c."startsAt" > ${NOW_UTC} - interval '45 days'
+         AND ($1::boolean OR c."hostEmail" = $2::text)
+       ORDER BY c."startsAt" DESC LIMIT 30`, v.owner, v.email);
+  }
   res.set('Cache-Control', 'no-store');
   res.json({
     isPro: v.pro,
     canHost: v.canHost,
     isOwner: v.owner,
+    replays: replayRows.map(c => {
+      const mine = c.hostEmail === v.email;
+      return { id: c.id, title: c.title, hostName: c.hostName, nicheId: c.nicheId, startsAt: c.startsAt, durationMin: c.durationMin, mine,
+               replayUrl: (v.pro || mine) ? c.replayUrl : null };
+    }),
+    past: past.map(c => ({ id: c.id, title: c.title, hostName: c.hostName, startsAt: c.startsAt, replayUrl: c.replayUrl || null,
+                           mine: c.hostEmail === v.email, questions: c.questions })),
     calls: rows.map(c => {
       const mine = c.hostEmail === v.email;
       return {
@@ -131,6 +170,7 @@ router.get('/', async (req, res) => {
         hostName: c.hostName, hostHeadline: c.headline || null,
         startsAt: c.startsAt, durationMin: c.durationMin,
         going: c.going, iGo: !!c.iGo, mine,
+        questions: c.questions, myQuestions: c.myQuestions,
         canJoin: (v.pro || mine) && !!c.open,
         // the link itself only goes to the people who run the call, so they can edit it
         joinUrl: (v.owner || mine) ? c.joinUrl : undefined,
@@ -234,16 +274,25 @@ router.patch('/:id', async (req, res) => {
   if (parsed.error) return res.status(400).json({ error: parsed.error });
   const f = Object.assign({}, {
     title: call.title, description: call.description, nicheId: call.nicheId,
-    startsAt: call.startsAt, durationMin: call.durationMin, joinUrl: call.joinUrl,
+    startsAt: call.startsAt, durationMin: call.durationMin, joinUrl: call.joinUrl, replayUrl: call.replayUrl || null,
   }, parsed.fields);
+  const replayAdded = !!f.replayUrl && f.replayUrl !== (call.replayUrl || null);
   // a new time means people should be reminded again
   const timeChanged = parsed.fields.startsAt !== undefined && parsed.fields.startsAt !== new Date(call.startsAt).toISOString();
   await prisma.$executeRawUnsafe(
     `UPDATE "LiveCall" SET "title" = $2::text, "description" = $3::text, "nicheId" = $4::text,
             "startsAt" = ($5::timestamptz AT TIME ZONE 'UTC'), "durationMin" = $6::int, "joinUrl" = $7::text,
-            "remindedAt" = CASE WHEN $8::boolean THEN NULL ELSE "remindedAt" END
+            "remindedAt" = CASE WHEN $8::boolean THEN NULL ELSE "remindedAt" END, "replayUrl" = $9::text
      WHERE "id" = $1::text`,
-    call.id, f.title, f.description, f.nicheId, f.startsAt, f.durationMin, f.joinUrl, timeChanged);
+    call.id, f.title, f.description, f.nicheId, f.startsAt, f.durationMin, f.joinUrl, timeChanged, f.replayUrl);
+  if (replayAdded) {
+    const rows = await prisma.$queryRawUnsafe(
+      `SELECT "userId" FROM "LiveRsvp" WHERE "callId" = $1::text UNION SELECT "userId" FROM "LiveQuestion" WHERE "callId" = $1::text`, call.id);
+    await notifyUsers(rows.map(r => r.userId).filter(id => id !== v.id), {
+      type: 'live_replay', title: `Replay is up: ${f.title}`,
+      body: 'Missed it, or want to watch again? Open Live and tap Watch replay.', link: { view: 'live' },
+    });
+  }
   if (timeChanged) {
     const rows = await prisma.$queryRawUnsafe(`SELECT "userId" FROM "LiveRsvp" WHERE "callId" = $1::text`, call.id);
     await notifyUsers(rows.map(r => r.userId), {
@@ -283,6 +332,55 @@ router.post('/:id/rsvp', async (req, res) => {
 router.delete('/:id/rsvp', async (req, res) => {
   await prisma.$executeRawUnsafe(
     `DELETE FROM "LiveRsvp" WHERE "callId" = $1::text AND "userId" = $2::text`, String(req.params.id).slice(0, 80), req.viewer.id);
+  res.json({ ok: true });
+});
+
+// ---------- POST /api/live/:id/questions ---------- (Pro members send a question in before the call)
+router.post('/:id/questions', async (req, res) => {
+  const v = req.viewer;
+  const call = await findCall(req.params.id);
+  if (!call || call.status !== 'scheduled') return res.status(404).json({ error: 'That call is not on the schedule.' });
+  const mine = call.hostEmail === v.email;
+  if (!v.pro && !mine) return proOnly(res);
+  if (call.ended) return res.status(400).json({ error: 'This call has already happened.' });
+  const body = paragraphs((req.body || {}).body, MAX_QUESTION).replace(/[ \t]{2,}/g, ' ');
+  if (!body || body.length < 5) return res.status(400).json({ error: 'Write your question first (at least 5 letters).' });
+  const count = await prisma.$queryRawUnsafe(
+    `SELECT count(*)::int AS n FROM "LiveQuestion" WHERE "callId" = $1::text AND "userId" = $2::text`, call.id, v.id);
+  if (count[0].n >= MAX_QUESTIONS_PER_MEMBER) return res.status(400).json({ error: `You can send up to ${MAX_QUESTIONS_PER_MEMBER} questions per call.` });
+  const id = crypto.randomUUID();
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO "LiveQuestion" ("id","callId","userId","body") VALUES ($1::text,$2::text,$3::text,$4::text)`, id, call.id, v.id, body);
+  res.status(201).json({ id, body });
+});
+
+// ---------- GET /api/live/:id/questions ---------- (the host and the owner see every question; a member sees their own)
+router.get('/:id/questions', async (req, res) => {
+  const v = req.viewer;
+  const call = await findCall(req.params.id);
+  if (!call) return res.status(404).json({ error: 'That call is not on the schedule.' });
+  const host = v.owner || call.hostEmail === v.email;
+  if (!host && !v.pro) return proOnly(res);
+  const rows = await prisma.$queryRawUnsafe(
+    `SELECT q."id", q."body", q."userId", to_char(q."createdAt", 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt", u."email"
+     FROM "LiveQuestion" q JOIN "User" u ON u."id" = q."userId"
+     WHERE q."callId" = $1::text AND ($2::boolean OR q."userId" = $3::text)
+     ORDER BY q."createdAt" ASC LIMIT 200`, call.id, host, v.id);
+  // the host sees an initial, never the email
+  res.json({ questions: rows.map(q => ({ id: q.id, body: q.body, createdAt: q.createdAt, mine: q.userId === v.id,
+                                         from: (q.email || '?').charAt(0).toUpperCase() })) });
+});
+
+// ---------- DELETE /api/live/:id/questions/:qid ---------- (the asker, the host, or the owner)
+router.delete('/:id/questions/:qid', async (req, res) => {
+  const v = req.viewer;
+  const call = await findCall(req.params.id);
+  if (!call) return res.status(404).json({ error: 'That call is not on the schedule.' });
+  const host = v.owner || call.hostEmail === v.email;
+  const n = await prisma.$executeRawUnsafe(
+    `DELETE FROM "LiveQuestion" WHERE "id" = $1::text AND "callId" = $2::text AND ($3::boolean OR "userId" = $4::text)`,
+    String(req.params.qid).slice(0, 80), call.id, host, v.id);
+  if (!n) return res.status(404).json({ error: 'Question not found.' });
   res.json({ ok: true });
 });
 

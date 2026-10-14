@@ -105,6 +105,21 @@ def fixture(state, method, path, body):
         return 200, {'leaderboard': [{'rank': 1, 'displayName': 'Smoke Test', 'value': 3, 'isMe': True}], 'type': 'streak'}
     if p == '/api/wins' and method == 'GET':
         return 200, {'wins': state.get('wins', [])}
+    if p == '/api/wins' and method == 'POST':
+        # shaped like src/routes/wins.js: the text must arrive as "body"
+        text = str((body or {}).get('body') or '').strip()
+        if not text:
+            return 400, {'error': 'Win text is required (max 500 chars).'}
+        w = {'id': 'w_new', 'body': text, 'emoji': (body or {}).get('emoji') or '🎉', 'authorId': 'u_smoke', 'authorEmail': 'smoke@example.com',
+             'authorInitial': 'S', 'createdAt': TODAY, 'reactions': []}
+        state.setdefault('wins', []).insert(0, w); state.setdefault('win_posts', []).append(body)
+        return 201, w
+    if re.match(r'^/api/wins/[^/]+/react$', p) and method == 'POST':
+        emoji = (body or {}).get('emoji')
+        if emoji not in ('🔥', '👏', '💪', '❤️'):
+            return 400, {'error': 'Invalid reaction emoji.'}
+        state.setdefault('win_reacts', []).append((p.split('/')[3], emoji))
+        return 200, {'action': 'added'}
     if re.match(r'^/api/discussion/[^/]+$', p) and method == 'GET':
         return 200, {'posts': [], 'isOwner': False}
     if re.match(r'^/api/mentors/[^/]+$', p) and method == 'GET':
@@ -132,7 +147,14 @@ def fixture(state, method, path, body):
             c['canJoin'] = bool(c.get('canJoin')) and (state['pro'] or bool(c.get('mine')))
             c.pop('join', None)
             calls.append(c)
-        return 200, {'isPro': state['pro'], 'canHost': lv.get('canHost', False), 'isOwner': lv.get('isOwner', False), 'calls': calls}
+        replays = []
+        for r in lv.get('replays', []):
+            r = dict(r)
+            if not state['pro'] and not r.get('mine'):
+                r['replayUrl'] = None
+            replays.append(r)
+        return 200, {'isPro': state['pro'], 'canHost': lv.get('canHost', False), 'isOwner': lv.get('isOwner', False), 'calls': calls,
+                     'replays': replays, 'past': lv.get('past', []) if lv.get('canHost') else []}
     if p == '/api/live' and method == 'POST':
         state.setdefault('live_posts', []).append(body)
         if not (body or {}).get('joinUrl'):
@@ -146,6 +168,24 @@ def fixture(state, method, path, body):
     if re.match(r'^/api/live/hosts/[^/]+$', p) and method == 'DELETE':
         state.setdefault('live_host_deletes', []).append(p.rsplit('/', 1)[1])
         return 200, {'ok': True}
+    m = re.match(r'^/api/live/([^/]+)/questions(?:/([^/]+))?$', p)
+    if m:
+        qs = state.setdefault('live_questions', {}).setdefault(m.group(1), [])
+        if method == 'POST':
+            if not state['pro']:
+                return 403, {'error': 'Live calls are for Pro members.', 'upgrade': True}
+            text = str((body or {}).get('body') or '').strip()
+            if len(text) < 5:
+                return 400, {'error': 'Write your question first (at least 5 letters).'}
+            q = {'id': f'q{len(qs) + 1}', 'body': text, 'from': 'S', 'mine': True, 'createdAt': TODAY}
+            qs.append(q); state.setdefault('live_question_posts', []).append((m.group(1), text))
+            return 201, {'id': q['id'], 'body': text}
+        if method == 'GET':
+            return 200, {'questions': list(qs)}
+        if method == 'DELETE':
+            state.setdefault('live_question_deletes', []).append((m.group(1), m.group(2)))
+            qs[:] = [q for q in qs if q['id'] != m.group(2)]
+            return 200, {'ok': True}
     m = re.match(r'^/api/live/([^/]+)/(join|rsvp)$', p)
     if m:
         call = next((c for c in (state.get('live') or {}).get('calls', []) if c['id'] == m.group(1)), None)
@@ -183,6 +223,35 @@ def fixture(state, method, path, body):
         return 200, {'url': 'https://checkout.stripe.com/c/pay/cs_test_smoke'}
     if p == '/api/billing/portal':
         return 200, {'url': 'https://billing.stripe.com/p/session/test_smoke'}
+    # client status pages (Business tab -> Client Portal): state['client_pages'] is the member's list
+    if p == '/api/client-status/mine' and method == 'GET':
+        return 200, {'pages': list(state.get('client_pages', []))}
+    if p == '/api/client-status' and method == 'POST':
+        b = body or {}
+        if not b.get('clientName') or not b.get('projectName'):
+            return 400, {'error': 'Add a client name and a project name.'}
+        pg = {'id': f"cp{len(state.get('client_pages', [])) + 1}", 'token': 'smoketoken_' + 'a' * 24, 'clientName': b['clientName'], 'projectName': b['projectName'],
+              'status': b.get('status') or 'In Progress', 'notes': b.get('notes') or '', 'createdAt': TODAY, 'updatedAt': TODAY}
+        state.setdefault('client_pages', []).insert(0, pg); state.setdefault('client_posts', []).append(b)
+        return 201, pg
+    m = re.match(r'^/api/client-status/public/([^/]+)$', p)
+    if m and method == 'GET':
+        for pg in state.get('client_pages', []):
+            if pg['token'] == m.group(1):
+                return 200, {k: pg[k] for k in ('clientName', 'projectName', 'status', 'notes', 'updatedAt')}
+        return 404, {'error': 'This status page does not exist.'}
+    m = re.match(r'^/api/client-status/([^/]+)$', p)
+    if m and method in ('PUT', 'DELETE'):
+        pages = state.get('client_pages', [])
+        pg = next((x for x in pages if x['id'] == m.group(1)), None)
+        if not pg:
+            return 404, {'error': 'Status page not found.'}
+        if method == 'DELETE':
+            pages.remove(pg); state.setdefault('client_deletes', []).append(pg['id'])
+            return 200, {'message': 'Deleted.'}
+        pg.update({k: v for k, v in (body or {}).items() if k in ('clientName', 'projectName', 'status', 'notes')})
+        state.setdefault('client_puts', []).append(body)
+        return 200, pg
     if p == '/api/health':
         return 200, {'ok': True}
     return 200, {}
@@ -792,8 +861,8 @@ def quiet_community(browser, base):
         step = [f'community ({label})']
         ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
         st = new_state(True)
-        st['wins'] = [{'id': f'w{i}', 'body': 'Got my first client', 'emoji': '🎉',
-                       'authorName': 'Someone', 'isMine': False, 'createdAt': TODAY,
+        st['wins'] = [{'id': f'w{i}', 'body': 'Got my first client', 'emoji': '🎉', 'authorId': f'u{i}',
+                       'authorEmail': 'someone@example.com', 'authorInitial': 'S', 'createdAt': TODAY,
                        'reactions': []} for i in range(posts)]
         attach_backend(ctx, st)
         ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
@@ -808,8 +877,90 @@ def quiet_community(browser, base):
                              f'{"shown" if expect else "hidden"} but was not')
         else:
             ok(step[0], f'{posts} posts — Community tab {"shown" if expect else "stays hidden"}')
+        if expect and shown:
+            # the Wins board inside the Community tab: real names and text, posting, reacting
+            page.click('#bottomTabCommunity'); page.wait_for_timeout(900)
+            got = page.evaluate("""(()=>{ const f = document.getElementById('ctabWinsFeed'); const c = f && f.querySelector('.win-card');
+              return {cards: f ? f.querySelectorAll('.win-card').length : 0, text: c ? c.innerText : ''}; })()""")
+            if got['cards'] != posts or 'Got my first client' not in got['text'] or 'someone' not in got['text'] or 'undefined' in got['text'] or 'Anon' in got['text']:
+                problem(step[0], 'the Community tab should show each win with who posted it and what they wrote', got)
+            else:
+                ok(step[0], 'the Community tab shows every win with the poster and the text')
+            page.fill('#ctabWinInput', 'Landed my first client today'); page.click('#ctabWinPostBtn'); page.wait_for_timeout(800)
+            sent = st.get('win_posts', [])
+            if len(sent) != 1 or (sent[0] or {}).get('body') != 'Landed my first client today':
+                problem(step[0], 'posting a win from the Community tab should send the text the server expects', sent)
+            elif page.locator('#ctabWinsFeed .win-card').count() != posts + 1:
+                problem(step[0], 'a win posted from the Community tab should show up in the list')
+            else:
+                ok(step[0], 'a win posted from the Community tab is sent correctly and shows up')
+            page.click('#ctabWinsFeed .win-card:nth-child(2) .win-react-btn[data-emoji="🔥"]'); page.wait_for_timeout(700)
+            if st.get('win_reacts') != [('w0', '🔥')]:
+                problem(step[0], 'the fire button on a win should send the reaction', st.get('win_reacts'))
+            else:
+                ok(step[0], 'reacting to a win from the Community tab works')
         finish(st, step[0])
         ctx.close()
+
+
+def client_status(browser, base):
+    """Business tab -> Client Portal: a Pro (yearly) member makes a status page, edits it, and the client's link opens a clean page."""
+    step = ['client status pages']
+    ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
+    st = new_state(True)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return
+    page.wait_for_timeout(800)
+    page.evaluate("showBusiness()"); page.wait_for_timeout(500)
+    page.click('[data-biz="portal"]'); page.wait_for_timeout(800)
+    if not visible(page, '#cpCreateBtn', 3000):
+        problem(step[0], 'the Client Portal panel did not open for a yearly member'); finish(st, step[0]); ctx.close(); return
+    empty = page.inner_text('#cpList')
+    if 'No status pages yet' not in empty:
+        problem(step[0], 'with no pages yet the list should say so', empty[:120])
+    page.fill('#cpClient', 'Acme Bakery'); page.fill('#cpProject', 'Spring video'); page.select_option('#cpStatus', 'Awaiting Feedback')
+    page.fill('#cpNotes', 'Draft 2 is up.'); page.click('#cpCreateBtn'); page.wait_for_timeout(900)
+    sent = st.get('client_posts', [])
+    if len(sent) != 1 or sent[0].get('clientName') != 'Acme Bakery' or sent[0].get('status') != 'Awaiting Feedback' or sent[0].get('notes') != 'Draft 2 is up.':
+        problem(step[0], 'creating a page should send the client, project, status and note', sent)
+    link = page.evaluate("(()=>{const i=document.querySelector('#cpList .cp-link-input'); return i ? i.value : ''})()")
+    if 'client-status.html?t=smoketoken_' not in link:
+        problem(step[0], 'the new page should list a share link to client-status.html', link)
+    else:
+        ok(step[0], 'a member creates a status page and gets a share link')
+    page.select_option('#cpList .cp-status', 'Delivered'); page.click('#cpList .cp-save'); page.wait_for_timeout(700)
+    puts = st.get('client_puts', [])
+    if len(puts) != 1 or puts[0].get('status') != 'Delivered':
+        problem(step[0], 'saving a page should send the new status', puts)
+    else:
+        ok(step[0], 'changing the status saves it')
+    # the client's view: no login, just the page
+    client = ctx.new_page(); watch_errors(client, step)
+    client.goto(link.replace('https://theguide.company', base) if link.startswith('http') else base + '/client-status.html?t=' + 'smoketoken_' + 'a' * 24, wait_until='load')
+    client.wait_for_timeout(900)
+    got = client.evaluate("(()=>({project: document.getElementById('project').innerText, client: document.getElementById('client').innerText, body: document.getElementById('body').innerText}))()")
+    if 'Spring video' not in got['project'] or 'Acme Bakery' not in got['client'] or 'Delivered' not in got['body'] or 'Draft 2 is up.' not in got['body']:
+        problem(step[0], "the client's page should show the project, client, status and note", got)
+    else:
+        ok(step[0], "the client's link opens a page with the project, status and note, no login needed")
+    client.goto(base + '/client-status.html?t=' + 'b' * 30, wait_until='load'); client.wait_for_timeout(700)
+    if 'not found' not in client.inner_text('#project').lower():
+        problem(step[0], 'a wrong link should say the page was not found', client.inner_text('#card')[:160])
+    else:
+        ok(step[0], 'a wrong link says the page was not found')
+    client.close()
+    page.on('dialog', lambda d: d.accept())
+    page.click('#cpList .cp-del'); page.wait_for_timeout(800)
+    if st.get('client_deletes') != ['cp1'] or 'No status pages yet' not in page.inner_text('#cpList'):
+        problem(step[0], 'deleting a page should remove it and empty the list', st.get('client_deletes'))
+    else:
+        ok(step[0], 'deleting a page removes it')
+    finish(st, step[0])
+    ctx.close()
 
 
 def live_iso_in(minutes):
@@ -830,9 +981,14 @@ def live_demo_calls():
     ]
 
 
+def live_demo_replays():
+    return [{'id': 'lc_old', 'title': 'Pricing your first package', 'hostName': 'Sam Rivera', 'nicheId': 'video', 'startsAt': live_iso_in(-60 * 50),
+             'durationMin': 45, 'mine': False, 'replayUrl': 'https://youtu.be/replay1'}]
+
+
 def live_calls(browser, base):
     """Live calls: Pro members see the schedule and join, free members see it locked, hosts schedule and
-    edit their own calls, and the owner approves hosts."""
+    edit their own calls, and the owner approves hosts. Members send questions in; hosts add replays."""
     iso_in, demo_calls = live_iso_in, live_demo_calls
 
     def open_app(label, pro, live, wide=False):
@@ -852,7 +1008,7 @@ def live_calls(browser, base):
         return step, ctx, st, page
 
     # 1) a Pro member, with nobody having posted yet
-    got = open_app('Pro member', True, {'calls': demo_calls()})
+    got = open_app('Pro member', True, {'calls': demo_calls(), 'replays': live_demo_replays()})
     if got:
         step, ctx, st, page = got
         tab = page.evaluate("getComputedStyle(document.getElementById('bottomTabCommunity')).display !== 'none'")
@@ -933,10 +1089,26 @@ def live_calls(browser, base):
                     problem(step[0], 'the calendar file is wrong', ics[:300])
             except Exception as e:
                 problem(step[0], 'Add to calendar did not download a file', e)
+            # a question for the host, sent in before the call
+            page.click('.live-card[data-call="lc_c"] [data-live="ask"]'); page.wait_for_timeout(300)
+            page.fill('.live-card[data-call="lc_c"] .live-ask textarea', 'How do you price a half-day shoot?')
+            page.click('.live-card[data-call="lc_c"] [data-live="ask-send"]'); page.wait_for_timeout(700)
+            sent = st.get('live_question_posts', [])
+            card_text = page.inner_text('.live-card[data-call="lc_c"]')
+            if sent == [('lc_c', 'How do you price a half-day shoot?')] and '1 question sent in' in card_text and 'Ask another question' in card_text:
+                ok(step[0], 'a Pro member sends a question in before the call, and the card counts it')
+            else:
+                problem(step[0], 'sending a question did not work', {'sent': sent, 'card': card_text[:200]})
+            # the replay of a past call
+            rep = page.locator('.live-replay')
+            if rep.count() == 1 and 'Pricing your first package' in rep.inner_text() and page.get_attribute('.live-replay a', 'href') == 'https://youtu.be/replay1':
+                ok(step[0], 'a past call with a replay shows "Watch replay" with its link')
+            else:
+                problem(step[0], 'the replay section is wrong', page.inner_text('#liveList')[-300:])
         finish(st, step[0]); ctx.close()
 
     # 2) a free member sees the schedule, locked
-    got = open_app('free member', False, {'calls': demo_calls()})
+    got = open_app('free member', False, {'calls': demo_calls(), 'replays': live_demo_replays()})
     if got:
         step, ctx, st, page = got
         if visible(page, '#livePill', 6000) and 'Live now' in page.inner_text('#livePill'):
@@ -958,13 +1130,18 @@ def live_calls(browser, base):
                 close_paywall(page)
             else:
                 problem(step[0], '"Unlock with Pro" did not open the upgrade window')
+            if page.locator('[data-live="ask"]').count() == 0 and page.locator('.live-replay [data-live="unlock"]').count() == 1 and page.locator('.live-replay a').count() == 0:
+                ok(step[0], 'a free member cannot send questions, and the replay is locked without its link')
+            else:
+                problem(step[0], 'a free member should see no question box and a locked replay')
         else:
             problem(step[0], 'the live calls did not open for a free member')
         finish(st, step[0]); ctx.close()
 
     # 3) a host: schedules, edits and cancels their own call, but cannot touch someone else's
-    mine = dict(demo_calls()[2], id='lc_mine', mine=True, joinUrl='https://acme.daily.co/mine')
-    got = open_app('host', True, {'canHost': True, 'isOwner': False, 'calls': [mine, dict(demo_calls()[0], startsAt=iso_in(300), canJoin=False)]}, wide=True)
+    mine = dict(demo_calls()[2], id='lc_mine', mine=True, joinUrl='https://acme.daily.co/mine', questions=2)
+    got = open_app('host', True, {'canHost': True, 'isOwner': False, 'calls': [mine, dict(demo_calls()[0], startsAt=iso_in(300), canJoin=False)],
+                                  'past': [{'id': 'lc_done', 'title': 'Cold outreach teardown', 'hostName': 'Sam Rivera', 'startsAt': iso_in(-60 * 30), 'replayUrl': None, 'mine': True, 'questions': 3}]}, wide=True)
     if got:
         step, ctx, st, page = got
         page.evaluate("showLive()")
@@ -1027,6 +1204,32 @@ def live_calls(browser, base):
                 ok(step[0], 'cancelling asks first, then cancels')
             else:
                 problem(step[0], 'cancelling a call did not work', st.get('live_changes'))
+            # the questions members sent in, and the replay link for a finished call
+            st['live_questions'] = {'lc_mine': [{'id': 'q1', 'body': 'How do I price a half-day shoot?', 'from': 'M', 'mine': False, 'createdAt': TODAY},
+                                                {'id': 'q2', 'body': 'Do you ask for a deposit?', 'from': 'D', 'mine': False, 'createdAt': TODAY}]}
+            st['live']['calls'] = [mine]
+            page.evaluate("loadLivePane(true)"); page.wait_for_timeout(900)
+            page.click('.live-card[data-call="lc_mine"] [data-live="questions"]'); page.wait_for_timeout(600)
+            qs = page.inner_text('.live-card[data-call="lc_mine"] .live-qs')
+            if 'How do I price a half-day shoot?' in qs and 'Do you ask for a deposit?' in qs and '@' not in qs:
+                ok(step[0], 'the host opens the questions sent in for their call (initials, never emails)')
+            else:
+                problem(step[0], 'the host could not see the questions', qs[:200])
+            page.click('.live-card[data-call="lc_mine"] .live-q [data-live="q-del"]'); page.wait_for_timeout(500)
+            if st.get('live_question_deletes') == [('lc_mine', 'q1')] and page.locator('.live-card[data-call="lc_mine"] .live-q').count() == 1:
+                ok(step[0], 'the host can remove a question')
+            else:
+                problem(step[0], 'removing a question did not work', st.get('live_question_deletes'))
+            past = page.inner_text('.live-past[data-past="lc_done"]')
+            if 'Cold outreach teardown' in past and '3 questions' in past:
+                page.fill('.live-past[data-past="lc_done"] .live-replay-input', 'https://youtu.be/new-replay')
+                page.click('.live-past[data-past="lc_done"] [data-live="replay-save"]'); page.wait_for_timeout(700)
+                if ('PATCH', 'lc_done', {'replayUrl': 'https://youtu.be/new-replay'}) in st.get('live_changes', []):
+                    ok(step[0], 'a host adds a replay link to a finished call')
+                else:
+                    problem(step[0], 'adding a replay link did not save', st.get('live_changes'))
+            else:
+                problem(step[0], 'the host should see their finished call under "Your past calls"', past[:200])
         finish(st, step[0]); ctx.close()
 
     # 4) the owner: approves and removes hosts, and can schedule on a host's behalf
@@ -2190,6 +2393,7 @@ def main():
         smoother(browser, base)
         quiet_community(browser, base)
         live_calls(browser, base)
+        client_status(browser, base)
         returning_learner(browser, base)
         daily_step(browser, base)
         niche_burst(browser, base)

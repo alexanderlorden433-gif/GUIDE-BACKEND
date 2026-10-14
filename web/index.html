@@ -4993,6 +4993,27 @@
   .live-form .biz-form > div.wide{flex:1 1 100%;}
   .live-form .biz-form input, .live-form .biz-form select{width:100%;}
   .live-form .live-hint{margin:6px 0 0; font-size:12.5px; color:var(--ink-soft); line-height:1.45;}
+  .live-ask{margin-top:12px; padding-top:12px; border-top:1px solid var(--line);}
+  .live-ask textarea{width:100%; min-height:70px; font-family:'Inter',sans-serif; font-size:16px; padding:9px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); outline:none; resize:vertical;}
+  .live-ask textarea:focus{box-shadow:0 0 0 3px rgba(var(--accent-rgb),.2);}
+  .live-ask-row{display:flex; gap:8px; margin-top:8px; align-items:center;}
+  .live-ask-row .live-msg{margin:0; flex:1;}
+  .live-qs{margin-top:12px; padding-top:10px; border-top:1px solid var(--line);}
+  .live-q{display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--line); font-size:14px; line-height:1.45; color:var(--ink-2);}
+  .live-q:last-child{border-bottom:none;}
+  .live-q .live-q-from{flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:12px; font-weight:700; background:rgba(var(--accent-rgb),.16); color:var(--grape-soft);}
+  .live-q span{flex:1;}
+  .live-q .tr-act{flex:none;}
+  .live-sec{margin:26px 0 10px; font:700 15px 'Space Grotesk',sans-serif; letter-spacing:-.01em; color:var(--ink);}
+  .live-sec small{display:block; margin-top:2px; font:400 13px 'Inter',sans-serif; color:var(--ink-soft);}
+  .live-replay{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-radius:14px; border:1px solid var(--line); background:var(--card); margin-bottom:8px;}
+  .live-replay b{display:block; font-size:14.5px; color:var(--ink);}
+  .live-replay small{display:block; color:var(--ink-soft); font-size:12.5px; margin-top:2px;}
+  .live-replay .live-btn{flex:none;}
+  .live-past{padding:12px 14px; border-radius:14px; border:1px solid var(--line); background:var(--card); margin-bottom:8px;}
+  .live-past b{display:block; font-size:14.5px; color:var(--ink);}
+  .live-past small{display:block; color:var(--ink-soft); font-size:12.5px; margin:2px 0 8px;}
+  .live-past .live-ask-row input{flex:1; min-width:0; font-size:16px; padding:9px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink);}
   .live-hosts{margin-top:22px; border-top:1px solid var(--line); padding-top:14px;}
   .live-hosts summary{cursor:pointer; font:600 14px 'Inter',sans-serif; color:var(--ink-2);}
   .live-host-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14px;}
@@ -11375,7 +11396,8 @@ const liveEsc = (v)=> String(v == null ? '' : v).replace(/[&<>"']/g, c=>({'&':'&
 async function loadLive(force){
   if(!force && liveInfo && Date.now() - liveInfoAt < 30000) return liveInfo;
   const d = await apiFetch('/live');
-  liveInfo = { isPro: !!(d && d.isPro), canHost: !!(d && d.canHost), isOwner: !!(d && d.isOwner), calls: (d && Array.isArray(d.calls)) ? d.calls : [] };
+  liveInfo = { isPro: !!(d && d.isPro), canHost: !!(d && d.canHost), isOwner: !!(d && d.isOwner), calls: (d && Array.isArray(d.calls)) ? d.calls : [],
+               replays: (d && Array.isArray(d.replays)) ? d.replays : [], past: (d && Array.isArray(d.past)) ? d.past : [] };
   liveInfoAt = Date.now();
   return liveInfo;
 }
@@ -11413,11 +11435,14 @@ function liveCardHtml(c, info){
   if(member && !open) actions += `<button type="button" class="live-btn${c.iGo ? ' on' : ''}" data-live="remind" data-id="${liveEsc(c.id)}">${ico(c.iGo ? 'check' : 'bell')} ${c.iGo ? 'Reminder set' : 'Remind me'}</button>`;
   if(member) actions += `<button type="button" class="live-btn" data-live="cal" data-id="${liveEsc(c.id)}">${ico('calendarPlus')} Add to calendar</button>`;
   if(!member) actions += `<button type="button" class="live-btn primary" data-live="unlock">${ico('lock')} Unlock with Pro</button>`;
-  if(c.mine || info.isOwner){
+  const host = c.mine || info.isOwner;
+  if(member && !host && st !== 'over') actions += `<button type="button" class="live-btn" data-live="ask" data-id="${liveEsc(c.id)}">${ico('chat')} ${c.myQuestions ? 'Ask another question' : 'Ask a question'}</button>`;
+  if(host){
     actions += `<button type="button" class="live-btn" data-live="edit" data-id="${liveEsc(c.id)}">${ico('pencil')} Edit</button>`
              + `<button type="button" class="live-btn" data-live="cancel" data-id="${liveEsc(c.id)}">Cancel call</button>`;
+    if(c.questions) actions += `<button type="button" class="live-btn" data-live="questions" data-id="${liveEsc(c.id)}">${ico('chat')} ${c.questions} question${c.questions === 1 ? '' : 's'}</button>`;
   }
-  return `<article class="live-card${st === 'live' ? ' is-live' : ''}">
+  return `<article class="live-card${st === 'live' ? ' is-live' : ''}" data-call="${liveEsc(c.id)}">
     <div class="live-top"><span>${liveEsc(liveWhen(c))} · ${c.durationMin} min</span>${badge}</div>
     <h3 class="live-title">${liveEsc(c.title)}</h3>
     <div class="live-host">with <b>${liveEsc(c.hostName)}</b>${c.hostHeadline ? ' · ' + liveEsc(c.hostHeadline) : ''}</div>
@@ -11425,9 +11450,25 @@ function liveCardHtml(c, info){
     <div class="live-meta">
       ${niche ? `<span>${nicheIco(niche)} ${liveEsc(niche.name)}</span>` : ''}
       ${member && c.going > 0 ? `<span>${ico('users')} ${c.going} going</span>` : ''}
+      ${!host && c.questions > 0 ? `<span>${ico('chat')} ${c.questions} question${c.questions === 1 ? '' : 's'} sent in</span>` : ''}
     </div>
     <div class="live-actions">${actions}</div>
+    <div class="live-extra"></div>
   </article>`;
+}
+function liveReplayHtml(r, info){
+  const member = info.isPro || r.mine;
+  const when = new Date(r.startsAt).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+  const btn = member && r.replayUrl
+    ? `<a class="live-btn primary" href="${liveEsc(r.replayUrl)}" target="_blank" rel="noopener noreferrer">${ico('video')} Watch replay</a>`
+    : `<button type="button" class="live-btn primary" data-live="unlock">${ico('lock')} Unlock with Pro</button>`;
+  return `<div class="live-replay"><div><b>${liveEsc(r.title)}</b><small>with ${liveEsc(r.hostName)} · ${liveEsc(when)} · ${r.durationMin} min</small></div>${btn}</div>`;
+}
+function livePastHtml(p){
+  const when = new Date(p.startsAt).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+  return `<div class="live-past" data-past="${liveEsc(p.id)}"><b>${liveEsc(p.title)}</b><small>${liveEsc(when)}${p.questions ? ' · ' + p.questions + ' question' + (p.questions === 1 ? '' : 's') : ''}${p.replayUrl ? ' · replay added' : ''}</small>
+    <div class="live-ask-row"><input type="url" class="live-replay-input" placeholder="Paste the replay link (YouTube, Loom…)" value="${liveEsc(p.replayUrl || '')}" aria-label="Replay link"><button type="button" class="live-btn" data-live="replay-save" data-id="${liveEsc(p.id)}">${p.replayUrl ? 'Update' : 'Add replay'}</button></div>
+    <p class="live-msg" role="status"></p></div>`;
 }
 
 function renderLiveList(){
@@ -11441,7 +11482,61 @@ function renderLiveList(){
   html += info.calls.length
     ? info.calls.map(c => liveCardHtml(c, info)).join('')
     : `<div class="tool-empty">${info.canHost ? 'No calls scheduled yet. Tap "Schedule a call" to add the first one.' : 'No calls are scheduled right now. When a host schedules one, you will get a notification.'}</div>`;
+  if(info.replays.length){
+    html += `<h4 class="live-sec">Replays<small>Missed a call? Watch it back.${info.isPro ? '' : ' Replays are for Pro members.'}</small></h4>`
+          + info.replays.map(r => liveReplayHtml(r, info)).join('');
+  }
+  if(info.canHost && info.past.length){
+    html += `<h4 class="live-sec">Your past calls<small>Add a replay link and members who set a reminder will be told.</small></h4>`
+          + info.past.map(livePastHtml).join('');
+  }
   list.innerHTML = html;
+}
+// the box under a call where a Pro member types a question for the host
+function openLiveAsk(c, btn){
+  const card = btn.closest('.live-card'); const box = card && card.querySelector('.live-extra');
+  if(!box) return;
+  if(box.querySelector('.live-ask')){ box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="live-ask"><textarea maxlength="300" placeholder="What do you want ${liveEsc(c.hostName)} to cover?" aria-label="Your question"></textarea>
+    <div class="live-ask-row"><button type="button" class="live-btn primary" data-live="ask-send" data-id="${liveEsc(c.id)}">Send question</button><p class="live-msg" role="status">Up to 3 per call. The host sees it before the call starts.</p></div></div>`;
+  box.querySelector('textarea').focus();
+}
+async function sendLiveQuestion(c, btn){
+  const box = btn.closest('.live-ask'); const ta = box && box.querySelector('textarea'); const msg = box && box.querySelector('.live-msg');
+  if(!ta) return;
+  btn.disabled = true; msg.classList.remove('err');
+  try{
+    await apiFetch('/live/' + encodeURIComponent(c.id) + '/questions', { method: 'POST', body: JSON.stringify({ body: ta.value }) });
+    c.questions = (c.questions || 0) + 1; c.myQuestions = (c.myQuestions || 0) + 1;
+    renderLiveList();
+    liveNote('Question sent. The host will see it before the call.');
+  }catch(e){
+    btn.disabled = false;
+    if(e.status === 403 && e.body && e.body.upgrade) openUpgradeModal({ type: 'live' });
+    else { msg.classList.add('err'); msg.textContent = e.message || 'Could not send the question.'; }
+  }
+}
+// the host's view of the questions sent in for one call
+async function showLiveQuestions(c, btn){
+  const card = btn.closest('.live-card'); const box = card && card.querySelector('.live-extra');
+  if(!box) return;
+  if(box.querySelector('.live-qs')){ box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="live-qs"><p class="live-msg">Loading…</p></div>';
+  try{
+    const r = await apiFetch('/live/' + encodeURIComponent(c.id) + '/questions');
+    const qs = (r && r.questions) || [];
+    box.innerHTML = `<div class="live-qs">${qs.length ? qs.map(q => `<div class="live-q"><span class="live-q-from">${liveEsc(q.from)}</span><span>${liveEsc(q.body)}</span><button type="button" class="tr-act" data-live="q-del" data-id="${liveEsc(c.id)}" data-q="${liveEsc(q.id)}">Remove</button></div>`).join('') : '<p class="live-msg">No questions yet.</p>'}</div>`;
+  }catch(e){ box.innerHTML = `<div class="live-qs"><p class="live-msg err">${liveEsc(e.message || 'Could not load the questions.')}</p></div>`; }
+}
+async function saveLiveReplay(id, btn){
+  const row = btn.closest('.live-past'); const input = row && row.querySelector('.live-replay-input'); const msg = row && row.querySelector('.live-msg');
+  if(!input) return;
+  btn.disabled = true; msg.classList.remove('err'); msg.textContent = 'Saving…';
+  try{
+    await apiFetch('/live/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify({ replayUrl: input.value }) });
+    await loadLivePane(true);
+    liveNote(input.value.trim() ? 'Replay added. Members who set a reminder have been told.' : 'Replay link removed.');
+  }catch(e){ btn.disabled = false; msg.classList.add('err'); msg.textContent = e.message || 'Could not save the link.'; }
 }
 function renderLiveHostBar(){
   const bar = document.getElementById('liveHostBar');
@@ -11641,6 +11736,15 @@ document.getElementById('ctabLive').addEventListener('click', async (e)=>{
   else if(act === 'unlock') openUpgradeModal({ type: 'live' });
   else if(act === 'remind') toggleLiveReminder(call, el);
   else if(act === 'cal') downloadLiveIcs(call);
+  else if(act === 'ask') openLiveAsk(call, el);
+  else if(act === 'ask-send') sendLiveQuestion(call, el);
+  else if(act === 'questions') showLiveQuestions(call, el);
+  else if(act === 'q-del'){
+    el.disabled = true;
+    try{ await apiFetch('/live/' + encodeURIComponent(el.dataset.id) + '/questions/' + encodeURIComponent(el.dataset.q), { method: 'DELETE' }); el.closest('.live-q').remove(); if(call){ call.questions = Math.max(0, (call.questions || 0) - 1); } }
+    catch(e){ el.disabled = false; liveNote(e.message || 'Could not remove the question.', true); }
+  }
+  else if(act === 'replay-save') saveLiveReplay(el.dataset.id, el);
   else if(act === 'new') openLiveForm(null);
   else if(act === 'edit') openLiveForm(call);
   else if(act === 'cancel') cancelLiveCall(call);
@@ -11912,7 +12016,7 @@ async function loadCommunityWins(){
     const text = (input.value||'').trim();
     if(!text){ showAppToast('Write something first!','error'); return; }
     try{
-      await apiFetch('/wins', { method:'POST', body: JSON.stringify({ text, emoji: emoji.value }) });
+      await apiFetch('/wins', { method:'POST', body: JSON.stringify({ body: text, emoji: emoji.value }) });
       input.value = '';
       showAppToast('Win posted!','success');
       loadCommunityWins();
@@ -11926,15 +12030,7 @@ async function loadCommunityWins(){
       return;
     }
     feed.innerHTML = '';
-    data.wins.forEach(w => {
-      const card = document.createElement('div');
-      card.className = 'win-card';
-      card.innerHTML = `<div class="win-top"><span class="win-emoji">${w.emoji||'🏆'}</span><span class="win-author">${w.userName||'Anon'}</span><span class="win-date">${new Date(w.createdAt).toLocaleDateString()}</span></div><div class="win-text">${w.text}</div><div class="win-actions"><button class="win-react-btn" data-id="${w.id}">🔥 ${w._count?.reactions||0}</button></div>`;
-      card.querySelector('.win-react-btn').addEventListener('click', async (e)=>{
-        try{ await apiFetch('/wins/'+w.id+'/react',{method:'POST'}); e.target.textContent='🔥 '+(parseInt(e.target.textContent.split(' ')[1]||0)+1); e.target.disabled=true; }catch(err){ showAppToast('Could not react','error'); }
-      });
-      feed.appendChild(card);
-    });
+    data.wins.forEach(w => feed.appendChild(buildWinCard(w, loadCommunityWins)));
   }catch(e){
     console.error('Community wins error:', e);
     feed.innerHTML = '<div class="tool-empty">Could not load wins — '+(e.message||'check your connection')+'<br><button onclick="loadCommunityWins()" style="margin-top:8px;padding:6px 18px;border-radius:8px;background:var(--grape);color:var(--on-accent);border:none;cursor:pointer;font-size:.95rem;">Retry</button></div>';
@@ -11988,6 +12084,56 @@ function showWins(){
 }
 winsBackBtn.addEventListener('click', showHome);
 
+function buildWinCard(w, reload){
+  const card = document.createElement('div');
+  card.className = 'win-card';
+  const time = new Date(w.createdAt);
+  const ago = timeAgo(time);
+  const displayName = (w.authorEmail || '').split('@')[0] || 'Guide User';
+  const initial = w.authorInitial || displayName[0].toUpperCase();
+  // Count reactions by emoji
+  const reactions = w.reactions || [];
+  const fireCount = reactions.filter(r=>r.emoji==='🔥').length;
+  const clapCount = reactions.filter(r=>r.emoji==='👏').length;
+  const strongCount = reactions.filter(r=>r.emoji==='💪').length;
+  const heartCount = reactions.filter(r=>r.emoji==='❤️').length;
+  // Check if current user reacted
+  const myReactions = reactions.filter(r=>r.userId===currentUserId);
+  const myFire = myReactions.some(r=>r.emoji==='🔥');
+  const myClap = myReactions.some(r=>r.emoji==='👏');
+  const myStrong = myReactions.some(r=>r.emoji==='💪');
+  const myHeart = myReactions.some(r=>r.emoji==='❤️');
+  const isAuthor = w.authorId === currentUserId;
+  card.innerHTML = `
+    <div class="win-header">
+      <div class="win-avatar">${initial}</div>
+      <div class="win-name">${escapeHtml(displayName)}${isAuthor ? ' <span style="color:var(--grape);">(you)</span>':''}</div>
+      <div class="win-time">${ago}</div>
+      ${isAuthor ? '<button class="win-delete-btn" data-id="'+w.id+'" title="Delete">✕</button>' : ''}
+    </div>
+    <div class="win-body">${w.emoji || '🏆'} ${escapeHtml(w.body)}</div>
+    <div class="win-emoji-row">
+      <button class="win-react-btn ${myFire?'active':''}" data-id="${w.id}" data-emoji="🔥">🔥 ${fireCount}</button>
+      <button class="win-react-btn ${myClap?'active':''}" data-id="${w.id}" data-emoji="👏">👏 ${clapCount}</button>
+      <button class="win-react-btn ${myStrong?'active':''}" data-id="${w.id}" data-emoji="💪">💪 ${strongCount}</button>
+      <button class="win-react-btn ${myHeart?'active':''}" data-id="${w.id}" data-emoji="❤️">❤️ ${heartCount}</button>
+    </div>
+  `;
+  card.querySelectorAll('.win-react-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try{ await apiFetch('/wins/' + btn.dataset.id + '/react', { method:'POST', body:JSON.stringify({emoji:btn.dataset.emoji}) }); reload(); }catch(e){}
+    });
+  });
+  const delBtn = card.querySelector('.win-delete-btn');
+  if(delBtn){
+    delBtn.addEventListener('click', async () => {
+      if(!confirm('Delete this win?')) return;
+      try{ await apiFetch('/wins/' + delBtn.dataset.id, { method:'DELETE' }); reload(); }catch(e){ alert('Could not delete.'); }
+    });
+  }
+  return card;
+}
+
 async function loadWins(){
   const feed = document.getElementById('winsFeed');
   const postArea = document.getElementById('winPostArea');
@@ -12007,55 +12153,7 @@ async function loadWins(){
       return;
     }
     feed.innerHTML = '';
-    data.wins.forEach(w => {
-      const card = document.createElement('div');
-      card.className = 'win-card';
-      const time = new Date(w.createdAt);
-      const ago = timeAgo(time);
-      const displayName = (w.authorEmail || '').split('@')[0] || 'Guide User';
-      const initial = w.authorInitial || displayName[0].toUpperCase();
-      // Count reactions by emoji
-      const reactions = w.reactions || [];
-      const fireCount = reactions.filter(r=>r.emoji==='🔥').length;
-      const clapCount = reactions.filter(r=>r.emoji==='👏').length;
-      const strongCount = reactions.filter(r=>r.emoji==='💪').length;
-      const heartCount = reactions.filter(r=>r.emoji==='❤️').length;
-      // Check if current user reacted
-      const myReactions = reactions.filter(r=>r.userId===currentUserId);
-      const myFire = myReactions.some(r=>r.emoji==='🔥');
-      const myClap = myReactions.some(r=>r.emoji==='👏');
-      const myStrong = myReactions.some(r=>r.emoji==='💪');
-      const myHeart = myReactions.some(r=>r.emoji==='❤️');
-      const isAuthor = w.authorId === currentUserId;
-      card.innerHTML = `
-        <div class="win-header">
-          <div class="win-avatar">${initial}</div>
-          <div class="win-name">${escapeHtml(displayName)}${isAuthor ? ' <span style="color:var(--grape);">(you)</span>':''}</div>
-          <div class="win-time">${ago}</div>
-          ${isAuthor ? '<button class="win-delete-btn" data-id="'+w.id+'" title="Delete">✕</button>' : ''}
-        </div>
-        <div class="win-body">${w.emoji || '🏆'} ${escapeHtml(w.body)}</div>
-        <div class="win-emoji-row">
-          <button class="win-react-btn ${myFire?'active':''}" data-id="${w.id}" data-emoji="🔥">🔥 ${fireCount}</button>
-          <button class="win-react-btn ${myClap?'active':''}" data-id="${w.id}" data-emoji="👏">👏 ${clapCount}</button>
-          <button class="win-react-btn ${myStrong?'active':''}" data-id="${w.id}" data-emoji="💪">💪 ${strongCount}</button>
-          <button class="win-react-btn ${myHeart?'active':''}" data-id="${w.id}" data-emoji="❤️">❤️ ${heartCount}</button>
-        </div>
-      `;
-      card.querySelectorAll('.win-react-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          try{ await apiFetch('/wins/' + btn.dataset.id + '/react', { method:'POST', body:JSON.stringify({emoji:btn.dataset.emoji}) }); loadWins(); }catch(e){}
-        });
-      });
-      const delBtn = card.querySelector('.win-delete-btn');
-      if(delBtn){
-        delBtn.addEventListener('click', async () => {
-          if(!confirm('Delete this win?')) return;
-          try{ await apiFetch('/wins/' + delBtn.dataset.id, { method:'DELETE' }); loadWins(); }catch(e){ alert('Could not delete.'); }
-        });
-      }
-      feed.appendChild(card);
-    });
+    data.wins.forEach(w => feed.appendChild(buildWinCard(w, loadWins)));
   } catch(e) {
     feed.innerHTML = '<div class="tool-empty">Could not load wins. <button type="button" onclick="loadWins()" style="color:var(--grape);background:none;border:none;cursor:pointer;font-weight:700;">Retry</button></div>';
   }
