@@ -25,6 +25,7 @@ SCREENS = {
     'live':        (True,  "showLive()"),
     'live-pro':    (True,  "showLive()"),
     'live-home-pro': (True, "showHome()"),
+    'live-replay-home': (True, "showHome()"),
     'live-host-pro': (True, "showLive(); setTimeout(()=>document.querySelector('[data-live=new]').click(), 500)"),
     'push-account-pro': (True, "document.getElementById('accountBtn').click(); setTimeout(()=>document.getElementById('accPushItem').scrollIntoView({block:'center'}), 700)"),
     'push-live-pro': (True, "showLive(); setTimeout(()=>document.querySelector('[data-live=remind]').click(), 700)"),
@@ -94,7 +95,9 @@ def main():
                             st['wins'] = []; st['live'] = {'canHost': False, 'isOwner': False, 'calls': smoke.live_demo_calls()}
                     if name == 'community-wins':
                         st['wins'] = [{'id': f'w{i}', 'body': b, 'emoji': e, 'authorId': f'u{i}', 'authorEmail': n + '@example.com', 'authorInitial': n[0].upper(), 'createdAt': smoke.TODAY, 'reactions': [{'id': f'r{i}{k}', 'userId': f'x{k}', 'emoji': '🔥'} for k in range(c)]} for i, (b, e, n, c) in enumerate([('Booked my first paid shoot', '🎉', 'maya', 5), ('Module one done, streak at 3', '💪', 'dev', 3), ('Sent my first contract with the template', '📄', 'sam', 2), ('Got a yes from a wedding client', '🔥', 'luis', 7), ('Finished my pricing sheet', '✅', 'ana', 1)])]
-                    if name.startswith('live'):
+                    if name == 'live-replay-home':
+                        st['wins'] = []; st['live'] = {'canHost': False, 'isOwner': False, 'calls': [], 'replays': smoke.live_demo_replays()}
+                    elif name.startswith('live'):
                         st['wins'] = []
                         st['live'] = {'canHost': 'host' in name or 'past' in name, 'isOwner': False, 'calls': smoke.live_demo_calls(), 'replays': smoke.live_demo_replays(),
                                       'past': [{'id': 'lc_done', 'title': 'Cold outreach teardown', 'hostName': 'Sam Rivera', 'startsAt': smoke.live_iso_in(-60 * 30), 'replayUrl': None, 'mine': True, 'questions': 3}]}

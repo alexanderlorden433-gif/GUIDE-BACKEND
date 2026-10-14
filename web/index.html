@@ -11518,7 +11518,7 @@ function liveCardHtml(c, info){
     ${c.description ? `<p class="live-desc">${liveEsc(c.description)}</p>` : ''}
     <div class="live-meta">
       ${niche ? `<span>${nicheIco(niche)} ${liveEsc(niche.name)}</span>` : ''}
-      ${member && c.going > 0 ? `<span>${ico('users')} ${c.going} going</span>` : ''}
+      ${c.going > 0 ? `<span>${ico('users')} ${c.going} going</span>` : ''}
       ${!host && c.questions > 0 ? `<span>${ico('chat')} ${c.questions} question${c.questions === 1 ? '' : 's'} sent in</span>` : ''}
     </div>
     <div class="live-actions">${actions}</div>
@@ -11545,8 +11545,8 @@ function renderLiveList(){
   if(!list || !liveInfo) return;
   const info = liveInfo;
   let html = '';
-  if(!info.isPro && info.calls.length){
-    html += `<div class="live-pro-note">${ico('lock')}<span>Live calls are for Pro members. You can see what is coming up, and Pro members join in one tap.</span></div>`;
+  if(!info.isPro && (info.calls.length || info.replays.length)){
+    html += `<div class="live-pro-note">${ico('lock')}<span>Live calls are for Pro members. You can see what is coming up${info.replays.length ? ' and what was recorded' : ''}; Pro members join in one tap${info.replays.length ? ' and watch the replays' : ''}.</span></div>`;
   }
   html += info.calls.length
     ? info.calls.map(c => liveCardHtml(c, info)).join('')
@@ -11945,7 +11945,18 @@ function renderLiveHome(){
   if(!wrap) return;
   const draw = ()=>{
     const next = liveInfo && liveInfo.calls.filter(c => liveState(c) !== 'over').sort((a, b) => liveStart(a) - liveStart(b))[0];
-    if(!next || liveStart(next) - Date.now() > 7 * 864e5){ wrap.innerHTML = ''; return; }
+    if(!next || liveStart(next) - Date.now() > 7 * 864e5){
+      // nothing coming up soon: a fresh replay (last two weeks) is worth a line too
+      const rep = liveInfo && (liveInfo.replays || []).filter(r => Date.now() - liveStart(r) < 14 * 864e5).sort((a, b) => liveStart(b) - liveStart(a))[0];
+      if(!rep){ wrap.innerHTML = ''; return; }
+      wrap.innerHTML = `<button type="button" class="live-pill" id="livePill">
+        <span class="live-pill-ico">${ico('video')}</span>
+        <span class="live-pill-text"><b>${liveEsc('Replay: ' + rep.title)}</b><small>${liveEsc('with ' + rep.hostName + (liveInfo.isPro ? ' · watch it back any time' : ' · Pro members can watch it back'))}</small></span>
+        <span class="live-pill-go">${liveInfo.isPro ? 'Watch' : 'Details'}</span></button>`;
+      document.getElementById('livePill').addEventListener('click', showLive);
+      applyCommunityVisibility(communityFull, true);
+      return;
+    }
     const st = liveState(next);
     wrap.innerHTML = `<button type="button" class="live-pill${st === 'live' ? ' is-live' : ''}" id="livePill">
       <span class="live-pill-ico">${ico('live')}</span>

@@ -1316,6 +1316,18 @@ def live_calls(browser, base):
                 ok(step[0], 'a free member cannot send questions, and the replay is locked without its link')
             else:
                 problem(step[0], 'a free member should see no question box and a locked replay')
+            if '12 going' in page.inner_text('#liveList'):
+                ok(step[0], 'a free member sees how many are going')
+            else:
+                problem(step[0], 'the going count should show to free members too')
+            # nothing coming up: Home still points at the replay
+            st['live']['calls'] = []
+            page.evaluate("liveInfo=null; showHome()"); page.wait_for_timeout(900)
+            pill = page.inner_text('#liveHomeWrap')
+            if 'Replay: Pricing your first package' in pill and 'Pro members can watch it back' in pill:
+                ok(step[0], 'with no call coming up, Home shows the latest replay and that Pro members can watch it')
+            else:
+                problem(step[0], 'Home should mention the replay when nothing is scheduled', pill[:120])
         else:
             problem(step[0], 'the live calls did not open for a free member')
         finish(st, step[0]); ctx.close()
