@@ -22,6 +22,7 @@ const analyticsRoutes = require('./routes/analytics');
 const liveRoutes = require('./routes/live');
 const pushRoutes = require('./routes/push');
 const { ensurePushTable } = require('./push');
+const clientStatusRoutes = require('./routes/clientStatus');
 const { ensureLiveTables, scheduleLiveReminders } = require('./live');
 const { ensureAnalyticsTables, pruneOldEvents, drain: drainAnalytics } = require('./analytics');
 const { ensureMetaTable } = require('./meta');
@@ -107,6 +108,7 @@ app.use('/api/network', networkRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/live', liveRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/client-status', clientStatusRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {
@@ -124,6 +126,7 @@ app.listen(PORT, () => {
   ensureMetaTable();
   ensureLiveTables();
   ensurePushTable();
+  clientStatusRoutes.ensureClientStatusTable();
   scheduleLiveReminders(); // does nothing until the tables exist
   setInterval(pruneOldEvents, 24 * 60 * 60 * 1000).unref();
 });
