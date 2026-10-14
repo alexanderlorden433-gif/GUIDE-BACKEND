@@ -110,7 +110,7 @@ def fixture(state, method, path, body):
         text = str((body or {}).get('body') or '').strip()
         if not text:
             return 400, {'error': 'Win text is required (max 500 chars).'}
-        w = {'id': 'w_new', 'body': text, 'emoji': (body or {}).get('emoji') or '🎉', 'authorId': 'u_smoke', 'authorEmail': 'smoke@example.com',
+        w = {'id': 'w_new', 'body': text, 'emoji': (body or {}).get('emoji') or '🎉', 'authorId': 'u_smoke', 'authorName': 'smoke',
              'authorInitial': 'S', 'createdAt': TODAY, 'reactions': []}
         state.setdefault('wins', []).insert(0, w); state.setdefault('win_posts', []).append(body)
         return 201, w
@@ -121,7 +121,7 @@ def fixture(state, method, path, body):
         state.setdefault('win_reacts', []).append((p.split('/')[3], emoji))
         return 200, {'action': 'added'}
     if re.match(r'^/api/discussion/[^/]+$', p) and method == 'GET':
-        return 200, {'posts': [], 'isOwner': False}
+        return 200, {'posts': state.get('discussion', []), 'isOwner': False}
     if re.match(r'^/api/mentors/[^/]+$', p) and method == 'GET':
         return 200, {'profiles': [], 'mine': None}
     if p == '/api/mentors/all/search':
@@ -211,8 +211,19 @@ def fixture(state, method, path, body):
         return 200, {'ok': True}
     if p.startswith('/api/admin/'):
         return 403, {'error': 'Not authorized.'}
+    if p == '/api/ai-chat/free' and method == 'GET':
+        if state['pro']:
+            return 200, {'pro': True, 'unlimited': True, 'left': None, 'limit': None}
+        return 200, {'pro': False, 'unlimited': False, 'left': state.get('ai_free_left', 1), 'limit': 1}
     if p == '/api/ai-chat':
-        return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.'}
+        if not state['pro']:
+            left = state.get('ai_free_left', 1)
+            if left <= 0:
+                return 403, {'error': "You've used today's free question. It comes back tomorrow, or go Pro for unlimited questions.", 'upgrade': True, 'left': 0, 'limit': 1}
+            state['ai_free_left'] = left - 1
+            state.setdefault('ai_posts', []).append(body)
+            return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': left - 1, 'limit': 1}
+        return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': None, 'limit': None}
     if p == '/api/billing/prices' and method == 'GET':
         # the real route reads these from Stripe; the numbers here are only a stand-in
         return 200, {'monthly': {'amount': 24.99, 'currency': 'USD', 'interval': 'month'},
@@ -731,13 +742,15 @@ def free_vs_pro(browser, base):
                 problem(step[0], 'no "Unlock with Pro" button on the locked modules', r)
             else:
                 ok(step[0], f"Module 1 ({r['mod1']} lessons) free, the other {r['later']} need Pro")
-            # tapping a Pro lesson should offer the upgrade, not just shake
+            # tapping a Pro lesson opens a peek (first paragraph readable, the rest blurred) with the unlock right there
             page.evaluate("""(()=>{const x=[...document.querySelectorAll('#nicheView .guide')]
                 .find(e=>(e.querySelector('.lock-tag')||{}).textContent?.includes('Pro'));
                 if(x) x.querySelector('.guide-row').click();})()""")
             page.wait_for_timeout(500)
+            if page.locator('#nicheView .guide.peeking .peek-unlock').count():
+                page.click('#nicheView .guide.peeking .peek-unlock'); page.wait_for_timeout(500)
             if visible(page, '#upgradeOverlay.open', 2500) or page.locator('#upgradeCta').count():
-                ok(step[0], 'tapping a Pro lesson offers the upgrade')
+                ok(step[0], 'tapping a Pro lesson shows a peek, and its unlock offers the upgrade')
             else:
                 problem(step[0], 'tapping a Pro lesson did nothing')
             page.wait_for_timeout(600)
@@ -878,7 +891,7 @@ def quiet_community(browser, base):
         ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
         st = new_state(True)
         st['wins'] = [{'id': f'w{i}', 'body': 'Got my first client', 'emoji': '🎉', 'authorId': f'u{i}',
-                       'authorEmail': 'someone@example.com', 'authorInitial': 'S', 'createdAt': TODAY,
+                       'authorName': 'someone', 'authorInitial': 'S', 'createdAt': TODAY,
                        'reactions': []} for i in range(posts)]
         attach_backend(ctx, st)
         ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
@@ -1142,6 +1155,170 @@ def home_greeting(browser, base):
                 problem(step[0], 'after Skip, the name box came back on the next visit')
         else:
             problem(step[0], 'Skip should leave a plain greeting and remember the choice', {'saved': saved, 'greet': greet(page)[:60]})
+        finish(st, step[0]); ctx.close()
+
+
+def pro_peeks(browser, base):
+    """Free members get a peek at Pro content: a locked lesson opens with its first paragraph readable and the rest
+    blurred; templates show their first lines; both offer the unlock right there."""
+    step = ['pro peeks (free member)']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return
+    page.wait_for_timeout(800)
+    page.evaluate("openNiche(NICHES[0].id); setCourseView('list')"); page.wait_for_timeout(700)
+    got = page.evaluate("""(()=>{ const g=[...document.querySelectorAll('#nicheView .guide.locked')].find(x=>x.querySelector('.lock-tag') && x.querySelector('.lock-tag').innerText.includes('Pro'));
+      if(!g) return null; g.querySelector('.guide-row').click();
+      const c=g.querySelector('.guide-content'); const modal=document.getElementById('upgradeModal');
+      return {open:g.classList.contains('open'), text:c.innerText, blurred:!!c.querySelector('.peek-blur'), unlock:!!c.querySelector('.peek-unlock'),
+              modalOpen: !!(modal && modal.style.display && modal.style.display !== 'none')}; })()""")
+    if not got:
+        problem(step[0], 'no Pro-locked lesson found to peek at')
+    elif got['open'] and got['blurred'] and got['unlock'] and len(got['text']) > 120 and not got['modalOpen'] and 'part of Pro' in got['text']:
+        ok(step[0], 'a locked lesson opens as a peek: first paragraph readable, the rest blurred, unlock right there')
+        page.click('#nicheView .guide.peeking .peek-unlock'); page.wait_for_timeout(500)
+        if page.locator('.modal-plan').count() > 0:
+            ok(step[0], 'the unlock in the peek opens the Pro window')
+        else:
+            problem(step[0], 'the unlock in the peek should open the Pro window')
+        page.keyboard.press('Escape'); page.wait_for_timeout(300)
+    else:
+        problem(step[0], 'the lesson peek is wrong', {k: (v if k != 'text' else v[:80]) for k, v in got.items()})
+    page.click('#nicheView [data-sub=templates]'); page.wait_for_timeout(700)
+    tp = page.evaluate("""(()=>{ const cards=[...document.querySelectorAll('.template-card.peek')]; const c=cards[0];
+      return {cards:cards.length, note: !!document.querySelector('.templates-peek-note'), readable: c ? c.querySelector('.template-preview').firstChild.textContent.length : 0,
+              blurred: c ? !!c.querySelector('.peek-blur') : false, copy: !!document.querySelector('.template-card .template-copy-btn:not(.peek-unlock)'),
+              literalNewline: c ? c.innerText.includes(String.fromCharCode(92)+'n') : false}; })()""")
+    if tp['cards'] > 0 and tp['note'] and tp['readable'] >= 80 and tp['blurred'] and not tp['copy'] and not tp['literalNewline']:
+        ok(step[0], 'templates show their first lines, blur the rest, and offer the unlock instead of Copy')
+    else:
+        problem(step[0], 'the template peek is wrong', tp)
+    finish(st, step[0])
+    ctx.close()
+    # Pro member: templates copy as before, with real line breaks
+    step = ['pro peeks (Pro member)']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block', permissions=['clipboard-read', 'clipboard-write'])
+    st = new_state(True)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if visible(page, '#appScreen', 10000):
+        page.wait_for_timeout(800)
+        page.evaluate("openNiche(NICHES[0].id)"); page.wait_for_timeout(400)
+        page.click('#nicheView [data-sub=templates]'); page.wait_for_timeout(600)
+        tp = page.evaluate("""(()=>{ const c=document.querySelector('.template-card'); return {peek: !!c.querySelector('.peek-blur'), copy: !!c.querySelector('.template-copy-btn'),
+              literalNewline: c.innerText.includes(String.fromCharCode(92)+'n'), lines: c.querySelector('.template-preview').innerText.split(String.fromCharCode(10)).length}; })()""")
+        if not tp['peek'] and tp['copy'] and not tp['literalNewline'] and tp['lines'] > 1:
+            ok(step[0], 'a Pro member sees whole templates with real line breaks and the Copy button')
+        else:
+            problem(step[0], 'the Pro template view is wrong', tp)
+    finish(st, step[0]); ctx.close()
+
+
+def module_one_moment(browser, base):
+    """When a free member finishes Module 1 of a chapter they chose, Home says so in concrete terms: the next lesson
+    titles, what Pro opens, and one button. The step-done sheet does the same."""
+    step = ['module 1 moment']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False)
+    st['data']['niches'] = ['video']
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return
+    page.wait_for_timeout(800)
+    # all but the last free lesson done; finish the last one through the real "done" flow
+    page.evaluate("""(()=>{ const n=NICHES[0]; courseStarts={[n.id]: dateMinusDays(todayStr(), 4)}; const fr=n.guides.filter(g=>g.mod===0);
+      fr.slice(0,-1).forEach(g=>completed.add(n.id+'|'+g.title)); openNiche(n.id); window.__last=fr[fr.length-1]; })()""")
+    page.wait_for_timeout(500)
+    page.evaluate("markStepDone(NICHES[0], window.__last)"); page.wait_for_timeout(900)
+    sheet = page.inner_text('.step-card') if page.locator('.step-card').count() else ''
+    nxt = page.evaluate("(()=>{const n=NICHES[0]; return n.guides.filter(g=>g.mod!==0).slice(0,3).map(g=>g.title)})()")
+    if 'You finished Module 1 of Videography' in sheet and all(t in sheet for t in nxt) and 'more lessons' in sheet and 'Keep going with Pro' in sheet:
+        ok(step[0], 'the step-done sheet names the next three lessons and what Pro opens')
+    else:
+        problem(step[0], 'the step-done sheet should spell out what comes next', sheet[:300])
+    page.click('.step-card [data-act="close"]'); page.wait_for_timeout(400)
+    page.evaluate("showHome()"); page.wait_for_timeout(600)
+    card = page.inner_text('#todayStepCard') if page.locator('#todayStepCard').count() else ''
+    if 'You finished Module 1 of Videography in 5 days' in card and all(t in card for t in nxt) and '42 more lessons' in card and 'Keep going with Pro' in card:
+        ok(step[0], 'Home shows the Module 1 card: days taken, the next three lessons, the counts, one button')
+    else:
+        problem(step[0], 'the Home card after Module 1 is wrong', card[:300])
+    page.click('#todayStepGo'); page.wait_for_timeout(500)
+    if page.locator('.modal-plan').count() > 0:
+        ok(step[0], 'its button opens the Pro window')
+    else:
+        problem(step[0], 'the Module 1 card button should open the Pro window')
+    finish(st, step[0])
+    ctx.close()
+
+
+def guider_free_question(browser, base):
+    """Free members get one question a day to The Guider; after it, the box says so and offers Pro."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    def open_guider(label, pro, left=1):
+        step = [f'guider free question ({label})']
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(pro); st['ai_free_left'] = left
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(800)
+        page.click('#bottomTabGuider'); page.wait_for_timeout(1000)
+        return step, ctx, st, page
+    got = open_guider('free member, question ready', False)
+    if got:
+        step, ctx, st, page = got
+        if not visible(page, '#aiChatInput', 3000):
+            problem(step[0], 'the Guider tab should open for a free member (it used to be blocked)')
+        else:
+            banner = page.inner_text('#aiChatFree')
+            if 'free question for today is ready' not in banner:
+                problem(step[0], 'the free member should be told their free question is ready', banner[:120])
+            page.fill('#aiChatInput', 'How do I price my first shoot?'); page.click('#aiChatSendBtn'); page.wait_for_timeout(900)
+            sent = st.get('ai_posts', [])
+            msgs = page.inner_text('#aiChatMessages')
+            banner = page.inner_text('#aiChatFree')
+            disabled = page.evaluate("document.getElementById('aiChatSendBtn').disabled")
+            if len(sent) == 1 and 'three packages' in msgs and "used today's free question" in banner and disabled:
+                ok(step[0], 'a free member asks one question, gets the answer, and is then told it comes back tomorrow or with Pro')
+            else:
+                problem(step[0], 'the free question flow is wrong', {'sent': len(sent), 'banner': banner[:100], 'disabled': disabled})
+            page.click('#aiChatUnlock'); page.wait_for_timeout(500)
+            if visible(page, '#upgradeModal', 2000) or page.locator('.modal-plan').count() > 0:
+                ok(step[0], 'the Unlock button opens the Pro window')
+            else:
+                problem(step[0], 'Unlock should open the Pro window')
+        finish(st, step[0]); ctx.close()
+    got = open_guider('free member, already used', False, left=0)
+    if got:
+        step, ctx, st, page = got
+        banner = page.inner_text('#aiChatFree') if page.locator('#aiChatFree').count() else ''
+        disabled = page.evaluate("(()=>{const b=document.getElementById('aiChatSendBtn'); return b ? b.disabled : null})()")
+        if "used today's free question" in banner and disabled:
+            ok(step[0], 'with the free question used, the box is closed until tomorrow')
+        else:
+            problem(step[0], 'a used-up free member should see the closed box', {'banner': banner[:100], 'disabled': disabled})
+        finish(st, step[0]); ctx.close()
+    got = open_guider('Pro member', True)
+    if got:
+        step, ctx, st, page = got
+        if page.locator('#aiChatFree').count() and page.inner_text('#aiChatFree').strip():
+            problem(step[0], 'a Pro member should see no free-question banner', page.inner_text('#aiChatFree')[:80])
+        else:
+            ok(step[0], 'a Pro member sees no limit')
         finish(st, step[0]); ctx.close()
 
 
@@ -1856,11 +2033,13 @@ def smoother(browser, base):
     page.wait_for_timeout(500)
     r = page.evaluate("""(()=>{ const modal = document.getElementById('upgradeOverlay').classList.contains('open');
       document.getElementById('upgradeOverlay').classList.remove('open');
-      return {modal, opened: window.__locked.classList.contains('open')}; })()""")
-    if not r['modal'] or r['opened']:
-        problem(step[0], 'a Pro lesson opened from search or Continue should show the upgrade box, not open', r)
+      const peek = window.__locked.classList.contains('peeking') && !!window.__locked.querySelector('.peek-unlock');
+      const text = window.__locked.querySelector('.guide-content').innerText;
+      return {modal, peek, hasRest: !!window.__locked.querySelector('.guide-rest'), text: text.slice(0, 60)}; })()""")
+    if r['modal'] or not r['peek'] or r['hasRest']:
+        problem(step[0], 'a Pro lesson opened from search or Continue should show the peek (not the full lesson, not the upgrade box straight away)', r)
     else:
-        ok(step[0], 'a Pro lesson reached from search or Continue shows the upgrade box')
+        ok(step[0], 'a Pro lesson reached from search or Continue shows the peek with its unlock')
     # 5) search stays one tap away from every screen
     page.evaluate("window.scrollTo(0, 600)")
     page.locator('#topbarSearchBtn').click(timeout=3000); page.wait_for_timeout(400)
@@ -2139,6 +2318,44 @@ def step_one_demo(browser, base):
                 ok(step[0], 'the new styles use only the look colour variables')
         finish(st, step[0])
         ctx.close()
+
+
+def community_names(browser, base):
+    """Chapter discussion: each post and reply shows the poster's name (the part before the "@", sent by the
+    backend as authorName) — never a full email address — and your own post says "(you)"."""
+    step = ['chapter discussion: names']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(True)
+    st['discussion'] = [
+        {'id': 'd1', 'body': 'How do you price a first shoot?', 'authorName': 'maya', 'isMine': False, 'canDelete': False, 'createdAt': TODAY,
+         'replies': [{'id': 'd1r1', 'body': 'Start with a half-day rate', 'authorName': 'luis', 'isMine': False, 'canDelete': False, 'createdAt': TODAY}]},
+        {'id': 'd2', 'body': 'My first client said yes', 'authorName': 'smoke', 'isMine': True, 'canDelete': True, 'createdAt': TODAY, 'replies': []},
+    ]
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'the app did not open')
+    else:
+        page.wait_for_timeout(600)
+        try:
+            page.evaluate("openNiche(NICHES[0].id); renderDiscussionPanel()")
+        except Exception as e:
+            problem(step[0], 'the chapter discussion crashed while showing posts', e)
+            finish(st, step[0]); ctx.close(); return
+        page.wait_for_timeout(800)
+        got = page.evaluate("""(()=>{ const l = document.getElementById('discussionList');
+          return {names: [...l.querySelectorAll('.mentor-card-name')].map(e => e.innerText.trim()), text: l.innerText}; })()""")
+        want = ['maya', 'luis', 'smoke (you)']
+        if not all(any(n.startswith(w) for n in got['names']) for w in want):
+            problem(step[0], 'posts and replies should show the poster\'s name', got['names'])
+        elif '@' in got['text'] or 'undefined' in got['text']:
+            problem(step[0], 'the discussion shows an email address or "undefined"', got['text'][:200])
+        else:
+            ok(step[0], 'posts and replies show names (no email addresses) and your own post says "(you)"')
+    finish(st, step[0])
+    ctx.close()
 
 
 def startup_account(browser, base):
@@ -2587,6 +2804,9 @@ def main():
         smoother(browser, base)
         quiet_community(browser, base)
         home_greeting(browser, base)
+        pro_peeks(browser, base)
+        module_one_moment(browser, base)
+        guider_free_question(browser, base)
         live_calls(browser, base)
         push_notifications(browser, base)
         client_status(browser, base)
@@ -2594,6 +2814,7 @@ def main():
         daily_step(browser, base)
         niche_burst(browser, base)
         startup_account(browser, base)
+        community_names(browser, base)
         step_one_demo(browser, base)
         account_settings(browser, base)
         manage_subscription(browser, base)

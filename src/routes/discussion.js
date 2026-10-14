@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../db');
+const { publicName } = require('../publicName');
 const { requireAuth } = require('../middleware/auth');
 const { notifyUser } = require('../notifications');
 
@@ -35,7 +36,7 @@ function serializePost(p, currentUserId, isOwner) {
   return {
     id: p.id,
     body: p.body,
-    authorEmail: p.author.email,
+    authorName: publicName(p.author.email),
     isMine: p.authorId === currentUserId,
     canDelete: p.authorId === currentUserId || isOwner,
     createdAt: p.createdAt,
@@ -44,7 +45,7 @@ function serializePost(p, currentUserId, isOwner) {
       .map(r => ({
         id: r.id,
         body: r.body,
-        authorEmail: r.author.email,
+        authorName: publicName(r.author.email),
         isMine: r.authorId === currentUserId,
         canDelete: r.authorId === currentUserId || isOwner,
         createdAt: r.createdAt,
@@ -113,7 +114,7 @@ router.post('/:nicheId/:postId/reply', writeLimiter, async (req, res) => {
   res.status(201).json({
     id: reply.id,
     body: reply.body,
-    authorEmail: reply.author.email,
+    authorName: publicName(reply.author.email),
     isMine: true,
     canDelete: true,
     createdAt: reply.createdAt,

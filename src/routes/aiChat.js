@@ -4,8 +4,57 @@ const { buildGuiderContext } = require('../guiderContext');
 const rateLimit = require('express-rate-limit');
 const { requireAuth } = require('../middleware/auth');
 
+const { isProUser } = require('../pro');
+
+// Free members get a taste: one question a day. Pro members are unlimited. The count lives on the
+// server (one row per member per day, created at startup like the other small tables), so it cannot
+// be reset from the browser. Days are UTC.
+const FREE_QUESTIONS_PER_DAY = 1;
+let tableReady = false;
+async function ensureGuiderTable() {
+  for (let attempt = 0; attempt < 3 && !tableReady; attempt++) {
+    try {
+      await prisma.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS "GuiderFreeUse" (
+        "userId" TEXT NOT NULL,
+        "day" TEXT NOT NULL,
+        "n" INTEGER NOT NULL DEFAULT 0,
+        CONSTRAINT "GuiderFreeUse_pkey" PRIMARY KEY ("userId", "day"),
+        CONSTRAINT "GuiderFreeUse_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+      )`);
+      tableReady = true;
+      console.log('Guider free-use table ready.');
+    } catch (err) {
+      console.error('Guider free-use table setup failed (attempt ' + (attempt + 1) + '):', err.message);
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+  return tableReady;
+}
+function todayUtc() { return new Date().toISOString().slice(0, 10); }
+async function freeUsedToday(userId) {
+  if (!tableReady) return 0;
+  const rows = await prisma.$queryRawUnsafe(`SELECT "n" FROM "GuiderFreeUse" WHERE "userId" = $1::text AND "day" = $2::text`, userId, todayUtc());
+  return rows[0] ? rows[0].n : 0;
+}
+async function countFreeUse(userId) {
+  if (!tableReady) return;
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO "GuiderFreeUse" ("userId", "day", "n") VALUES ($1::text, $2::text, 1)
+     ON CONFLICT ("userId", "day") DO UPDATE SET "n" = "GuiderFreeUse"."n" + 1`, userId, todayUtc());
+}
+
 const router = express.Router();
 router.use(requireAuth);
+
+// ---------- GET /api/ai-chat/free ----------
+// How many free questions this member has left today (Pro members: unlimited).
+router.get('/free', async (req, res) => {
+  const pro = await isProUser(req.user.id);
+  res.set('Cache-Control', 'no-store');
+  if (pro) return res.json({ pro: true, unlimited: true, left: null, limit: null });
+  const used = await freeUsedToday(req.user.id);
+  res.json({ pro: false, unlimited: false, left: Math.max(0, FREE_QUESTIONS_PER_DAY - used), limit: FREE_QUESTIONS_PER_DAY });
+});
 
 // Real API calls cost real money, so this needs a tighter limit than most
 // other routes — enough for a normal back-and-forth conversation, not
@@ -18,6 +67,8 @@ const aiChatLimiter = rateLimit({
   legacyHeaders: false,
 });
 router.use(aiChatLimiter);
+
+const MAX_MESSAGE_CHARS = 8000;
 
 // ---------- POST /api/ai-chat ----------
 // This is the ONLY place that ever talks to Anthropic's API — the frontend
@@ -38,12 +89,26 @@ router.post('/', async (req, res) => {
 
   // Only forward role/content — never trust anything else the client sends,
   // and cap how much conversation history gets sent per request.
+  const pro = await isProUser(req.user.id);
+  let freeLeft = null;
+  if (!pro) {
+    if (!tableReady) return res.status(503).json({ error: 'The Guider is not ready yet. Try again in a minute.' });
+    const used = await freeUsedToday(req.user.id);
+    if (used >= FREE_QUESTIONS_PER_DAY) {
+      return res.status(403).json({ error: "You've used today's free question. It comes back tomorrow, or go Pro for unlimited questions.", upgrade: true, left: 0, limit: FREE_QUESTIONS_PER_DAY });
+    }
+    freeLeft = FREE_QUESTIONS_PER_DAY - used - 1;
+  }
+
+  // Pro members get their recent conversation; a free question stands on its own.
   const safeMessages = messages
     .filter(m => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
-    .slice(-20)
-    .map(m => ({ role: m.role, content: m.content }));
+    .slice(pro ? -20 : -1)
+    // a Guider answer is at most ~1000 tokens (~5,000 characters); anything longer
+    // is not from the app, so trim it rather than pay to send it
+    .map(m => ({ role: m.role, content: m.content.slice(0, MAX_MESSAGE_CHARS) }));
 
-  if (safeMessages.length === 0) {
+  if (safeMessages.length === 0 || safeMessages[safeMessages.length - 1].role !== 'user') {
     return res.status(400).json({ error: 'No valid messages to send.' });
   }
 
@@ -93,7 +158,8 @@ router.post('/', async (req, res) => {
     const textBlock = (data.content || []).find(b => b.type === 'text');
     const replyText = textBlock ? textBlock.text : "Sorry, I didn't get a usable response — try asking again.";
 
-    res.json({ reply: replyText });
+    if (!pro) { try { await countFreeUse(req.user.id); } catch (e) { console.error('[guider] could not count the free question:', e.message); } }
+    res.json({ reply: replyText, left: freeLeft, limit: pro ? null : FREE_QUESTIONS_PER_DAY });
   } catch (err) {
     console.error('AI chat request failed:', err);
     res.status(502).json({ error: "Couldn't reach The Guider right now. Please check your connection and try again." });
@@ -101,3 +167,4 @@ router.post('/', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.ensureGuiderTable = ensureGuiderTable;

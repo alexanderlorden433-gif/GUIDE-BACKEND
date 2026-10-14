@@ -5,6 +5,7 @@
 //      imports, typos in require() and crashes at load time are caught)
 //   3. the Prisma schema is valid
 //   4. an error inside an async route gives a 500 instead of stopping the server
+//   5. big-enough request sizes: saving progress and Guider chats aren't cut off at 16 KB
 // Usage: node ops/check_backend.js   (exit 1 on any failure)
 const fs = require('fs');
 const path = require('path');
@@ -70,6 +71,12 @@ try {
 
 Module._load = origLoad;
 
+// 3b. posts, wins and mentor cards are shown to every member: send a name, never the poster's email
+const leaks = ['discussion.js', 'wins.js', 'mentors.js'].filter(f =>
+  /authorEmail\s*:/.test(fs.readFileSync(path.join(ROOT, 'src', 'routes', f), 'utf8')));
+if (leaks.length) bad(`${leaks.join(', ')} send(s) the poster's email to other members — send authorName: publicName(email) instead`);
+else ok("posts, wins and mentor cards send the poster's name, not their email");
+
 // 4. an error inside an async route must give a 500, not stop the server
 async function checkAsyncErrors() {
   const indexSrc = fs.readFileSync(path.join(ROOT, 'src', 'index.js'), 'utf8');
@@ -98,7 +105,54 @@ async function checkAsyncErrors() {
   }
 }
 
-checkAsyncErrors().catch(e => bad('async error check failed: ' + e.message)).finally(() => {
+// 5. request size limits: a realistic progress save (~40 KB: every lesson of the first
+//    16 chapters ticked + a Guider chat) and a long Guider conversation must get through,
+//    while ordinary routes still refuse oversized bodies.
+async function checkBodyLimits() {
+  const indexSrc = fs.readFileSync(path.join(ROOT, 'src', 'index.js'), 'utf8');
+  if (!/useJsonParsers\(app, express\)/.test(indexSrc)) {
+    return bad('src/index.js does not use useJsonParsers — request size limits not checked');
+  }
+  if (/app\.use\(express\.json\(/.test(indexSrc)) {
+    return bad('src/index.js has its own express.json() — it would cut off progress saves at its limit');
+  }
+  const express = require(path.join(ROOT, 'node_modules', 'express'));
+  const { useJsonParsers } = require(path.join(ROOT, 'src', 'bodyParsers'));
+  const app = express();
+  useJsonParsers(app, express);
+  const echo = (req, res) => res.json({ got: JSON.stringify(req.body).length });
+  app.put('/api/account', echo);
+  app.post('/api/ai-chat', echo);
+  app.post('/api/wins', echo);
+  app.use((err, req, res, next) => res.status(err.status || 500).json({ error: err.type || 'x' }));
+  const server = await new Promise(r => { const s = app.listen(0, '127.0.0.1', () => r(s)); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const send = (method, p, body) => fetch(base + p, { method, headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body), signal: AbortSignal.timeout(3000) }).then(r => r.status);
+  const completed = Array.from({ length: 756 }, (_, i) => `side-hustle-${i % 16}|How to do lesson number ${i} well`);
+  const reply = 'A long, detailed Guider answer. '.repeat(150); // ~4.8 KB, about 1000 tokens
+  const chat = Array.from({ length: 20 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: i % 2 ? reply : 'How do I price my first job?' }));
+  try {
+    const save = await send('PUT', '/api/account', { data: { completed, aiChat: { cleaning: chat } } });
+    if (save === 200) ok('a big progress save (an active learner, ~90 KB) gets through');
+    else bad(`a big progress save is refused with status ${save} — people's progress would stop saving`);
+    const ask = await send('POST', '/api/ai-chat', { nicheName: 'Cleaning', messages: chat });
+    if (ask === 200) ok('a long Guider conversation (20 messages, ~50 KB) gets through');
+    else bad(`a long Guider conversation is refused with status ${ask} — The Guider would stop answering`);
+    const junk = await send('POST', '/api/wins', { text: 'x'.repeat(40 * 1024) });
+    if (junk === 413) ok('other routes still refuse oversized bodies (16 KB)');
+    else bad(`a 40 KB body to an ordinary route got status ${junk} instead of 413`);
+  } catch (e) {
+    bad('request size check: request never answered (' + e.name + ')');
+  } finally {
+    server.close();
+  }
+}
+
+checkAsyncErrors()
+  .catch(e => bad('async error check failed: ' + e.message))
+  .then(() => checkBodyLimits().catch(e => bad('request size check failed: ' + e.message)))
+  .finally(() => {
   console.log(problems.length ? `${problems.length} backend problem(s)` : 'Backend OK');
   process.exit(problems.length ? 1 : 0);
 });

@@ -45,9 +45,13 @@ SCREENS = {
     'account-pro': (True,  "document.getElementById('accountBtn').click(); setTimeout(()=>document.getElementById('accBillingCard').scrollIntoView(), 400)"),
     'guide':       (True,  "openNiche(NICHES[0].id); setCourseView('list'); document.querySelector('#nicheView .guide .guide-title').click()"),
     'checklists':  (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=checklists]').click()"),
+    'templates-free': (True, "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=templates]').click()"),
+    'guide-peek':  (True,  "openNiche(NICHES[0].id); setCourseView('list'); setTimeout(()=>{const g=[...document.querySelectorAll('#nicheView .guide.locked')].find(x=>x.innerText.includes('Pro')); g.querySelector('.guide-row').click(); setTimeout(()=>g.scrollIntoView({block:'start'}),200)}, 400)"),
     'templates-pro': (True, "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=templates]').click()"),
     'tools-pro':   (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=tools]').click()"),
     'mentor-pro':  (True,  "openNiche(NICHES[0].id); document.querySelector('#nicheView [data-sub=aichat]').click()"),
+    'guider-free': (True,  "document.getElementById('bottomTabGuider').click()"),
+    'guider-used': (True,  "document.getElementById('bottomTabGuider').click()"),
     'upgrade':     (True,  "openUpgradeModal()"),
     'today':       (True,  "showToday()"),
     'business-pro': (True, "showBusiness()"),
@@ -61,6 +65,8 @@ SCREENS = {
     'path':        (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id)"),
     'step-sheet':  (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); openStepSheet(NICHES[0], 4)"),
     'step-locked': (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); openStepSheet(NICHES[0], 9)"),
+    'mod1-done':   (True,  "selectedNiches=['video']; courseStarts={video: dateMinusDays(todayStr(), 5)}; NICHES[0].guides.filter(g=>g.mod===0).forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); streak={count:6,lastDate:todayStr()}; showHome()"),
+    'mod1-sheet':  (True,  "selectedNiches=['video']; const fr=NICHES[0].guides.filter(g=>g.mod===0); fr.slice(0,-1).forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); openNiche(NICHES[0].id); setTimeout(()=>markStepDone(NICHES[0], fr[fr.length-1]), 400)"),
     'home-pronote': (True, "NICHES[0].guides.filter(g=>g.mod===0).forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); streak={count:2,lastDate:dateMinusDays(todayStr(),1)}; showHome()"),
     'path-start':  (True,  "streak={count:0,lastDate:null}; openNiche(NICHES[1].id)"),
     'step-done':   (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); markStepDone(NICHES[0], NICHES[0].guides[4])"),
@@ -87,6 +93,8 @@ def main():
                 for theme in (('dark', 'light') if '--light' in sys.argv else ('dark',)):
                     ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
                     st = smoke.new_state(pro=name.endswith('-pro'))
+                    if name == 'guider-used':
+                        st['ai_free_left'] = 0
                     if name == 'greet-ask':
                         st['data']['userProfile'] = {'displayName': '', 'bio': ''}
                     if name.startswith('push'):
@@ -94,7 +102,7 @@ def main():
                         if 'live' in name:
                             st['wins'] = []; st['live'] = {'canHost': False, 'isOwner': False, 'calls': smoke.live_demo_calls()}
                     if name == 'community-wins':
-                        st['wins'] = [{'id': f'w{i}', 'body': b, 'emoji': e, 'authorId': f'u{i}', 'authorEmail': n + '@example.com', 'authorInitial': n[0].upper(), 'createdAt': smoke.TODAY, 'reactions': [{'id': f'r{i}{k}', 'userId': f'x{k}', 'emoji': '🔥'} for k in range(c)]} for i, (b, e, n, c) in enumerate([('Booked my first paid shoot', '🎉', 'maya', 5), ('Module one done, streak at 3', '💪', 'dev', 3), ('Sent my first contract with the template', '📄', 'sam', 2), ('Got a yes from a wedding client', '🔥', 'luis', 7), ('Finished my pricing sheet', '✅', 'ana', 1)])]
+                        st['wins'] = [{'id': f'w{i}', 'body': b, 'emoji': e, 'authorId': f'u{i}', 'authorName': n, 'authorInitial': n[0].upper(), 'createdAt': smoke.TODAY, 'reactions': [{'id': f'r{i}{k}', 'userId': f'x{k}', 'emoji': '🔥'} for k in range(c)]} for i, (b, e, n, c) in enumerate([('Booked my first paid shoot', '🎉', 'maya', 5), ('Module one done, streak at 3', '💪', 'dev', 3), ('Sent my first contract with the template', '📄', 'sam', 2), ('Got a yes from a wedding client', '🔥', 'luis', 7), ('Finished my pricing sheet', '✅', 'ana', 1)])]
                     if name == 'live-replay-home':
                         st['wins'] = []; st['live'] = {'canHost': False, 'isOwner': False, 'calls': [], 'replays': smoke.live_demo_replays()}
                     elif name.startswith('live'):
