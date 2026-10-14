@@ -211,8 +211,19 @@ def fixture(state, method, path, body):
         return 200, {'ok': True}
     if p.startswith('/api/admin/'):
         return 403, {'error': 'Not authorized.'}
+    if p == '/api/ai-chat/free' and method == 'GET':
+        if state['pro']:
+            return 200, {'pro': True, 'unlimited': True, 'left': None, 'limit': None}
+        return 200, {'pro': False, 'unlimited': False, 'left': state.get('ai_free_left', 1), 'limit': 1}
     if p == '/api/ai-chat':
-        return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.'}
+        if not state['pro']:
+            left = state.get('ai_free_left', 1)
+            if left <= 0:
+                return 403, {'error': "You've used today's free question. It comes back tomorrow, or go Pro for unlimited questions.", 'upgrade': True, 'left': 0, 'limit': 1}
+            state['ai_free_left'] = left - 1
+            state.setdefault('ai_posts', []).append(body)
+            return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': left - 1, 'limit': 1}
+        return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': None, 'limit': None}
     if p == '/api/billing/prices' and method == 'GET':
         # the real route reads these from Stripe; the numbers here are only a stand-in
         return 200, {'monthly': {'amount': 24.99, 'currency': 'USD', 'interval': 'month'},
@@ -1142,6 +1153,66 @@ def home_greeting(browser, base):
                 problem(step[0], 'after Skip, the name box came back on the next visit')
         else:
             problem(step[0], 'Skip should leave a plain greeting and remember the choice', {'saved': saved, 'greet': greet(page)[:60]})
+        finish(st, step[0]); ctx.close()
+
+
+def guider_free_question(browser, base):
+    """Free members get one question a day to The Guider; after it, the box says so and offers Pro."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    def open_guider(label, pro, left=1):
+        step = [f'guider free question ({label})']
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(pro); st['ai_free_left'] = left
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(800)
+        page.click('#bottomTabGuider'); page.wait_for_timeout(1000)
+        return step, ctx, st, page
+    got = open_guider('free member, question ready', False)
+    if got:
+        step, ctx, st, page = got
+        if not visible(page, '#aiChatInput', 3000):
+            problem(step[0], 'the Guider tab should open for a free member (it used to be blocked)')
+        else:
+            banner = page.inner_text('#aiChatFree')
+            if 'free question for today is ready' not in banner:
+                problem(step[0], 'the free member should be told their free question is ready', banner[:120])
+            page.fill('#aiChatInput', 'How do I price my first shoot?'); page.click('#aiChatSendBtn'); page.wait_for_timeout(900)
+            sent = st.get('ai_posts', [])
+            msgs = page.inner_text('#aiChatMessages')
+            banner = page.inner_text('#aiChatFree')
+            disabled = page.evaluate("document.getElementById('aiChatSendBtn').disabled")
+            if len(sent) == 1 and 'three packages' in msgs and "used today's free question" in banner and disabled:
+                ok(step[0], 'a free member asks one question, gets the answer, and is then told it comes back tomorrow or with Pro')
+            else:
+                problem(step[0], 'the free question flow is wrong', {'sent': len(sent), 'banner': banner[:100], 'disabled': disabled})
+            page.click('#aiChatUnlock'); page.wait_for_timeout(500)
+            if visible(page, '#upgradeModal', 2000) or page.locator('.modal-plan').count() > 0:
+                ok(step[0], 'the Unlock button opens the Pro window')
+            else:
+                problem(step[0], 'Unlock should open the Pro window')
+        finish(st, step[0]); ctx.close()
+    got = open_guider('free member, already used', False, left=0)
+    if got:
+        step, ctx, st, page = got
+        banner = page.inner_text('#aiChatFree') if page.locator('#aiChatFree').count() else ''
+        disabled = page.evaluate("(()=>{const b=document.getElementById('aiChatSendBtn'); return b ? b.disabled : null})()")
+        if "used today's free question" in banner and disabled:
+            ok(step[0], 'with the free question used, the box is closed until tomorrow')
+        else:
+            problem(step[0], 'a used-up free member should see the closed box', {'banner': banner[:100], 'disabled': disabled})
+        finish(st, step[0]); ctx.close()
+    got = open_guider('Pro member', True)
+    if got:
+        step, ctx, st, page = got
+        if page.locator('#aiChatFree').count() and page.inner_text('#aiChatFree').strip():
+            problem(step[0], 'a Pro member should see no free-question banner', page.inner_text('#aiChatFree')[:80])
+        else:
+            ok(step[0], 'a Pro member sees no limit')
         finish(st, step[0]); ctx.close()
 
 
@@ -2575,6 +2646,7 @@ def main():
         smoother(browser, base)
         quiet_community(browser, base)
         home_greeting(browser, base)
+        guider_free_question(browser, base)
         live_calls(browser, base)
         push_notifications(browser, base)
         client_status(browser, base)
