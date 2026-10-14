@@ -1158,6 +1158,54 @@ def home_greeting(browser, base):
         finish(st, step[0]); ctx.close()
 
 
+def trial_card(browser, base):
+    """Starting Pro on the free trial is remembered; Home then counts down the trial and shows what was done with it."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    # 1) coming back from checkout after choosing the trial
+    step = ['trial card (after checkout)']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(True)
+    attach_backend(ctx, st)
+    ctx.add_init_script(init + "try{localStorage.setItem('guide_trial_pending','4');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/?session_id=cs_test_smoke', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return
+    page.wait_for_timeout(1500)
+    saved = st['data'].get('trial')
+    card = page.inner_text('#trialWrap')
+    if saved and saved.get('startedAt') == TODAY and saved.get('days') == 4 and 'Your Pro trial ends in 4 days' in card and 'Manage subscription' in card:
+        ok(step[0], 'coming back from checkout on the trial saves the start date and Home counts down 4 days')
+    else:
+        problem(step[0], 'the trial should be remembered and counted down', {'saved': saved, 'card': card[:100]})
+    page.click('#trialManageBtn'); page.wait_for_timeout(700)
+    if page.locator('#accManageBillingBtn').count() > 0:
+        ok(step[0], 'Manage subscription opens the account settings')
+    else:
+        problem(step[0], 'Manage subscription should open the account settings')
+    finish(st, step[0]); ctx.close()
+    # 2) a day before the end, and after it
+    for label, days_ago, expect in (('tomorrow', 3, 'ends tomorrow'), ('over', 6, None)):
+        step = [f'trial card ({label})']
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(True)
+        st['data']['trial'] = {'startedAt': time.strftime('%Y-%m-%d', time.gmtime(time.time() - days_ago * 86400)), 'days': 4}
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if visible(page, '#appScreen', 10000):
+            page.wait_for_timeout(900)
+            card = page.inner_text('#trialWrap')
+            if expect and expect in card:
+                ok(step[0], f'the day before the end, Home says the trial {expect}')
+            elif not expect and not card.strip():
+                ok(step[0], 'once the trial is over, the card is gone')
+            else:
+                problem(step[0], 'the trial card is wrong for this day', card[:100])
+        finish(st, step[0]); ctx.close()
+
+
 def chapter_certificate(browser, base):
     """Chapter certificates: every chapter shows the goal ("finish all N lessons and earn the certificate, with your
     name on it") with a preview; a free member's preview carries a PREVIEW mark and an Unlock button that opens the
@@ -2887,6 +2935,7 @@ def main():
         smoother(browser, base)
         quiet_community(browser, base)
         home_greeting(browser, base)
+        trial_card(browser, base)
         chapter_certificate(browser, base)
         pro_peeks(browser, base)
         module_one_moment(browser, base)
