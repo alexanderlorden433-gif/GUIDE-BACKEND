@@ -92,3 +92,18 @@ Things worth remembering:
   asked Alexander which is right before touching ad copy.
 - Max 2 open PRs: extra branches wait as ready branches; `pr_queue.py` (scratchpad) opens the next ones.
   Branches that both add smoke fixtures near `/api/health` or the `main()` order will conflict; merge main in.
+
+## 2026-10-14 — greeting, "why buy Pro" features
+- Prices are $24.99/mo and $149/yr (Alexander confirmed). CLAUDE.md is stale on this; code and ads are right.
+- Pro rule for routes now lives in `src/pro.js` (`isProUser`); use it instead of copying the owner/preview/isPro check.
+- The Guider's free question (`src/routes/aiChat.js`): one a day for free members, counted in `GuiderFreeUse`
+  (created at startup). A free question sends only the last message to the model.
+- Features that each got a branch: Guider free question, locked-lesson/template peeks, "you finished Module 1"
+  card, live-call pull for free members (going count + latest replay), trial countdown card, chapter
+  certificates (`drawCertificate(niche, {preview})`, PREVIEW mark, `#certGoal` row, share sheet).
+- `pickTodayStep` used to fall back to a free lesson from an unchosen chapter, which hid "chapter done" states.
+- Templates had literal `\n` in their text for a long time; the template body is now converted and shown
+  with `white-space:pre-wrap`.
+- `pr_queue.py` (scratchpad) now also merges main into my open PRs when GitHub says they conflict, resolves
+  pure both-sides insertions in `ops/smoke/smoke.py`/`shots.py` by keeping both, re-runs `ops/check.sh`, pushes.
+  Any other conflict stops and is reported. The Pro window's id is `#upgradeOverlay`.
