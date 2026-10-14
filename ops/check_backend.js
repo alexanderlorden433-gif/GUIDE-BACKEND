@@ -70,6 +70,12 @@ try {
 
 Module._load = origLoad;
 
+// 3b. posts, wins and mentor cards are shown to every member: send a name, never the poster's email
+const leaks = ['discussion.js', 'wins.js', 'mentors.js'].filter(f =>
+  /authorEmail\s*:/.test(fs.readFileSync(path.join(ROOT, 'src', 'routes', f), 'utf8')));
+if (leaks.length) bad(`${leaks.join(', ')} send(s) the poster's email to other members — send authorName: publicName(email) instead`);
+else ok("posts, wins and mentor cards send the poster's name, not their email");
+
 // 4. an error inside an async route must give a 500, not stop the server
 async function checkAsyncErrors() {
   const indexSrc = fs.readFileSync(path.join(ROOT, 'src', 'index.js'), 'utf8');

@@ -12192,7 +12192,7 @@ function buildWinCard(w, reload){
   card.className = 'win-card';
   const time = new Date(w.createdAt);
   const ago = timeAgo(time);
-  const displayName = (w.authorEmail || '').split('@')[0] || 'Guide User';
+  const displayName = w.authorName || (w.authorEmail || '').split('@')[0] || 'Guide User';
   const initial = w.authorInitial || displayName[0].toUpperCase();
   // Count reactions by emoji
   const reactions = w.reactions || [];
@@ -16672,7 +16672,7 @@ function buildDiscussionPostCard(niche, post){
   const repliesHtml = post.replies.map(r=>`
     <div class="mentor-card" style="margin:10px 0 0 20px;background:var(--bg);">
       <div class="mentor-card-head">
-        <div class="mentor-card-name" style="font-size:12.5px;">${escapeHtmlMentor(r.authorEmail.split('@')[0])}${r.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
+        <div class="mentor-card-name" style="font-size:12.5px;">${escapeHtmlMentor(r.authorName || (r.authorEmail || '').split('@')[0])}${r.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
         ${r.canDelete ? `<button type="button" class="ai-chat-clear-btn discussion-delete-btn" data-id="${r.id}" style="background:var(--bg);color:var(--ink-soft);border-color:var(--line);">Delete</button>` : ''}
       </div>
       <div class="mentor-card-bio" style="font-size:12.5px;">${escapeHtmlMentor(r.body)}</div>
@@ -16680,7 +16680,7 @@ function buildDiscussionPostCard(niche, post){
   `).join('');
   card.innerHTML = `
     <div class="mentor-card-head">
-      <div class="mentor-card-name">${escapeHtmlMentor(post.authorEmail.split('@')[0])}${post.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
+      <div class="mentor-card-name">${escapeHtmlMentor(post.authorName || (post.authorEmail || '').split('@')[0])}${post.isMine ? ' <span style="color:var(--ink-soft);font-weight:600;">(you)</span>' : ''}</div>
       ${post.canDelete ? `<button type="button" class="ai-chat-clear-btn discussion-delete-btn" data-id="${post.id}" style="background:var(--bg);color:var(--ink-soft);border-color:var(--line);">Delete</button>` : ''}
     </div>
     <div class="mentor-card-bio">${escapeHtmlMentor(post.body)}</div>

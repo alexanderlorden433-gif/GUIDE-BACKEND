@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../db');
+const { publicName } = require('../publicName');
 const { requireAuth } = require('../middleware/auth');
 const { notifyUsers } = require('../notifications');
 
@@ -66,7 +67,7 @@ router.get('/:nicheId', async (req, res) => {
       bio: p.bio,
       lookingFor: p.lookingFor,
       contact: p.contact,
-      authorEmail: p.author.email,
+      authorName: publicName(p.author.email),
       isMine: p.authorId === req.user.id,
     })),
   });
@@ -119,7 +120,7 @@ router.put('/:nicheId', async (req, res) => {
     bio: profile.bio,
     lookingFor: profile.lookingFor,
     contact: profile.contact,
-    authorEmail: req.user.email,
+    authorName: publicName(req.user.email),
     isMine: true,
   });
 });
