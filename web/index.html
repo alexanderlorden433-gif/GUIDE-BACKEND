@@ -4811,6 +4811,15 @@
   @media (prefers-reduced-motion: reduce){ main > div, .guide.open .guide-content{animation:none;} }
 
   /* ---------- Daily step loop: Today's step, the "step done" moment, the chapter path ---------- */
+  /* The greeting at the top of Home: "Good morning, Alexander." and, once, "What should we call you?" */
+  .home-greet{margin:4px 0 16px;}
+  .home-greet h2{margin:0; font:700 26px/1.2 'Space Grotesk',sans-serif; letter-spacing:-.02em; color:var(--ink);}
+  .home-greet p{margin:4px 0 0; font-size:14.5px; color:var(--ink-soft);}
+  .home-greet.ask{padding:16px 16px 14px; border-radius:16px; background:var(--card); border:1px solid rgba(var(--accent-rgb),.3);}
+  .home-greet-form{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; align-items:center;}
+  .home-greet-form input{flex:1 1 160px; min-width:0; font-size:16px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); outline:none;}
+  .home-greet-form input:focus{box-shadow:0 0 0 3px rgba(var(--accent-rgb),.2);}
+  .home-greet-form .biz-primary-btn{width:auto; padding:10px 18px;}
   .today-step{position:relative; background:linear-gradient(160deg, rgba(var(--accent-rgb),.16), rgba(var(--accent-rgb),.03) 62%), var(--card); border:1px solid rgba(var(--accent-rgb),.3); border-radius:20px; padding:18px 18px 16px; margin-bottom:24px; box-shadow:0 10px 36px rgba(var(--accent-rgb),.10); overflow:hidden;}
   .today-step.quiet{background:var(--card); border-color:var(--line); box-shadow:none;}
   .ts-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
@@ -5617,6 +5626,7 @@
 
   <main>
     <div id="homeView">
+      <div id="homeGreetingWrap"></div>
       <div id="todayStepWrap"></div>
       <div id="dailyDigestWrap"></div>
       <div id="liveHomeWrap"></div>
@@ -8213,6 +8223,7 @@ async function loginApp(email, record, userId){
   ensureRecurringExpenses();
   userBadge.textContent = userProfile.displayName ? userProfile.displayName[0].toUpperCase() : email[0].toUpperCase();
   userBadge.title = userProfile.displayName || email;
+  greetFresh = true;
   landingView.style.display = 'none';
   authScreen.style.display = 'none';
   appScreen.style.display = '';
@@ -10204,6 +10215,7 @@ function renderHome(){
     // clutter, no Your/More split, just everything in one place to jump
     // to quickly.
     renderDailyDigest();
+    renderHomeGreeting();
     const liveWrapEl = document.getElementById('liveHomeWrap');
     if(liveWrapEl) liveWrapEl.innerHTML = '';
     continueWrap.innerHTML = '';
@@ -10218,6 +10230,7 @@ function renderHome(){
   }
 
   renderDailyDigest();
+  renderHomeGreeting();
   renderLiveHome();
   // Today's step is the one thing to do next. When it is there, it takes the place of "Continue where you left off".
   const hasStep = renderTodayStep();
@@ -10412,6 +10425,8 @@ function renderAccountModal(){
     note.textContent = 'Profile saved!';
     // Update the topbar badge
     document.getElementById('userBadge').textContent = name ? name[0].toUpperCase() : (currentEmail ? currentEmail[0].toUpperCase() : '?');
+    if(name) userProfile.nameAsked = true;
+    renderHomeGreeting();
     showAppToast('Profile updated', 'success');
     setTimeout(()=>{ note.textContent = ''; }, 2000);
   });
@@ -10823,6 +10838,50 @@ function pickTodayStep(){
 }
 
 /** The card at the top of Home. Returns true when it shows a step to do (it then stands in for "Continue"). */
+// ---------- Greeting on Home ----------
+// "Welcome back, Alexander." the first time Home shows after logging in, then "Good morning, Alexander."
+// Someone with no name yet is asked once, right on Home, what we should call them.
+let greetFresh = false;
+function greetingWord(){
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+function firstName(){
+  return String(userProfile.displayName || '').trim().split(/\s+/)[0] || '';
+}
+function renderHomeGreeting(){
+  const wrap = document.getElementById('homeGreetingWrap');
+  if(!wrap) return;
+  if(homeViewMode === 'chapters'){ wrap.innerHTML = ''; return; }
+  const name = firstName();
+  if(!name && !userProfile.nameAsked){
+    wrap.innerHTML = `<section class="home-greet ask"><h2>Welcome to The Guide.</h2><p>What should we call you?</p>
+      <form class="home-greet-form" id="greetForm"><input type="text" id="greetName" maxlength="40" placeholder="Your first name" autocomplete="given-name" aria-label="Your first name"><button type="submit" class="biz-primary-btn">Save</button><button type="button" class="tr-act" id="greetSkip">Skip</button></form></section>`;
+    document.getElementById('greetForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const v = document.getElementById('greetName').value.trim().slice(0, 40);
+      if(!v){ document.getElementById('greetName').focus(); return; }
+      userProfile.displayName = v; userProfile.nameAsked = true;
+      saveProgress();
+      userBadge.textContent = v[0].toUpperCase(); userBadge.title = v;
+      greetFresh = true;
+      renderHomeGreeting();
+    });
+    document.getElementById('greetSkip').addEventListener('click', ()=>{
+      userProfile.nameAsked = true; saveProgress(); renderHomeGreeting();
+    });
+    return;
+  }
+  const today = todayStr();
+  const alive = streak.count > 0 && (streak.lastDate === today || streak.lastDate === dateMinusDays(today, 1));
+  const sub = alive && streak.count > 1 ? `Day ${streak.count} of your streak.`
+    : completed.size === 0 ? "Let's get step one done." : 'Pick up where you left off.';
+  const who = name ? ', ' + escapeHtml(name) : '';
+  const head = greetFresh ? (hasSeenWelcome ? `Welcome back${who}.` : `Welcome${who}.`) : `${greetingWord()}${who}.`;
+  wrap.innerHTML = `<section class="home-greet"><h2>${head}</h2><p>${sub}</p></section>`;
+  greetFresh = false;
+}
+
 function renderTodayStep(clearOnly){
   const wrap = document.getElementById('todayStepWrap');
   if(!wrap) return false;

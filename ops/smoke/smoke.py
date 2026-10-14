@@ -1081,6 +1081,70 @@ def client_status(browser, base):
     ctx.close()
 
 
+def home_greeting(browser, base):
+    """Home greets people by name: "Welcome back, Alexander." after logging in, then "Good morning, Alexander.";
+    someone with no name yet is asked once what to call them."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    def open_home(label, profile):
+        step = [f'home greeting ({label})']
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(True)
+        st['data']['userProfile'] = profile
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(900)
+        return step, ctx, st, page
+    greet = lambda page: page.inner_text('#homeGreetingWrap')
+    # 1) a member with a name
+    got = open_home('with a name', {'displayName': 'Alexander Lorden', 'bio': ''})
+    if got:
+        step, ctx, st, page = got
+        first = greet(page)
+        page.evaluate("showHome()"); page.wait_for_timeout(300)
+        later = greet(page)
+        if first.startswith('Welcome back, Alexander.') and re.match(r'^Good (morning|afternoon|evening), Alexander\.', later):
+            ok(step[0], 'Home says "Welcome back, Alexander." after logging in, then "Good morning, Alexander."')
+        else:
+            problem(step[0], 'the greeting should use the first name', {'first': first[:60], 'later': later[:60]})
+        if 'Day 3 of your streak' not in later:
+            problem(step[0], 'the greeting should mention the streak', later[:80])
+        finish(st, step[0]); ctx.close()
+    # 2) no name yet: asked once, right on Home
+    got = open_home('no name yet', {'displayName': '', 'bio': ''})
+    if got:
+        step, ctx, st, page = got
+        if not visible(page, '#greetName', 3000):
+            problem(step[0], 'a member with no name should be asked what to call them', greet(page)[:80])
+        else:
+            page.fill('#greetName', 'Alexander'); page.keyboard.press('Enter'); page.wait_for_timeout(700)
+            saved = st['data'].get('userProfile') or {}
+            badge = page.inner_text('#userBadge').strip()
+            if saved.get('displayName') == 'Alexander' and saved.get('nameAsked') is True and re.match(r'^Welcome( back)?, Alexander\.', greet(page)) and badge == 'A':
+                ok(step[0], 'saving the name greets them by it, saves it to the account, and updates the letter badge')
+            else:
+                problem(step[0], 'saving the name did not go through', {'saved': saved, 'greet': greet(page)[:60], 'badge': badge})
+        finish(st, step[0]); ctx.close()
+    # 3) skip: not asked again
+    got = open_home('skip', {'displayName': '', 'bio': ''})
+    if got:
+        step, ctx, st, page = got
+        page.click('#greetSkip'); page.wait_for_timeout(600)
+        saved = st['data'].get('userProfile') or {}
+        if saved.get('nameAsked') is True and page.locator('#greetName').count() == 0 and re.match(r'^(Welcome( back)?|Good (morning|afternoon|evening))\.', greet(page)):
+            page.reload(wait_until='load'); page.wait_for_timeout(1200)
+            if page.locator('#greetName').count() == 0:
+                ok(step[0], 'Skip remembers the choice: a plain greeting, and no asking again next time')
+            else:
+                problem(step[0], 'after Skip, the name box came back on the next visit')
+        else:
+            problem(step[0], 'Skip should leave a plain greeting and remember the choice', {'saved': saved, 'greet': greet(page)[:60]})
+        finish(st, step[0]); ctx.close()
+
+
 def live_iso_in(minutes):
     return time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(time.time() + minutes * 60))
 
@@ -2510,6 +2574,7 @@ def main():
         new_chapters(browser, base)
         smoother(browser, base)
         quiet_community(browser, base)
+        home_greeting(browser, base)
         live_calls(browser, base)
         push_notifications(browser, base)
         client_status(browser, base)
