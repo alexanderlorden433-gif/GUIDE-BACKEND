@@ -125,6 +125,7 @@ app.listen(PORT, () => {
   ensureAnalyticsTables().then(ok => { if (ok) pruneOldEvents(); });
   ensureMetaTable();
   ensureLiveTables();
+  aiChatRoutes.ensureGuiderTable();
   ensurePushTable();
   clientStatusRoutes.ensureClientStatusTable();
   scheduleLiveReminders(); // does nothing until the tables exist

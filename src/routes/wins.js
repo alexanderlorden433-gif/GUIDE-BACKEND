@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../db');
+const { publicName } = require('../publicName');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -33,7 +34,7 @@ router.get('/', async (req, res) => {
       body: w.body,
       emoji: w.emoji,
       authorId: w.authorId,
-      authorEmail: w.author.email,
+      authorName: publicName(w.author.email),
       authorInitial: w.author.email.charAt(0).toUpperCase(),
       createdAt: w.createdAt,
       reactions: w.reactions,
@@ -69,7 +70,7 @@ router.post('/', async (req, res) => {
       body: win.body,
       emoji: win.emoji,
       authorId: win.authorId,
-      authorEmail: win.author.email,
+      authorName: publicName(win.author.email),
       authorInitial: win.author.email.charAt(0).toUpperCase(),
       createdAt: win.createdAt,
       reactions: [],
