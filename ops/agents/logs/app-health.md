@@ -52,3 +52,16 @@
 - Step 5 area: src/routes/aiChat.js → 2 hardening items queued (details in private report 2026-10-13). Next PR when a slot frees.
 - Still open: delete account vs Stripe subscription (asked Alexander 10-06); terms.html old prices (asked 10-06); /client-status build vs hide.
 - Next step-5 area: src/routes/discussion.js + mentors.js input validation.
+
+## 2026-10-14 (Wed)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway status on main 0409ab8 = success (only Railway reports on main; Netlify reports on PRs).
+- Since last notes: #21, #22 MERGED. Claude agent merged #23–#34 incl. #32 client-status routes (so /client-status is now built — question closed).
+- check.sh on main: ALL PASS (backend, lint, API paths, smoke 0 problems).
+- Opened PR #35 agent/app-health/2026-10-14-big-saves: global express.json limit 16kb cut off PUT /api/account (whole progress blob; route allows 512KB) and POST /api/ai-chat (20-msg history) → saves silently fail / Guider stops answering for active learners. Verified: 756 completed keys = 37KB → 413 on main. New src/bodyParsers.js (account 600kb, ai-chat 200kb, rest 16kb); Guider messages trimmed to 8000 chars. check_backend step 5.
+- Opened PR #36 agent/app-health/2026-10-14-community-names: discussion/wins/mentors now send authorName instead of the full poster email (privacy; details in private report). Frontend falls back to authorEmail. Smoke step community_names (fails on main) — first test with posts in the discussion board. Backend check 3b.
+- #35 and #36 merge together cleanly (tested locally; both touch ops/check_backend.js).
+- Step 5 area: discussion.js + mentors.js. Also: nicheId isn't validated (posts can go to made-up chapters, low); /mentors/all/search q has no length cap (low). aiChat rate limit is per IP, not per account — still queued.
+- Gap noted: saveProgress() swallows errors — user never told when saving fails. Candidate small PR (a quiet "couldn't save" toast).
+- src/index-15.html is an unused old copy of the app (ask before deleting).
+- Still open: delete account vs Stripe subscription (asked 10-06); terms.html old prices (asked 10-06).
+- Next step-5 area: src/routes/live.js + push.js (new features from #27/#33).
