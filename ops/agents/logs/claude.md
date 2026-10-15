@@ -123,3 +123,11 @@ Things worth remembering:
 - Outreach runs from this session: scratchpad `outreach/` (targets, batches, sent_log) and daily `send_later`
   turns; Gmail connector on theguidesupport@gmail.com, label "Guide Outreach". Each turn has a 200-web-search
   budget, so research runs one category per turn.
+
+## 2026-10-15 design polish (PR #49)
+- Design system lives in the last block of the `<style>` in web/index.html ("Design system (October 2026 polish pass)"): Inter only, solid accent, `--sp-1..8` spacing, 44px buttons, dividers over boxes.
+- Icons: `ico(name)` in templates, `<i data-ico="name"></i>` anywhere (a MutationObserver fills them in). Icons have pointer-events:none so delegated click handlers still see the button as e.target.
+- Inside the gv- lesson player a local `ico` variable shadows the helper: use `<i data-ico>` strings there.
+- Lesson video stickers (GV_STK) still use emoji on purpose (video content, also used by social/render.py).
+- Left GuideMeta / GuideAnalytics blocks untouched (privacy dialog close button is still a text ✕).
+- PR #45 (partner codes) has a one-hunk CSS conflict with #49 near `.acct-hint`: keep both sides.
