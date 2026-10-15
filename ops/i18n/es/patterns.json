@@ -524,7 +524,19 @@
   "$$1 por página"
  ],
  [
-  "^Your AI hour: (\\d+) minutes left\\. Writes are free until then\\.$",
-  "Tu hora de IA: quedan $1 minutos. Hasta entonces, escribir es gratis."
+  "^Your AI hour: (\\d+) free writes and (\\d+) minutes left\\.$",
+  "Tu hora de IA: te quedan $1 escrituras gratis y $2 minutos."
+ ],
+ [
+  "^Your AI hour: 1 free write and (\\d+) minutes left\\.$",
+  "Tu hora de IA: te queda 1 escritura gratis y $1 minutos."
+ ],
+ [
+  "^Your AI hour: (\\d+) free writes and 1 minute left\\.$",
+  "Tu hora de IA: te quedan $1 escrituras gratis y 1 minuto."
+ ],
+ [
+  "^Your plan includes 1 hour of AI writing every day \\(up to (\\d+) writes\\)\\. It starts with your first write\\.$",
+  "Tu plan incluye 1 hora de escritura con IA cada día (hasta $1 escrituras). Empieza con tu primera escritura."
  ]
 ]

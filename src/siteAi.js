@@ -195,7 +195,8 @@ async function writePage({ userId, mode, description, draft, chapter, lang, tz }
   if (!result || !result.ok) {
     console.error('[site-ai] could not write the page:', result && result.status, result && result.error);
     await giveBack(userId).catch(err => console.error('[site-ai] could not give the write back:', err.message));
-    if (spent.bucket !== 'hour') await credits.refundCredit(userId, spent.bucket).catch(err => console.error('[site-ai] could not give the credit back:', err.message));
+    if (spent.bucket === 'hour') await credits.giveBackHourWrite(userId, tz).catch(err => console.error('[site-ai] could not give the hour write back:', err.message));
+    else await credits.refundCredit(userId, spent.bucket).catch(err => console.error('[site-ai] could not give the credit back:', err.message));
     const msg = result && result.error === 'timeout' ? 'That took too long. Please try again.' : 'The page writer could not finish just now. Please try again.';
     return { status: 502, body: { error: msg, credits: await credits.getCredits(userId).catch(() => undefined), hour: await credits.hourState(userId, tz).catch(() => undefined) } };
   }

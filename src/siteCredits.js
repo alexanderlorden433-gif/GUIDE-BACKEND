@@ -9,9 +9,9 @@
 // Buying credits is separate from Pro: it never makes anyone Pro, and putting a page live still needs Pro.
 //
 // Pro members (and members from the old Lifetime plan, for good) also get one hour of AI writing a day without
-// using credits. The hour starts with their first write of the day (their own day, from the time zone the app
-// sends) and lasts 60 minutes; after it, credits work as usual. The per-member cap of writes a day in
-// src/siteAi.js still applies inside the hour.
+// using credits: up to 10 writes, within 60 minutes of their first write of the day (their own day, from the time
+// zone the app sends). After either runs out, credits work as usual. The 10 keeps a heavy day well under what a
+// month of Pro brings in; the per-member cap of writes a day in src/siteAi.js still applies on top.
 //
 // The tables are created in src/sites.js (SiteAiCredit, SiteAiCreditLog, SiteAiHour).
 const crypto = require('crypto');
@@ -108,6 +108,7 @@ async function grantFromCheckout(session) {
 
 // ---------------------------------------------------------------- Pro's daily AI hour
 const HOUR_MINUTES = 60;
+const HOUR_WRITES = 10;
 const DEFAULT_TZ = 'America/New_York';
 
 /** A time zone name the app sent, if it's a real one. */
@@ -129,28 +130,43 @@ async function hasDailyHour(userId) {
 }
 
 /**
- * Where today's hour stands: {included: false} for members without one, otherwise
- * {included: true, state: 'ready' | 'active' | 'used', minutesLeft, secondsLeft}.
- * Times are worked out in the database, so the server's and the database's clocks can't disagree.
+ * Where today's hour stands: {included: false} for members without one, otherwise {included: true, minutes,
+ * writes, state: 'ready' | 'active' | 'used', minutesLeft, secondsLeft, writesLeft}. 'used' means the time or
+ * the writes ran out. Times are worked out in the database, so the server's and the database's clocks agree.
  */
 async function hourState(userId, tz, included) {
   if (included === undefined) included = await hasDailyHour(userId);
-  if (!included) return { included: false, minutes: HOUR_MINUTES };
+  const base = { included: !!included, minutes: HOUR_MINUTES, writes: HOUR_WRITES };
+  if (!included) return base;
   const rows = await prisma.$queryRawUnsafe(
-    `SELECT GREATEST(0, EXTRACT(EPOCH FROM ("startedAt" + make_interval(mins => $3::int) - CURRENT_TIMESTAMP)))::int AS "secondsLeft"
+    `SELECT GREATEST(0, EXTRACT(EPOCH FROM ("startedAt" + make_interval(mins => $3::int) - CURRENT_TIMESTAMP)))::int AS "secondsLeft", "writes"
        FROM "SiteAiHour" WHERE "userId" = $1::text AND "day" = $2::text`, userId, localDay(tz), HOUR_MINUTES);
-  if (!rows[0]) return { included: true, minutes: HOUR_MINUTES, state: 'ready' };
-  const secondsLeft = rows[0].secondsLeft;
-  if (secondsLeft > 0) return { included: true, minutes: HOUR_MINUTES, state: 'active', secondsLeft, minutesLeft: Math.ceil(secondsLeft / 60) };
-  return { included: true, minutes: HOUR_MINUTES, state: 'used' };
+  if (!rows[0]) return Object.assign(base, { state: 'ready', writesLeft: HOUR_WRITES });
+  const secondsLeft = rows[0].secondsLeft, writesLeft = Math.max(0, HOUR_WRITES - rows[0].writes);
+  if (secondsLeft > 0 && writesLeft > 0) return Object.assign(base, { state: 'active', secondsLeft, minutesLeft: Math.ceil(secondsLeft / 60), writesLeft });
+  return Object.assign(base, { state: 'used', writesLeft });
 }
 
-/** For a write: starts today's hour if it hasn't started. True when the hour is running, so the write is free. */
+/**
+ * For a write: starts today's hour if it hasn't started, and takes one of its writes if there's time and a write
+ * left (in one statement, so taps at once can't go past 10). True when this write is covered by the hour.
+ */
 async function useDailyHour(userId, tz) {
   if (!(await hasDailyHour(userId))) return false;
+  const day = localDay(tz);
   await prisma.$executeRawUnsafe(
-    `INSERT INTO "SiteAiHour" ("userId", "day") VALUES ($1::text, $2::text) ON CONFLICT ("userId", "day") DO NOTHING`, userId, localDay(tz));
-  return (await hourState(userId, tz, true)).state === 'active';
+    `INSERT INTO "SiteAiHour" ("userId", "day") VALUES ($1::text, $2::text) ON CONFLICT ("userId", "day") DO NOTHING`, userId, day);
+  const rows = await prisma.$queryRawUnsafe(
+    `UPDATE "SiteAiHour" SET "writes" = "writes" + 1
+      WHERE "userId" = $1::text AND "day" = $2::text AND "writes" < $3::int
+        AND "startedAt" + make_interval(mins => $4::int) > CURRENT_TIMESTAMP
+      RETURNING "writes"`, userId, day, HOUR_WRITES, HOUR_MINUTES);
+  return !!rows[0];
+}
+/** Gives an hour write back after a write that failed. */
+async function giveBackHourWrite(userId, tz) {
+  await prisma.$executeRawUnsafe(
+    `UPDATE "SiteAiHour" SET "writes" = GREATEST("writes" - 1, 0) WHERE "userId" = $1::text AND "day" = $2::text`, userId, localDay(tz));
 }
 
 /** The packs as the app shows them. */
@@ -159,4 +175,4 @@ function packsForApp() {
 }
 
 module.exports = { WELCOME, PACKS, packById, packsForApp, getCredits, spendCredit, refundCredit, logUse, grantFromCheckout, FREE_DAILY_TOTAL,
-  HOUR_MINUTES, cleanTz, localDay, hasDailyHour, hourState, useDailyHour };
+  HOUR_MINUTES, HOUR_WRITES, cleanTz, localDay, hasDailyHour, hourState, useDailyHour, giveBackHourWrite };

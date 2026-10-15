@@ -89,7 +89,7 @@ SITE_PACKS = [{'id': 'small', 'credits': 5, 'price': 4.99, 'each': 1.0}, {'id': 
 def site_ai_state(state):
     """The fake member's AI credits (like GET /api/sites/mine → ai.credits): 2 free to start; Pro's daily hour."""
     ai = state.setdefault('site_ai', {'ready': True, 'free': 2, 'paid': 0})
-    ai.setdefault('hour', {'included': bool(state['pro']), 'state': 'ready', 'minutes': 60})
+    ai.setdefault('hour', {'included': bool(state['pro']), 'state': 'ready', 'minutes': 60, 'writes': 10, 'writesLeft': 10})
     return ai
 
 
@@ -279,7 +279,8 @@ def fixture(state, method, path, body):
         d = b.get('draft') or {}
         hour = ai['hour']
         if hour.get('included') and hour.get('state') != 'used':
-            ai['hour'] = {**hour, 'state': 'active', 'secondsLeft': hour.get('secondsLeft', 3600), 'minutesLeft': 60}
+            left = hour.get('writesLeft', 10) - 1
+            ai['hour'] = {**hour, 'state': 'active' if left > 0 else 'used', 'secondsLeft': hour.get('secondsLeft', 3600), 'minutesLeft': 60, 'writesLeft': left}
             paid_with = 'hour'
         elif ai['free'] + ai['paid'] <= 0:
             return 402, {'error': "You've used today's AI hour. It comes back tomorrow, or pick a pack to keep writing now." if hour.get('included') else "You're out of AI credits. Pick a pack to keep writing.",
@@ -4111,7 +4112,7 @@ def website_ai(browser, base):
         step, ctx, st, page = got
         card = page.inner_text('#siteAi')
         if ('Let AI improve your page' in card and page.locator('#saBetter').count() and page.locator('#saDesc').count() == 0
-                and 'includes 1 hour of AI writing every day' in card and 'You have 12' not in card and not page.locator('#saBuy').count()):
+                and 'includes 1 hour of AI writing every day (up to 10 writes)' in card and 'You have 12' not in card and not page.locator('#saBuy').count()):
             ok(step[0], 'a Pro page with content offers Make it better, and says Pro includes an hour of AI writing a day')
         else:
             problem(step[0], 'a filled Pro page should offer Make it better and the daily hour', card[:300])
@@ -4120,7 +4121,7 @@ def website_ai(browser, base):
         saves = len(st.get('site_saves') or [])
         card = page.inner_text('#siteAi')
         hour_line = page.inner_text('#saHour') if page.locator('#saHour').count() else ''
-        if st.get('site_ai_paid_with') == ['hour'] and 'Your AI hour: 60 minutes left' in hour_line and post.get('tz'):
+        if st.get('site_ai_paid_with') == ['hour'] and 'Your AI hour: 9 free writes and 60 minutes left' in hour_line and post.get('tz'):
             ok(step[0], "the write starts the Pro member's hour: free, with the minutes left (credits untouched)")
         else:
             problem(step[0], 'a Pro write should use the daily hour', {'paid_with': st.get('site_ai_paid_with'), 'hour': hour_line, 'tz': post.get('tz')})

@@ -1327,9 +1327,8 @@
  "Pick a pack.": "Elige un paquete.",
  "That checkout link looks wrong.": "Ese enlace de pago no parece correcto.",
  "Checkout not found.": "No encontramos ese pago.",
- "Your AI hour: 1 minute left. Writes are free until then.": "Tu hora de IA: queda 1 minuto. Hasta entonces, escribir es gratis.",
  "You've used today's AI hour. It comes back tomorrow; credits work anytime.": "Ya usaste tu hora de IA de hoy. Vuelve mañana; los créditos funcionan siempre.",
- "Your plan includes 1 hour of AI writing every day. It starts with your first write.": "Tu plan incluye 1 hora de escritura con IA cada día. Empieza con tu primera escritura.",
  "You've used today's AI hour. It comes back tomorrow, or pick a pack to keep writing now.": "Ya usaste tu hora de IA de hoy. Vuelve mañana, o elige un paquete para seguir escribiendo ahora.",
- "One-time payment through Stripe. Credits never expire, and a write that fails gives its credit back. Pro includes 1 hour of AI writing every day, and putting your page live.": "Pago único a través de Stripe. Los créditos no vencen, y si una escritura falla te devolvemos el crédito. Pro incluye 1 hora de escritura con IA cada día y publicar tu página."
+ "One-time payment through Stripe. Credits never expire, and a write that fails gives its credit back. Pro includes 1 hour of AI writing every day, and putting your page live.": "Pago único a través de Stripe. Los créditos no vencen, y si una escritura falla te devolvemos el crédito. Pro incluye 1 hora de escritura con IA cada día y publicar tu página.",
+ "Your AI hour: 1 free write and 1 minute left.": "Tu hora de IA: te queda 1 escritura gratis y 1 minuto."
 }

@@ -498,12 +498,13 @@ model SiteAiCreditLog {
   @@index([kind, createdAt])
 }
 
-// When a Pro member's daily AI hour started (src/siteCredits.js): one row per member per day (their time zone).
+// When a Pro member's daily AI hour started and how many of its 10 writes they used (src/siteCredits.js).
 model SiteAiHour {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   day       String
   startedAt DateTime @default(now())
+  writes    Int      @default(0)
 
   @@id([userId, day])
 }

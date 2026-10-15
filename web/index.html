@@ -18268,11 +18268,11 @@ function siteSetHour(h){
 function siteHourLine(h){
   if(!h || !h.included) return '';
   if(h.state === 'active'){
-    const m = Math.max(1, Math.ceil(((h.until || Date.now()) - Date.now()) / 60000));
-    return m === 1 ? 'Your AI hour: 1 minute left. Writes are free until then.' : `Your AI hour: ${m} minutes left. Writes are free until then.`;
+    const m = Math.max(1, Math.ceil(((h.until || Date.now()) - Date.now()) / 60000)), w = h.writesLeft == null ? h.writes || 10 : h.writesLeft;
+    return `Your AI hour: ${w === 1 ? '1 free write' : w + ' free writes'} and ${m === 1 ? '1 minute' : m + ' minutes'} left.`;
   }
   if(h.state === 'used') return "You've used today's AI hour. It comes back tomorrow; credits work anytime.";
-  return 'Your plan includes 1 hour of AI writing every day. It starts with your first write.';
+  return `Your plan includes 1 hour of AI writing every day (up to ${h.writes || 10} writes). It starts with your first write.`;
 }
 /** Every 20 seconds while the hour runs: update the minutes, and when it ends, redraw (credits take over). */
 function siteHourTick(){
