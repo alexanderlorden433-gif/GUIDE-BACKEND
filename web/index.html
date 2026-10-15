@@ -8014,7 +8014,11 @@ function setAuthMode(mode){
   authCardReset.style.display = 'none';
   if(mode==='signup'){
     authTitle.textContent = "Create your account";
-    authSubmitBtn.textContent = "Sign up & start learning";
+    const sub = document.querySelector('#authCardStep1 .auth-sub');
+    if(sub) sub.textContent = pendingReferralCode
+      ? "A friend sent you. Your account starts with 7 free days of Pro: every lesson, the templates and the AI mentor."
+      : "Your progress saves automatically once you're in — no more losing your place.";
+    authSubmitBtn.textContent = pendingReferralCode ? "Sign up & start my free week" : "Sign up & start learning";
     authSwitchText.innerHTML = 'Already have an account? <button type="button" id="authToggleBtn2">Log in</button>';
     forgotWrap.style.display = 'none';
   } else {
@@ -12273,8 +12277,8 @@ async function renderEarnInvite(){
   content.innerHTML = `
     <div class="referral-hero">
       <div class="referral-hero-icon">🎁</div>
-      <h3>Give Pro, Get Pro</h3>
-      <p>Every friend who goes Pro earns you 10 days of free Pro access. No limit.</p>
+      <h3>Give a week of Pro, get 10 days</h3>
+      <p>Anyone who joins with your link starts with 7 free days of Pro. When they go Pro, you get 10 days free. No limit.</p>
       <div class="referral-link-box">
         <input type="text" id="earnInviteLinkInput" readonly value="${escapeHtmlMentor(link)}">
         <button type="button" id="earnInviteCopyBtn">Copy link</button>

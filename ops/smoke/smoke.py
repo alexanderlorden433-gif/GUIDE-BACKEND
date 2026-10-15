@@ -96,6 +96,8 @@ def fixture(state, method, path, body):
             state['data'] = body['data']
         return 200, {'message': 'Saved.'}
     if p in ('/api/auth/login', '/api/auth/signup'):
+        if p.endswith('signup'):
+            state.setdefault('signups', []).append(body or {})
         return 200, {'token': 'smoke-token', 'user': {'id': 'u_smoke', 'email': (body or {}).get('email', 'smoke@theguide.test')}}
     if p == '/api/notifications':
         return 200, {'items': [{'id': 'n1', 'type': 'system', 'title': 'Welcome to The Guide', 'body': 'Pick a chapter to start.', 'link': None, 'read': False, 'createdAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(time.time() - 2 * 3600))}], 'unreadCount': 1}
@@ -1468,6 +1470,44 @@ def guider_free_question(browser, base):
         else:
             ok(step[0], 'a Pro member sees no limit')
         finish(st, step[0]); ctx.close()
+
+
+def invite_week(browser, base):
+    """A friend's invite link: the signup screen says the new account starts with a free week of Pro, and the
+    friend's code is sent with the signup. The Earn tab explains the deal the same way."""
+    step = ['invite link: free week']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False)
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/?ref=ABC2345', wait_until='load')
+    if not visible(page, '#landingSignupBtn', 10000):
+        problem(step[0], 'landing page did not open'); finish(st, step[0]); ctx.close(); return
+    page.click('#landingSignupBtn'); page.wait_for_timeout(400)
+    sub = page.inner_text('#authCardStep1 .auth-sub'); btn = page.inner_text('#authSubmitBtn')
+    if '7 free days of Pro' in sub and 'free week' in btn:
+        ok(step[0], 'with a friend\'s link, the signup screen says the account starts with 7 free days of Pro')
+    else:
+        problem(step[0], 'the signup screen should mention the free week from the friend\'s link', {'sub': sub[:90], 'btn': btn})
+    page.fill('#authEmail', 'new@theguide.test'); page.fill('#authPassword', 'password123'); page.evaluate("document.getElementById('authSubmitBtn').click()")
+    if not visible(page, '#authCardIntro', 10000):
+        problem(step[0], 'signup did not reach the welcome step'); finish(st, step[0]); ctx.close(); return
+    page.evaluate("document.getElementById('introSkipBtn').click()")
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'the app did not open after the welcome step'); finish(st, step[0]); ctx.close(); return
+    sent = (st.get('signups') or [{}])[-1]
+    if sent.get('referralCode') == 'ABC2345':
+        ok(step[0], 'the friend\'s code goes to the server with the signup')
+    else:
+        problem(step[0], 'the referral code from the link was not sent with the signup', sent)
+    page.evaluate("showEarnTab('referrals')"); page.wait_for_timeout(800)
+    txt = page.inner_text('#earnInviteContent') if page.locator('#earnInviteContent').count() else ''
+    if '7 free days' in txt and '10 days' in txt:
+        ok(step[0], 'the Earn tab explains: your friend gets a week of Pro, you get 10 days when they go Pro')
+    else:
+        problem(step[0], 'the Earn tab should explain the give-a-week deal', txt[:120])
+    finish(st, step[0]); ctx.close()
 
 
 def live_iso_in(minutes):
@@ -2954,6 +2994,7 @@ def main():
         home_greeting(browser, base)
         trial_card(browser, base)
         chapter_certificate(browser, base)
+        invite_week(browser, base)
         pro_peeks(browser, base)
         module_one_moment(browser, base)
         guider_free_question(browser, base)

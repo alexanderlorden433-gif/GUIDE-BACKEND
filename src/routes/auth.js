@@ -77,12 +77,17 @@ router.post('/signup', signupLimiter, async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const myReferralCode = await makeUniqueReferralCode();
+    // A friend's link gives the new member a week of Pro on day one (the same expiring
+    // bonus-days grant referrals and partner codes use). The friend still gets their
+    // 10 days only if this person goes Pro, so nobody earns anything from fake signups.
+    const bonusProUntil = referrerId ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : undefined;
     const user = await prisma.user.create({
       data: {
         email,
         passwordHash,
         referralCode: myReferralCode,
         referredByCode,
+        bonusProUntil,
         dataBlob: {
           completed: [],
           tools: {},
@@ -99,7 +104,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
       notifyUser(referrerId, {
         type: 'referral_signup',
         title: 'Someone joined using your invite link',
-        body: 'You\'ll get 10 days of free Pro automatically if they go Pro.',
+        body: 'They got a free week of Pro from you. You get 10 days of free Pro if they go Pro.',
         link: { view: 'invite' },
       }).catch(() => {});
     }
