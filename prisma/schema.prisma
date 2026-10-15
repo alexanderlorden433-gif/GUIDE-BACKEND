@@ -183,6 +183,7 @@ model Win {
   body      String
   emoji     String   @default("🎉")
   reactions WinReaction[]
+  publicOffer WinPublic?
   createdAt DateTime @default(now())
 
   @@index([createdAt])
@@ -408,3 +409,15 @@ model Lead {
   unsubscribedAt DateTime?
   createdAt      DateTime  @default(now())
 }
+
+// Wins a member offered for the public landing page (src/routes/publicWins.js). Shown only once
+// the owner approves. Created at startup with CREATE TABLE IF NOT EXISTS; declared here so the schema matches.
+model WinPublic {
+  winId      String    @id
+  status     String    @default("waiting")
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+  win        Win       @relation(fields: [winId], references: [id], onDelete: Cascade)
+  @@index([status])
+}
+

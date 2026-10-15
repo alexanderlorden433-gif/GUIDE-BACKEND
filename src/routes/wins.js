@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const prisma = require('../db');
 const { publicName } = require('../publicName');
 const { requireAuth } = require('../middleware/auth');
+const { offerWin } = require('./publicWins');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -65,7 +66,14 @@ router.post('/', async (req, res) => {
       },
     });
 
+    // "Show this on the website": it waits for the owner's OK before it appears on the landing page
+    let onSite = null;
+    if (req.body.showOnSite === true) {
+      try { onSite = (await offerWin(win.id)) ? 'waiting' : null; } catch (e) { console.error('Offer win to site failed:', e.message); }
+    }
+
     res.status(201).json({
+      onSite,
       id: win.id,
       body: win.body,
       emoji: win.emoji,

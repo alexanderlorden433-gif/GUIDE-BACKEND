@@ -118,7 +118,9 @@ def fixture(state, method, path, body):
         w = {'id': 'w_new', 'body': text, 'emoji': (body or {}).get('emoji') or '🎉', 'authorId': 'u_smoke', 'authorName': 'smoke',
              'authorInitial': 'S', 'createdAt': TODAY, 'reactions': []}
         state.setdefault('wins', []).insert(0, w); state.setdefault('win_posts', []).append(body)
-        return 201, w
+        return 201, dict(w, onSite='waiting' if (body or {}).get('showOnSite') is True else None)
+    if p == '/api/public-wins' and method == 'GET':
+        return 200, {'wins': state.get('public_wins', [])}
     if re.match(r'^/api/wins/[^/]+/react$', p) and method == 'POST':
         emoji = (body or {}).get('emoji')
         if emoji not in ('🔥', '👏', '💪', '❤️'):
@@ -3172,6 +3174,59 @@ def design_polish(browser, base):
         ctx.close(); ctx2.close()
 
 
+def landing_trust(browser, base):
+    """Trust on the landing page: member wins appear only when at least three are approved; the 7-day
+    money-back guarantee shows on the Pro card, in the FAQ and in the Pro box; members can offer a win."""
+    step = ['landing trust']
+    three = [{'id': f'p{i}', 'body': b, 'name': n, 'createdAt': '2026-10-1%dT12:00:00Z' % i}
+             for i, (b, n) in enumerate([('Booked my first paid shoot', 'maya'), ('Sent my first invoice', 'dev'), ('Three lawns on my weekly route', 'sam')], 1)]
+    for count in (2, 3):
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(False); st['public_wins'] = three[:count]; attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load'); page.wait_for_timeout(1200)
+        r = page.evaluate("({ shown: !document.getElementById('lpWins').hidden, items: document.querySelectorAll('#lpWinsList li').length, text: document.getElementById('lpWinsList').innerText })")
+        if count == 2 and not r['shown']:
+            ok(step[0], 'with fewer than three approved wins, the section stays hidden')
+        elif count == 3 and r['shown'] and r['items'] == 3 and 'maya' in r['text'] and '@' not in r['text']:
+            ok(step[0], 'three approved wins show on the landing page with member names, no emails')
+            g = page.evaluate("({ card: (document.querySelector('.lp-plan.pro .lp-guarantee')||{}).textContent || '', faq: [...document.querySelectorAll('.lp-faq summary')].some(x => /isn't for me/.test(x.textContent)) })")
+            if '7-day money-back guarantee' in g['card'] and g['faq']:
+                ok(step[0], 'the Pro card and the FAQ show the 7-day money-back guarantee')
+            else:
+                problem(step[0], 'the guarantee is missing from the Pro card or FAQ', g)
+        else:
+            problem(step[0], f'member wins section wrong with {count} approved wins', r)
+        ctx.close()
+    # signed in: the Pro box shows the guarantee, and a win can be offered for the website
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False); attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load'); page.wait_for_timeout(1500)
+    page.evaluate('openUpgradeModal()'); page.wait_for_timeout(500)
+    gm = page.evaluate("(document.querySelector('#upgradeOverlay .modal-guarantee')||{}).textContent || ''")
+    if '7-day money-back guarantee' in gm and '7 days of your first payment' in gm:
+        ok(step[0], 'the Pro box shows the 7-day money-back guarantee')
+    else:
+        problem(step[0], 'the Pro box is missing the guarantee', gm)
+    page.keyboard.press('Escape'); page.wait_for_timeout(300)
+    page.evaluate('showHome && showHome(); applyCommunityVisibility(true); showCommunityTab()'); page.wait_for_timeout(600)
+    page.locator('#communityTabs [data-ctab="wins"]').click(); page.wait_for_timeout(600)
+    if not visible(page, '#ctabWinSite', 3000):
+        problem(step[0], 'the "also show it on the website" box is missing from the wins form')
+    else:
+        page.fill('#ctabWinInput', 'Landed my first retainer'); page.check('#ctabWinSite'); page.click('#ctabWinPostBtn'); page.wait_for_timeout(700)
+        posts = st.get('win_posts') or []
+        toast = page.evaluate("(document.querySelector('.app-toast')||{}).textContent || ''")
+        if posts and posts[-1].get('showOnSite') is True and 'once it is checked' in toast:
+            ok(step[0], 'ticking the box offers the win for the website and says it will show once checked')
+        else:
+            problem(step[0], 'offering a win for the website did not work', {'posts': posts[-1:], 'toast': toast[:80]})
+    finish(st, step[0]); ctx.close()
+
+
 def main():
     srv, base = serve_web()
     t0 = time.time()
@@ -3214,6 +3269,7 @@ def main():
         account_settings(browser, base)
         manage_subscription(browser, base)
         design_polish(browser, base)
+        landing_trust(browser, base)
         save_retry(browser, base)
         browser.close()
     srv.shutdown()
