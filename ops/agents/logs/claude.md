@@ -132,7 +132,7 @@ Things worth remembering:
 - Left GuideMeta / GuideAnalytics blocks untouched (privacy dialog close button is still a text ✕).
 - PR #45 (partner codes) has a one-hunk CSS conflict with #49 near `.acct-hint`: keep both sides.
 
-## 2026-10-15 growth batch (PRs #50–#57, all open at time of writing)
+## 2026-10-15 growth batch (PRs #50–#57, all merged the same day; stacked so they merged in order without conflicts)
 - #50 public pages: `ops/seo/build_pages.js` writes web/start/**, web/tools/**, sitemap.xml, robots.txt from the
   niche files (`--check` in check.sh step 4). OnlyFans chapter is kept off public pages. OG images: ops/seo/og_images.py.
 - #51 quiz: /quiz/ + /quiz/<slug>/ result pages, built by the same script; trading is excluded from quiz results.
@@ -153,3 +153,7 @@ Things worth remembering:
   To find untranslated UI: run `window.__guideI18nKeys()` in English and diff against ui.json.
 - Expect merge conflicts between these PRs in ops/smoke/smoke.py (new test functions before `def main()` and calls
   after `design_polish(...)`), src/index.js, prisma/schema.prisma, ops/check_backend.js: keep both sides.
+- Stacking trick that worked: merge each earlier PR branch into the next one, resolving smoke.py per top-level
+  function (git's line hunks interleave two new test functions and break them). Script idea: 3-way merge each
+  `def` separately; union the calls in main().
+- Live-check limit: WebFetch here refuses theguide.company / railway URLs unless they appear in a user message.
