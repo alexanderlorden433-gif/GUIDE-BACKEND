@@ -49,6 +49,7 @@ model User {
   pushSubscriptions    PushSubscription[]
   liveQuestions        LiveQuestion[]
   promoRedemptions     PromoRedemption[]
+  memberSite           MemberSite?
 
   @@index([stripeCustomerId])
   @@index([referredByCode])
@@ -183,6 +184,7 @@ model Win {
   body      String
   emoji     String   @default("🎉")
   reactions WinReaction[]
+  publicOffer WinPublic?
   createdAt DateTime @default(now())
 
   @@index([createdAt])
@@ -382,8 +384,21 @@ model PromoCode {
   uses      Int      @default(0)
   active    Boolean  @default(true)
   expiresAt DateTime?
+  commissionPct Int?
   createdAt DateTime @default(now())
   redemptions PromoRedemption[]
+  payouts   PartnerPayout[]
+}
+
+// Creator payouts: what was paid to a code's partner for a month (src/routes/codes.js).
+model PartnerPayout {
+  id     String    @id
+  codeId String
+  month  String
+  amount Float
+  paidAt DateTime  @default(now())
+  code   PromoCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  @@unique([codeId, month])
 }
 
 model PromoRedemption {
@@ -407,4 +422,57 @@ model Lead {
   lastSentAt     DateTime?
   unsubscribedAt DateTime?
   createdAt      DateTime  @default(now())
+}
+
+// ---------- Member websites ----------
+// A member's one-page site at theguide.company/s/<slug> (src/sites.js). Created at startup with
+// CREATE TABLE IF NOT EXISTS; declared here so Prisma knows about them.
+model MemberSite {
+  id         String        @id @default(uuid())
+  userId     String        @unique
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug       String        @unique
+  previewKey String
+  data       Json          @default("{}")
+  published  Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @default(now())
+  requests   SiteRequest[]
+}
+
+// A request a visitor sent through a member's site.
+model SiteRequest {
+  id        String     @id @default(uuid())
+  siteId    String
+  site      MemberSite @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name      String
+  contact   String
+  service   String?
+  message   String?
+  seen      Boolean    @default(false)
+  createdAt DateTime   @default(now())
+
+  @@index([siteId, createdAt])
+}
+
+// Wins a member offered for the public landing page (src/routes/publicWins.js). Shown only once
+// the owner approves. Created at startup with CREATE TABLE IF NOT EXISTS; declared here so the schema matches.
+model WinPublic {
+  winId      String    @id
+  status     String    @default("waiting")
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+  win        Win       @relation(fields: [winId], references: [id], onDelete: Cascade)
+  @@index([status])
+}
+
+// Billing emails (src/billingEmails.js): which one-time emails went out (trial ending, checkout left).
+// Created at startup with CREATE TABLE IF NOT EXISTS; declared here so the schema matches.
+model EmailSent {
+  id     String   @id
+  kind   String
+  ref    String
+  userId String?
+  sentAt DateTime @default(now())
+  @@unique([kind, ref])
 }

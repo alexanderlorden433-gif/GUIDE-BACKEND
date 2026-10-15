@@ -64,6 +64,9 @@ router.get('/', async (req, res) => {
 // every change (see saveProgress() in the app). This endpoint mirrors that
 // directly so the rest of the app's logic barely has to change — it just
 // calls this instead of window.storage.set().
+// Keys in the progress blob that only the server writes (see PUT below).
+const SERVER_KEYS = ['onboardingDripSent', 'onboardingDripOptOut'];
+
 router.put('/', async (req, res) => {
   const { data } = req.body;
   if (typeof data !== 'object' || data === null) {
@@ -74,6 +77,15 @@ router.put('/', async (req, res) => {
   const blobSize = JSON.stringify(data).length;
   if (blobSize > 512 * 1024) { // 512 KB max
     return res.status(413).json({ error: 'Data payload too large.' });
+  }
+
+  // The app sends only the keys it knows about. Keys the server writes itself (which onboarding
+  // emails went out, an opt-out) would be wiped by every save, and the same email would go out
+  // again the next day, so carry them over from the stored copy.
+  const current = await prisma.user.findUnique({ where: { id: req.user.id }, select: { dataBlob: true } });
+  const stored = (current && current.dataBlob) || {};
+  for (const key of SERVER_KEYS) {
+    if (stored[key] !== undefined && data[key] === undefined) data[key] = stored[key];
   }
 
   const user = await prisma.user.update({

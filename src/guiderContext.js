@@ -83,6 +83,36 @@ function trackerShape(blob, nicheId) {
   return counts.length ? [`In this chapter's trackers they have: ${counts.join(', ')}.`] : [];
 }
 
+/** Goals a member can pick for their 30-day plan (the app keeps the same list). */
+const PLAN_GOALS = {
+  first_customer: 'their first paying customer',
+  first_500: 'their first $500 from it',
+  set_up: 'being set up and ready to sell',
+  grow: 'more customers than they have now',
+  trade_plan: 'a written trading plan they stick to',
+  practice: 'a month of practice trades in their journal',
+  basics: 'the basics down before they risk real money',
+};
+
+/**
+ * Their 30-day plan in this chapter, if they have one: which day they are on and what they want by day 30.
+ * Days are counted in UTC here, so near midnight this can be a day off from what the app shows.
+ */
+function planLine(blob, niche, now = Date.now()) {
+  const p = blob.dayPlan;
+  if (!p || typeof p !== 'object' || !niche || p.nicheId !== niche.id) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(p.start))) return null;
+  const day = Math.floor((now - Date.parse(`${p.start}T00:00:00Z`)) / 86400000) + 1;
+  if (!Number.isFinite(day) || day > 37) return null;
+  const goal = PLAN_GOALS[p.goal];
+  const goalBit = goal ? ` Their goal by day 30: ${goal}.` : '';
+  const shape = 'one lesson step a day, a module a week, and a check-in with you every 7 days';
+  if (day < 1) return `They have made a 30-day plan for this chapter (${shape}); it starts on ${p.start}.${goalBit}`;
+  if (day > 30) return `They have just finished a 30-day plan in this chapter (${shape}).${goalBit}`;
+  return `They are on day ${day} of 30 of a plan for this chapter (${shape}).${goalBit} ` +
+    'When they check in, look at what they finished, help them with what got in the way, and keep the advice to the next 7 days.';
+}
+
 /**
  * A short paragraph for the system prompt, or '' when there is nothing useful
  * to say yet (a brand-new account should not get a wall of empty facts).
@@ -93,6 +123,8 @@ function buildGuiderContext(blob, niche) {
 
   const progress = courseProgress(blob, niche);
   if (progress) lines.push(progress);
+  const plan = planLine(blob, niche);
+  if (plan) lines.push(plan);
   lines.push(...businessShape(blob));
   if (niche) lines.push(...trackerShape(blob, niche.id));
 

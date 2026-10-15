@@ -1,1 +1,3 @@
+# Members' one-page websites: theguide.company/s/<address> is drawn by the backend (src/sitePages.js).
+/s/*  https://guide-backend-production.up.railway.app/s/:splat  200
 /*    /index.html   200

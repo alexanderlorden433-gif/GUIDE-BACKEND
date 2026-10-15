@@ -7,6 +7,9 @@
 //   4. an error inside an async route gives a 500 instead of stopping the server
 //   5. big-enough request sizes: saving progress and Guider chats aren't cut off at 16 KB
 //   6. a host can edit a live call that has already started (to fix the link mid-call)
+//   7. The Guider is told about the member's 30-day plan in that chapter (day and goal), and only that chapter
+//   8. the billing emails (trial ends tomorrow, checkout left) say the amount, how to cancel, and nothing was charged
+//   9. member websites: what a member or a visitor types is shown as text, never run as page code
 // Usage: node ops/check_backend.js   (exit 1 on any failure)
 const fs = require('fs');
 const path = require('path');
@@ -166,10 +169,53 @@ function checkLiveEdit() {
   else bad('a call can be moved to a time that has already passed');
 }
 
+// 9. member websites (theguide.company/s/<address>): the page is drawn from what members type, and the
+//    request form shows back what visitors typed. All of it must arrive as text.
+function checkMemberSites() {
+  const sites = require(path.join(ROOT, 'src', 'sites'));
+  const evil = '<script>alert(1)</script>"><img src=x onerror=alert(1)>';
+  const html = sites.renderSitePage({ slug: 'joes-lawns', previewKey: 'k', data: {
+    name: evil, tagline: evil, area: evil, hours: evil, about: evil, email: 'a@b.co', phone: '555 123 4567',
+    services: [{ name: evil, price: evil, note: evil }] } }, { error: evil, form: { name: evil, contact: evil, message: evil, service: evil } });
+  const scripts = (html.match(/<script(?![^>]*application\/ld\+json)/g) || []).length;
+  if (scripts || /<img/i.test(html) || html.includes('<script>alert')) bad('a member website lets typed text run as page code');
+  else ok("member websites show typed text as text (no code runs)");
+  if (sites.slugProblem('admin') && sites.slugProblem('theguide') && !sites.slugProblem('joes-lawns')) ok("member web addresses can't take The Guide's own names");
+  else bad("member web address rules are off (reserved names or a normal name)");
+}
+
+// 7. the 30-day plan: The Guider knows which day it is and what the member wants by day 30
+function checkGuiderPlan() {
+  const { buildGuiderContext } = require(path.join(ROOT, 'src', 'guiderContext'));
+  const start = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+  const niche = { id: 'lawn', guides: [{ title: 'A', mod: 0 }, { title: 'B', mod: 0 }], modules: [{ title: 'Start' }] };
+  const blob = { completed: ['lawn|A'], dayPlan: { nicheId: 'lawn', start, goal: 'first_customer', from: 0, checkins: {} } };
+  const here = buildGuiderContext(blob, niche);
+  if (/day 3 of 30/.test(here) && /first paying customer/.test(here)) ok("The Guider knows the member's plan day and goal");
+  else bad("The Guider isn't told about the member's 30-day plan: " + here.slice(0, 200));
+  const other = buildGuiderContext(blob, Object.assign({}, niche, { id: 'cleaning' }));
+  if (/30-day|of 30/.test(other)) bad("The Guider is told about a plan from another chapter");
+  else ok("a plan in another chapter stays out of The Guider's notes");
+}
+
+// 8. billing emails: the trial reminder and the checkout note say the right things, plainly.
+function checkBillingEmails() {
+  const be = require(path.join(ROOT, 'src', 'billingEmails'));
+  const t = be.trialEndingEmail({ endsAt: Date.parse('2026-10-16T18:00:00Z'), amountCents: 2499, currency: 'usd', interval: 'month' });
+  if (/\$24\.99 a month/.test(t.text) && /Manage subscription/.test(t.text) && /stays free/.test(t.text) && !/—/.test(t.text + t.html)) ok('the trial reminder says the amount, how to cancel, and that Module 1 stays free');
+  else bad('the trial-ending email is missing the amount, the way to cancel, or uses an em dash');
+  const c = be.checkoutLeftEmail({ startedAt: Date.parse('2026-10-15T12:00:00Z'), prices: { monthly: { amount: 24.99, currency: 'USD' }, yearly: { amount: 149, currency: 'USD' } } });
+  if (/nothing was charged/.test(c.text) && /\$24\.99 a month or \$149 a year/.test(c.text) && /only reminder/.test(c.text) && !/—/.test(c.text + c.html)) ok('the checkout note says nothing was charged, the real prices, and that it is the only reminder');
+  else bad('the checkout-left email is missing "nothing was charged", the prices, or the only-reminder line');
+}
+
 checkAsyncErrors()
   .catch(e => bad('async error check failed: ' + e.message))
   .then(() => checkBodyLimits().catch(e => bad('request size check failed: ' + e.message)))
   .then(() => { try { checkLiveEdit(); } catch (e) { bad('live edit check failed: ' + e.message); } })
+  .then(() => { try { checkMemberSites(); } catch (e) { bad('member website check failed: ' + e.message); } })
+  .then(() => { try { checkGuiderPlan(); } catch (e) { bad('Guider plan check failed: ' + e.message); } })
+  .then(() => { try { checkBillingEmails(); } catch (e) { bad('billing email check failed: ' + e.message); } })
   .finally(() => {
   console.log(problems.length ? `${problems.length} backend problem(s)` : 'Backend OK');
   process.exit(problems.length ? 1 : 0);
