@@ -3227,6 +3227,163 @@ def landing_trust(browser, base):
     finish(st, step[0]); ctx.close()
 
 
+
+
+def billing_email_links(browser, base):
+    """The billing emails link back with ?open=upgrade ("Pick up where you left off") and ?open=account
+    ("Open my account"): the first opens the Pro box for a free member, the second opens account settings."""
+    step = ['billing email links']
+    for which, check in (('upgrade', "!!document.querySelector('#upgradeOverlay.open, #upgradeOverlay[style*=\"flex\"]') || getComputedStyle(document.getElementById('upgradeOverlay')).display !== 'none'"),
+                         ('account', "!!document.getElementById('accountCloseBtn') && document.getElementById('accountCloseBtn').offsetParent !== null")):
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(False); attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + f'/?open={which}&utm_source=email', wait_until='load'); page.wait_for_timeout(2400)
+        if page.evaluate(check):
+            ok(step[0], f'?open={which} from the email opens the {"Pro box" if which == "upgrade" else "account settings"}')
+        else:
+            problem(step[0], f'?open={which} did not open the right screen')
+        finish(st, step[0]); ctx.close()
+
+
+def public_pages(browser, base):
+    """The public pages Google can find: a guide per business with its free Module 1, free calculators,
+    sitemap/robots, a real title and share picture on the app, and the "Start Module 1 free" deep link."""
+    step = ['public pages']
+    import urllib.request
+    get = lambda path: urllib.request.urlopen(base + path).read().decode('utf8')
+    try:
+        sitemap = get('/sitemap.xml'); robots = get('/robots.txt')
+        locs = re.findall(r'<loc>https://theguide.company(/[^<]*)</loc>', sitemap)
+        guides = [u for u in locs if u.startswith('/start/') and u != '/start/']
+        if len(guides) >= 20 and '/tools/hourly-rate-calculator/' in locs and 'Sitemap: https://theguide.company/sitemap.xml' in robots:
+            ok(step[0], f'sitemap lists {len(guides)} business guides and the calculators; robots.txt points to it')
+        else:
+            problem(step[0], 'sitemap.xml / robots.txt are incomplete', {'guides': len(guides), 'locs': locs[:5]})
+        broken = [u for u in locs if u not in ('/',) and not u.endswith('.html') and '<h1>' not in get(u + 'index.html')]
+        if broken:
+            problem(step[0], 'pages in the sitemap are missing or empty', broken[:5])
+        else:
+            ok(step[0], f'every page in the sitemap exists and has a heading ({len(locs)} URLs)')
+        bad_ofm = 'OnlyFans' in get('/start/index.html')
+        if bad_ofm:
+            problem(step[0], 'the OnlyFans chapter must not have a public page')
+    except Exception as e:
+        problem(step[0], 'could not read the sitemap or pages', e)
+
+    for device, vp, mobile in (('phone', {'width': 375, 'height': 812}, True), ('desktop', {'width': 1280, 'height': 800}, False)):
+        step = [f'{device}: public pages']
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        attach_backend(ctx, new_state(False))
+        ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/start/lawn-care-business/', wait_until='load'); page.wait_for_timeout(400)
+        info = page.evaluate("""(()=>({ wide: document.documentElement.scrollWidth - innerWidth, h1: document.querySelector('h1').textContent,
+          lessons: document.querySelectorAll('.pg-lesson').length, steps: document.querySelectorAll('.pg-lesson .pg-step').length,
+          cta: document.querySelector('.pg-hero .pg-btn').getAttribute('href'), canon: document.querySelector('link[rel=canonical]').href,
+          og: document.querySelector('meta[property="og:image"]').content, ld: document.querySelectorAll('script[type="application/ld+json"]').length }))()""")
+        if info['wide'] <= 1 and 'lawn care' in info['h1'] and info['lessons'] >= 5 and info['steps'] == info['lessons'] and 'start=lawn' in info['cta'] and info['ld'] >= 2:
+            ok(step[0], f"the lawn care guide shows Module 1 in full ({info['lessons']} lessons, each with its step), fits the screen, and links into the app")
+        else:
+            problem(step[0], 'the lawn care guide page is wrong', info)
+        og_file = os.path.join(ROOT, 'web', info['og'].replace('https://theguide.company/', ''))
+        if not os.path.isfile(og_file):
+            problem(step[0], 'the share picture for the guide is missing', info['og'])
+        if device == 'phone':
+            shot(page, 'phone-40-public-guide')
+        # the free calculator works with no signup
+        page.goto(base + '/tools/hourly-rate-calculator/', wait_until='load'); page.wait_for_timeout(300)
+        before = page.inner_text('.pg-calc output')
+        page.fill('input[name=hours]', '30'); page.wait_for_timeout(150)
+        after = page.inner_text('.pg-calc output')
+        if '$62.32 an hour' in before and '$31.16 an hour' in after and page.evaluate('document.documentElement.scrollWidth - innerWidth') <= 1:
+            ok(step[0], 'the hourly rate calculator works in the page (30k take-home, 3k costs, 25% tax: $62.32/hr at 15 hrs, $31.16 at 30)')
+        else:
+            problem(step[0], 'the hourly rate calculator gave the wrong answer', {'before': before[:60], 'after': after[:60]})
+        # "Start Module 1 free" lands on the app with that business picked and sign-up open
+        page.goto(base + '/start/lawn-care-business/', wait_until='load'); page.wait_for_timeout(300)
+        page.click('.pg-hero .pg-btn'); page.wait_for_timeout(1800)
+        landed = page.evaluate("""(()=>({ pick: (()=>{try{return sessionStorage.getItem('guide_demo_pick')}catch(e){return null}})(),
+          signup: !!document.querySelector('#authScreen') && getComputedStyle(document.querySelector('#authScreen')).display !== 'none',
+          first: (document.querySelector('#lpPick button[aria-pressed="true"]')||{}).dataset?.id }))()""")
+        if landed['pick'] == 'lawn' and landed['signup'] and landed['first'] == 'lawn':
+            ok(step[0], 'Start Module 1 free opens sign-up with Lawn Care already picked')
+        else:
+            problem(step[0], 'the guide page link did not carry the business into sign-up', landed)
+        ctx.close()
+
+    # signed in: ?start=lawn opens the chapter, and the app page has a real title and share picture
+    step = ['public pages (signed in)']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False); attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/?start=lawn&utm_source=guide_pages', wait_until='load'); page.wait_for_timeout(2200)
+    r = page.evaluate("({ chapter: typeof currentNicheId !== 'undefined' ? currentNicheId : null, url: location.search, title: document.title, desc: (document.querySelector('meta[name=description]')||{}).content || '', og: (document.querySelector('meta[property=\"og:image\"]')||{}).content || '' })")
+    if r['chapter'] == 'lawn' and 'start=' not in r['url']:
+        ok(step[0], 'a signed-in member following ?start=lawn lands in the Lawn Care chapter')
+    else:
+        problem(step[0], '?start= should open that chapter for signed-in members', r)
+    og_ok = os.path.isfile(os.path.join(ROOT, 'web', r['og'].replace('https://theguide.company/', ''))) if r['og'] else False
+    if 'side business' in r['title'] and len(r['desc']) > 80 and og_ok:
+        ok(step[0], 'the app page has a real title, a description and a share picture')
+    else:
+        problem(step[0], 'the app page is missing its title, description or share picture', r)
+    finish(st, step[0]); ctx.close()
+
+
+
+def side_business_quiz(browser, base):
+    """The 'Which side business fits you?' quiz: seven questions, a match with its real first step, links that
+    carry the business into the app, a shareable result page, and the free-course email box."""
+    for device, vp, mobile in (('phone', {'width': 375, 'height': 812}, True), ('desktop', {'width': 1280, 'height': 800}, False)):
+        step = [f'{device}: side business quiz']
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        st = new_state(False); attach_backend(ctx, st)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/quiz/', wait_until='load'); page.wait_for_timeout(400)
+        n = 0
+        while page.locator('.qz-opt').count() and n < 12:
+            page.locator('.qz-opt').first.click(); page.wait_for_timeout(80); n += 1
+        if not visible(page, '.qz-match', 3000):
+            problem(step[0], 'the quiz did not reach a result', n); ctx.close(); continue
+        r = page.evaluate("""(()=>({ match: document.querySelector('.qz-match').textContent, step: (document.querySelector('#quiz .pg-step p')||{}).textContent || '',
+          start: document.querySelector('#quiz .pg-btn').getAttribute('href'), guide: document.querySelectorAll('#quiz .pg-btn')[1].getAttribute('href'),
+          more: document.querySelectorAll('.qz-more li').length, wide: document.documentElement.scrollWidth - innerWidth }))()""")
+        if n == 7 and r['match'] and len(r['step']) > 20 and 'start=' in r['start'] and 'utm_source=quiz' in r['start'] and r['guide'].startswith('/start/') and r['more'] == 2 and r['wide'] <= 1:
+            ok(step[0], f"7 questions lead to a match ({r['match']}) with its first step, two more to look at, and links into the app and the free guide")
+        else:
+            problem(step[0], 'the quiz result is incomplete', dict(r, questions=n))
+        slug = r['guide'].strip('/').split('/')[-1] if r['guide'] else ''
+        share = os.path.join(ROOT, 'web', 'quiz', slug, 'index.html')
+        if not (slug and os.path.isfile(share) and r['match'] in open(share).read()):
+            problem(step[0], 'the shareable result page for this match is missing', slug)
+        # the free course box: a bad email is caught, a real one goes to /api/leads with the quiz as its source
+        page.fill('#qzEmail', 'nope'); page.click('.qz-mail button'); page.wait_for_timeout(200)
+        bad = page.inner_text('.qz-msg')
+        page.fill('#qzEmail', 'Quiz@Example.com'); page.click('.qz-mail button'); page.wait_for_timeout(600)
+        leads = st.get('leads') or []
+        if 'real email' in bad and leads and leads[-1]['email'] == 'quiz@example.com' and str(leads[-1].get('source', '')).startswith('quiz-') and visible(page, '.qz-done', 2000):
+            ok(step[0], 'the free course box catches a bad email and signs up a real one, tagged with the quiz match')
+        else:
+            problem(step[0], 'the free course box on the quiz result did not work', {'bad': bad, 'leads': leads[-1:]})
+        if device == 'phone':
+            shot(page, 'phone-41-quiz-result')
+        ctx.close()
+    # the landing page points people who can't decide to the quiz
+    step = ['side business quiz (landing)']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    attach_backend(ctx, new_state(False))
+    ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load'); page.wait_for_timeout(800)
+    if page.evaluate("!!document.querySelector('#lpStepOne a[href=\"/quiz/\"], .lp-quiz-link a[href=\"/quiz/\"]')"):
+        ok(step[0], '"Not sure which to pick? Take the 2-minute quiz" sits next to Try step one')
+    else:
+        problem(step[0], 'the landing page should link to the quiz next to Try step one')
+    ctx.close()
+
 def main():
     srv, base = serve_web()
     t0 = time.time()
@@ -3271,6 +3428,9 @@ def main():
         design_polish(browser, base)
         landing_trust(browser, base)
         save_retry(browser, base)
+        billing_email_links(browser, base)
+        public_pages(browser, base)
+        side_business_quiz(browser, base)
         browser.close()
     srv.shutdown()
     # de-duplicate
