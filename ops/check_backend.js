@@ -7,6 +7,7 @@
 //   4. an error inside an async route gives a 500 instead of stopping the server
 //   5. big-enough request sizes: saving progress and Guider chats aren't cut off at 16 KB
 //   6. a host can edit a live call that has already started (to fix the link mid-call)
+//   7. The Guider is told about the member's 30-day plan in that chapter (day and goal), and only that chapter
 // Usage: node ops/check_backend.js   (exit 1 on any failure)
 const fs = require('fs');
 const path = require('path');
@@ -166,10 +167,25 @@ function checkLiveEdit() {
   else bad('a call can be moved to a time that has already passed');
 }
 
+// 7. the 30-day plan: The Guider knows which day it is and what the member wants by day 30
+function checkGuiderPlan() {
+  const { buildGuiderContext } = require(path.join(ROOT, 'src', 'guiderContext'));
+  const start = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+  const niche = { id: 'lawn', guides: [{ title: 'A', mod: 0 }, { title: 'B', mod: 0 }], modules: [{ title: 'Start' }] };
+  const blob = { completed: ['lawn|A'], dayPlan: { nicheId: 'lawn', start, goal: 'first_customer', from: 0, checkins: {} } };
+  const here = buildGuiderContext(blob, niche);
+  if (/day 3 of 30/.test(here) && /first paying customer/.test(here)) ok("The Guider knows the member's plan day and goal");
+  else bad("The Guider isn't told about the member's 30-day plan: " + here.slice(0, 200));
+  const other = buildGuiderContext(blob, Object.assign({}, niche, { id: 'cleaning' }));
+  if (/30-day|of 30/.test(other)) bad("The Guider is told about a plan from another chapter");
+  else ok("a plan in another chapter stays out of The Guider's notes");
+}
+
 checkAsyncErrors()
   .catch(e => bad('async error check failed: ' + e.message))
   .then(() => checkBodyLimits().catch(e => bad('request size check failed: ' + e.message)))
   .then(() => { try { checkLiveEdit(); } catch (e) { bad('live edit check failed: ' + e.message); } })
+  .then(() => { try { checkGuiderPlan(); } catch (e) { bad('Guider plan check failed: ' + e.message); } })
   .finally(() => {
   console.log(problems.length ? `${problems.length} backend problem(s)` : 'Backend OK');
   process.exit(problems.length ? 1 : 0);
