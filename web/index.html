@@ -5598,6 +5598,7 @@
   .sa-err{margin:0; font-size:14px; font-weight:500; color:rgb(var(--danger-rgb)); max-width:68ch;}
   .sa-err:empty{display:none;}
   .sa-note{font-size:13px; line-height:1.5; color:var(--ink-soft); max-width:68ch;}
+  .sa-hour.on{color:var(--ink); font-weight:500;}
   .sa-bar{height:4px; border-radius:2px; background:var(--line); overflow:hidden;}
   .sa-bar span{display:block; height:100%; width:0; background:var(--grape); transition:width 1s linear;}
   .sa-done{border-top:1px solid var(--line); padding-top:var(--sp-3); display:grid; gap:var(--sp-2);}
@@ -5606,6 +5607,20 @@
   .sa-tips-h{margin:var(--sp-1) 0 0; font-size:14px; font-weight:600; color:var(--ink);}
   .sa-tips{margin:0; padding-left:var(--sp-5); font-size:14px; line-height:1.5; color:var(--ink-2); max-width:68ch;}
   .sa-done .site-text{padding:0;}
+  .sa-buy{border-top:1px solid var(--line); padding-top:var(--sp-3); display:grid; gap:var(--sp-2);}
+  .sa-buy .sa-tips-h{margin:0;}
+  .sa-packs{display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--sp-2); max-width:640px;}
+  .sa-pack{display:grid; grid-template-areas:"name" "price" "each"; gap:2px; justify-items:start; text-align:left; padding:var(--sp-3); min-height:var(--btn-h); border:1px solid var(--line-2); border-radius:var(--r-btn); background:var(--bg); color:var(--ink); font:500 14px 'Inter',sans-serif; cursor:pointer;}
+  .sa-pack b{grid-area:name; font-weight:600; font-size:15px;}
+  .sa-pack .sa-price{grid-area:price; font-size:18px; font-weight:700;}
+  .sa-pack small{grid-area:each; font-size:13px; color:var(--ink-soft);}
+  .sa-pack:hover{border-color:var(--ink-soft);}
+  .sa-pack.on{border-color:var(--grape);}
+  .sa-pack:disabled{opacity:.6; cursor:default;}
+  @media (max-width:520px){
+    .sa-packs{grid-template-columns:1fr;}
+    .sa-pack{grid-template-areas:"name price" "each price"; grid-template-columns:1fr auto; align-items:center; column-gap:var(--sp-3);}
+  }
   @media (prefers-reduced-motion: reduce){ .sa-bar span{transition:none;} }
   @media (max-width:640px){
     .sf-two{grid-template-columns:1fr;}
@@ -10069,6 +10084,13 @@ function wirePartnerCodeBox(id, onDone){
 // this can't be a JS closure — it's a small serializable descriptor instead.
 async function handlePostCheckoutReturn(){
   const params = new URLSearchParams(window.location.search);
+  // back from buying AI website credits (a one-time payment, not Pro)
+  const creditsSession = params.get('credits_session');
+  if(creditsSession){
+    window.history.replaceState({}, '', '/');
+    siteCreditsReturn(creditsSession);
+    return;
+  }
   const cameFromCheckout = params.has('session_id');
   if(cameFromCheckout){
     window.history.replaceState({}, '', window.location.pathname);
@@ -13734,6 +13756,7 @@ function handleOpenParam(){
   if(!open) return;
   window.history.replaceState({}, '', window.location.pathname);
   if(open === 'live') setTimeout(()=> showLive(), 300);
+  if(open === 'website') setTimeout(()=> showSite(), 300); // e.g. back from a credits checkout they didn't finish
   // from the billing emails: "Pick up where you left off" and "Open my account"
   if(open === 'upgrade') setTimeout(()=>{ if(!isPro) openUpgradeModal(); }, 500);
   if(open === 'account') setTimeout(()=>{ const b = document.getElementById('accountBtn'); if(b) b.click(); }, 500);
@@ -18227,13 +18250,44 @@ function showSite(){
   document.getElementById('siteView').style.display = '';
   currentNicheId = null;
   window.scrollTo(0, 0);
-  if(!siteAi.busy){ siteAi.last = null; siteAi.error = ''; siteAi.upgrade = false; }
-  renderSiteView(true);
+  if(!siteAi.busy){ siteAi.last = null; siteAi.error = ''; siteAi.buying = false; }
+  return renderSiteView(true);
 }
 
 // The AI page writer (POST /sites/ai, src/siteAi.js): the member says what they do in a few lines and Claude
 // writes the whole page into the form below. Nothing is public until they put it live.
-let siteAi = { busy: '', started: 0, open: false, desc: '', error: '', upgrade: false, last: null };
+let siteAi = { busy: '', started: 0, open: false, desc: '', error: '', buying: false, last: null };
+// the member's time zone: Pro's daily AI hour resets at their midnight
+const SITE_TZ = (()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){ return ''; } })();
+let siteHourTimer = null;
+/** Keeps the time left on the daily hour as an end time on this device, so the countdown can tick. */
+function siteSetHour(h){
+  if(!siteState || !siteState.ai || !h) return;
+  siteState.ai.hour = Object.assign({}, h, h.state === 'active' ? { until: Date.now() + (h.secondsLeft || 0) * 1000 } : {});
+}
+function siteHourLine(h){
+  if(!h || !h.included) return '';
+  if(h.state === 'active'){
+    const m = Math.max(1, Math.ceil(((h.until || Date.now()) - Date.now()) / 60000)), w = h.writesLeft == null ? h.writes || 10 : h.writesLeft;
+    return `Your AI hour: ${w === 1 ? '1 free write' : w + ' free writes'} and ${m === 1 ? '1 minute' : m + ' minutes'} left.`;
+  }
+  if(h.state === 'used') return "You've used today's AI hour. It comes back tomorrow; credits work anytime.";
+  return `Your plan includes 1 hour of AI writing every day (up to ${h.writes || 10} writes). It starts with your first write.`;
+}
+/** Every 20 seconds while the hour runs: update the minutes, and when it ends, redraw (credits take over). */
+function siteHourTick(){
+  clearInterval(siteHourTimer);
+  const h = siteState && siteState.ai && siteState.ai.hour;
+  if(!h || h.state !== 'active') return;
+  siteHourTimer = setInterval(()=>{
+    const el = document.getElementById('saHour');
+    const hh = siteState && siteState.ai && siteState.ai.hour;
+    if(!el || !el.isConnected || !hh || hh.state !== 'active'){ clearInterval(siteHourTimer); return; }
+    if(Date.now() >= hh.until){ hh.state = 'used'; clearInterval(siteHourTimer); if(!siteAi.busy){ readSiteForm(); renderSiteView(); } return; }
+    const line = siteHourLine(hh);
+    if(el.dataset.en !== line){ el.dataset.en = line; el.textContent = line; }
+  }, 20000);
+}
 const SITE_AI_NAMES = { 'claude-fable-5-1': 'Claude Fable 5.1', 'claude-opus-5-5': 'Claude Opus 5.5', 'claude-sonnet-5-5': 'Claude Sonnet 5.5' };
 const SITE_AI_STEPS = ['Reading what you wrote…', 'Working out your services and prices…', 'Writing why people should pick you…',
   'Answering the questions customers ask…', 'Checking it reads well…', 'Almost there…'];
@@ -18265,9 +18319,19 @@ function siteAiHtml(d){
       ${last.tips.length ? `<p class="sa-tips-h">Before you put it live</p><ul class="sa-tips" translate="no">${last.tips.map(t => `<li>${gvEsc(t)}</li>`).join('')}</ul>` : ''}
       <div class="site-row"><button type="button" class="site-text" id="saUndo">Undo, put my old page back</button></div>
     </div>` : '';
-  const leftLine = ai.left > 0
-    ? (siteState.pro ? `${ai.left} of ${ai.limit} AI writes left today.` : `${ai.left} of ${ai.limit} free AI writes left today. Pro members get ${ai.proLimit || 10} a day.`)
-    : (siteState.pro ? 'No AI writes left today. They come back tomorrow.' : `No free AI writes left today. Pro members get ${ai.proLimit || 10} a day.`);
+  const c = ai.credits || { free: 0, paid: 0, total: 0 };
+  const h = ai.hour || { included: false };
+  const hourOpen = !!(h.included && h.state !== 'used');   // a Pro member's daily hour is still to come or running
+  const creditLine = c.total <= 0 ? "You're out of AI credits. Each write uses 1."
+    : !c.paid ? (c.free === 1 ? 'You have 1 free AI credit to try it. Each write uses 1.' : `You have ${c.free} free AI credits to try it. Each write uses 1.`)
+    : (c.total === 1 ? 'You have 1 AI credit. Each write uses 1.' : `You have ${c.total} AI credits. Each write uses 1.`);
+  const money = (n)=> '$' + Number(n).toFixed(2);
+  const packs = siteAi.buying || (c.total <= 0 && !hourOpen) ? `<div class="sa-buy" id="saBuy">
+      <p class="sa-tips-h">Get more AI credits</p>
+      <div class="sa-packs" role="group" aria-label="AI credit packs">${(ai.packs || []).map(p => `<button type="button" class="sa-pack" data-pack="${gvEsc(p.id)}">
+          <b>${p.credits} credits</b><span class="sa-price">${money(p.price)}</span><small>${money(p.each)} a page</small></button>`).join('')}</div>
+      <small class="sa-note">One-time payment through Stripe. Credits never expire, and a write that fails gives its credit back.${h.included ? '' : ' Pro includes 1 hour of AI writing every day, and putting your page live.'}</small>
+    </div>` : '';
   return `<section class="site-ai" id="siteAi">
       <div class="ss-head">${ico('sparkles')}<b>${has ? 'Let AI improve your page' : 'Let AI write your page'}</b></div>
       ${last ? '' : has && !showForm ? '<p class="ss-sub">It makes your page clearer and more convincing, fills gaps like reasons to pick you and common questions, and keeps your facts and prices.</p>'
@@ -18283,11 +18347,13 @@ function siteAiHtml(d){
       <p class="sa-err" role="alert">${gvEsc(siteAi.error)}</p>
       <div class="site-row">
         ${showForm
-          ? `<button type="button" class="live-btn primary" id="saWrite"${ai.left > 0 ? '' : ' disabled'}>${ico('sparkles')} Write my page</button>${has ? '<button type="button" class="site-text" id="saCancel">Cancel</button>' : ''}`
-          : `<button type="button" class="live-btn primary" id="saBetter"${ai.left > 0 ? '' : ' disabled'}>${ico('sparkles')} Make it better</button><button type="button" class="live-btn" id="saWrite"${ai.left > 0 ? '' : ' disabled'}>Write it again</button>`}
-        ${siteAi.upgrade || (!siteState.pro && ai.left <= 0) ? `<button type="button" class="live-btn" id="saPro">${ico('lock')} See Pro</button>` : ''}
+          ? `<button type="button" class="live-btn primary" id="saWrite">${ico('sparkles')} Write my page</button>${has ? '<button type="button" class="site-text" id="saCancel">Cancel</button>' : ''}`
+          : `<button type="button" class="live-btn primary" id="saBetter">${ico('sparkles')} Make it better</button><button type="button" class="live-btn" id="saWrite">Write it again</button>`}
+        ${packs || c.total <= 0 || hourOpen ? '' : '<button type="button" class="site-text" id="saMore">Get more credits</button>'}
       </div>
-      <small class="sa-note" id="saLeft">${leftLine}</small>
+      ${h.included ? `<small class="sa-note sa-hour${h.state === 'active' ? ' on' : ''}" id="saHour">${siteHourLine(h)}</small>` : ''}
+      ${hourOpen ? '' : `<small class="sa-note" id="saLeft">${creditLine}</small>`}
+      ${packs}
       <small class="sa-note" id="saModel">${last && last.model ? `Written by ${gvEsc(SITE_AI_NAMES[last.model] || 'Claude')}, made by Anthropic.` : `Uses ${gvEsc(model)}, made by Anthropic.`} Check prices and details before you put it live.</small>
     </section>`;
 }
@@ -18312,18 +18378,28 @@ async function siteAiRun(mode){
     const t = document.getElementById('saDesc'); if(t) t.focus();
     return;
   }
-  siteAi.busy = mode; siteAi.started = Date.now(); siteAi.error = ''; siteAi.upgrade = false; siteAi.last = null;
+  const hourOpen = !!(ai.hour && ai.hour.included && ai.hour.state !== 'used');
+  if(ai.credits && ai.credits.total <= 0 && !hourOpen){
+    siteAi.error = ai.hour && ai.hour.included ? "You've used today's AI hour. It comes back tomorrow, or pick a pack to keep writing now." : "You're out of AI credits. Pick a pack to keep writing.";
+    siteAi.buying = true;
+    renderSiteView();
+    const b = document.getElementById('saBuy'); if(b && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    return;
+  }
+  siteAi.busy = mode; siteAi.started = Date.now(); siteAi.error = ''; siteAi.buying = false; siteAi.last = null;
   renderSiteView();
   const timer = setInterval(siteAiTick, 1000);
   siteAiTick();
   try{
     const r = await apiFetch('/sites/ai', { method: 'POST', body: JSON.stringify({ mode, description: siteAi.desc.trim(), draft: d,
-      chapter: siteAiChapter(d.nicheId), lang: d.lang === 'es' ? 'es' : 'en' }) });
+      chapter: siteAiChapter(d.nicheId), lang: d.lang === 'es' ? 'es' : 'en', tz: SITE_TZ }) });
     if(!siteDraft) siteDraft = siteNew();
     const prev = JSON.parse(JSON.stringify(siteDraft.data));
     siteDraft.data = r.draft;
     if(!siteDraft.slugTouched || !siteDraft.slug) siteDraft.slug = siteSlugify(r.draft.name);
-    ai.left = r.left; ai.model = r.model || ai.model;
+    if(r.credits) ai.credits = r.credits;
+    if(r.hour) siteSetHour(r.hour);
+    ai.model = r.model || ai.model;
     const live = !!(siteState.site && siteState.site.published);
     siteAi.busy = ''; siteAi.open = false;
     siteAi.last = { tips: r.tips || [], model: r.model, prev, live, saved: !live };
@@ -18336,13 +18412,57 @@ async function siteAiRun(mode){
   }catch(e){
     siteAi.busy = '';
     const b = e.body || {};
-    if(typeof b.left === 'number') ai.left = b.left;
+    if(b.credits) ai.credits = b.credits;
+    if(b.hour) siteSetHour(b.hour);
+    if(b.packs) ai.packs = b.packs;
     siteAi.error = b.error || (e.status ? 'The page writer could not finish just now. Please try again.' : 'Your connection dropped. Check it and try again.');
-    siteAi.upgrade = !!b.upgrade;
+    siteAi.buying = !!b.buy;
     renderSiteView();
   }finally{
     clearInterval(timer);
   }
+}
+/** Off to Stripe for a pack of credits. What's in the form is kept on this device and put back on return. */
+async function siteBuyCredits(packId, btn){
+  readSiteForm();
+  try{ localStorage.setItem('guide_site_kept', JSON.stringify({ at: Date.now(), draft: siteDraft, desc: siteAi.desc })); }catch(e){}
+  document.querySelectorAll('#saBuy .sa-pack').forEach(b => { b.disabled = true; });
+  if(btn) btn.classList.add('on');
+  try{
+    const r = await apiFetch('/sites/credits/checkout', { method: 'POST', body: JSON.stringify({ pack: packId }) });
+    window.location.href = r.url; // leaves the page; Stripe handles the payment
+  }catch(e){
+    document.querySelectorAll('#saBuy .sa-pack').forEach(b => { b.disabled = false; b.classList.remove('on'); });
+    siteAi.error = (e.body && e.body.error) || 'Could not start checkout. Please try again.';
+    renderSiteView();
+  }
+}
+/** The form as it was before going to checkout, if that was in the last couple of hours. */
+function siteTakeKept(){
+  try{
+    const k = JSON.parse(localStorage.getItem('guide_site_kept') || 'null');
+    localStorage.removeItem('guide_site_kept');
+    if(k && k.draft && k.draft.data && Date.now() - k.at < 2 * 3600 * 1000) return k;
+  }catch(e){}
+  return null;
+}
+/** Back from Stripe with ?credits_session=…: add the credits now (the webhook may still be on its way). */
+async function siteCreditsReturn(id){
+  await showSite();
+  let r = null;
+  for(let i = 0; i < 4 && !r; i++){
+    try{ r = await apiFetch('/sites/credits/confirm', { method: 'POST', body: JSON.stringify({ session: id }) }); }
+    catch(e){
+      if(e.status === 409 && i < 3){ await new Promise(res => setTimeout(res, 2000)); continue; }
+      showAppToast((e.body && e.body.error) || "We couldn't check your payment just now. Your credits will show up shortly.", 'error');
+      return;
+    }
+  }
+  if(siteState && siteState.ai && r.credits) siteState.ai.credits = r.credits;
+  siteAi.buying = false; siteAi.error = '';
+  renderSiteView();
+  fireConfetti(40);
+  showAppToast(`${r.pack} AI credits added. Each write uses 1.`, 'success');
 }
 function siteAiUndo(){
   const last = siteAi.last;
@@ -18379,9 +18499,11 @@ async function renderSiteView(fresh){
   const box = document.getElementById('siteContent');
   if(fresh || !siteState){
     box.innerHTML = skeletonCards(3);
-    try{ siteState = await apiFetch('/sites/mine'); }
+    try{ siteState = await apiFetch('/sites/mine?tz=' + encodeURIComponent(SITE_TZ)); siteSetHour(siteState.ai && siteState.ai.hour); }
     catch(e){ box.innerHTML = `<div class="tool-empty">Your website couldn't load just now. Check your connection and try again.</div>`; return; }
     siteDraft = null;
+    const kept = siteTakeKept();   // back from buying credits: the form as they left it
+    if(kept){ siteDraft = kept.draft; if(kept.desc) siteAi.desc = kept.desc; }
     paintSiteBadge();
   }
   const site = siteState.site, colors = siteState.colors || {};
@@ -18489,6 +18611,7 @@ async function renderSiteView(fresh){
   box.innerHTML = status + siteAiHtml(d) + requests + editor;
   const form = document.getElementById('siteForm');
   if(siteAi.busy){ form.inert = true; form.classList.add('busy'); siteAiTick(); }
+  siteHourTick();
   wireSiteView();
 }
 
@@ -18565,8 +18688,10 @@ function wireSiteView(){
   if(aiBox) aiBox.addEventListener('click', (e)=>{
     const b = e.target.closest('button');
     if(!b || b.disabled) return;
+    const sai = siteState.ai || {};
+    const none = !!(sai.credits && sai.credits.total <= 0 && !(sai.hour && sai.hour.included && sai.hour.state !== 'used'));
     if(b.id === 'saWrite'){
-      if(siteHasContent(siteDraft.data) && !siteAi.open){
+      if(siteHasContent(siteDraft.data) && !siteAi.open && !none){
         readSiteForm(); siteAi.open = true; siteAi.error = ''; renderSiteView();
         const t = document.getElementById('saDesc'); if(t) t.focus();
         return;
@@ -18576,7 +18701,8 @@ function wireSiteView(){
     else if(b.id === 'saBetter') siteAiRun('improve');
     else if(b.id === 'saCancel'){ readSiteForm(); siteAi.open = false; siteAi.error = ''; renderSiteView(); }
     else if(b.id === 'saUndo') siteAiUndo();
-    else if(b.id === 'saPro') openUpgradeModal({ type: 'website' });
+    else if(b.id === 'saMore'){ readSiteForm(); siteAi.buying = true; renderSiteView(); }
+    else if(b.dataset.pack) siteBuyCredits(b.dataset.pack, b);
   });
 
   const site = siteState.site;

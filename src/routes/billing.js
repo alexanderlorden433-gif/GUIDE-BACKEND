@@ -5,6 +5,7 @@ const { stripe, createCheckoutSession, createPortalSession, getPlanPrices, TRIAL
 const { notifyUser } = require('../notifications');
 const { recordMoney } = require('../analytics');
 const { trackCheckout, trackPurchase } = require('../meta');
+const { grantFromCheckout } = require('../siteCredits');
 
 const router = express.Router();
 
@@ -75,6 +76,12 @@ router.post('/webhook', async (req, res) => {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
+        // A pack of AI website credits is a one-time payment, not Pro: add the credits and stop here.
+        if (session.metadata?.kind === 'site_credits') {
+          const g = await grantFromCheckout(session);
+          if (!g.ok) console.error('[credits] checkout not added:', g.why, session.id);
+          break;
+        }
         const userId = session.metadata?.userId;
         const plan = session.metadata?.plan;
         if (!userId) break;

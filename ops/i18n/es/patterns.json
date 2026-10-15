@@ -480,26 +480,6 @@
   "$1 capítulos terminados"
  ],
  [
-  "^(\\d+) of (\\d+) AI writes left today\\.$",
-  "Te quedan $1 de $2 escrituras con IA hoy."
- ],
- [
-  "^(\\d+) of (\\d+) free AI writes left today\\. Pro members get (\\d+) a day\\.$",
-  "Te quedan $1 de $2 escrituras gratis con IA hoy. Los miembros Pro tienen $3 al día."
- ],
- [
-  "^No free AI writes left today\\. Pro members get (\\d+) a day\\.$",
-  "Hoy ya no te quedan escrituras gratis con IA. Los miembros Pro tienen $1 al día."
- ],
- [
-  "^That's all (\\d+) free AI writes for today\\. Pro members get (\\d+) a day\\.$",
-  "Ya usaste tus $1 escrituras gratis con IA de hoy. Los miembros Pro tienen $2 al día."
- ],
- [
-  "^That's all (\\d+) AI writes for today\\. It resets tomorrow\\.$",
-  "Ya usaste tus $1 escrituras con IA de hoy. Mañana se renuevan."
- ],
- [
   "^Uses (Claude(?: [A-Za-z]+ [\\d.]+)?), made by Anthropic\\. Check prices and details before you put it live\\.$",
   "Usa $1, de Anthropic. Revisa los precios y los detalles antes de publicarla."
  ],
@@ -522,5 +502,41 @@
  [
   "^Reason (\\d+)$",
   "Razón $1"
+ ],
+ [
+  "^You have (\\d+) free AI credits to try it\\. Each write uses 1\\.$",
+  "Tienes $1 créditos de IA gratis para probarlo. Cada escritura usa 1."
+ ],
+ [
+  "^You have (\\d+) AI credits\\. Each write uses 1\\.$",
+  "Tienes $1 créditos de IA. Cada escritura usa 1."
+ ],
+ [
+  "^(\\d+) AI credits added\\. Each write uses 1\\.$",
+  "Se agregaron $1 créditos de IA. Cada escritura usa 1."
+ ],
+ [
+  "^(\\d+) credits$",
+  "$1 créditos"
+ ],
+ [
+  "^\\$([\\d.]+) a page$",
+  "$$1 por página"
+ ],
+ [
+  "^Your AI hour: (\\d+) free writes and (\\d+) minutes left\\.$",
+  "Tu hora de IA: te quedan $1 escrituras gratis y $2 minutos."
+ ],
+ [
+  "^Your AI hour: 1 free write and (\\d+) minutes left\\.$",
+  "Tu hora de IA: te queda 1 escritura gratis y $1 minutos."
+ ],
+ [
+  "^Your AI hour: (\\d+) free writes and 1 minute left\\.$",
+  "Tu hora de IA: te quedan $1 escrituras gratis y 1 minuto."
+ ],
+ [
+  "^Your plan includes 1 hour of AI writing every day \\(up to (\\d+) writes\\)\\. It starts with your first write\\.$",
+  "Tu plan incluye 1 hora de escritura con IA cada día (hasta $1 escrituras). Empieza con tu primera escritura."
  ]
 ]

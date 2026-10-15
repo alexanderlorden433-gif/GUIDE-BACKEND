@@ -52,6 +52,46 @@ const DDL = [
     CONSTRAINT "SiteAiUse_pkey" PRIMARY KEY ("userId", "day"),
     CONSTRAINT "SiteAiUse_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
   )`,
+  // AI website credits (src/siteCredits.js): what each member has left, free and bought
+  `CREATE TABLE IF NOT EXISTS "SiteAiCredit" (
+    "userId" TEXT NOT NULL,
+    "free" INTEGER NOT NULL DEFAULT 0,
+    "paid" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "SiteAiCredit_pkey" PRIMARY KEY ("userId"),
+    CONSTRAINT "SiteAiCredit_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+  )`,
+  // every change to them: a pack bought (one row per Stripe checkout, so a payment is never counted twice),
+  // a write (with the model and tokens it used, to see what writes really cost), a failed write given back
+  `CREATE TABLE IF NOT EXISTS "SiteAiCreditLog" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "free" INTEGER NOT NULL DEFAULT 0,
+    "paid" INTEGER NOT NULL DEFAULT 0,
+    "pack" TEXT,
+    "amountCents" INTEGER,
+    "stripeSession" TEXT,
+    "model" TEXT,
+    "inputTokens" INTEGER,
+    "outputTokens" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "SiteAiCreditLog_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "SiteAiCreditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "SiteAiCreditLog_stripeSession_key" ON "SiteAiCreditLog"("stripeSession")`,
+  // Pro's daily AI hour (src/siteCredits.js): when a member's hour started and how many of its writes they used,
+  // one row per member per (their) day
+  `CREATE TABLE IF NOT EXISTS "SiteAiHour" (
+    "userId" TEXT NOT NULL,
+    "day" TEXT NOT NULL,
+    "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "writes" INTEGER NOT NULL DEFAULT 0,
+    CONSTRAINT "SiteAiHour_pkey" PRIMARY KEY ("userId", "day"),
+    CONSTRAINT "SiteAiHour_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+  )`,
+  `CREATE INDEX IF NOT EXISTS "SiteAiCreditLog_kind_createdAt_idx" ON "SiteAiCreditLog"("kind", "createdAt")`,
 ];
 
 const state = { ready: false };
