@@ -43,13 +43,16 @@ Live URLs: app `https://theguide.company`, API `https://guide-backend-production
    it is not). Put the details in your private report to Alexander instead.
 7. **Keep the brand.** The app has two looks that share one set of colour variables at the
    top of `web/index.html`: **Forest & Gold** (the default: ground `#0C1310`, action green
-   `#3FCB93`, gold `#E8B94A`) and **Purple** (ground `#0B0A12`, purple→pink `#A855F7 → #EC4899`,
+   `#3FCB93`, gold `#E8B94A`) and **Purple** (ground `#0B0A12`, purple `#A855F7`,
    gold `#FFD23F`), picked in the account menu and set on `<html data-theme>`. **Never hard-code
    a colour** in the CSS or the script: use `var(--grape)` (main action colour), `var(--gold)`,
    `var(--ink)`, `var(--card)`… , `rgba(var(--accent-rgb),.2)` for tints, and `themeVar('--grape')`
    in script. Text on an action colour uses `var(--on-accent)`. Check every change in both looks
-   (`python3 ops/smoke/shots.py <label> --look=purple`). Space Grotesk for headings, Inter for
-   text, the compass-star logo. The app is dark-only today (the ☀️/🌙 button has no light styles
+   (`python3 ops/smoke/shots.py <label> --look=purple`). Follow the design system at the end of the
+   `<style>` block: one font (Inter), solid colours (no gradients or glows), the accent only on
+   primary buttons, progress and active states, spacing from `--sp-1…--sp-8` (4/8/12/16/24/32/48/64),
+   one 44px button height, line icons via `ico()` / `<i data-ico="…">` (never emoji as icons),
+   dividers instead of boxes inside boxes. The compass-star logo. The app is dark-only today (the ☀️/🌙 button has no light styles
    yet — a known design issue). Don't change prices, plan names, or claims about the product
    (16 chapters, 756 guides/videos, AI mentor).
 8. **Before you start, look at what's already open:** `gh api repos/alexanderlorden433-gif/GUIDE-BACKEND/pulls`.

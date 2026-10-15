@@ -46,7 +46,8 @@ open and unmerged, don't start a new area — improve that PR or wait, and say s
    - small, tasteful motion (≤ 250ms) that respects `prefers-reduced-motion`
    - trust on money screens: what Pro includes, cancel anytime, Stripe security note
 4. **Build it** in `web/index.html` — mostly CSS; markup changes only where needed. Reuse the
-   existing CSS variables (`--bg`, `--ink`, `--card`, …) and brand gradient. No new fonts, no
+   existing CSS variables (`--bg`, `--ink`, `--card`, `--sp-*`, …) and the design system at the end of
+   the `<style>` block (solid accent, line icons, 44px buttons). No new fonts, no
    new libraries, no external images. Keep `index.html` growth small (a few KB).
    Don't change: prices, plan names, product claims, legal text, tracking/payment code,
    element IDs that JavaScript uses (search for an ID before renaming anything).
