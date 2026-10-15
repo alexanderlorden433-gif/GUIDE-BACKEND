@@ -99,3 +99,30 @@ li{margin-bottom:var(--sp-2);}
   .pg-cta{padding:var(--sp-5) var(--sp-4);}
   .pg-calc{padding:var(--sp-4);}
 }
+
+/* the quiz */
+.qz{background:var(--card); border-radius:var(--r-card); padding:var(--sp-5); margin:0 0 var(--sp-6); max-width:640px;}
+.qz h2{outline:none;}
+.qz-bar{height:4px; border-radius:2px; background:var(--line); overflow:hidden; margin-bottom:var(--sp-5);}
+.qz-bar i{display:block; height:100%; background:var(--grape); transition:width .2s ease;}
+.qz-opts{display:grid; gap:var(--sp-2);}
+.qz-opt{min-height:var(--btn-h); padding:var(--sp-3) var(--sp-4); border-radius:var(--r-btn); border:1px solid var(--line-2); background:transparent; color:var(--ink);
+  font:500 16px/1.4 'Inter', system-ui, sans-serif; text-align:left; cursor:pointer;}
+.qz-opt:hover{border-color:var(--ink-soft);}
+.qz-opt.on{border-color:var(--grape);}
+.qz-back{margin-top:var(--sp-4); background:none; border:0; padding:0; min-height:var(--btn-h); color:var(--ink-soft); font:500 15px 'Inter', system-ui, sans-serif; cursor:pointer;}
+.qz-back:hover{color:var(--ink);}
+.qz-match{font-size:clamp(28px, 4vw, 36px);}
+.qz-why{color:var(--ink-2); font-size:15px;}
+.qz-cost{font-size:15px; color:var(--ink-2);}
+.qz-more{margin-top:var(--sp-5);}
+.qz-mail{display:grid; gap:var(--sp-2); margin-top:var(--sp-6); padding-top:var(--sp-5); border-top:1px solid var(--line);}
+.qz-mail label{font-size:15px; font-weight:500; color:var(--ink-2);}
+.qz-mail-row{display:flex; gap:var(--sp-2); flex-wrap:wrap;}
+.qz-mail-row input[type=email]{flex:1 1 200px; min-width:0; min-height:var(--btn-h); padding:0 var(--sp-3); border:1px solid var(--line-2); border-radius:var(--r-btn);
+  background:var(--bg); color:var(--ink); font:500 16px 'Inter', system-ui, sans-serif;}
+.qz-mail-row input[type=email]:focus{outline:none; border-color:var(--grape);}
+.qz-hp{position:absolute; left:-9999px; width:1px; height:1px; opacity:0;}
+.qz-msg{margin:0; font-size:14px; color:var(--ink-soft); min-height:1em;}
+.qz-done{margin:0;}
+@media (max-width:560px){ .qz{padding:var(--sp-4);} }
