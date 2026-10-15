@@ -1795,6 +1795,22 @@
   .acct-card .notif-pref-item:first-of-type{padding-top:0;}
   .acct-card .notif-pref-item:last-child{padding-bottom:0;}
   .acct-hint{margin:0 0 10px; font-size:12.5px; line-height:1.5; color:var(--ink-soft);}
+  .code-row{display:flex; gap:8px;}
+  .code-row input{flex:1; min-width:0; text-transform:uppercase; letter-spacing:.08em; font-weight:700;}
+  .code-row .live-btn{flex:none;}
+  .modal-link{display:block; margin:12px auto 0; font:600 13px 'Inter',sans-serif; color:var(--ink-soft); text-decoration:underline; background:none; border:0; cursor:pointer;}
+  #upgradeCodeWrap{margin-top:10px; text-align:left;}
+  .dx-codes-form{display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr auto; gap:8px; align-items:end; margin:0 0 12px;}
+  .dx-codes-form label{display:flex; flex-direction:column; gap:4px; font-size:11.5px; color:var(--ink-soft); min-width:0;}
+  .dx-codes-form input{width:100%; min-width:0; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:500 13px 'Inter',sans-serif;}
+  .dx-codes-table{width:100%; border-collapse:collapse; font-size:13px;}
+  .dx-codes-table th, .dx-codes-table td{padding:8px 6px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap;}
+  .dx-codes-table th{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); font-weight:600;}
+  .dx-codes-table code{font:700 13px ui-monospace, Menlo, monospace; letter-spacing:.06em;}
+  .dx-codes-table .st{font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(var(--accent-rgb),.15); color:var(--grape-soft);}
+  .dx-codes-table .st.off{background:var(--card); color:var(--ink-soft);}
+  .dx-codes-wrap{overflow-x:auto;}
+  @media(max-width:720px){ .dx-codes-form{grid-template-columns:1fr 1fr;} }
   .acct-danger{border-color:rgba(var(--danger-rgb),.3); background:rgba(var(--danger-rgb),.05);}
   .acct-danger h4{color:rgb(var(--danger-rgb));}
   .account-danger-btn{
@@ -6746,6 +6762,16 @@ let pendingReferralCode = null;
   }catch(e){ /* localStorage unavailable -- referral capture is best-effort */ }
 })();
 
+// A partner code from a shared link (?code=PEAK30): kept until the person is signed in, then applied.
+let pendingPartnerCode = null;
+(function(){
+  try{
+    const c = new URLSearchParams(window.location.search).get('code');
+    if(c){ pendingPartnerCode = c.trim().toUpperCase(); localStorage.setItem('guide_pending_code', pendingPartnerCode); }
+    else { pendingPartnerCode = localStorage.getItem('guide_pending_code') || null; }
+  }catch(e){ /* best-effort */ }
+})();
+
 let authToken = localStorage.getItem('guide_token') || null;
 
 function setAuthToken(token){
@@ -8303,6 +8329,7 @@ async function loginApp(email, record, userId){
   // backend (requireOwner), this just decides whether to show the menu item.
   checkDashboardAccess();
   startNotifPolling();
+  applyPendingPartnerCode();
 }
 
 async function handleAuthSubmit(){
@@ -8984,7 +9011,15 @@ function openUpgradeModal(resumeAction){
     <div class="modal-start" id="upgradeStart"></div>
     <button type="button" class="modal-cta" id="upgradeCta">Continue to checkout →</button>
     <p class="modal-note" id="upgradeModalNote"></p>
+    <button type="button" class="modal-link" id="upgradeHaveCode">Have a partner code?</button>
+    <div id="upgradeCodeWrap" hidden>${partnerCodeBoxHtml('upgCode', 'Your code')}</div>
   `;
+  upgradeModalBody.querySelector('#upgradeHaveCode').addEventListener('click', ()=>{
+    const w = upgradeModalBody.querySelector('#upgradeCodeWrap');
+    w.hidden = !w.hidden;
+    if(!w.hidden) upgradeModalBody.querySelector('#upgCodeInput').focus();
+  });
+  wirePartnerCodeBox('upgCode', ()=>{ setTimeout(()=> upgradeOverlay.classList.remove('open'), 900); });
   paintPlanPrices();
   loadPlanPrices().then(()=>{ paintPlanPrices(); paintStartChoice(); });
   selectedPlan = 'monthly';
@@ -9027,6 +9062,54 @@ function openUpgradeModal(resumeAction){
   upgradeOverlay.classList.add('open');
 }
 upgradeOverlay.addEventListener('click', (e)=>{ if(e.target===upgradeOverlay) upgradeOverlay.classList.remove('open'); });
+
+// ---------- Partner codes ----------
+// A code from a newsletter, podcast or creator is worth a number of free Pro days (the same
+// bonus-days grant referrals use). The server checks everything; this just asks and reacts.
+async function redeemPartnerCode(code){
+  const r = await apiFetch('/codes/redeem', { method: 'POST', body: JSON.stringify({ code }) });
+  if(!isPro){
+    isPro = true;
+    if(document.getElementById('homeView').offsetParent) showHome();
+    renderOverall();
+  }
+  fireConfetti(60);
+  showAppToast(`${r.days} days of Pro are on, thanks to ${r.label}.`, 'success');
+  return r;
+}
+async function applyPendingPartnerCode(){
+  if(!pendingPartnerCode) return;
+  const code = pendingPartnerCode;
+  pendingPartnerCode = null;
+  try{ localStorage.removeItem('guide_pending_code'); }catch(e){}
+  try{ await redeemPartnerCode(code); }
+  catch(e){ showAppToast(`Code ${code}: ${e.message || 'could not be applied.'}`, 'error'); }
+}
+// the "Have a partner code?" box (Account and the Pro window share it)
+function partnerCodeBoxHtml(id, label){
+  return `<div class="code-box" id="${id}"><label class="acct-field" for="${id}Input"><span>${label || 'Have a partner code?'}</span>
+      <div class="code-row"><input type="text" id="${id}Input" placeholder="e.g. PEAK30" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24"><button type="button" class="live-btn primary" id="${id}Btn">Apply</button></div></label>
+      <div class="acct-note" id="${id}Msg" role="status"></div></div>`;
+}
+function wirePartnerCodeBox(id, onDone){
+  const input = document.getElementById(id + 'Input'), btn = document.getElementById(id + 'Btn'), msg = document.getElementById(id + 'Msg');
+  if(!input || !btn) return;
+  const go = async ()=>{
+    const code = input.value.trim().toUpperCase();
+    msg.classList.remove('err'); msg.textContent = '';
+    if(!code){ msg.textContent = 'Type the code first.'; return; }
+    btn.disabled = true;
+    try{
+      const r = await redeemPartnerCode(code);
+      msg.textContent = `Applied: ${r.days} days of Pro.`;
+      input.value = '';
+      if(onDone) onDone(r);
+    }catch(e){ msg.classList.add('err'); msg.textContent = e.message || 'That code could not be applied.'; }
+    btn.disabled = false;
+  };
+  btn.addEventListener('click', go);
+  input.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); go(); } });
+}
 
 // After returning from a real Stripe redirect (success or the app reloading
 // with a saved token), resume whatever the user was trying to do when they
@@ -9691,8 +9774,22 @@ async function showAdmin(){
       </div>
       <div id="adminActionResult" class="dx-sub" style="margin-top:10px;"></div>
     </div>
+    <section class="dx-card" id="dxCodes">
+      <div class="dx-card-head"><div class="dx-label">Partner codes</div><div class="dx-sub">A code gives free Pro days. Give one to each partner; the link form is theguide.company/?code=CODE</div></div>
+      <form class="dx-codes-form" id="dxCodeForm">
+        <label>Who it is for<input id="dxCodeLabel" maxlength="60" placeholder="Peak Freelance" required></label>
+        <label>Code (blank = random)<input id="dxCodeCode" maxlength="24" placeholder="PEAK30"></label>
+        <label>Days<input id="dxCodeDays" type="number" min="1" max="365" value="30" required></label>
+        <label>Max uses<input id="dxCodeMax" type="number" min="1" placeholder="no limit"></label>
+        <label>Expires<input id="dxCodeExp" type="date"></label>
+        <button type="submit" class="dx-btn" id="dxCodeCreate">Create</button>
+      </form>
+      <div class="dx-sub" id="dxCodeMsg"></div>
+      <div class="dx-codes-wrap"><table class="dx-codes-table" id="dxCodeTable"><tbody></tbody></table></div>
+    </section>
   </div>`;
   const R = root.querySelector('#dxOwner');
+  renderAdminCodes();
   const S = { ov: dxCacheGet('owner:' + DX_TZ), snap: dxCacheGet('ownerLive:' + DX_TZ), status: 'connecting' };
   if(S.snap && Date.now() - S.snap.at > 10 * 60 * 1000) S.snap = null; // too old to show as "live"
 
@@ -9858,6 +9955,43 @@ async function showAdmin(){
     catch(e){ document.getElementById('adminActionResult').textContent = '❌ ' + (e.message || 'Failed'); }
     this.disabled = false; this.textContent = '🔥 Send streak reminders now';
   });
+}
+
+// Partner codes on the owner dashboard: make one, see uses, switch off.
+async function renderAdminCodes(){
+  const table = document.querySelector('#dxCodeTable tbody'), msg = document.getElementById('dxCodeMsg'), form = document.getElementById('dxCodeForm');
+  if(!table || !form) return;
+  const paint = (codes)=>{
+    table.innerHTML = codes.length ? `<tr><th>Code</th><th>For</th><th>Days</th><th>Used</th><th>Expires</th><th>State</th><th></th></tr>` + codes.map(c => `<tr>
+        <td><code>${dxEsc(c.code)}</code></td><td>${dxEsc(c.label)}</td><td>${c.days}</td><td>${c.uses}${c.maxUses != null ? ' / ' + c.maxUses : ''}</td>
+        <td>${c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : '—'}</td>
+        <td><span class="st${c.state === 'ok' ? '' : ' off'}">${dxEsc({ok:'live', inactive:'off', expired:'expired', used_up:'used up'}[c.state] || c.state)}</span></td>
+        <td><button type="button" class="dx-btn" data-code-toggle="${dxEsc(c.id)}" data-active="${c.active ? '1' : '0'}">${c.active ? 'Turn off' : 'Turn on'}</button></td>
+      </tr>`).join('') : '<tr><td class="dx-sub">No codes yet. Make the first one above.</td></tr>';
+    table.querySelectorAll('[data-code-toggle]').forEach(b => b.addEventListener('click', async ()=>{
+      b.disabled = true;
+      try{ await apiFetch('/codes/' + encodeURIComponent(b.dataset.codeToggle), { method:'PUT', body: JSON.stringify({ active: b.dataset.active !== '1' }) }); await load(); }
+      catch(e){ msg.textContent = '❌ ' + (e.message || 'Could not update the code.'); b.disabled = false; }
+    }));
+  };
+  const load = async ()=>{ try{ const r = await apiFetch('/codes'); paint(r.codes || []); }catch(e){ msg.textContent = e.status === 503 ? 'Codes are not ready yet, try again in a minute.' : '❌ ' + (e.message || 'Could not load the codes.'); } };
+  if(!form.dataset.wired){
+    form.dataset.wired = '1';
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const btn = document.getElementById('dxCodeCreate'); btn.disabled = true; msg.textContent = '';
+      const body = { label: document.getElementById('dxCodeLabel').value, code: document.getElementById('dxCodeCode').value || undefined,
+                     days: document.getElementById('dxCodeDays').value, maxUses: document.getElementById('dxCodeMax').value || null, expiresAt: document.getElementById('dxCodeExp').value || null };
+      try{
+        const c = await apiFetch('/codes', { method:'POST', body: JSON.stringify(body) });
+        msg.textContent = `✅ ${c.code} made: ${c.days} days for ${c.label}. Link: ${location.origin}/?code=${c.code}`;
+        form.reset(); document.getElementById('dxCodeDays').value = '30';
+        await load();
+      }catch(err){ msg.textContent = '❌ ' + (err.message || 'Could not create the code.'); }
+      btn.disabled = false;
+    });
+  }
+  await load();
 }
 
 // ===================== Marketing dashboard =====================
@@ -10451,6 +10585,12 @@ function renderAccountModal(){
           <div class="acct-note" id="accBillingError" role="status"></div>
         </section>
 
+        <section class="acct-card" id="accCodeCard">
+          <h4>Partner code</h4>
+          <p class="acct-hint">Got a code from a newsletter, a podcast or a creator we work with? It adds free Pro days to your account.</p>
+          ${partnerCodeBoxHtml('accCode', 'Your code')}
+        </section>
+
         <section class="acct-card">
           <h4>Change password</h4>
           <label class="acct-field" for="accCurrentPw"><span>Current password</span>
@@ -10473,6 +10613,7 @@ function renderAccountModal(){
     </div>
   `;
   upgradeModalBody.querySelector('#accountCloseBtn').addEventListener('click', ()=> upgradeOverlay.classList.remove('open'));
+  wirePartnerCodeBox('accCode');
 
   // Profile save
   const profileNameInput = upgradeModalBody.querySelector('#accDisplayName');

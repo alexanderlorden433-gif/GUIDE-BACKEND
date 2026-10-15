@@ -224,6 +224,36 @@ def fixture(state, method, path, body):
             state.setdefault('ai_posts', []).append(body)
             return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': left - 1, 'limit': 1}
         return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': None, 'limit': None}
+    # partner codes: state['codes'] = {'PEAK30': {'days': 30, 'label': 'Peak Freelance'}}
+    if p == '/api/codes/redeem' and method == 'POST':
+        code = str((body or {}).get('code') or '').strip().upper().replace(' ', '')
+        codes = state.get('codes') or {}
+        if code not in codes:
+            return 404, {'error': 'That code does not exist. Check the spelling.'}
+        if code in state.setdefault('redeems', []):
+            return 409, {'error': 'You have already used this code.'}
+        state['redeems'].append(code)
+        state['pro'] = True
+        return 200, {'ok': True, 'days': codes[code]['days'], 'label': codes[code]['label'], 'bonusProUntil': '2099-01-01T00:00:00.000Z'}
+    if p == '/api/codes' and method == 'GET':
+        if not state.get('owner'):
+            return 403, {'error': 'Not authorized.'}
+        return 200, {'codes': state.get('code_rows', [])}
+    if p == '/api/codes' and method == 'POST':
+        if not state.get('owner'):
+            return 403, {'error': 'Not authorized.'}
+        b = body or {}
+        row = {'id': f'c{len(state.get("code_rows", [])) + 1}', 'code': (str(b.get('code') or '') or 'RND-ABC123').upper().replace(' ', ''), 'label': b.get('label'), 'days': int(b.get('days') or 0),
+               'maxUses': b.get('maxUses'), 'uses': 0, 'active': True, 'expiresAt': None, 'createdAt': TODAY, 'state': 'ok'}
+        state.setdefault('code_rows', []).insert(0, row)
+        return 201, row
+    if p.startswith('/api/codes/') and method == 'PUT':
+        cid = p.rsplit('/', 1)[1]
+        for row in state.get('code_rows', []):
+            if row['id'] == cid:
+                row['active'] = bool((body or {}).get('active')); row['state'] = 'ok' if row['active'] else 'inactive'
+                return 200, row
+        return 404, {'error': 'Code not found.'}
     if p == '/api/billing/prices' and method == 'GET':
         # the real route reads these from Stripe; the numbers here are only a stand-in
         return 200, {'monthly': {'amount': 24.99, 'currency': 'USD', 'interval': 'month'},
@@ -1470,6 +1500,79 @@ def guider_free_question(browser, base):
         finish(st, step[0]); ctx.close()
 
 
+def partner_codes(browser, base):
+    """Partner codes: a ?code= link applies itself after sign-in; the Account page and the Pro window
+    have a "Have a partner code?" box; wrong codes say why; a good one turns Pro on."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    def open_app(label, query=''):
+        step = [f'partner codes ({label})']
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(False)
+        st['codes'] = {'PEAK30': {'days': 30, 'label': 'Peak Freelance'}}
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/' + query, wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(900)
+        return step, ctx, st, page
+    # 1) a shared link with the code in it
+    got = open_app('link', '?code=peak30')
+    if got:
+        step, ctx, st, page = got
+        toast = page.inner_text('#appToast') if page.locator('#appToast').count() else page.evaluate("(document.querySelector('.app-toast, .toast')||{}).innerText || ''")
+        pro = page.evaluate("isPro")
+        stored = page.evaluate("(()=>{try{return localStorage.getItem('guide_pending_code')}catch(e){return 'x'}})()")
+        if st.get('redeems') == ['PEAK30'] and pro and '30 days of Pro are on' in toast and 'Peak Freelance' in toast and not stored:
+            ok(step[0], 'opening theguide.company/?code=PEAK30 while signed in applies the code, turns Pro on and says thanks to the partner')
+        else:
+            problem(step[0], 'the code in the link should apply itself after sign-in', {'redeems': st.get('redeems'), 'pro': pro, 'toast': toast[:80], 'stored': stored})
+        finish(st, step[0]); ctx.close()
+    # 2) the box in the Pro window, with a wrong code first
+    got = open_app('pro window')
+    if got:
+        step, ctx, st, page = got
+        page.evaluate("openUpgradeModal()"); page.wait_for_timeout(400)
+        hidden_before = page.evaluate("document.getElementById('upgradeCodeWrap').hidden")
+        page.evaluate("document.getElementById('upgradeHaveCode').click()"); page.wait_for_timeout(200)
+        if not (hidden_before and visible(page, '#upgCodeInput', 2000)):
+            problem(step[0], '"Have a partner code?" should reveal the code box in the Pro window')
+        else:
+            page.fill('#upgCodeInput', 'nope'); page.evaluate("document.getElementById('upgCodeBtn').click()"); page.wait_for_timeout(400)
+            bad = page.inner_text('#upgCodeMsg')
+            page.fill('#upgCodeInput', 'peak30'); page.evaluate("document.getElementById('upgCodeBtn').click()"); page.wait_for_timeout(400)
+            good = page.inner_text('#upgCodeMsg')
+            page.wait_for_timeout(1100)
+            closed = not page.evaluate("document.getElementById('upgradeOverlay').classList.contains('open')")
+            if 'does not exist' in bad and 'Applied: 30 days of Pro' in good and st.get('redeems') == ['PEAK30'] and page.evaluate("isPro") and closed:
+                ok(step[0], 'a wrong code says so, a right one applies, turns Pro on and closes the Pro window')
+            else:
+                problem(step[0], 'the Pro-window code box did not behave', {'bad': bad, 'good': good, 'redeems': st.get('redeems'), 'closed': closed})
+        finish(st, step[0]); ctx.close()
+    # 3) the box in Account settings
+    got = open_app('account')
+    if got:
+        step, ctx, st, page = got
+        page.evaluate("document.getElementById('accountBtn').click()"); page.wait_for_timeout(500)
+        if not visible(page, '#accCodeInput', 3000):
+            problem(step[0], 'Account settings should have a Partner code box')
+        else:
+            page.fill('#accCodeInput', 'PEAK30'); page.keyboard.press('Enter'); page.wait_for_timeout(400)
+            m = page.inner_text('#accCodeMsg')
+            if 'Applied: 30 days of Pro' in m and st.get('redeems') == ['PEAK30']:
+                ok(step[0], 'the Account page box applies a code (Enter works too)')
+            else:
+                problem(step[0], 'the Account page code box did not apply the code', {'msg': m, 'redeems': st.get('redeems')})
+            page.fill('#accCodeInput', 'PEAK30'); page.keyboard.press('Enter'); page.wait_for_timeout(400)
+            m2 = page.inner_text('#accCodeMsg')
+            if 'already used' in m2:
+                ok(step[0], 'using the same code twice is refused with a clear message')
+            else:
+                problem(step[0], 'a second use of the same code should be refused', m2)
+        finish(st, step[0]); ctx.close()
+
+
 def live_iso_in(minutes):
     return time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(time.time() + minutes * 60))
 
@@ -2612,7 +2715,7 @@ def account_settings(browser, base):
             shot(page, 'phone-17-account-bottom')
         page.evaluate("document.querySelector('.acct-body').scrollTop = 0")
         # the fields: big enough to tap, text size that stops phones zooming in, labels focus their field
-        fields = page.evaluate("""(()=>[...document.querySelectorAll('.acct-field input, .acct-field textarea')].map(e => {
+        fields = page.evaluate("""(()=>[...document.querySelectorAll('.acct-field input, .acct-field textarea')].filter(e => !e.closest('.code-row')).map(e => {
           const r = e.getBoundingClientRect(); return {id: e.id, h: Math.round(r.height), fs: parseFloat(getComputedStyle(e).fontSize), w: Math.round(r.width)}; }))()""")
         bad = [f for f in fields if f['h'] < 40 or f['fs'] < 16 or f['w'] < 200]
         if len(fields) != 4 or bad:
@@ -2954,6 +3057,7 @@ def main():
         home_greeting(browser, base)
         trial_card(browser, base)
         chapter_certificate(browser, base)
+        partner_codes(browser, base)
         pro_peeks(browser, base)
         module_one_moment(browser, base)
         guider_free_question(browser, base)

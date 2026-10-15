@@ -74,6 +74,9 @@ SCREENS = {
     'path-start':  (True,  "streak={count:0,lastDate:null}; openNiche(NICHES[1].id)"),
     'step-done':   (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); markStepDone(NICHES[0], NICHES[0].guides[4])"),
     # chapter certificates: the goal row (everyone), its preview, and the finished chapter (Pro)
+    'code-account': (True, "document.getElementById('accountBtn').click(); setTimeout(()=>document.getElementById('accCodeCard').scrollIntoView({block:'center'}), 500)"),
+    'code-upgrade': (True, "openUpgradeModal(); setTimeout(()=>document.getElementById('upgradeHaveCode').click(), 300)"),
+    'code-admin-pro': (True, "showAdmin(); setTimeout(()=>document.getElementById('dxCodes').scrollIntoView(), 1200)"),
     'cert-goal':   (True,  "DEMO_PROGRESS(); openNiche(NICHES[0].id); setCourseView('list'); setTimeout(()=>window.scrollTo(0,0), 200)"),
     'cert-preview': (True, "DEMO_PROGRESS(); openNiche(NICHES[0].id); setTimeout(()=>document.getElementById('certGoal').click(), 300)"),
     'cert-done-pro': (True, "NICHES[0].guides.forEach(g=>completed.add(NICHES[0].id+'|'+g.title)); streak={count:12,lastDate:todayStr()}; openNiche(NICHES[0].id); setCourseView('list'); setTimeout(()=>window.scrollTo(0,0), 200)"),
@@ -110,6 +113,11 @@ def main():
                             st['wins'] = []; st['live'] = {'canHost': False, 'isOwner': False, 'calls': smoke.live_demo_calls()}
                     if name == 'community-wins':
                         st['wins'] = [{'id': f'w{i}', 'body': b, 'emoji': e, 'authorId': f'u{i}', 'authorName': n, 'authorInitial': n[0].upper(), 'createdAt': smoke.TODAY, 'reactions': [{'id': f'r{i}{k}', 'userId': f'x{k}', 'emoji': '🔥'} for k in range(c)]} for i, (b, e, n, c) in enumerate([('Booked my first paid shoot', '🎉', 'maya', 5), ('Module one done, streak at 3', '💪', 'dev', 3), ('Sent my first contract with the template', '📄', 'sam', 2), ('Got a yes from a wedding client', '🔥', 'luis', 7), ('Finished my pricing sheet', '✅', 'ana', 1)])]
+                    if name == 'code-admin-pro':
+                        st['owner'] = True
+                        st['code_rows'] = [{'id': 'c1', 'code': 'PEAK30', 'label': 'Peak Freelance', 'days': 30, 'maxUses': None, 'uses': 12, 'active': True, 'expiresAt': None, 'createdAt': smoke.TODAY, 'state': 'ok'},
+                                           {'id': 'c2', 'code': 'SP-7KQ2MN', 'label': 'Superpath', 'days': 30, 'maxUses': 200, 'uses': 41, 'active': True, 'expiresAt': '2026-12-31T23:59:59Z', 'createdAt': smoke.TODAY, 'state': 'ok'},
+                                           {'id': 'c3', 'code': 'OLD7', 'label': 'Test', 'days': 7, 'maxUses': 1, 'uses': 1, 'active': False, 'expiresAt': None, 'createdAt': smoke.TODAY, 'state': 'inactive'}]
                     if name.startswith('live-empty'):
                         st['wins'] = []; st['live'] = {'canHost': False, 'isOwner': False, 'calls': [], 'replays': [], 'past': []}
                     elif name == 'live-replay-home':
