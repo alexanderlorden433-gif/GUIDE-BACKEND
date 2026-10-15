@@ -174,12 +174,25 @@ function checkLiveEdit() {
 function checkMemberSites() {
   const sites = require(path.join(ROOT, 'src', 'sites'));
   const evil = '<script>alert(1)</script>"><img src=x onerror=alert(1)>';
-  const html = sites.renderSitePage({ slug: 'joes-lawns', previewKey: 'k', data: {
+  const data = {
     name: evil, tagline: evil, area: evil, hours: evil, about: evil, email: 'a@b.co', phone: '555 123 4567',
-    services: [{ name: evil, price: evil, note: evil }] } }, { error: evil, form: { name: evil, contact: evil, message: evil, service: evil } });
+    services: [{ name: evil, price: evil, note: evil }], highlights: [evil], faq: [{ q: evil + '</script>', a: evil }] };
+  let html = '';
+  for (const lang of ['en', 'es']) {
+    // a live page (with the search-engine data block) and a preview, in both languages
+    html += sites.renderSitePage({ slug: 'joes-lawns', previewKey: 'k', data: Object.assign({ lang }, data) }, {});
+    html += sites.renderSitePage({ slug: 'joes-lawns', previewKey: 'k', data: Object.assign({ lang }, data) }, { preview: true, previewKey: 'k', error: evil, form: { name: evil, contact: evil, message: evil, service: evil } });
+  }
   const scripts = (html.match(/<script(?![^>]*application\/ld\+json)/g) || []).length;
-  if (scripts || /<img/i.test(html) || html.includes('<script>alert')) bad('a member website lets typed text run as page code');
-  else ok("member websites show typed text as text (no code runs)");
+  const closes = (html.match(/<\/script>/g) || []).length, opens = (html.match(/<script/g) || []).length;
+  if (scripts || closes !== opens || /<img/i.test(html) || html.includes('<script>alert')) bad('a member website lets typed text run as page code');
+  else ok("member websites show typed text as text (no code runs), including reasons and questions");
+  // the AI page writer: loads, and its answer format is one the API accepts (every object closed, no length rules)
+  const siteAi = require(path.join(ROOT, 'src', 'siteAi'));
+  const objs = []; (function walk(n) { if (n && typeof n === 'object') { if (n.type === 'object') objs.push(n); Object.values(n).forEach(walk); } })(siteAi.SCHEMA);
+  if (objs.length && objs.every(o => o.additionalProperties === false && Object.keys(o.properties).every(k => o.required.includes(k)))
+      && !/minLength|maxLength|maxItems|minimum|maximum/.test(JSON.stringify(siteAi.SCHEMA)) && siteAi.MODELS()[0]) ok('the AI page writer loads and asks for a page format the API accepts');
+  else bad('the AI page writer schema would be refused by the API (every object needs additionalProperties: false and all fields required)');
   if (sites.slugProblem('admin') && sites.slugProblem('theguide') && !sites.slugProblem('joes-lawns')) ok("member web addresses can't take The Guide's own names");
   else bad("member web address rules are off (reserved names or a normal name)");
 }

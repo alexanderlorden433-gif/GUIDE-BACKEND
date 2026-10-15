@@ -44,6 +44,14 @@ const DDL = [
     CONSTRAINT "SiteRequest_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "MemberSite"("id") ON DELETE CASCADE ON UPDATE CASCADE
   )`,
   `CREATE INDEX IF NOT EXISTS "SiteRequest_siteId_createdAt_idx" ON "SiteRequest"("siteId", "createdAt")`,
+  // how many times a member asked the AI to write their page today (src/siteAi.js keeps a daily limit)
+  `CREATE TABLE IF NOT EXISTS "SiteAiUse" (
+    "userId" TEXT NOT NULL,
+    "day" TEXT NOT NULL,
+    "n" INTEGER NOT NULL DEFAULT 0,
+    CONSTRAINT "SiteAiUse_pkey" PRIMARY KEY ("userId", "day"),
+    CONSTRAINT "SiteAiUse_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+  )`,
 ];
 
 const state = { ready: false };
@@ -118,6 +126,14 @@ function cleanSiteData(b) {
     phone: phone.replace(/\D/g, '').length >= 6 ? phone : '',
     color: Object.prototype.hasOwnProperty.call(COLORS, b.color) ? b.color : 'green',
     nicheId: /^[a-z0-9_-]{1,30}$/.test(String(b.nicheId || '')) ? b.nicheId : '',
+    // why people pick this business: up to three short points
+    highlights: (Array.isArray(b.highlights) ? b.highlights : []).slice(0, 3).map(h => oneLine(h, 100)).filter(Boolean),
+    // questions customers ask, with the answers
+    faq: (Array.isArray(b.faq) ? b.faq : []).slice(0, 6)
+      .map(f => ({ q: oneLine(f && f.q, 120), a: multiLine(f && f.a, 400) }))
+      .filter(f => f.q && f.a),
+    // the language of the page itself (the words around the member's own text)
+    lang: b.lang === 'es' ? 'es' : 'en',
   };
 }
 /** What has to be there before a page can go live. null when it's ready. */
@@ -142,12 +158,42 @@ function cleanRequest(b) {
 }
 
 // ---------------------------------------------------------------- the page itself
+// The words around the member's own text, in the page's language.
+const WORDS = {
+  en: {
+    quote: 'Ask for a quote', call: 'Call', email: 'Email', serving: 'Serving', services: 'Services and prices',
+    why: (name) => `Why people choose ${name}`, faq: 'Questions people ask', about: 'About',
+    sent: (name) => `Thanks. Your request was sent to ${name}. They will get back to you soon.`, them: 'them', thisBiz: 'this business',
+    yourName: 'Your name', contact: 'Phone or email', need: 'What do you need?', choose: 'Choose one', other: 'Something else',
+    message: 'Message', messageHint: 'When, where, and anything they should know', send: 'Send request',
+    private: (name) => `Your details go only to ${name}, so they can reply.`, empty: 'Leave this empty',
+    preview: 'Preview: only you can see this page until you publish it in the app.',
+    madeWith: 'Made with', madeTail: ', where people learn to start a side business.', placeholderName: 'Your business name', soon: 'Coming soon',
+  },
+  es: {
+    quote: 'Pide una cotización', call: 'Llamar al', email: 'Correo', serving: 'Servicio en', services: 'Servicios y precios',
+    why: (name) => `Por qué elegir ${name}`, faq: 'Preguntas frecuentes', about: 'Sobre nosotros',
+    sent: (name) => `Gracias. Tu solicitud se envió a ${name}. Te responderán pronto.`, them: 'ellos', thisBiz: 'este negocio',
+    yourName: 'Tu nombre', contact: 'Teléfono o correo', need: '¿Qué necesitas?', choose: 'Elige uno', other: 'Otra cosa',
+    message: 'Mensaje', messageHint: 'Cuándo, dónde y lo que deban saber', send: 'Enviar solicitud',
+    private: (name) => `Tus datos solo le llegan a ${name}, para que te pueda responder.`, empty: 'Deja esto vacío',
+    preview: 'Vista previa: solo tú puedes ver esta página hasta que la publiques en la app.',
+    madeWith: 'Hecho con', madeTail: ', donde la gente aprende a empezar un negocio paralelo.', placeholderName: 'El nombre de tu negocio', soon: 'Muy pronto',
+  },
+};
+// The form's messages to visitors, in Spanish for Spanish pages.
+const ERRORS_ES = {
+  'Add your name.': 'Escribe tu nombre.',
+  'Add a phone number or email so they can reach you.': 'Escribe un teléfono o correo para que te puedan contactar.',
+  'Too many requests from here. Please try again later, or call or email instead.': 'Demasiadas solicitudes desde aquí. Inténtalo más tarde, o llama o escribe un correo.',
+  'This page has had a lot of requests today. Please try again tomorrow, or call or email instead.': 'Esta página recibió muchas solicitudes hoy. Inténtalo mañana, o llama o escribe un correo.',
+};
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const telHref = (phone) => 'tel:' + phone.replace(/[^\d+]/g, '');
 
-function shell({ title, description, canonical, robots, body, color, jsonLd }) {
+function shell({ title, description, canonical, robots, body, color, jsonLd, lang }) {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang === 'es' ? 'es' : 'en'}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -185,6 +231,16 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(
   .svc small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
   .svc .price{font-weight:600;white-space:nowrap;color:var(--ink)}
   .about{white-space:pre-line;color:var(--ink-2);max-width:65ch;margin:0}
+  .why{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+  .why li{padding-left:28px;position:relative;color:var(--ink-2)}
+  .why li::before{content:'';position:absolute;left:4px;top:.55em;width:10px;height:10px;border-radius:50%;background:var(--accent)}
+  .faq details{border-bottom:1px solid var(--line);padding:12px 0}
+  .faq details:last-child{border-bottom:0}
+  .faq summary{cursor:pointer;font-weight:600;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:'+';float:right;color:var(--muted);font-weight:400}
+  .faq details[open] summary::after{content:'–'}
+  .faq p{margin:8px 0 0;color:var(--ink-2);white-space:pre-line}
   form{display:grid;gap:12px;max-width:520px}
   label{display:grid;gap:4px;font-size:14px;font-weight:500;color:var(--ink-2)}
   input,select,textarea{font:16px 'Inter',sans-serif;padding:10px 12px;min-height:44px;border:1px solid #C9D0CD;border-radius:10px;background:#fff;color:var(--ink);width:100%}
@@ -210,54 +266,64 @@ ${body}
 /** The member's page. `opts`: {preview, sent, error, form} — what to show after the form was used. */
 function renderSitePage(site, opts = {}) {
   const d = cleanSiteData(site.data);
+  const W = WORDS[d.lang] || WORDS.en;
   const color = COLORS[d.color] || COLORS.green;
   const url = `${SITE_ORIGIN}/s/${site.slug}`;
-  const title = d.area ? `${d.name} · ${d.area}` : d.name || 'Coming soon';
+  const title = d.area ? `${d.name} · ${d.area}` : d.name || W.soon;
   const description = d.tagline || (d.services.length ? d.services.map(s => s.name).slice(0, 4).join(', ') : '') || d.about.slice(0, 150);
   const form = opts.form || {};
+  const error = opts.error && d.lang === 'es' ? (ERRORS_ES[opts.error] || opts.error) : opts.error;
   const contactBtns = [
-    `<a class="btn" href="#ask">Ask for a quote</a>`,
-    d.phone ? `<a class="btn ghost" href="${esc(telHref(d.phone))}">Call ${esc(d.phone)}</a>` : '',
-    d.email ? `<a class="btn ghost" href="mailto:${esc(d.email)}">Email</a>` : '',
+    `<a class="btn" href="#ask">${W.quote}</a>`,
+    d.phone ? `<a class="btn ghost" href="${esc(telHref(d.phone))}">${W.call} ${esc(d.phone)}</a>` : '',
+    d.email ? `<a class="btn ghost" href="mailto:${esc(d.email)}">${W.email}</a>` : '',
   ].join('');
-  const services = d.services.length ? `<section id="services"><h2>Services and prices</h2>
+  const services = d.services.length ? `<section id="services"><h2>${W.services}</h2>
       ${d.services.map(s => `<div class="svc"><div><b>${esc(s.name)}</b>${s.note ? `<small>${esc(s.note)}</small>` : ''}</div>${s.price ? `<span class="price">${esc(s.price)}</span>` : ''}</div>`).join('')}
     </section>` : '';
-  const about = d.about ? `<section id="about"><h2>About</h2><p class="about">${esc(d.about)}</p></section>` : '';
+  const why = d.highlights.length ? `<section id="why"><h2>${esc(W.why(d.name || W.thisBiz))}</h2>
+      <ul class="why">${d.highlights.map(h => `<li>${esc(h)}</li>`).join('')}</ul></section>` : '';
+  const about = d.about ? `<section id="about"><h2>${W.about}</h2><p class="about">${esc(d.about)}</p></section>` : '';
+  const faq = d.faq.length ? `<section id="faq" class="faq"><h2>${W.faq}</h2>
+      ${d.faq.map(f => `<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('')}</section>` : '';
   const options = d.services.map(s => `<option${form.service === s.name ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
   const action = `/s/${esc(site.slug)}/request${opts.preview ? `?preview=${esc(opts.previewKey || '')}` : ''}`;
   const ask = opts.sent
-    ? `<p class="note ok" role="status">Thanks. Your request was sent to ${esc(d.name || 'them')}. They will get back to you soon.</p>`
-    : `${opts.error ? `<p class="note bad" role="alert">${esc(opts.error)}</p>` : ''}
+    ? `<p class="note ok" role="status">${esc(W.sent(d.name || W.them))}</p>`
+    : `${error ? `<p class="note bad" role="alert">${esc(error)}</p>` : ''}
       <form method="post" action="${action}">
-        <label>Your name<input name="name" required maxlength="60" autocomplete="name" value="${esc(form.name || '')}"></label>
-        <label>Phone or email<input name="contact" required maxlength="120" autocomplete="on" value="${esc(form.contact || '')}"></label>
-        ${options ? `<label>What do you need?<select name="service"><option value="">Choose one</option>${options}<option${form.service === 'Something else' ? ' selected' : ''}>Something else</option></select></label>` : ''}
-        <label>Message<textarea name="message" maxlength="1000" placeholder="When, where, and anything they should know">${esc(form.message || '')}</textarea></label>
-        <div class="hp" aria-hidden="true"><label>Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label></div>
-        <div><button class="btn" type="submit">Send request</button></div>
-        <p class="small">Your details go only to ${esc(d.name || 'this business')}, so they can reply.</p>
+        <label>${W.yourName}<input name="name" required maxlength="60" autocomplete="name" value="${esc(form.name || '')}"></label>
+        <label>${W.contact}<input name="contact" required maxlength="120" autocomplete="on" value="${esc(form.contact || '')}"></label>
+        ${options ? `<label>${W.need}<select name="service"><option value="">${W.choose}</option>${options}<option${form.service === 'Something else' ? ' selected' : ''} value="Something else">${W.other}</option></select></label>` : ''}
+        <label>${W.message}<textarea name="message" maxlength="1000" placeholder="${W.messageHint}">${esc(form.message || '')}</textarea></label>
+        <div class="hp" aria-hidden="true"><label>${W.empty}<input name="website" tabindex="-1" autocomplete="off"></label></div>
+        <div><button class="btn" type="submit">${W.send}</button></div>
+        <p class="small">${esc(W.private(d.name || W.thisBiz))}</p>
       </form>`;
-  const jsonLd = {
+  const business = {
     '@context': 'https://schema.org', '@type': 'LocalBusiness', name: d.name, url,
     ...(description ? { description } : {}), ...(d.area ? { areaServed: d.area } : {}),
     ...(d.phone ? { telephone: d.phone } : {}), ...(d.email ? { email: d.email } : {}),
     ...(d.services.length ? { makesOffer: d.services.map(s => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.name }, ...(s.price ? { description: s.price } : {}) })) } : {}),
   };
-  const body = `${opts.preview ? '<div class="preview">Preview: only you can see this page until you publish it in the app.</div>' : ''}
+  const jsonLd = d.faq.length ? [business, { '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: d.faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }] : business;
+  const body = `${opts.preview ? `<div class="preview">${W.preview}</div>` : ''}
 <main class="wrap">
   <header class="top">
-    <h1>${esc(d.name || 'Your business name')}</h1>
+    <h1>${esc(d.name || W.placeholderName)}</h1>
     ${d.tagline ? `<p class="tag">${esc(d.tagline)}</p>` : ''}
-    ${d.area || d.hours ? `<p class="meta">${d.area ? `<span>Serving ${esc(d.area)}</span>` : ''}${d.hours ? `<span>${esc(d.hours)}</span>` : ''}</p>` : ''}
+    ${d.area || d.hours ? `<p class="meta">${d.area ? `<span>${W.serving} ${esc(d.area)}</span>` : ''}${d.hours ? `<span>${esc(d.hours)}</span>` : ''}</p>` : ''}
     <div class="acts">${contactBtns}</div>
   </header>
   ${services}
+  ${why}
   ${about}
-  <section id="ask"><h2>Ask for a quote</h2>${ask}</section>
+  ${faq}
+  <section id="ask"><h2>${W.quote}</h2>${ask}</section>
 </main>
-<footer><div class="wrap">Made with <a href="${SITE_ORIGIN}/?utm_source=member_site&amp;utm_medium=referral&amp;utm_campaign=${esc(site.slug)}">The Guide</a>, where people learn to start a side business.</div></footer>`;
-  return shell({ title, description, canonical: opts.preview ? '' : url, robots: opts.preview ? 'noindex, nofollow' : 'index, follow', body, color, jsonLd: opts.preview ? null : jsonLd });
+<footer><div class="wrap">${W.madeWith} <a href="${SITE_ORIGIN}/?utm_source=member_site&amp;utm_medium=referral&amp;utm_campaign=${esc(site.slug)}${d.lang === 'es' ? '&amp;lang=es' : ''}">The Guide</a>${W.madeTail}</div></footer>`;
+  return shell({ title, description, canonical: opts.preview ? '' : url, robots: opts.preview ? 'noindex, nofollow' : 'index, follow', body, color, jsonLd: opts.preview ? null : jsonLd, lang: d.lang });
 }
 
 /** For an address with no live page behind it. */

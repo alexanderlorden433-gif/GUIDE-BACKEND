@@ -50,6 +50,7 @@ model User {
   liveQuestions        LiveQuestion[]
   promoRedemptions     PromoRedemption[]
   memberSite           MemberSite?
+  siteAiUses           SiteAiUse[]
 
   @@index([stripeCustomerId])
   @@index([referredByCode])
@@ -453,6 +454,16 @@ model SiteRequest {
   createdAt DateTime   @default(now())
 
   @@index([siteId, createdAt])
+}
+
+// How many times a member used the AI page writer on a day (src/siteAi.js), for the daily limit.
+model SiteAiUse {
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day    String
+  n      Int    @default(0)
+
+  @@id([userId, day])
 }
 
 // Wins a member offered for the public landing page (src/routes/publicWins.js). Shown only once

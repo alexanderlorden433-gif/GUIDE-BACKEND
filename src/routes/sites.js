@@ -7,6 +7,7 @@ const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { isProUser } = require('../pro');
 const { SITE_ORIGIN, COLORS, state, oneLine, slugify, slugProblem, cleanSiteData, publishProblem } = require('../sites');
+const { writePage, usedToday, currentModel, DAILY } = require('../siteAi');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -33,11 +34,28 @@ async function mySite(userId) {
 // The member's page (or null), the latest requests from it, and the colours a page can have.
 router.get('/mine', async (req, res) => {
   res.set('Cache-Control', 'no-store');
-  const [site, pro] = await Promise.all([mySite(req.user.id), isProUser(req.user.id)]);
-  if (!site) return res.json({ site: null, requests: [], unseen: 0, pro, colors: COLORS });
+  const [site, pro, used] = await Promise.all([mySite(req.user.id), isProUser(req.user.id), usedToday(req.user.id)]);
+  const limit = pro ? DAILY.pro : DAILY.free;
+  const ai = { ready: !!process.env.ANTHROPIC_API_KEY, limit, left: Math.max(0, limit - used), proLimit: DAILY.pro, model: currentModel() };
+  if (!site) return res.json({ site: null, requests: [], unseen: 0, pro, colors: COLORS, ai });
   const requests = await prisma.$queryRawUnsafe(
     `SELECT * FROM "SiteRequest" WHERE "siteId" = $1::text ORDER BY "createdAt" DESC LIMIT 100`, site.id);
-  res.json({ site: siteShape(site), requests: requests.map(requestShape), unseen: requests.filter(r => !r.seen).length, pro, colors: COLORS });
+  res.json({ site: siteShape(site), requests: requests.map(requestShape), unseen: requests.filter(r => !r.seen).length, pro, colors: COLORS, ai });
+});
+
+// ---------- POST /api/sites/ai ----------
+// The AI writes the page {mode: "write"|"improve", description, draft, chapter: {name, description, tips}, lang}.
+// Answers {draft, tips, model, left, limit}; nothing is saved here, the app shows it in the editor first.
+// A write takes up to a minute, so on top of the daily limit there's a short-term one per member.
+const aiBurst = rateLimit({ windowMs: 10 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false,
+                            keyGenerator: (req) => 'site-ai:' + req.user.id,
+                            message: { error: 'Too many tries in a row. Wait a few minutes, then try again.' } });
+router.post('/ai', aiBurst, async (req, res) => {
+  const b = req.body || {};
+  const pro = await isProUser(req.user.id);
+  const r = await writePage({ userId: req.user.id, pro, mode: b.mode, description: b.description, draft: b.draft,
+                              chapter: b.chapter, lang: b.lang });
+  res.status(r.status).json(r.body);
 });
 
 // ---------- PUT /api/sites/mine ----------
