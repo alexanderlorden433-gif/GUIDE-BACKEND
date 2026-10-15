@@ -35,6 +35,8 @@ SCREENS = {
     'live-past-pro': (True, "showLive(); setTimeout(()=>document.querySelector('.live-sec:last-of-type').scrollIntoView(), 600)"),
     'landing-tour': (False, "document.getElementById('lpTour').scrollIntoView()"),
     'landing-demo': (False,"document.getElementById('lpStepOne').scrollIntoView()"),
+    'landing-course': (False, "document.getElementById('lpCourse').scrollIntoView()"),
+    'landing-course-done': (False, "document.getElementById('lpCourse').scrollIntoView(); document.getElementById('lpCourseEmail').value='ana@example.com'; document.getElementById('lpCourseBtn').click()"),
     'landing-demo-done': (False, "document.querySelector('#lpPick button:nth-child(2)').click(); document.querySelector('.dm-done').click(); document.getElementById('lpStepOne').scrollIntoView()"),
     'signup':      (False, "document.getElementById('landingSignupBtn').click()"),
     'login':       (False, "document.getElementById('landingLoginBtn').click()"),
