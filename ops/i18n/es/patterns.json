@@ -1,5 +1,117 @@
 [
  [
+  "^Day (\\d+) · (.+) · done$",
+  "Día $1 · $2 · hecho"
+ ],
+ [
+  "^Day (\\d+) · (.+)$",
+  "Día $1 · $2"
+ ],
+ [
+  "^Day (\\d+) of (\\d+)$",
+  "Día $1 de $2"
+ ],
+ [
+  "^30-day plan · (.+)$",
+  "Plan de 30 días · $1"
+ ],
+ [
+  "^(\\d+) of (\\d+) steps done$",
+  "$1 de $2 pasos hechos"
+ ],
+ [
+  "^Your week (\\d+) check-in\\. Tell The Guider how it went and get your focus for week (\\d+)\\.$",
+  "Tu revisión de la semana $1. Cuéntale a The Guider cómo te fue y recibe tu enfoque para la semana $2."
+ ],
+ [
+  "^, and (\\d+) more$",
+  ", y $1 más"
+ ],
+ [
+  "^1 earlier day is still open\\.$",
+  "Todavía tienes 1 día anterior pendiente."
+ ],
+ [
+  "^(\\d+) earlier days are still open\\.$",
+  "Todavía tienes $1 días anteriores pendientes."
+ ],
+ [
+  "^(.+) · Goal by day 30: (.+)$",
+  "$1 · Meta para el día 30: $2"
+ ],
+ [
+  "^Week (\\d+)$",
+  "Semana $1"
+ ],
+ [
+  "^Module (\\d+) · (.+)$",
+  "Módulo $1 · $2"
+ ],
+ [
+  "^How week (\\d+) went, and what to focus on next\\.$",
+  "Cómo te fue en la semana $1 y en qué enfocarte ahora."
+ ],
+ [
+  "^Starts with Module (\\d+), “(.+)”\\.$",
+  "Empieza con el Módulo $1, “$2”."
+ ],
+ [
+  "^Starts with Module (\\d+)\\.$",
+  "Empieza con el Módulo $1."
+ ],
+ [
+  "^Picks up where you are: Module (\\d+), lesson (\\d+) of (\\d+)\\.$",
+  "Sigue desde donde vas: Módulo $1, lección $2 de $3."
+ ],
+ [
+  "^That module opens on (.+), so day 1 is then\\.$",
+  "Ese módulo se abre el $1, así que ese será el día 1."
+ ],
+ [
+  "^Your next module opens on (.+), so day 1 is then\\.$",
+  "Tu próximo módulo se abre el $1, así que ese será el día 1."
+ ],
+ [
+  "^Starts (.+)$",
+  "Empieza: $1"
+ ],
+ [
+  "^Requests from your page <span class=\"site-new\">(\\d+) new</span>$",
+  "Solicitudes desde tu página <span class=\"site-new\">$1 nuevas</span>"
+ ],
+ [
+  "^Service (\\d+)$",
+  "Servicio $1"
+ ],
+ [
+  "^Price for service (\\d+)$",
+  "Precio del servicio $1"
+ ],
+ [
+  "^Note for service (\\d+)$",
+  "Nota del servicio $1"
+ ],
+ [
+  "^Remove service (\\d+)$",
+  "Quitar el servicio $1"
+ ],
+ [
+  "^This module opens in (\\d+) days?\\.$",
+  "Este módulo se abre en $1 día(s)."
+ ],
+ [
+  "^This check-in opens on day (\\d+)\\.$",
+  "Esta revisión se abre el día $1."
+ ],
+ [
+  "^(.+) is in your Lead Pipeline\\.$",
+  "$1 ya está en tu embudo de contactos."
+ ],
+ [
+  "^Delete the request from (.+)\\?$",
+  "¿Borrar la solicitud de $1?"
+ ],
+ [
   "^<b>Your step:</b> (.+)$",
   "<b>Tu paso:</b> $1"
  ],

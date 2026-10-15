@@ -12319,10 +12319,11 @@ function renderPlanCard(clearOnly){
   } else {
     const d = days[t - 1], st = planDayState(niche, d);
     const what = planDayText(niche, d);
-    line = d.type === 'checkin' ? `<b>Today:</b> your week ${d.week} check-in. Tell The Guider how it went and get your focus for ${d.week < 4 ? `week ${d.week + 1}` : 'the last two days'}.`
-      : d.type === 'finish' ? '<b>Today:</b> day 30. Look back with The Guider and plan what comes next.'
-      : `<b>Today:</b> ${gvEsc(what[0])}${what.length > 1 ? `, and ${what.length - 1} more` : ''}.`;
-    if(st.done) line += ' Done.';
+    // each piece in its own element, so the Spanish layer can translate them one by one
+    line = d.type === 'checkin' ? `<b>Today:</b> <span>Your week ${d.week} check-in. Tell The Guider how it went and get your focus for ${d.week < 4 ? `week ${d.week + 1}` : 'the last two days'}.</span>`
+      : d.type === 'finish' ? '<b>Today:</b> <span>Day 30. Look back with The Guider and plan what comes next.</span>'
+      : `<b>Today:</b> <span>${gvEsc(what[0])}</span>${what.length > 1 ? `<span>, and ${what.length - 1} more</span>` : ''}<span>.</span>`;
+    if(st.done) line += ' <span>Done.</span>';
     const open = days.filter(x=> x.day < t && x.type === 'lessons' && !planDayState(niche, x).done).length;
     if(open) line += ` <span class="pc-open">${open} earlier day${open === 1 ? ' is' : 's are'} still open.</span>`;
     if((d.type === 'checkin' || d.type === 'finish') && !st.done){
@@ -12380,7 +12381,7 @@ function openPlanMaker(){
     const keys = planGoalKeys(niche.id);
     if(!keys.includes(goal)) goal = (dayPlan && keys.includes(dayPlan.goal)) ? dayPlan.goal : keys[0];
     card.querySelector('#planGoals').innerHTML = keys.map(k=> `<button type="button" class="pl-goal${k === goal ? ' on' : ''}" role="radio" aria-checked="${k === goal}" data-goal="${k}">${gvEsc(PLAN_GOALS[k].label)}</button>`).join('');
-    card.querySelector('#planNote').textContent = planMakerNote(niche);
+    card.querySelector('#planNote').innerHTML = planMakerNote(niche).map(b=> `<span>${gvEsc(b)}</span>`).join(' ');
   };
   sel.addEventListener('change', paint);
   card.querySelector('#planGoals').addEventListener('click', (e)=>{
@@ -12413,7 +12414,7 @@ function planMakerNote(niche){
   if(start !== todayStr()) bits.push(`That module opens on ${planDateLabel(start)}, so day 1 is then.`);
   if(!isPro) bits.push(g.mod === 0 ? 'Week 1 is free. The weeks after it use Pro lessons.' : 'You have finished the free module, so this plan uses Pro lessons.');
   if(planRunning()) bits.push('This replaces your current plan.');
-  return bits.join(' ');
+  return bits; // one sentence each
 }
 
 // ----- the plan page -----
@@ -12471,6 +12472,11 @@ function renderPlanView(){
   box.innerHTML = html;
   document.getElementById('planAskBtn').addEventListener('click', ()=>{
     const g = PLAN_GOALS[dayPlan.goal];
+    if(LANG === 'es'){
+      const dayBit = t < 1 ? 'Mi plan de 30 días empieza pronto.' : t > PLAN_DAYS ? 'Ya terminé mi plan de 30 días.' : `Voy en el día ${t} de mi plan de 30 días.`;
+      openGuiderWith(niche.id, `${dayBit}${g ? ` Mi meta para el día 30: ${PLAN_GOAL_ES[dayPlan.goal] || g.me}.` : ''} Llevo ${s.done} de ${s.total} pasos. `);
+      return;
+    }
     const dayBit = t < 1 ? 'My 30-day plan starts soon.' : t > PLAN_DAYS ? 'I have finished my 30-day plan.' : `I'm on day ${t} of my 30-day plan.`;
     openGuiderWith(niche.id, `${dayBit}${g ? ` My goal by day 30: ${g.me}.` : ''} I've done ${s.done} of ${s.total} steps. `);
   });
@@ -12513,17 +12519,27 @@ let planPendingCheckin = null; // {nicheId, day} until the message is sent
 function planCheckinText(day){
   const niche = planNiche(), days = buildPlanDays(niche, dayPlan.from);
   const g = PLAN_GOALS[dayPlan.goal];
-  const goalBit = g ? ` My goal by day 30: ${g.me}.` : '';
+  const es = LANG === 'es';
+  const goalBit = g ? (es ? ` Mi meta para el día 30: ${PLAN_GOAL_ES[dayPlan.goal] || g.me}.` : ` My goal by day 30: ${g.me}.`) : '';
   if(day >= PLAN_DAYS){
     const s = planSummary(niche, days);
-    return `Day 30 of my 30-day plan.${goalBit} I finished ${s.done} of ${s.total} steps. Help me look back: what should I keep doing, and what should my next 30 days focus on?`;
+    return es ? `Día 30 de mi plan de 30 días.${goalBit} Terminé ${s.done} de ${s.total} pasos. Ayúdame a repasar: ¿qué debería seguir haciendo y en qué deberían enfocarse mis próximos 30 días?`
+      : `Day 30 of my 30-day plan.${goalBit} I finished ${s.done} of ${s.total} steps. Help me look back: what should I keep doing, and what should my next 30 days focus on?`;
   }
   const w = Math.ceil(day / 7);
   const wk = days.filter(d=> d.week === w && d.type === 'lessons');
   const done = wk.filter(d=> planDayState(niche, d).done).length;
+  if(es){
+    const next = w < 4 ? `en la semana ${w + 1}` : 'en los últimos dos días del plan';
+    return `Revisión de la semana ${w} de mi plan de 30 días.${goalBit} Esta semana terminé ${done} de ${wk.length} pasos. ¿En qué debería enfocarme ${next}${done < wk.length ? ' y cómo me pongo al día con lo que me faltó' : ''}?`;
+  }
   const next = w < 4 ? `in week ${w + 1}` : 'in the last two days of the plan';
   return `Week ${w} check-in for my 30-day plan.${goalBit} This week I finished ${done} of ${wk.length} steps. What should I focus on ${next}${done < wk.length ? ', and how do I catch up on what I missed' : ''}?`;
 }
+// The goals in the first person, in Spanish, for the message typed into The Guider.
+const PLAN_GOAL_ES = { first_customer: 'mi primer cliente que pague', first_500: 'mis primeros $500 con esto', set_up: 'tener todo listo para vender',
+  grow: 'más clientes de los que tengo ahora', trade_plan: 'un plan de trading por escrito que sí siga', practice: 'un mes de operaciones de práctica en mi diario',
+  basics: 'dominar lo básico antes de arriesgar dinero real' };
 function planCheckin(day){
   const niche = planNiche();
   if(!niche) return;
