@@ -131,3 +131,25 @@ Things worth remembering:
 - Lesson video stickers (GV_STK) still use emoji on purpose (video content, also used by social/render.py).
 - Left GuideMeta / GuideAnalytics blocks untouched (privacy dialog close button is still a text ✕).
 - PR #45 (partner codes) has a one-hunk CSS conflict with #49 near `.acct-hint`: keep both sides.
+
+## 2026-10-15 growth batch (PRs #50–#57, all open at time of writing)
+- #50 public pages: `ops/seo/build_pages.js` writes web/start/**, web/tools/**, sitemap.xml, robots.txt from the
+  niche files (`--check` in check.sh step 4). OnlyFans chapter is kept off public pages. OG images: ops/seo/og_images.py.
+- #51 quiz: /quiz/ + /quiz/<slug>/ result pages, built by the same script; trading is excluded from quiz results.
+- #52 [sensitive] billing emails: src/billingEmails.js (trial ends tomorrow, one "left checkout" note; EmailSent
+  table dedupes). account PUT now carries over server-only keys (onboardingDripSent/OptOut).
+- #53 landing wins (members opt in per win, owner approves; landing shows only with 3+ approved) + 7-day
+  money-back wording on landing, Pro box, FAQ and terms.
+- #54 creator payouts: PromoCode.commissionPct + PartnerPayout; monthly report in the owner dashboard, paid by hand.
+- #55 30-day plan: saved as `dayPlan` in the progress blob; week n = one module, check-ins on days 7/14/21/28/30
+  open The Guider with a message typed in; src/guiderContext.js tells The Guider the plan day + goal.
+  Also fixed: Guider Send button/header were dark-on-dark; chapters open at the top.
+- #56 member websites: theguide.company/s/<slug> is proxied by Netlify (web/_redirects) to the backend, which
+  draws plain HTML (src/sitePages.js, src/sites.js). Publishing needs Pro; requests land in-app (bell + My website)
+  and can go to the Lead Pipeline. Lead Pipeline rows are now escaped.
+- #57 Spanish part 1: web/i18n/es.js built by `python3 ops/i18n/build_es.py` from ops/i18n/es/*.json. Chapter data
+  (names, modules, Module 1 lessons) is swapped at load; everything else is translated on screen by a DOM walker
+  (exact text, inline-markup keys, regex patterns). Lesson titles stay English in data (progress keys).
+  To find untranslated UI: run `window.__guideI18nKeys()` in English and diff against ui.json.
+- Expect merge conflicts between these PRs in ops/smoke/smoke.py (new test functions before `def main()` and calls
+  after `design_polish(...)`), src/index.js, prisma/schema.prisma, ops/check_backend.js: keep both sides.
