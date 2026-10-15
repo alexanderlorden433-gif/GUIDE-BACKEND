@@ -29,6 +29,9 @@ const leadsCourse = require('./leads');
 const billingEmails = require('./billingEmails');
 const { ensurePushTable } = require('./push');
 const clientStatusRoutes = require('./routes/clientStatus');
+const sitesRoutes = require('./routes/sites');
+const sitePages = require('./sitePages');
+const memberSites = require('./sites');
 const { ensureLiveTables, scheduleLiveReminders } = require('./live');
 const { ensureAnalyticsTables, pruneOldEvents, drain: drainAnalytics } = require('./analytics');
 const { ensureMetaTable } = require('./meta');
@@ -76,6 +79,10 @@ app.use('/media', express.static(path.join(__dirname, '..', 'media'), {
 // Security headers — protects against clickjacking, MIME-sniffing, XSS, etc.
 app.use(helmet());
 
+// Members' own one-page websites (theguide.company/s/<address>, passed through by Netlify). Public HTML
+// pages with a plain form, so they sit before CORS: the form is sent from the page's own address.
+app.use('/s', sitePages.pages);
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || origin === 'null' || normalizeOrigin(origin) === normalizeOrigin(process.env.APP_URL)) {
@@ -118,6 +125,7 @@ app.use('/api/push', pushRoutes);
 app.use('/api/codes', codesRoutes);
 app.use('/api/leads', leadsRoutes);
 app.use('/api/client-status', clientStatusRoutes);
+app.use('/api/sites', sitesRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {
@@ -141,6 +149,7 @@ app.listen(PORT, () => {
   leadsCourse.ensureLeadTable().then(ok => { if (ok) leadsCourse.scheduleLeadCourse(); });
   billingEmails.ensureEmailTable().then(ok => { if (ok) billingEmails.scheduleBillingEmails(); });
   clientStatusRoutes.ensureClientStatusTable();
+  memberSites.ensureSiteTables();
   scheduleLiveReminders(); // does nothing until the tables exist
   setInterval(pruneOldEvents, 24 * 60 * 60 * 1000).unref();
 });

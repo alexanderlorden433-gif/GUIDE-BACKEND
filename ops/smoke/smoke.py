@@ -218,6 +218,39 @@ def fixture(state, method, path, body):
         return 200, {'ok': True}
     if p.startswith('/api/admin/'):
         return 403, {'error': 'Not authorized.'}
+    # member websites, shaped like src/routes/sites.js: state['site'] = {'site': {...} or None, 'requests': [...]}
+    if p == '/api/sites/mine':
+        sw = state.setdefault('site', {'site': None, 'requests': []})
+        colors = {'green': '#16865A', 'blue': '#2459D6', 'purple': '#7E3BD0', 'orange': '#C2540A', 'red': '#C62F2F', 'black': '#1D2321'}
+        if method == 'GET':
+            return 200, {'site': sw['site'], 'requests': sw['requests'], 'unseen': len([r for r in sw['requests'] if not r['seen']]), 'pro': state['pro'], 'colors': colors}
+        if method == 'PUT':
+            b = body or {}
+            d = b.get('data') or {}
+            slug = re.sub(r'[^a-z0-9]+', '-', str(b.get('slug') or d.get('name') or '').lower()).strip('-')[:40]
+            if len(slug) < 3:
+                return 400, {'error': 'Pick a web address of at least 3 letters or numbers.', 'field': 'slug'}
+            if slug == 'taken-name':
+                return 409, {'error': 'That web address is taken. Try another one.', 'field': 'slug'}
+            if b.get('published') and not state['pro']:
+                return 403, {'error': 'Putting your page live is part of Pro.', 'upgrade': True}
+            svcs = [x for x in (d.get('services') or []) if (x or {}).get('name')]
+            d = {**d, 'services': svcs}
+            state.setdefault('site_saves', []).append(b)
+            sw['site'] = {'slug': slug, 'url': 'https://theguide.company/s/' + slug, 'previewKey': 'smokepreviewkey123456', 'published': bool(b.get('published')), 'data': d, 'updatedAt': TODAY}
+            return 200, {'site': sw['site']}
+    m = re.match(r'^/api/sites/requests/([^/]+)$', p)
+    if m:
+        sw = state.setdefault('site', {'site': None, 'requests': []})
+        r = next((x for x in sw['requests'] if x['id'] == m.group(1)), None)
+        if not r:
+            return 404, {'error': 'Request not found.'}
+        if method == 'PUT':
+            r['seen'] = (body or {}).get('seen') is not False
+            return 200, {'ok': True}
+        if method == 'DELETE':
+            sw['requests'] = [x for x in sw['requests'] if x['id'] != r['id']]
+            return 200, {'ok': True}
     if p == '/api/ai-chat/free' and method == 'GET':
         if state['pro']:
             return 200, {'pro': True, 'unlimited': True, 'left': None, 'limit': None}
@@ -3191,6 +3224,144 @@ def design_polish(browser, base):
         ctx.close(); ctx2.close()
 
 
+def member_website(browser, base):
+    """My website: a member fills in a one-page site, saves it, previews it; going live is Pro. Requests from the
+    page are listed, can be added to the Lead Pipeline (shown as text, never as page code) and deleted."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    def open_site(label, pro, site=None, vp=None):
+        step = [f'my website ({label})']
+        vp = vp or {'width': 390, 'height': 844}
+        mobile = vp['width'] < 600
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        st = new_state(pro)
+        if site:
+            st['site'] = site
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.on('dialog', lambda dlg: dlg.accept())
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(700)
+        page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
+        page.click('#siteNavBtn'); page.wait_for_timeout(900)
+        return step, ctx, st, page
+
+    # 1) a free member makes a page, previews it, and is offered Pro to put it live
+    got = open_site('free member', False)
+    if got:
+        step, ctx, st, page = got
+        if not visible(page, '#siteForm', 3000):
+            problem(step[0], 'My website should open the form')
+        else:
+            page.fill('#sfName', "Joe's Lawns")
+            slug = page.input_value('#sfSlug')
+            page.fill('#sfTagline', 'Weekly mowing, done on time')
+            page.fill('#sfArea', 'Springfield')
+            row = page.locator('#sfSvcList .sf-svc').first
+            row.locator('[data-k="name"]').fill('Weekly mow'); row.locator('[data-k="price"]').fill('$40')
+            page.click('#sfAddSvc'); page.wait_for_timeout(200)
+            rows = page.locator('#sfSvcList .sf-svc')
+            kept = rows.first.locator('[data-k="name"]').input_value()
+            rows.nth(1).locator('[data-k="name"]').fill('Leaf cleanup'); rows.nth(1).locator('[data-k="price"]').fill('from $120')
+            page.click('.sf-color[data-color="blue"]')
+            shot(page, 'phone-website-form')
+            page.click('#sfSave'); page.wait_for_timeout(700)
+            saved = (st.get('site_saves') or [{}])[-1]
+            d = saved.get('data') or {}
+            if (slug == 'joes-lawns' and kept == 'Weekly mow' and saved.get('slug') == 'joes-lawns' and saved.get('published') is False
+                    and d.get('name') == "Joe's Lawns" and d.get('color') == 'blue' and [x['name'] for x in d.get('services', [])] == ['Weekly mow', 'Leaf cleanup']):
+                ok(step[0], 'the address follows the name, adding a service keeps what was typed, and the draft saves')
+            else:
+                problem(step[0], 'the page did not save as filled in', {'slug': slug, 'kept': kept, 'saved': saved})
+            href = page.get_attribute('#sitePreview', 'href') or ''
+            status = page.inner_text('#siteStatus') if page.locator('#siteStatus').count() else ''
+            if 'Not live yet' in status and href.startswith('https://theguide.company/s/joes-lawns?preview='):
+                ok(step[0], 'after saving: "Not live yet" with a preview link')
+            else:
+                problem(step[0], 'the saved draft should show a preview link', {'status': status[:80], 'href': href})
+            page.click('#siteUp'); page.wait_for_timeout(700)
+            if visible(page, '#upgradeOverlay', 2000):
+                ok(step[0], 'putting the page live opens the Pro window for a free member')
+            else:
+                problem(step[0], 'a free member should be offered Pro to put the page live')
+            close_paywall(page)
+            no_sideways_scroll(page, step[0])
+        finish(st, step[0]); ctx.close()
+
+    # 2) a Pro member with a live page and requests from it
+    bad_name = '<img src=x onerror="window.__xss=1">Sam'
+    site = {'site': {'slug': 'pat-cleans', 'url': 'https://theguide.company/s/pat-cleans', 'previewKey': 'smokepreviewkey123456', 'published': True, 'updatedAt': TODAY,
+                     'data': {'name': 'Pat Cleans', 'tagline': 'Deep cleans', 'area': 'Shelbyville', 'hours': '', 'about': '', 'email': '', 'phone': '', 'color': 'green', 'nicheId': 'cleaning',
+                              'services': [{'name': 'Deep clean', 'price': '$150', 'note': ''}]}},
+            'requests': [{'id': 'r1', 'name': bad_name, 'contact': '555 123 4567', 'service': 'Deep clean', 'message': 'Saturday?', 'seen': False, 'createdAt': TODAY + 'T10:00:00Z'},
+                         {'id': 'r2', 'name': 'Alex', 'contact': 'alex@example.com', 'service': '', 'message': '', 'seen': True, 'createdAt': TODAY + 'T09:00:00Z'}]}
+    got = open_site('Pro member, live page', True, site=site)
+    if got:
+        step, ctx, st, page = got
+        status = page.inner_text('#siteStatus')
+        reqs = page.inner_text('#siteReqs')
+        if 'Your page is live' in status and 'theguide.company/s/pat-cleans' in status and '1 new' in reqs and page.locator('.site-req').count() == 2:
+            ok(step[0], 'the live page, its link, and the 2 requests (1 new) show')
+        else:
+            problem(step[0], 'the live page and its requests should show', {'status': status[:100], 'reqs': reqs[:100]})
+        tel = page.get_attribute('.site-req[data-id="r1"] .sr-contact a', 'href')
+        mail = page.get_attribute('.site-req[data-id="r2"] .sr-contact a', 'href')
+        if tel == 'tel:5551234567' and mail == 'mailto:alex@example.com':
+            ok(step[0], 'a phone number is a call link and an email a mail link')
+        else:
+            problem(step[0], 'contact details should be tappable', {'tel': tel, 'mail': mail})
+        shot(page, 'phone-website-live')
+        page.click('.site-req[data-id="r1"] [data-act="lead"]'); page.wait_for_timeout(700)
+        leads = (st['data'].get('business') or {}).get('leads') or []
+        seen = [r['seen'] for r in st['site']['requests'] if r['id'] == 'r1']
+        if leads and leads[-1].get('name') == bad_name and leads[-1].get('source') == 'Website' and leads[-1].get('contact') == '555 123 4567' and seen == [True]:
+            ok(step[0], 'Add to leads puts the request in the Lead Pipeline and marks it read')
+        else:
+            problem(step[0], 'Add to leads should copy the request into the Lead Pipeline', {'leads': leads[-1:], 'seen': seen})
+        page.click('.site-req[data-id="r2"] [data-act="del"]'); page.wait_for_timeout(600)
+        if page.locator('.site-req').count() == 1 and len(st['site']['requests']) == 1:
+            ok(step[0], 'a request can be deleted')
+        else:
+            problem(step[0], 'deleting a request should remove it')
+        page.fill('#sfSlug', 'taken-name'); page.click('#sfSave'); page.wait_for_timeout(600)
+        err = page.inner_text('#sfSlugErr')
+        if 'taken' in err:
+            ok(step[0], 'a web address someone else has is flagged next to the address box')
+        else:
+            problem(step[0], 'a taken address should be explained next to the box', err)
+        page.fill('#sfSlug', 'pat-cleans')
+        page.click('#siteDown'); page.wait_for_timeout(700)
+        last = (st.get('site_saves') or [{}])[-1]
+        if last.get('published') is False and 'Not live yet' in page.inner_text('#siteStatus'):
+            ok(step[0], 'Take it down puts the page offline')
+        else:
+            problem(step[0], 'Take it down should put the page offline', last)
+        # the visitor's text is shown as text everywhere, never run as page code
+        page.evaluate("currentBizTab='leads'; showBusiness()"); page.wait_for_timeout(700)
+        title = page.evaluate("(()=>{const t=[...document.querySelectorAll('#lpList .tr-title')].pop(); return t ? t.textContent : ''})()")
+        xss = page.evaluate("!!window.__xss || !!document.querySelector('#lpList img, #siteContent img')")
+        if title == bad_name and not xss:
+            ok(step[0], "a visitor's name shows as plain text in the Lead Pipeline (no code runs)")
+        else:
+            problem(step[0], "a visitor's text must never run as page code", {'title': title, 'xss': xss})
+        finish(st, step[0]); ctx.close()
+
+    # 3) on a laptop, both looks
+    got = open_site('laptop', True, site=site, vp={'width': 1280, 'height': 800})
+    if got:
+        step, ctx, st, page = got
+        no_sideways_scroll(page, step[0])
+        shot(page, 'desktop-website-forest')
+        page.evaluate("document.documentElement.setAttribute('data-theme','purple')"); page.wait_for_timeout(200)
+        shot(page, 'desktop-website-purple')
+        ok(step[0], 'My website opens on a laptop')
+        finish(st, step[0]); ctx.close()
+
+
+
+
 def thirty_day_plan(browser, base):
     """The 30-day plan: Home offers it, two questions make it, the plan page lays out 30 days a module a week, a
     lesson day opens its lesson, the check-in opens The Guider with the message typed in, and sending it ticks
@@ -3331,6 +3502,7 @@ def thirty_day_plan(browser, base):
 
 
 
+
 def creator_payouts(browser, base):
     """Owner dashboard: a code can carry a creator share, and the payouts card shows each creator's cut
     for a month and lets the owner mark it paid."""
@@ -3367,6 +3539,7 @@ def creator_payouts(browser, base):
     else:
         problem(step[0], 'no Mark paid button on an unpaid creator')
     finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3429,6 +3602,7 @@ def landing_trust(browser, base):
 
 
 
+
 def billing_email_links(browser, base):
     """The billing emails link back with ?open=upgrade ("Pick up where you left off") and ?open=account
     ("Open my account"): the first opens the Pro box for a free member, the second opens account settings."""
@@ -3445,6 +3619,7 @@ def billing_email_links(browser, base):
         else:
             problem(step[0], f'?open={which} did not open the right screen')
         finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3533,6 +3708,7 @@ def public_pages(browser, base):
     else:
         problem(step[0], 'the app page is missing its title, description or share picture', r)
     finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3630,8 +3806,9 @@ def main():
         account_settings(browser, base)
         manage_subscription(browser, base)
         design_polish(browser, base)
-        thirty_day_plan(browser, base)
+        member_website(browser, base)
         save_retry(browser, base)
+        thirty_day_plan(browser, base)
         creator_payouts(browser, base)
         landing_trust(browser, base)
         billing_email_links(browser, base)

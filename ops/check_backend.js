@@ -9,6 +9,7 @@
 //   6. a host can edit a live call that has already started (to fix the link mid-call)
 //   7. The Guider is told about the member's 30-day plan in that chapter (day and goal), and only that chapter
 //   8. the billing emails (trial ends tomorrow, checkout left) say the amount, how to cancel, and nothing was charged
+//   9. member websites: what a member or a visitor types is shown as text, never run as page code
 // Usage: node ops/check_backend.js   (exit 1 on any failure)
 const fs = require('fs');
 const path = require('path');
@@ -168,6 +169,21 @@ function checkLiveEdit() {
   else bad('a call can be moved to a time that has already passed');
 }
 
+// 9. member websites (theguide.company/s/<address>): the page is drawn from what members type, and the
+//    request form shows back what visitors typed. All of it must arrive as text.
+function checkMemberSites() {
+  const sites = require(path.join(ROOT, 'src', 'sites'));
+  const evil = '<script>alert(1)</script>"><img src=x onerror=alert(1)>';
+  const html = sites.renderSitePage({ slug: 'joes-lawns', previewKey: 'k', data: {
+    name: evil, tagline: evil, area: evil, hours: evil, about: evil, email: 'a@b.co', phone: '555 123 4567',
+    services: [{ name: evil, price: evil, note: evil }] } }, { error: evil, form: { name: evil, contact: evil, message: evil, service: evil } });
+  const scripts = (html.match(/<script(?![^>]*application\/ld\+json)/g) || []).length;
+  if (scripts || /<img/i.test(html) || html.includes('<script>alert')) bad('a member website lets typed text run as page code');
+  else ok("member websites show typed text as text (no code runs)");
+  if (sites.slugProblem('admin') && sites.slugProblem('theguide') && !sites.slugProblem('joes-lawns')) ok("member web addresses can't take The Guide's own names");
+  else bad("member web address rules are off (reserved names or a normal name)");
+}
+
 // 7. the 30-day plan: The Guider knows which day it is and what the member wants by day 30
 function checkGuiderPlan() {
   const { buildGuiderContext } = require(path.join(ROOT, 'src', 'guiderContext'));
@@ -197,6 +213,7 @@ checkAsyncErrors()
   .catch(e => bad('async error check failed: ' + e.message))
   .then(() => checkBodyLimits().catch(e => bad('request size check failed: ' + e.message)))
   .then(() => { try { checkLiveEdit(); } catch (e) { bad('live edit check failed: ' + e.message); } })
+  .then(() => { try { checkMemberSites(); } catch (e) { bad('member website check failed: ' + e.message); } })
   .then(() => { try { checkGuiderPlan(); } catch (e) { bad('Guider plan check failed: ' + e.message); } })
   .then(() => { try { checkBillingEmails(); } catch (e) { bad('billing email check failed: ' + e.message); } })
   .finally(() => {
