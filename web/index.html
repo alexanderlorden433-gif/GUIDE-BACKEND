@@ -8185,6 +8185,8 @@ document.getElementById('welcomeNextBtn').addEventListener('click', ()=>{
 });
 document.getElementById('welcomeSkipBtn').addEventListener('click', closeWelcomeSlideshow);
 
+// If a save fails (bad signal, server restart), the app keeps trying and tells the member once.
+let saveFailing = false, saveRetryTimer = null, saveRetryDelay = 0;
 async function saveProgress(){
   if(!currentEmail || !authToken) return;
   try{
@@ -8211,11 +8213,23 @@ async function saveProgress(){
         }
       })
     });
+    clearTimeout(saveRetryTimer); saveRetryTimer = null; saveRetryDelay = 0;
+    if(saveFailing){ saveFailing = false; showAppToast('Your progress is saved.', 'success'); }
   }catch(err){
-    console.error('Could not save progress', err);
+    console.warn('Could not save progress', err);
+    // Every save sends the whole progress, so trying again later catches up on everything.
+    // Bad connection or a server hiccup: try again. A rejected save (logged out, too big…): don't loop.
+    const s = err && err.status;
+    if(!s || s >= 500 || s === 429){
+      if(!saveFailing){ saveFailing = true; showAppToast("Couldn't save your progress just now. The app will keep trying.", 'error'); }
+      clearTimeout(saveRetryTimer);
+      saveRetryDelay = Math.min(saveRetryDelay ? saveRetryDelay * 2 : 5000, 120000);
+      saveRetryTimer = setTimeout(()=>{ saveRetryTimer = null; saveProgress(); }, saveRetryDelay);
+    }
   }
   updateTodayBadge();
 }
+window.addEventListener('online', ()=>{ if(saveFailing){ clearTimeout(saveRetryTimer); saveRetryTimer = null; saveProgress(); } });
 
 /** Lessons were rewritten and renamed. Progress was saved under the old titles,
  *  so map each saved key through the lesson id (the old title's hash) to its new title. */
