@@ -179,3 +179,9 @@ Things worth remembering:
   in SQL (no server/DB clock mismatch). useDailyHour() runs before spendCredit(); hour writes log free=0 paid=0.
   Lifetime = User.planType 'lifetime' (also counts if isPro got switched off). 30/day write cap still applies.
 - Pro's hour is capped at 10 writes (HOUR_WRITES; SiteAiHour.writes, taken with a conditional UPDATE … RETURNING). Alexander chose this to protect margin.
+- PR #62: My website is a chat now (Alexander: "make it like a normal AI chat box"). POST /api/sites/ai {message, history}
+  → {reply, changed, draft}; schema has reply/changed/lang/phone/email; cleanHistory() keeps last 10 alternating turns.
+  Live preview = POST /api/sites/preview → renderSitePage(..., {preview, inApp}) shown in a sandbox="" iframe via a blob:
+  URL (srcdoc would resolve "#ask" against the app's URL). Chat kept in businessData.siteChat (40 max). The form is in
+  <details id="siteEditBox">; tests must open it. Playwright service_workers='block' throws inside sandboxed frames:
+  SANDBOX_SW is ignored in watch_errors.
