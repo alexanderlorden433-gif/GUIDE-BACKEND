@@ -168,3 +168,9 @@ Things worth remembering:
 - Page data gained highlights[3], faq[≤6] {q,a} and lang (en|es); public page draws them (+ FAQPage JSON-LD).
 - Smoke test website_ai holds the /api/sites/ai request with page.route to screenshot the "writing" state.
 - Test Postgres harness (/tmp/pgt) must run as user claude: `runuser -u claude -- node start.js`.
+- PR #61 (stacked on #60): AI credits. src/siteCredits.js (PACKS small/medium/large = 5/15/40 credits, WELCOME 2 free,
+  FREE_DAILY_TOTAL env SITE_AI_FREE_DAILY_TOTAL). Tables SiteAiCredit (free, paid) + SiteAiCreditLog (unique
+  stripeSession = idempotent grants; 'use' rows keep model + tokens). Stripe: createCreditsCheckout in src/stripe.js
+  (mode payment, card only, price_data inline, metadata.kind='site_credits'). The webhook checks kind FIRST and breaks,
+  so credits never hit the Pro path. Return URL /billing/credits?credits_session=… → app calls POST /sites/credits/confirm.
+  Daily per-member cap is now 30 (DAILY_CAP); app-wide SITE_AI_DAILY_TOTAL default 1000.
