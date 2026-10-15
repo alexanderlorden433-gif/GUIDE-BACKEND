@@ -3,7 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>The Guide</title>
+<title>The Guide: start a real side business, step by step</title>
+<meta name="description" content="Pick a real business, from lawn care and cleaning to e-commerce and UGC, and follow it as a course: modules in order, narrated video lessons and an AI mentor. Module 1 of every course is free.">
+<link rel="canonical" href="https://theguide.company/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Guide">
+<meta property="og:title" content="The Guide: start a real side business, step by step">
+<meta property="og:description" content="Real businesses taught as courses, one step at a time. Module 1 of every course is free.">
+<meta property="og:url" content="https://theguide.company/">
+<meta property="og:image" content="https://theguide.company/img/og/og-default.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"The Guide","url":"https://theguide.company","logo":"https://theguide.company/icons/icon-512.png"}</script>
 
 <!-- PWA: install-to-home-screen + offline support -->
 <link rel="manifest" href="manifest.json">
@@ -1797,7 +1809,7 @@
   .code-row .live-btn{flex:none;}
   .modal-link{display:block; margin:12px auto 0; font:600 13px 'Inter',sans-serif; color:var(--ink-soft); text-decoration:underline; background:none; border:0; cursor:pointer;}
   #upgradeCodeWrap{margin-top:12px; text-align:left;}
-  .dx-codes-form{display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr auto; gap:8px; align-items:end; margin:0 0 12px;}
+  .dx-codes-form{display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr auto; gap:8px; align-items:end; margin:0 0 12px;}
   .dx-codes-form label{display:flex; flex-direction:column; gap:4px; font-size:11.5px; color:var(--ink-soft); min-width:0;}
   .dx-codes-form input{width:100%; min-width:0; padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:500 13px 'Inter',sans-serif;}
   .dx-codes-table{width:100%; border-collapse:collapse; font-size:13px;}
@@ -5504,6 +5516,22 @@
   .module-head:first-child{margin-top:0;}
   .module-head.done .module-count{color:var(--grape-soft);}
 
+  .dx-payouts-bar{display:flex; align-items:end; gap:var(--sp-4); flex-wrap:wrap; margin:0 0 var(--sp-3);}
+  .dx-payouts-bar label{display:flex; flex-direction:column; gap:var(--sp-1); font-size:12px; color:var(--ink-soft);}
+  .dx-payouts-bar input{padding:var(--sp-2) var(--sp-3); border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:500 13px 'Inter',sans-serif;}
+  /* member wins on the landing page, the guarantee line, the website opt-in */
+  .lp-wins{list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:0 var(--sp-6); border-top:1px solid var(--line);}
+  .lp-wins li{padding:var(--sp-4) 0; border-bottom:1px solid var(--line);}
+  .lp-wins p{margin:0 0 var(--sp-2); font-size:16px; color:var(--ink); max-width:60ch;}
+  .lp-wins span{font-size:14px; color:var(--ink-soft);}
+  .lp-plan .lp-guarantee{font-size:14px; color:var(--ink-2); margin:calc(-1 * var(--sp-4)) 0 var(--sp-5);}
+  .modal-guarantee{font-size:13px; line-height:1.5; color:var(--ink-soft); margin:var(--sp-2) 0 0; text-align:center;}
+  .win-post-form{flex-wrap:wrap;}
+  .win-site{display:flex; align-items:flex-start; gap:var(--sp-2); flex-basis:100%; font-size:13px; color:var(--ink-soft); line-height:1.4; cursor:pointer;}
+  .win-post-form .win-site input{flex:none; width:16px; height:16px; min-width:16px; min-height:0; padding:0; margin:2px 0 0; accent-color:var(--grape);}
+  .lp-quiz-link{margin:var(--sp-4) 0 0; font-size:15px; color:var(--ink-soft);}
+  .lp-quiz-link a{color:var(--grape-soft); font-weight:600;}
+
   /* ---------- loading and empty states ---------- */
   .skel-wrap{display:block;}
   .skeleton{background:var(--card-2); background-image:none; animation:skelPulse 1.4s ease-in-out infinite; border-radius:6px;}
@@ -5694,6 +5722,7 @@
         <h2 class="lp-h2">Try step one. No signup.</h2>
         <p class="lp-lead">Pick a business. This is the first real thing you would do in its course.</p>
         <div class="lp-pick" id="lpPick" role="group" aria-label="Pick a business"></div>
+        <p class="lp-quiz-link">Not sure which to pick? <a href="/quiz/">Take the 2-minute quiz</a></p>
       </div>
       <div class="lp-demo" id="lpDemo" aria-live="polite"></div>
     </div>
@@ -5853,6 +5882,14 @@
     </div>
   </section>
 
+  <section class="lp-section" id="lpWins" hidden>
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Wins from members</h2>
+      <p class="lp-lead">Shared by members in the app, shown here with their OK.</p>
+      <ul class="lp-wins" id="lpWinsList"></ul>
+    </div>
+  </section>
+
   <section class="lp-section">
     <div class="lp-wrap">
       <h2 class="lp-h2" style="text-align:center;">Start free, pay when it's worth it</h2>
@@ -5873,6 +5910,7 @@
           <p class="lp-amt"><span id="lpProAmt">$24.99</span><small id="lpProPer">/month</small></p>
           <p class="lp-per" id="lpProYear">or $149 a year, save $150 (50%)</p>
           <p class="lp-trial" id="lpProTrial">Try it free for 4 days. Cancel any time.</p>
+          <p class="lp-guarantee">7-day money-back guarantee on your first payment.</p>
           <ul>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Every module of all <span data-count-word>sixteen</span> courses</span></li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>The Guider, your AI mentor</span></li>
@@ -5890,6 +5928,7 @@
       <details><summary>How much time does it take?</summary><p>Lessons are short enough to do in a sitting. A module opens each week, so most people spend a few evenings a week on it rather than a whole weekend.</p></details>
       <details><summary>What if I pick the wrong chapter?</summary><p>Switch whenever you like. Pro opens all <span data-count-word>sixteen</span> courses, and whatever you've finished stays finished.</p></details>
       <details><summary>Can I cancel?</summary><p>Yes, in one tap from your account page. You keep Pro until the period you've paid for ends, and anything you've already finished stays open to you.</p></details>
+      <details><summary>What if Pro isn't for me?</summary><p>Email us within 7 days of your first payment and we'll refund it in full. No forms, no questions you have to answer.</p></details>
       <details><summary>Is this a get-rich-quick thing?</summary><p>No. It teaches how these businesses actually work: pricing, clients, contracts, delivery, money. Nobody can promise what you'll earn, and we don't.</p></details>
     </div>
   </section>
@@ -5907,7 +5946,7 @@
 
   <footer class="lp-foot">
     <div class="lp-wrap">
-      Questions? Email <a href="mailto:TheGuide1@gmail.com">TheGuide1@gmail.com</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
+      <a href="/start/">Business guides</a> · <a href="/tools/">Free calculators</a> · Questions? Email <a href="mailto:TheGuide1@gmail.com">TheGuide1@gmail.com</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
     </div>
   </footer>
 </div>
@@ -8292,6 +8331,10 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
     const real = (n)=> n && n.guides && n.guides[0] && n.guides[0].action;
     let list = FEATURED.map(id=> NICHES.find(n=> n.id === id)).filter(real);
     if(list.length < 4) list = NICHES.filter(real).slice(0, 8);
+    // ?start=<chapter> from a business guide page or the quiz: lead with that business
+    let wanted = null;
+    try{ const id = new URLSearchParams(window.location.search).get('start'); wanted = id && NICHES.find(n=> n.id === id && real(n)); }catch(e){}
+    if(wanted){ list = [wanted, ...list.filter(n=> n.id !== wanted.id)].slice(0, 8); }
     pick.innerHTML = list.map(n=> `<button type="button" data-id="${gvEsc(n.id)}" aria-pressed="false"><em>${nicheIco(n)}</em>${gvEsc(n.name)}</button>`).join('');
     const show = (n, chosen)=>{
       if(chosen){ try{ sessionStorage.setItem('guide_demo_pick', n.id); }catch(e){} }   // sign-up starts them on this business
@@ -8328,7 +8371,11 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
       const n = b && list.find(x=> x.id === b.dataset.id);
       if(n) show(n, true);
     });
-    show(list[0], false);
+    show(list[0], !!wanted);
+    if(wanted && !window.__startHandled){
+      window.__startHandled = true;
+      setTimeout(()=>{ const b = document.getElementById('landingSignupBtn'); if(b && !currentEmail) b.click(); }, 400);
+    }
   }
 
   // scroll to a section
@@ -8342,6 +8389,18 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
   view.querySelectorAll('[data-lp-signup]').forEach(b=>{
     b.addEventListener('click', ()=> document.getElementById('landingSignupBtn').click());
   });
+
+  // wins members agreed to show here, approved by the owner; the section stays hidden until there are three
+  const winsSec = document.getElementById('lpWins');
+  if(winsSec && !winsSec.dataset.loaded){
+    winsSec.dataset.loaded = '1';
+    fetch(API_BASE_URL + '/public-wins').then(r => r.ok ? r.json() : { wins: [] }).then(d => {
+      const wins = (d && d.wins) || [];
+      if(wins.length < 3) return;
+      document.getElementById('lpWinsList').innerHTML = wins.map(w => `<li><p>${gvEsc(w.body)}</p><span>${gvEsc(w.name)} · ${new Date(w.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</span></li>`).join('');
+      winsSec.hidden = false;
+    }).catch(()=>{});
+  }
 
   // the free 7-day course: one email, one tap
   const courseForm = document.getElementById('lpCourseForm');
@@ -9604,6 +9663,7 @@ function openUpgradeModal(resumeAction){
     <div class="modal-start" id="upgradeStart"></div>
     <button type="button" class="modal-cta" id="upgradeCta">Continue to checkout →</button>
     <p class="modal-note" id="upgradeModalNote"></p>
+    <p class="modal-guarantee">7-day money-back guarantee: if Pro isn't for you, email us within 7 days of your first payment for a full refund.</p>
     <button type="button" class="modal-link" id="upgradeHaveCode">Have a partner code?</button>
     <div id="upgradeCodeWrap" hidden>${partnerCodeBoxHtml('upgCode', 'Your code')}</div>
   `;
@@ -9838,6 +9898,7 @@ const FAQ_DATA = [
     { q: "What's the \"Continue where you left off\" card?", a: "It remembers the last guide you opened and links straight back to it, so you don't have to hunt for it again next time you log in." },
   ]},
   { category: "Account & data", items: [
+    { q: "Can I get a refund?", a: "Yes. If Pro isn't for you, email TheGuide1@gmail.com within 7 days of your first payment and we'll refund it in full. You can also cancel any time from your account; you keep Pro until the period you paid for ends." },
     { q: "How do I change my password or delete my account?", a: "Open your account from the top bar. Password changes happen instantly; account deletion requires clicking the delete button twice to confirm, since it's permanent." },
     { q: "How do I back up my data?", a: "Go to Stats and use \"Back up everything (JSON)\" for a complete snapshot of your account, or \"Export data as CSV\" if you just want your tracked tool data in a spreadsheet-friendly format." },
     { q: "Is my data private?", a: "Your password is stored hashed, never as plain text, and your progress and tool data are tied to your account. The Privacy page explains what we collect and why." },
@@ -10367,6 +10428,10 @@ async function showAdmin(){
       </div>
       <div id="adminActionResult" class="dx-sub" style="margin-top:12px;"></div>
     </div>
+    <section class="dx-card" id="dxSiteWins">
+      <div class="dx-card-head"><div class="dx-label">Wins for the website</div><div class="dx-sub">Members ticked "show it on the website". Approved wins appear on the landing page once there are at least three.</div></div>
+      <div id="dxSiteWinsList"><div class="dx-empty">Nothing waiting.</div></div>
+    </section>
     <section class="dx-card" id="dxCodes">
       <div class="dx-card-head"><div class="dx-label">Partner codes</div><div class="dx-sub">A code gives free Pro days. Give one to each partner; the link form is theguide.company/?code=CODE</div></div>
       <form class="dx-codes-form" id="dxCodeForm">
@@ -10375,14 +10440,22 @@ async function showAdmin(){
         <label>Days<input id="dxCodeDays" type="number" min="1" max="365" value="30" required></label>
         <label>Max uses<input id="dxCodeMax" type="number" min="1" placeholder="no limit"></label>
         <label>Expires<input id="dxCodeExp" type="date"></label>
+        <label>Creator share %<input id="dxCodePct" type="number" min="0" max="90" placeholder="none"></label>
         <button type="submit" class="dx-btn" id="dxCodeCreate">Create</button>
       </form>
       <div class="dx-sub" id="dxCodeMsg"></div>
       <div class="dx-codes-wrap"><table class="dx-codes-table" id="dxCodeTable"><tbody></tbody></table></div>
     </section>
+    <section class="dx-card" id="dxPayouts">
+      <div class="dx-card-head"><div class="dx-label">Creator payouts</div><div class="dx-sub">What members brought in by a code with a creator share paid in a month, and the creator's cut. A member counts for the first code they used. Refunds are not taken off: check Stripe before you pay.</div></div>
+      <div class="dx-payouts-bar"><label>Month<input id="dxPayMonth" type="month"></label><span class="dx-sub" id="dxPayTotal"></span></div>
+      <div class="dx-codes-wrap"><table class="dx-codes-table" id="dxPayTable"><tbody></tbody></table></div>
+    </section>
   </div>`;
   const R = root.querySelector('#dxOwner');
   renderAdminCodes();
+  renderAdminPayouts();
+  renderAdminSiteWins();
   const S = { ov: dxCacheGet('owner:' + DX_TZ), snap: dxCacheGet('ownerLive:' + DX_TZ), status: 'connecting' };
   if(S.snap && Date.now() - S.snap.at > 10 * 60 * 1000) S.snap = null; // too old to show as "live"
 
@@ -10550,17 +10623,73 @@ async function showAdmin(){
   });
 }
 
+// Creator payouts: pick a month, see what each creator's members paid and the creator's cut, note what you paid.
+async function renderAdminPayouts(){
+  const table = document.querySelector('#dxPayTable tbody'), monthIn = document.getElementById('dxPayMonth'), total = document.getElementById('dxPayTotal');
+  if(!table || !monthIn) return;
+  if(!monthIn.value){ const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); monthIn.value = d.toISOString().slice(0, 7); }
+  if(!monthIn.dataset.wired){ monthIn.dataset.wired = '1'; monthIn.addEventListener('change', renderAdminPayouts); }
+  const money = (n)=> '$' + Number(n || 0).toFixed(2);
+  let r;
+  try{ r = await apiFetch('/codes/payouts?month=' + encodeURIComponent(monthIn.value)); }
+  catch(e){ table.innerHTML = `<tr><td class="dx-sub">${dxEsc(e.message || 'Could not load payouts.')}</td></tr>`; total.textContent = ''; return; }
+  const rows = r.payouts || [];
+  total.textContent = rows.length ? `Still to pay for this month: ${money(r.totalOwed)}` : '';
+  table.innerHTML = rows.length ? `<tr><th>Creator</th><th>Code</th><th>Share</th><th>Members</th><th>Paying now</th><th>Payments</th><th>They paid</th><th>Owed</th><th></th></tr>` + rows.map(p => `<tr>
+      <td>${dxEsc(p.label)}</td><td><code>${dxEsc(p.code)}</code></td><td>${p.commissionPct}%</td><td>${p.members}</td><td>${p.paying}</td><td>${p.payments}</td>
+      <td>${money(p.revenue)}</td><td><b>${money(p.owed)}</b></td>
+      <td>${p.paid ? `<span class="st">paid ${money(p.paid.amount)}</span>` : (p.owed > 0 ? `<button type="button" class="dx-btn" data-pay-code="${dxEsc(p.codeId)}" data-owed="${p.owed}">Mark paid</button>` : '')}</td>
+    </tr>`).join('') : '<tr><td class="dx-sub">No codes with a creator share yet. Give a code a share (for example 30%) above.</td></tr>';
+  table.querySelectorAll('[data-pay-code]').forEach(b => b.addEventListener('click', async ()=>{
+    const v = prompt('Amount you paid this creator for ' + monthIn.value, b.dataset.owed);
+    if(v === null) return;
+    b.disabled = true;
+    try{ await apiFetch('/codes/' + encodeURIComponent(b.dataset.payCode) + '/payouts', { method:'POST', body: JSON.stringify({ month: monthIn.value, amount: v }) }); renderAdminPayouts(); }
+    catch(e){ b.disabled = false; showAppToast(e.message || 'Could not save that.', 'error'); }
+  }));
+}
+
+// Wins members offered for the landing page: approve or hide each one.
+async function renderAdminSiteWins(){
+  const box = document.getElementById('dxSiteWinsList');
+  if(!box) return;
+  let wins = [];
+  try{ wins = (await apiFetch('/public-wins/review')).wins || []; }
+  catch(e){ box.innerHTML = `<div class="dx-empty">${e.status === 503 ? 'Not ready yet, try again in a minute.' : 'Could not load the wins.'}</div>`; return; }
+  if(!wins.length){ box.innerHTML = '<div class="dx-empty">Nothing waiting. When a member ticks "show it on the website", it lands here.</div>'; return; }
+  const label = { waiting:'waiting', approved:'on the website', hidden:'hidden' };
+  box.innerHTML = `<table class="dx-codes-table"><tbody>${wins.map(w => `<tr>
+      <td style="white-space:normal">${dxEsc(w.body)}<div class="dx-sub">${dxEsc(w.name)} · ${new Date(w.createdAt).toLocaleDateString()}</div></td>
+      <td><span class="st${w.status === 'approved' ? '' : ' off'}">${label[w.status] || dxEsc(w.status)}</span></td>
+      <td>${w.status !== 'approved' ? `<button type="button" class="dx-btn" data-site-win="${dxEsc(w.winId)}" data-to="approved">Approve</button>` : ''}
+          ${w.status !== 'hidden' ? `<button type="button" class="dx-btn" data-site-win="${dxEsc(w.winId)}" data-to="hidden">Hide</button>` : ''}</td>
+    </tr>`).join('')}</tbody></table>`;
+  box.querySelectorAll('[data-site-win]').forEach(b => b.addEventListener('click', async ()=>{
+    b.disabled = true;
+    try{ await apiFetch('/public-wins/' + encodeURIComponent(b.dataset.siteWin), { method:'PUT', body: JSON.stringify({ status: b.dataset.to }) }); renderAdminSiteWins(); }
+    catch(e){ b.disabled = false; showAppToast('Could not update that win.', 'error'); }
+  }));
+}
+
 // Partner codes on the owner dashboard: make one, see uses, switch off.
 async function renderAdminCodes(){
   const table = document.querySelector('#dxCodeTable tbody'), msg = document.getElementById('dxCodeMsg'), form = document.getElementById('dxCodeForm');
   if(!table || !form) return;
   const paint = (codes)=>{
-    table.innerHTML = codes.length ? `<tr><th>Code</th><th>For</th><th>Days</th><th>Used</th><th>Expires</th><th>State</th><th></th></tr>` + codes.map(c => `<tr>
+    table.innerHTML = codes.length ? `<tr><th>Code</th><th>For</th><th>Days</th><th>Used</th><th>Share</th><th>Expires</th><th>State</th><th></th></tr>` + codes.map(c => `<tr>
         <td><code>${dxEsc(c.code)}</code></td><td>${dxEsc(c.label)}</td><td>${c.days}</td><td>${c.uses}${c.maxUses != null ? ' / ' + c.maxUses : ''}</td>
+        <td><button type="button" class="dx-btn" data-code-share="${dxEsc(c.id)}" data-pct="${c.commissionPct == null ? '' : c.commissionPct}" title="Set the creator's share">${c.commissionPct == null ? 'None' : c.commissionPct + '%'}</button></td>
         <td>${c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : '—'}</td>
         <td><span class="st${c.state === 'ok' ? '' : ' off'}">${dxEsc({ok:'live', inactive:'off', expired:'expired', used_up:'used up'}[c.state] || c.state)}</span></td>
         <td><button type="button" class="dx-btn" data-code-toggle="${dxEsc(c.id)}" data-active="${c.active ? '1' : '0'}">${c.active ? 'Turn off' : 'Turn on'}</button></td>
       </tr>`).join('') : '<tr><td class="dx-sub">No codes yet. Make the first one above.</td></tr>';
+    table.querySelectorAll('[data-code-share]').forEach(b => b.addEventListener('click', async ()=>{
+      const v = prompt('Creator share for this code, in % (1 to 90). Leave empty for none.', b.dataset.pct);
+      if(v === null) return;
+      b.disabled = true;
+      try{ await apiFetch('/codes/' + encodeURIComponent(b.dataset.codeShare), { method:'PUT', body: JSON.stringify({ commissionPct: v.trim() }) }); await load(); renderAdminPayouts(); }
+      catch(e){ msg.textContent = 'Failed: ' + (e.message || 'Could not set the share.'); b.disabled = false; }
+    }));
     table.querySelectorAll('[data-code-toggle]').forEach(b => b.addEventListener('click', async ()=>{
       b.disabled = true;
       try{ await apiFetch('/codes/' + encodeURIComponent(b.dataset.codeToggle), { method:'PUT', body: JSON.stringify({ active: b.dataset.active !== '1' }) }); await load(); }
@@ -10574,10 +10703,12 @@ async function renderAdminCodes(){
       e.preventDefault();
       const btn = document.getElementById('dxCodeCreate'); btn.disabled = true; msg.textContent = '';
       const body = { label: document.getElementById('dxCodeLabel').value, code: document.getElementById('dxCodeCode').value || undefined,
-                     days: document.getElementById('dxCodeDays').value, maxUses: document.getElementById('dxCodeMax').value || null, expiresAt: document.getElementById('dxCodeExp').value || null };
+                     days: document.getElementById('dxCodeDays').value, maxUses: document.getElementById('dxCodeMax').value || null, expiresAt: document.getElementById('dxCodeExp').value || null,
+                     commissionPct: document.getElementById('dxCodePct').value || null };
       try{
         const c = await apiFetch('/codes', { method:'POST', body: JSON.stringify(body) });
-        msg.textContent = `${c.code} made: ${c.days} days for ${c.label}. Link: ${location.origin}/?code=${c.code}`;
+        msg.textContent = `${c.code} made: ${c.days} days for ${c.label}${c.commissionPct ? `, ${c.commissionPct}% creator share` : ''}. Link: ${location.origin}/?code=${c.code}`;
+        renderAdminPayouts();
         form.reset(); document.getElementById('dxCodeDays').value = '30';
         await load();
       }catch(err){ msg.textContent = 'Failed: ' + (err.message || 'Could not create the code.'); }
@@ -13186,10 +13317,21 @@ async function renderPushOffer(){
 // ?open=live (from a tapped push notification) opens the Live screen once the app is in
 function handleOpenParam(){
   const params = new URLSearchParams(window.location.search);
+  // ?start=<chapter> (from the public business guides and the quiz) opens that chapter
+  const start = params.get('start');
+  if(start && typeof NICHES !== 'undefined' && NICHES.some(n => n.id === start)){
+    params.delete('start');
+    const q = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (q ? '?' + q : ''));
+    setTimeout(()=> openNiche(start), 300);
+  }
   const open = params.get('open');
   if(!open) return;
   window.history.replaceState({}, '', window.location.pathname);
   if(open === 'live') setTimeout(()=> showLive(), 300);
+  // from the billing emails: "Pick up where you left off" and "Open my account"
+  if(open === 'upgrade') setTimeout(()=>{ if(!isPro) openUpgradeModal(); }, 500);
+  if(open === 'account') setTimeout(()=>{ const b = document.getElementById('accountBtn'); if(b) b.click(); }, 500);
 }
 
 // One line on Home about the next call, so nobody has to go looking for it.
@@ -13432,6 +13574,7 @@ async function loadCommunityWins(){
       <input type="text" id="ctabWinInput" placeholder="Share a win: first client, hit a goal, landed a deal…" maxlength="200">
       <select id="ctabWinEmoji"><option value="🏆">Milestone</option><option value="💰">Money</option><option value="🎉">Celebration</option><option value="🔥">On a roll</option><option value="⭐">Shout-out</option><option value="🚀">Launch</option></select>
       <button id="ctabWinPostBtn">Post</button>
+          <label class="win-site"><input type="checkbox" id="ctabWinSite"> Also show it on theguide.company, with the name members see, once it's checked</label>
     </div>
   `;
   document.getElementById('ctabWinPostBtn').addEventListener('click', async ()=>{
@@ -13440,9 +13583,10 @@ async function loadCommunityWins(){
     const text = (input.value||'').trim();
     if(!text){ showAppToast('Write something first!','error'); return; }
     try{
-      await apiFetch('/wins', { method:'POST', body: JSON.stringify({ body: text, emoji: emoji.value }) });
+      const site = document.getElementById('ctabWinSite');
+      const r = await apiFetch('/wins', { method:'POST', body: JSON.stringify({ body: text, emoji: emoji.value, showOnSite: !!(site && site.checked) }) });
       input.value = '';
-      showAppToast('Win posted!','success');
+      showAppToast(r && r.onSite === 'waiting' ? 'Win posted. It will show on the website once it is checked.' : 'Win posted!','success');
       loadCommunityWins();
     }catch(e){ showAppToast('Could not post. Try again.','error'); }
   });
@@ -13565,6 +13709,7 @@ async function loadWins(){
       <input type="text" id="winInput" placeholder="Share a win: first client, hit a goal, landed a deal…" maxlength="200">
       <select id="winEmoji"><option value="🏆">Milestone</option><option value="💰">Money</option><option value="🎉">Celebration</option><option value="🔥">On a roll</option><option value="⭐">Shout-out</option><option value="🚀">Launch</option></select>
       <button id="winPostBtn">Post</button>
+          <label class="win-site"><input type="checkbox" id="winSite"> Also show it on theguide.company, with the name members see, once it's checked</label>
     </div>
   `;
   document.getElementById('winPostBtn').addEventListener('click', postWin);
@@ -13588,8 +13733,10 @@ async function postWin(){
   const body = input.value.trim();
   if(!body) return;
   try {
-    await apiFetch('/wins', { method:'POST', body:JSON.stringify({body, emoji}) });
+    const site = document.getElementById('winSite');
+    const r = await apiFetch('/wins', { method:'POST', body:JSON.stringify({body, emoji, showOnSite: !!(site && site.checked)}) });
     input.value = '';
+    if(r && r.onSite === 'waiting') showAppToast('Win posted. It will show on the website once it is checked.', 'success');
     loadWins();
   } catch(e) {
     alert('Could not post. Try again.');
