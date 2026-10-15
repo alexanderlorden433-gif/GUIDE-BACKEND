@@ -82,6 +82,23 @@ def new_state(pro=True):
     }
 
 
+def site_ai_state(state):
+    """How many AI page writes the fake member has left today (like GET /api/sites/mine → ai)."""
+    return state.setdefault('site_ai', {'ready': True, 'limit': 10 if state['pro'] else 2, 'left': 10 if state['pro'] else 2})
+
+
+def site_ai_page():
+    """What the fake AI writes: a whole lawn-care page, shaped like cleanSiteData() in src/sites.js."""
+    return {'name': 'Green Mile Lawn Care', 'tagline': 'Weekly mowing for busy families in Springfield', 'area': 'Springfield', 'hours': 'Mon to Sat, 8am to 6pm',
+            'about': "I'm Sam. I started mowing for neighbours last summer and now keep a weekly route.",
+            'services': [{'name': 'Weekly mowing', 'price': '$40 a visit', 'note': 'Mow, edge and blow off paths.'},
+                         {'name': 'Leaf cleanup', 'price': 'from $120', 'note': ''}, {'name': 'Hedge trim', 'price': '$25 an hour', 'note': ''}],
+            'highlights': ['Same day every week', 'Text when the job is done', 'No contracts'],
+            'faq': [{'q': 'Do I need to be home?', 'a': 'No. Just leave the gate unlocked.'}, {'q': 'How do I pay?', 'a': 'Cash, Venmo or Zelle after each visit.'},
+                    {'q': 'Which areas do you cover?', 'a': 'Springfield and the towns next to it.'}],
+            'color': 'green', 'email': '', 'phone': '', 'nicheId': '', 'lang': 'en'}
+
+
 def fixture(state, method, path, body):
     """Response for a real backend route, shaped like src/routes/*."""
     p = path
@@ -222,8 +239,10 @@ def fixture(state, method, path, body):
     if p == '/api/sites/mine':
         sw = state.setdefault('site', {'site': None, 'requests': []})
         colors = {'green': '#16865A', 'blue': '#2459D6', 'purple': '#7E3BD0', 'orange': '#C2540A', 'red': '#C62F2F', 'black': '#1D2321'}
+        ai = site_ai_state(state)
         if method == 'GET':
-            return 200, {'site': sw['site'], 'requests': sw['requests'], 'unseen': len([r for r in sw['requests'] if not r['seen']]), 'pro': state['pro'], 'colors': colors}
+            return 200, {'site': sw['site'], 'requests': sw['requests'], 'unseen': len([r for r in sw['requests'] if not r['seen']]), 'pro': state['pro'], 'colors': colors,
+                         'ai': {'ready': ai['ready'], 'limit': ai['limit'], 'left': ai['left'], 'proLimit': 10, 'model': 'claude-fable-5-1'}}
         if method == 'PUT':
             b = body or {}
             d = b.get('data') or {}
@@ -239,6 +258,22 @@ def fixture(state, method, path, body):
             state.setdefault('site_saves', []).append(b)
             sw['site'] = {'slug': slug, 'url': 'https://theguide.company/s/' + slug, 'previewKey': 'smokepreviewkey123456', 'published': bool(b.get('published')), 'data': d, 'updatedAt': TODAY}
             return 200, {'site': sw['site']}
+    # the AI page writer (src/siteAi.js): state['site_ai_reply'] = (status, body) answers once; otherwise a lawn-care page
+    if p == '/api/sites/ai' and method == 'POST':
+        ai = site_ai_state(state)
+        state.setdefault('site_ai_posts', []).append(body or {})
+        if state.get('site_ai_reply'):
+            status, reply = state.pop('site_ai_reply')
+            return status, reply
+        b = body or {}
+        d = b.get('draft') or {}
+        ai['left'] = max(0, ai['left'] - 1)
+        page = site_ai_page()
+        if b.get('mode') == 'improve':
+            page = {**page, 'name': d.get('name') or page['name'], 'color': d.get('color') or page['color']}
+        page.update({'email': d.get('email', ''), 'phone': d.get('phone', ''), 'nicheId': d.get('nicheId', ''), 'lang': b.get('lang') or 'en'})
+        return 200, {'draft': page, 'tips': ['Check these prices against two local lawn services.', '<img src=x onerror="window.__xss=1">Add your phone number.'],
+                     'model': 'claude-fable-5-1', 'left': ai['left'], 'limit': ai['limit']}
     m = re.match(r'^/api/sites/requests/([^/]+)$', p)
     if m:
         sw = state.setdefault('site', {'site': None, 'requests': []})
@@ -3883,6 +3918,183 @@ def side_business_quiz(browser, base):
         problem(step[0], 'the landing page should link to the quiz next to Try step one')
     ctx.close()
 
+def website_ai(browser, base):
+    """My website → Let AI write your page: the member says what they do, the AI (Claude, src/siteAi.js) fills in the
+    whole page, a page that isn't live is saved as a draft, Undo puts the old page back, a live page waits for Save,
+    the daily limit offers Pro to free members, and nothing the AI writes runs as page code."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    def open_site(label, pro, site=None, vp=None):
+        step = [f'AI website writer ({label})']
+        vp = vp or {'width': 390, 'height': 844}
+        mobile = vp['width'] < 600
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        st = new_state(pro)
+        if site:
+            st['site'] = site
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.on('dialog', lambda dlg: dlg.accept())
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(700)
+        page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
+        page.click('#siteNavBtn'); page.wait_for_timeout(900)
+        return step, ctx, st, page
+    val = lambda page, sel: page.evaluate(f"[...document.querySelectorAll('{sel}')].map(e => e.value)")
+
+    # 1) a free member with no page yet: describe the business, the AI writes it, it's saved as a draft
+    got = open_site('free member, new page', False)
+    if got:
+        step, ctx, st, page = got
+        card = page.inner_text('#siteAi') if page.locator('#siteAi').count() else ''
+        if 'Let AI write your page' in card and '2 of 2 free AI writes left today' in card and 'Claude Fable 5.1' in card and page.locator('#saDesc').count():
+            ok(step[0], 'the AI card leads the page: what to tell it, the free writes left, and the model')
+        else:
+            problem(step[0], 'a new page should start with the AI card', card[:300])
+        page.click('#saWrite'); page.wait_for_timeout(300)
+        err = page.inner_text('#siteAi .sa-err')
+        if 'little about your business' in err and not st.get('site_ai_posts'):
+            ok(step[0], 'tapping Write with nothing typed asks for a few lines first (nothing is sent)')
+        else:
+            problem(step[0], 'an empty description should be caught before calling the AI', {'err': err, 'posts': st.get('site_ai_posts')})
+        page.select_option('#saKind', 'lawn')
+        page.fill('#saDesc', 'I mow lawns in Springfield on weekends. $40 a cut. Mostly busy families.')
+        held = []
+        page.route('**/api/sites/ai', lambda route: held.append(route))
+        page.click('#saWrite'); page.wait_for_timeout(1500)
+        busy = page.inner_text('#siteAi') if page.locator('#siteAi').count() else ''
+        inert = page.evaluate("!!document.getElementById('siteForm').inert")
+        bar = page.evaluate("(document.getElementById('saBar')||{style:{}}).style.width || ''")
+        if 'Writing your page' in busy and 'about a minute' in busy and inert and bar not in ('', '0%'):
+            ok(step[0], 'while it writes: "Writing your page…", a moving bar, and the form is locked')
+        else:
+            problem(step[0], 'the writing state should show and lock the form', {'busy': busy[:200], 'inert': inert, 'bar': bar})
+        shot(page, 'phone-website-ai-writing')
+        if held:
+            req = held[0].request
+            body = req.post_data_json or {}
+            ch = body.get('chapter') or {}
+            if (body.get('mode') == 'write' and 'mow lawns in Springfield' in body.get('description', '') and body.get('lang') == 'en'
+                    and ch.get('name') and len(ch.get('tips') or []) >= 2 and any('price' in t.lower() or 'quote' in t.lower() for t in ch['tips'])
+                    and (body.get('draft') or {}).get('nicheId') == 'lawn'):
+                ok(step[0], 'it sends what they wrote, the kind of business, and that chapter\'s pricing lessons')
+            else:
+                problem(step[0], 'the AI request is missing something', {'body': {k: body.get(k) for k in ('mode', 'description', 'lang', 'chapter')}})
+            status, payload = fixture(st, 'POST', '/api/sites/ai', body)
+            held[0].fulfill(status=status, json=payload, headers={'access-control-allow-origin': '*'})
+        else:
+            problem(step[0], 'Write my page should call the AI')
+        page.unroute('**/api/sites/ai')
+        page.wait_for_timeout(1200)
+        services = val(page, '#sfSvcList .sf-svc [data-k="name"]')
+        reasons = val(page, '#siteForm .sf-hl')
+        faqs = val(page, '#sfFaqList .sf-faq [data-k="q"]')
+        if (page.input_value('#sfName') == 'Green Mile Lawn Care' and page.input_value('#sfSlug') == 'green-mile-lawn-care'
+                and services == ['Weekly mowing', 'Leaf cleanup', 'Hedge trim'] and reasons == ['Same day every week', 'Text when the job is done', 'No contracts']
+                and faqs[:1] == ['Do I need to be home?'] and len(faqs) == 3):
+            ok(step[0], 'the whole page lands in the form: name, address, services, reasons to pick them, questions')
+        else:
+            problem(step[0], 'the AI page should fill the form', {'name': page.input_value('#sfName'), 'services': services, 'reasons': reasons, 'faqs': faqs})
+        saved = (st.get('site_saves') or [{}])[-1]
+        sd = saved.get('data') or {}
+        card = page.inner_text('#siteAi')
+        if (saved.get('published') is False and sd.get('name') == 'Green Mile Lawn Care' and len(sd.get('faq') or []) == 3 and sd.get('nicheId') == 'lawn'
+                and 'Not live yet' in page.inner_text('#siteStatus') and 'saved as a draft' in card):
+            ok(step[0], 'a new page is saved as a draft straight away, so Preview shows it')
+        else:
+            problem(step[0], 'the written page should be saved as a draft', {'saved': saved, 'card': card[:200]})
+        tips = page.evaluate("[...document.querySelectorAll('#siteAi .sa-tips li')].map(li => li.textContent)")
+        xss = page.evaluate("!!window.__xss || !!document.querySelector('#siteAi img')")
+        if len(tips) == 2 and 'Check these prices' in tips[0] and not xss and 'Written by Claude Fable 5.1' in card and '1 of 2 free AI writes left today' in card:
+            ok(step[0], 'its tips show as plain text, with who wrote it and the writes left')
+        else:
+            problem(step[0], 'the AI tips should show as text', {'tips': tips, 'xss': xss, 'card': card[:300]})
+        shot(page, 'phone-website-ai-done')
+        no_sideways_scroll(page, step[0])
+        # Undo: the form goes back to how it was (empty)
+        page.click('#saUndo'); page.wait_for_timeout(500)
+        if page.input_value('#sfName') == '' and page.locator('#saUndo').count() == 0:
+            ok(step[0], 'Undo puts the old page back in the form')
+        else:
+            problem(step[0], 'Undo should restore the form', page.input_value('#sfName'))
+        # the daily limit: a free member is offered Pro
+        st['site_ai_reply'] = (429, {'error': "That's all 2 free AI writes for today. Pro members get 10 a day.", 'left': 0, 'limit': 2, 'upgrade': True})
+        page.fill('#saDesc', 'I mow lawns in Springfield on weekends.')
+        page.click('#saWrite'); page.wait_for_timeout(900)
+        card = page.inner_text('#siteAi')
+        if "That's all 2 free AI writes" in card and page.locator('#saPro').count() and page.is_disabled('#saWrite'):
+            ok(step[0], 'at the daily limit: says so plainly, the button rests, and Pro is one tap away')
+        else:
+            problem(step[0], 'the daily limit should be explained with a way to Pro', card[:300])
+        page.click('#saPro'); page.wait_for_timeout(600)
+        if visible(page, '#upgradeOverlay', 2000):
+            ok(step[0], 'See Pro opens the Pro window')
+        else:
+            problem(step[0], 'See Pro should open the Pro window')
+        close_paywall(page)
+        finish(st, step[0]); ctx.close()
+
+    # 2) a Pro member with a live page: Make it better, which waits for Save; questions and language can be edited
+    site = {'site': {'slug': 'pat-cleans', 'url': 'https://theguide.company/s/pat-cleans', 'previewKey': 'smokepreviewkey123456', 'published': True, 'updatedAt': TODAY,
+                     'data': {'name': 'Pat Cleans', 'tagline': 'Deep cleans', 'area': 'Shelbyville', 'hours': '', 'about': '', 'email': 'pat@example.com', 'phone': '', 'color': 'blue', 'nicheId': 'cleaning',
+                              'services': [{'name': 'Deep clean', 'price': '$150', 'note': ''}], 'highlights': [], 'faq': [], 'lang': 'en'}},
+            'requests': []}
+    got = open_site('Pro member, live page', True, site=site)
+    if got:
+        step, ctx, st, page = got
+        card = page.inner_text('#siteAi')
+        if 'Let AI improve your page' in card and page.locator('#saBetter').count() and page.locator('#saDesc').count() == 0 and '10 of 10 AI writes left today' in card:
+            ok(step[0], 'a page with content offers Make it better (and Write it again)')
+        else:
+            problem(step[0], 'a filled page should offer Make it better', card[:300])
+        page.click('#saBetter'); page.wait_for_timeout(1200)
+        post = (st.get('site_ai_posts') or [{}])[-1]
+        saves = len(st.get('site_saves') or [])
+        card = page.inner_text('#siteAi')
+        if (post.get('mode') == 'improve' and (post.get('draft') or {}).get('name') == 'Pat Cleans' and page.input_value('#sfName') == 'Pat Cleans'
+                and page.input_value('#sfEmail') == 'pat@example.com' and len(val(page, '#sfSvcList .sf-svc [data-k="name"]')) == 3
+                and saves == 0 and 'Save changes to update your live page' in card):
+            ok(step[0], 'Make it better keeps their name and email, fills the page, and waits for Save on a live page')
+        else:
+            problem(step[0], 'improving a live page should fill the form and wait for Save', {'post': post.get('mode'), 'saves': saves, 'card': card[:200]})
+        page.click('#saWrite'); page.wait_for_timeout(300)
+        if page.locator('#saDesc').count() and page.locator('#saCancel').count():
+            ok(step[0], 'Write it again opens the description box first')
+        else:
+            problem(step[0], 'Write it again should ask what the business does first')
+        page.click('#saCancel'); page.wait_for_timeout(300)
+        page.click('#sfAddFaq'); page.wait_for_timeout(300)
+        rows = page.locator('#sfFaqList .sf-faq')
+        n = rows.count()
+        rows.nth(n - 1).locator('[data-k="q"]').fill('Do you bring supplies?')
+        rows.nth(n - 1).locator('[data-k="a"]').fill('Yes, everything.')
+        page.locator('#sfFaqList .sf-faq').first.locator('[data-del-faq]').click(); page.wait_for_timeout(300)
+        page.select_option('#sfLang', 'es')
+        page.click('#sfSave'); page.wait_for_timeout(800)
+        saved = (st.get('site_saves') or [{}])[-1]
+        sd = saved.get('data') or {}
+        qs = [f.get('q') for f in sd.get('faq') or []]
+        if saved.get('published') is True and qs == ['How do I pay?', 'Which areas do you cover?', 'Do you bring supplies?'] and sd.get('lang') == 'es' and sd.get('color') == 'blue':
+            ok(step[0], 'questions can be added and removed, the page language changed, and Save keeps it live')
+        else:
+            problem(step[0], 'editing questions and language should save', {'qs': qs, 'lang': sd.get('lang'), 'published': saved.get('published'), 'color': sd.get('color')})
+        shot(page, 'phone-website-ai-live')
+        finish(st, step[0]); ctx.close()
+
+    # 3) on a laptop, both looks, while it writes and when it's done
+    got = open_site('laptop', False, vp={'width': 1280, 'height': 800})
+    if got:
+        step, ctx, st, page = got
+        no_sideways_scroll(page, step[0])
+        shot(page, 'desktop-website-ai-forest')
+        page.evaluate("document.documentElement.setAttribute('data-theme','purple')"); page.wait_for_timeout(200)
+        shot(page, 'desktop-website-ai-purple')
+        ok(step[0], 'the AI card shows on a laptop in both looks')
+        finish(st, step[0]); ctx.close()
+
+
 def find_new_things(browser, base):
     """The newer parts of the app are easy to find: links at the top of the landing page, a one-time "New in
     The Guide" card and a row of shortcuts on Home, the plan and website first in the account menu, a 30-day plan
@@ -4036,6 +4248,7 @@ def main():
         spanish(browser, base)
         save_retry(browser, base)
         member_website(browser, base)
+        website_ai(browser, base)
         thirty_day_plan(browser, base)
         creator_payouts(browser, base)
         landing_trust(browser, base)
