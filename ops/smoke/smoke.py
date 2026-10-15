@@ -229,6 +229,15 @@ def fixture(state, method, path, body):
             state.setdefault('ai_posts', []).append(body)
             return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': left - 1, 'limit': 1}
         return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': None, 'limit': None}
+    # the free 7-day course: the landing page posts an email
+    if p == '/api/leads' and method == 'POST':
+        em = str((body or {}).get('email') or '').strip().lower()
+        if (body or {}).get('website'):
+            return 200, {'ok': True}
+        if '@' not in em or '.' not in em.split('@')[-1]:
+            return 400, {'error': 'Enter a real email address.'}
+        state.setdefault('leads', []).append({'email': em, 'source': (body or {}).get('source')})
+        return 200, {'ok': True}
     if p == '/api/billing/prices' and method == 'GET':
         # the real route reads these from Stripe; the numbers here are only a stand-in
         return 200, {'monthly': {'amount': 24.99, 'currency': 'USD', 'interval': 'month'},
@@ -1472,6 +1481,40 @@ def guider_free_question(browser, base):
             problem(step[0], 'a Pro member should see no free-question banner', page.inner_text('#aiChatFree')[:80])
         else:
             ok(step[0], 'a Pro member sees no limit')
+        finish(st, step[0]); ctx.close()
+
+
+def free_course(browser, base):
+    """The landing page offers the free 7-day email course: a bad email is caught on the spot, a real one is
+    sent to the server once and the form turns into a "Day 1 is on its way" note."""
+    for label, vp, mobile in (('phone', {'width': 390, 'height': 844}, True), ('desktop', {'width': 1280, 'height': 900}, False)):
+        step = [f'{label}: free 7-day course']
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        st = new_state(False)
+        attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#lpCourse', 10000):
+            problem(step[0], 'the landing page should have the free course section'); finish(st, step[0]); ctx.close(); continue
+        page.evaluate("document.getElementById('lpCourse').scrollIntoView()"); page.wait_for_timeout(300)
+        w = page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+        if not w:
+            problem(step[0], 'the course section makes the page scroll sideways')
+        page.fill('#lpCourseEmail', 'nope'); page.evaluate("document.getElementById('lpCourseBtn').click()"); page.wait_for_timeout(300)
+        if page.locator('.lp-course-err').count() == 1 and not st.get('leads'):
+            ok(step[0], 'a bad email is caught before anything is sent')
+        else:
+            problem(step[0], 'a bad email should be caught on the page', {'errs': page.locator('.lp-course-err').count(), 'leads': st.get('leads')})
+        page.fill('#lpCourseEmail', 'Ana@Example.com'); page.keyboard.press('Enter'); page.wait_for_timeout(600)
+        done = page.locator('.lp-course-done')
+        txt = done.inner_text() if done.count() else ''
+        if st.get('leads') == [{'email': 'ana@example.com', 'source': 'landing'}] and 'Day 1 is on its way' in txt and page.locator('.lp-course-err').count() == 0 and not page.evaluate("getComputedStyle(document.querySelector('.lp-course-row')).display !== 'none'"):
+            ok(step[0], 'a real email is sent once and the form turns into "Day 1 is on its way"')
+        else:
+            problem(step[0], 'the course signup did not go through cleanly', {'leads': st.get('leads'), 'text': txt[:80]})
+        if label == 'phone':
+            shot(page, 'phone-30-free-course')
         finish(st, step[0]); ctx.close()
 
 
@@ -3015,6 +3058,7 @@ def main():
         home_greeting(browser, base)
         trial_card(browser, base)
         chapter_certificate(browser, base)
+        free_course(browser, base)
         pro_peeks(browser, base)
         module_one_moment(browser, base)
         guider_free_question(browser, base)

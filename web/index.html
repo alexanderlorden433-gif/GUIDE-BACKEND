@@ -3030,6 +3030,23 @@
   }
   .lp-cta-ghost:hover{border-color:rgba(255,255,255,0.3);}
   .lp-reassure{margin:16px 0 0; font-size:13.5px; color:var(--ink-soft);}
+  .lp-course-card{display:grid; grid-template-columns:1.1fr .9fr; gap:36px; align-items:center; padding:36px; border-radius:22px; background:var(--card); border:1px solid var(--line-2); position:relative; overflow:hidden;}
+  .lp-course-card::before{content:''; position:absolute; inset:-40% -20% auto auto; width:420px; height:420px; border-radius:50%; background:radial-gradient(circle, rgba(var(--accent-rgb),.18), transparent 65%); pointer-events:none;}
+  .lp-course-card .lp-h2{margin-bottom:12px;}
+  .lp-course-card .lp-lead{margin-bottom:0;}
+  .lp-course-kicker{margin:0 0 10px; font:700 12px/1 'Inter',sans-serif; letter-spacing:.14em; text-transform:uppercase; color:var(--grape-soft);}
+  .lp-course-form{position:relative; display:flex; flex-direction:column; gap:10px;}
+  .lp-course-label{font-size:13px; font-weight:600; color:var(--ink-soft);}
+  .lp-course-row{display:flex; gap:10px;}
+  .lp-course-row input{flex:1; min-width:0; padding:14px 16px; border-radius:12px; border:1.5px solid var(--line-2); background:var(--bg); color:var(--ink); font:500 16px 'Inter',sans-serif;}
+  .lp-course-row input:focus{outline:none; border-color:var(--grape);}
+  .lp-course-row .lp-cta{white-space:nowrap;}
+  .lp-course-form.done .lp-course-row, .lp-course-form.done .lp-course-label{display:none;}
+  .lp-course-done{display:flex; gap:12px; align-items:flex-start; padding:16px 18px; border-radius:14px; background:rgba(var(--accent-rgb),.12); border:1px solid rgba(var(--accent-rgb),.3); color:var(--ink); font-size:15px; line-height:1.5;}
+  .lp-course-done b{display:block; font-family:'Space Grotesk',sans-serif; font-size:17px; margin-bottom:2px;}
+  .lp-course-done .ico{width:22px; height:22px; color:var(--grape); flex:none; margin-top:2px;}
+  .lp-course-err{color:#FF8A80; font-size:13.5px; font-weight:600; margin:0;}
+  @media(max-width:760px){ .lp-course-card{grid-template-columns:1fr; gap:22px; padding:24px 20px;} .lp-course-row{flex-direction:column;} .lp-course-row .lp-cta{width:100%;} }
 
   /* phone frame holding a real screen from the app */
   .lp-phone{
@@ -5614,6 +5631,27 @@
         <div class="lp-pick" id="lpPick" role="group" aria-label="Pick a business"></div>
       </div>
       <div class="lp-demo" id="lpDemo" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="lp-section lp-course" id="lpCourse">
+    <div class="lp-wrap">
+      <div class="lp-course-card">
+        <div>
+          <p class="lp-course-kicker">Free 7-day email course</p>
+          <h2 class="lp-h2">Start your side business in 7 days.</h2>
+          <p class="lp-lead">One short email a day, each with one thing to do: pick your lane, write your offer, price it, find your first ten customers. No account, no card.</p>
+        </div>
+        <form class="lp-course-form" id="lpCourseForm" novalidate>
+          <label class="lp-course-label" for="lpCourseEmail">Your email</label>
+          <div class="lp-course-row">
+            <input type="email" id="lpCourseEmail" name="email" placeholder="you@example.com" autocomplete="email" inputmode="email" required>
+            <button type="submit" class="lp-cta" id="lpCourseBtn">Send me day 1</button>
+          </div>
+          <input type="text" name="website" id="lpCourseWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+          <p class="lp-reassure" id="lpCourseNote">Seven emails, then it stops. Unsubscribe with one tap at any time.</p>
+        </form>
+      </div>
     </div>
   </section>
 
@@ -8220,6 +8258,35 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
   view.querySelectorAll('[data-lp-signup]').forEach(b=>{
     b.addEventListener('click', ()=> document.getElementById('landingSignupBtn').click());
   });
+
+  // the free 7-day course: one email, one tap
+  const courseForm = document.getElementById('lpCourseForm');
+  if(courseForm && !courseForm.dataset.wired){
+    courseForm.dataset.wired = '1';
+    courseForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const input = document.getElementById('lpCourseEmail'), btn = document.getElementById('lpCourseBtn'), note = document.getElementById('lpCourseNote');
+      const email = input.value.trim();
+      let err = courseForm.querySelector('.lp-course-err');
+      if(err) err.remove();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){
+        note.insertAdjacentHTML('beforebegin', '<p class="lp-course-err">Enter a real email address.</p>');
+        input.focus();
+        return;
+      }
+      btn.disabled = true; btn.textContent = 'Sending…';
+      try{
+        await apiFetch('/leads', { method: 'POST', body: JSON.stringify({ email, source: 'landing', website: document.getElementById('lpCourseWebsite').value }) });
+        courseForm.classList.add('done');
+        note.insertAdjacentHTML('beforebegin', `<div class="lp-course-done" role="status">${ico('check')}<div><b>Day 1 is on its way.</b>Check your inbox in a minute (and the spam folder, the first time). Day 2 comes tomorrow.</div></div>`);
+        note.textContent = 'Want the whole course now? Module 1 of every chapter is free.';
+        try{ GuideAnalytics.event('course_join'); }catch(_e){}
+      }catch(ex){
+        note.insertAdjacentHTML('beforebegin', `<p class="lp-course-err">${escapeHtml(ex.message || 'Something went wrong. Try again in a minute.')}</p>`);
+        btn.disabled = false; btn.textContent = 'Send me day 1';
+      }
+    });
+  }
 
   // the 53-second tour video: nothing downloads until someone taps play
   const tourFrame = document.getElementById('lpTourFrame');

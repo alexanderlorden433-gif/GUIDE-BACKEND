@@ -22,6 +22,8 @@ const networkRoutes = require('./routes/networking');
 const analyticsRoutes = require('./routes/analytics');
 const liveRoutes = require('./routes/live');
 const pushRoutes = require('./routes/push');
+const leadsRoutes = require('./routes/leads');
+const leadsCourse = require('./leads');
 const { ensurePushTable } = require('./push');
 const clientStatusRoutes = require('./routes/clientStatus');
 const { ensureLiveTables, scheduleLiveReminders } = require('./live');
@@ -109,6 +111,7 @@ app.use('/api/network', networkRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/live', liveRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/leads', leadsRoutes);
 app.use('/api/client-status', clientStatusRoutes);
 
 // Fallback error handler
@@ -128,6 +131,7 @@ app.listen(PORT, () => {
   ensureLiveTables();
   aiChatRoutes.ensureGuiderTable();
   ensurePushTable();
+  leadsCourse.ensureLeadTable().then(ok => { if (ok) leadsCourse.scheduleLeadCourse(); });
   clientStatusRoutes.ensureClientStatusTable();
   scheduleLiveReminders(); // does nothing until the tables exist
   setInterval(pruneOldEvents, 24 * 60 * 60 * 1000).unref();
