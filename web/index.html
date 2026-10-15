@@ -12776,6 +12776,9 @@ function handleOpenParam(){
   if(!open) return;
   window.history.replaceState({}, '', window.location.pathname);
   if(open === 'live') setTimeout(()=> showLive(), 300);
+  // from the billing emails: "Pick up where you left off" and "Open my account"
+  if(open === 'upgrade') setTimeout(()=>{ if(!isPro) openUpgradeModal(); }, 500);
+  if(open === 'account') setTimeout(()=>{ const b = document.getElementById('accountBtn'); if(b) b.click(); }, 500);
 }
 
 // One line on Home about the next call, so nobody has to go looking for it.

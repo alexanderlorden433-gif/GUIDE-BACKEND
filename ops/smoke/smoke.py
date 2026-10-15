@@ -3172,6 +3172,24 @@ def design_polish(browser, base):
         ctx.close(); ctx2.close()
 
 
+def billing_email_links(browser, base):
+    """The billing emails link back with ?open=upgrade ("Pick up where you left off") and ?open=account
+    ("Open my account"): the first opens the Pro box for a free member, the second opens account settings."""
+    step = ['billing email links']
+    for which, check in (('upgrade', "!!document.querySelector('#upgradeOverlay.open, #upgradeOverlay[style*=\"flex\"]') || getComputedStyle(document.getElementById('upgradeOverlay')).display !== 'none'"),
+                         ('account', "!!document.getElementById('accountCloseBtn') && document.getElementById('accountCloseBtn').offsetParent !== null")):
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(False); attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + f'/?open={which}&utm_source=email', wait_until='load'); page.wait_for_timeout(2400)
+        if page.evaluate(check):
+            ok(step[0], f'?open={which} from the email opens the {"Pro box" if which == "upgrade" else "account settings"}')
+        else:
+            problem(step[0], f'?open={which} did not open the right screen')
+        finish(st, step[0]); ctx.close()
+
+
 def main():
     srv, base = serve_web()
     t0 = time.time()
@@ -3214,6 +3232,7 @@ def main():
         account_settings(browser, base)
         manage_subscription(browser, base)
         design_polish(browser, base)
+        billing_email_links(browser, base)
         save_retry(browser, base)
         browser.close()
     srv.shutdown()

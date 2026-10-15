@@ -25,6 +25,7 @@ const pushRoutes = require('./routes/push');
 const codesRoutes = require('./routes/codes');
 const leadsRoutes = require('./routes/leads');
 const leadsCourse = require('./leads');
+const billingEmails = require('./billingEmails');
 const { ensurePushTable } = require('./push');
 const clientStatusRoutes = require('./routes/clientStatus');
 const { ensureLiveTables, scheduleLiveReminders } = require('./live');
@@ -135,6 +136,7 @@ app.listen(PORT, () => {
   ensurePushTable();
   codesRoutes.ensureCodeTables();
   leadsCourse.ensureLeadTable().then(ok => { if (ok) leadsCourse.scheduleLeadCourse(); });
+  billingEmails.ensureEmailTable().then(ok => { if (ok) billingEmails.scheduleBillingEmails(); });
   clientStatusRoutes.ensureClientStatusTable();
   scheduleLiveReminders(); // does nothing until the tables exist
   setInterval(pruneOldEvents, 24 * 60 * 60 * 1000).unref();
