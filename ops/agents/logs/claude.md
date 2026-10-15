@@ -107,3 +107,19 @@ Things worth remembering:
 - `pr_queue.py` (scratchpad) now also merges main into my open PRs when GitHub says they conflict, resolves
   pure both-sides insertions in `ops/smoke/smoke.py`/`shots.py` by keeping both, re-runs `ops/check.sh`, pushes.
   Any other conflict stops and is reported. The Pro window's id is `#upgradeOverlay`.
+
+## 2026-10-15 — partner codes, free course, give-a-week, outreach
+- **Partner codes** (`src/routes/codes.js`, tables PromoCode/PromoRedemption at startup): owner makes codes on the
+  dashboard; `?code=X` on any link applies after sign-in; boxes in Account and the Pro window. Redeem is
+  rate-limited; a member can use a code once. Extends `bonusProUntil` like referrals.
+- **Free 7-day course** (`src/leads.js`, `src/routes/leads.js`, table Lead): landing form → Day 1 at once, days
+  2–7 from a daily cron (13:30 UTC). Stops on unsubscribe / after day 7 / when the email has an account. Uses
+  the Resend setup (`RESEND_API_KEY`, `EMAIL_FROM`); unconfigured = leads kept, nothing sent.
+- `scheduleOnboardingDrip` exists in `src/onboardingDrip.js` but is never called from `src/index.js` — the
+  5-email welcome sequence after signup may not be running. Worth a look (sensitive: emails to users).
+- Referral links now give the new member 7 days of Pro at signup (`src/routes/auth.js`).
+- The scheduled Meta Ads and Social agents' prompts carried the old price ($28.99); fixed to $24.99/$149.
+  Lesson count in those prompts still says 756 (the app says 876) — left alone, needs Alexander.
+- Outreach runs from this session: scratchpad `outreach/` (targets, batches, sent_log) and daily `send_later`
+  turns; Gmail connector on theguidesupport@gmail.com, label "Guide Outreach". Each turn has a 200-web-search
+  budget, so research runs one category per turn.
