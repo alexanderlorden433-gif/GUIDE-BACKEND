@@ -48,6 +48,7 @@ model User {
   liveRsvps            LiveRsvp[]
   pushSubscriptions    PushSubscription[]
   liveQuestions        LiveQuestion[]
+  promoRedemptions     PromoRedemption[]
 
   @@index([stripeCustomerId])
   @@index([referredByCode])
@@ -368,6 +369,31 @@ model LiveQuestion {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([callId])
+}
+
+// Partner codes (src/routes/codes.js): a code worth N free Pro days, given out by a partner.
+// Created at startup with CREATE TABLE IF NOT EXISTS; declared here so the schema matches.
+model PromoCode {
+  id        String   @id
+  code      String   @unique
+  label     String
+  days      Int
+  maxUses   Int?
+  uses      Int      @default(0)
+  active    Boolean  @default(true)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  redemptions PromoRedemption[]
+}
+
+model PromoRedemption {
+  id        String   @id
+  codeId    String
+  userId    String
+  createdAt DateTime @default(now())
+  code      PromoCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([codeId, userId])
 }
 
 // The free 7-day email course (src/leads.js): people who left their email on the landing page.
