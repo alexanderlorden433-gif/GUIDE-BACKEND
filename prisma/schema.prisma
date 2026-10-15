@@ -382,8 +382,21 @@ model PromoCode {
   uses      Int      @default(0)
   active    Boolean  @default(true)
   expiresAt DateTime?
+  commissionPct Int?
   createdAt DateTime @default(now())
   redemptions PromoRedemption[]
+  payouts   PartnerPayout[]
+}
+
+// Creator payouts: what was paid to a code's partner for a month (src/routes/codes.js).
+model PartnerPayout {
+  id     String    @id
+  codeId String
+  month  String
+  amount Float
+  paidAt DateTime  @default(now())
+  code   PromoCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  @@unique([codeId, month])
 }
 
 model PromoRedemption {

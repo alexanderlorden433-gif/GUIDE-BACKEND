@@ -1797,7 +1797,7 @@
   .code-row .live-btn{flex:none;}
   .modal-link{display:block; margin:12px auto 0; font:600 13px 'Inter',sans-serif; color:var(--ink-soft); text-decoration:underline; background:none; border:0; cursor:pointer;}
   #upgradeCodeWrap{margin-top:12px; text-align:left;}
-  .dx-codes-form{display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr auto; gap:8px; align-items:end; margin:0 0 12px;}
+  .dx-codes-form{display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr auto; gap:8px; align-items:end; margin:0 0 12px;}
   .dx-codes-form label{display:flex; flex-direction:column; gap:4px; font-size:11.5px; color:var(--ink-soft); min-width:0;}
   .dx-codes-form input{width:100%; min-width:0; padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:500 13px 'Inter',sans-serif;}
   .dx-codes-table{width:100%; border-collapse:collapse; font-size:13px;}
@@ -5454,6 +5454,10 @@
   .module-head, .module-head.done{background:none; border:0; border-top:1px solid var(--line); border-radius:0; padding:var(--sp-5) 0 var(--sp-3); margin:var(--sp-6) 0 0;}
   .module-head:first-child{margin-top:0;}
   .module-head.done .module-count{color:var(--grape-soft);}
+
+  .dx-payouts-bar{display:flex; align-items:end; gap:var(--sp-4); flex-wrap:wrap; margin:0 0 var(--sp-3);}
+  .dx-payouts-bar label{display:flex; flex-direction:column; gap:var(--sp-1); font-size:12px; color:var(--ink-soft);}
+  .dx-payouts-bar input{padding:var(--sp-2) var(--sp-3); border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:500 13px 'Inter',sans-serif;}
 
   /* ---------- loading and empty states ---------- */
   .skel-wrap{display:block;}
@@ -10314,14 +10318,21 @@ async function showAdmin(){
         <label>Days<input id="dxCodeDays" type="number" min="1" max="365" value="30" required></label>
         <label>Max uses<input id="dxCodeMax" type="number" min="1" placeholder="no limit"></label>
         <label>Expires<input id="dxCodeExp" type="date"></label>
+        <label>Creator share %<input id="dxCodePct" type="number" min="0" max="90" placeholder="none"></label>
         <button type="submit" class="dx-btn" id="dxCodeCreate">Create</button>
       </form>
       <div class="dx-sub" id="dxCodeMsg"></div>
       <div class="dx-codes-wrap"><table class="dx-codes-table" id="dxCodeTable"><tbody></tbody></table></div>
     </section>
+    <section class="dx-card" id="dxPayouts">
+      <div class="dx-card-head"><div class="dx-label">Creator payouts</div><div class="dx-sub">What members brought in by a code with a creator share paid in a month, and the creator's cut. A member counts for the first code they used. Refunds are not taken off: check Stripe before you pay.</div></div>
+      <div class="dx-payouts-bar"><label>Month<input id="dxPayMonth" type="month"></label><span class="dx-sub" id="dxPayTotal"></span></div>
+      <div class="dx-codes-wrap"><table class="dx-codes-table" id="dxPayTable"><tbody></tbody></table></div>
+    </section>
   </div>`;
   const R = root.querySelector('#dxOwner');
   renderAdminCodes();
+  renderAdminPayouts();
   const S = { ov: dxCacheGet('owner:' + DX_TZ), snap: dxCacheGet('ownerLive:' + DX_TZ), status: 'connecting' };
   if(S.snap && Date.now() - S.snap.at > 10 * 60 * 1000) S.snap = null; // too old to show as "live"
 
@@ -10489,17 +10500,51 @@ async function showAdmin(){
   });
 }
 
+// Creator payouts: pick a month, see what each creator's members paid and the creator's cut, note what you paid.
+async function renderAdminPayouts(){
+  const table = document.querySelector('#dxPayTable tbody'), monthIn = document.getElementById('dxPayMonth'), total = document.getElementById('dxPayTotal');
+  if(!table || !monthIn) return;
+  if(!monthIn.value){ const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); monthIn.value = d.toISOString().slice(0, 7); }
+  if(!monthIn.dataset.wired){ monthIn.dataset.wired = '1'; monthIn.addEventListener('change', renderAdminPayouts); }
+  const money = (n)=> '$' + Number(n || 0).toFixed(2);
+  let r;
+  try{ r = await apiFetch('/codes/payouts?month=' + encodeURIComponent(monthIn.value)); }
+  catch(e){ table.innerHTML = `<tr><td class="dx-sub">${dxEsc(e.message || 'Could not load payouts.')}</td></tr>`; total.textContent = ''; return; }
+  const rows = r.payouts || [];
+  total.textContent = rows.length ? `Still to pay for this month: ${money(r.totalOwed)}` : '';
+  table.innerHTML = rows.length ? `<tr><th>Creator</th><th>Code</th><th>Share</th><th>Members</th><th>Paying now</th><th>Payments</th><th>They paid</th><th>Owed</th><th></th></tr>` + rows.map(p => `<tr>
+      <td>${dxEsc(p.label)}</td><td><code>${dxEsc(p.code)}</code></td><td>${p.commissionPct}%</td><td>${p.members}</td><td>${p.paying}</td><td>${p.payments}</td>
+      <td>${money(p.revenue)}</td><td><b>${money(p.owed)}</b></td>
+      <td>${p.paid ? `<span class="st">paid ${money(p.paid.amount)}</span>` : (p.owed > 0 ? `<button type="button" class="dx-btn" data-pay-code="${dxEsc(p.codeId)}" data-owed="${p.owed}">Mark paid</button>` : '')}</td>
+    </tr>`).join('') : '<tr><td class="dx-sub">No codes with a creator share yet. Give a code a share (for example 30%) above.</td></tr>';
+  table.querySelectorAll('[data-pay-code]').forEach(b => b.addEventListener('click', async ()=>{
+    const v = prompt('Amount you paid this creator for ' + monthIn.value, b.dataset.owed);
+    if(v === null) return;
+    b.disabled = true;
+    try{ await apiFetch('/codes/' + encodeURIComponent(b.dataset.payCode) + '/payouts', { method:'POST', body: JSON.stringify({ month: monthIn.value, amount: v }) }); renderAdminPayouts(); }
+    catch(e){ b.disabled = false; showAppToast(e.message || 'Could not save that.', 'error'); }
+  }));
+}
+
 // Partner codes on the owner dashboard: make one, see uses, switch off.
 async function renderAdminCodes(){
   const table = document.querySelector('#dxCodeTable tbody'), msg = document.getElementById('dxCodeMsg'), form = document.getElementById('dxCodeForm');
   if(!table || !form) return;
   const paint = (codes)=>{
-    table.innerHTML = codes.length ? `<tr><th>Code</th><th>For</th><th>Days</th><th>Used</th><th>Expires</th><th>State</th><th></th></tr>` + codes.map(c => `<tr>
+    table.innerHTML = codes.length ? `<tr><th>Code</th><th>For</th><th>Days</th><th>Used</th><th>Share</th><th>Expires</th><th>State</th><th></th></tr>` + codes.map(c => `<tr>
         <td><code>${dxEsc(c.code)}</code></td><td>${dxEsc(c.label)}</td><td>${c.days}</td><td>${c.uses}${c.maxUses != null ? ' / ' + c.maxUses : ''}</td>
+        <td><button type="button" class="dx-btn" data-code-share="${dxEsc(c.id)}" data-pct="${c.commissionPct == null ? '' : c.commissionPct}" title="Set the creator's share">${c.commissionPct == null ? 'None' : c.commissionPct + '%'}</button></td>
         <td>${c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : '—'}</td>
         <td><span class="st${c.state === 'ok' ? '' : ' off'}">${dxEsc({ok:'live', inactive:'off', expired:'expired', used_up:'used up'}[c.state] || c.state)}</span></td>
         <td><button type="button" class="dx-btn" data-code-toggle="${dxEsc(c.id)}" data-active="${c.active ? '1' : '0'}">${c.active ? 'Turn off' : 'Turn on'}</button></td>
       </tr>`).join('') : '<tr><td class="dx-sub">No codes yet. Make the first one above.</td></tr>';
+    table.querySelectorAll('[data-code-share]').forEach(b => b.addEventListener('click', async ()=>{
+      const v = prompt('Creator share for this code, in % (1 to 90). Leave empty for none.', b.dataset.pct);
+      if(v === null) return;
+      b.disabled = true;
+      try{ await apiFetch('/codes/' + encodeURIComponent(b.dataset.codeShare), { method:'PUT', body: JSON.stringify({ commissionPct: v.trim() }) }); await load(); renderAdminPayouts(); }
+      catch(e){ msg.textContent = 'Failed: ' + (e.message || 'Could not set the share.'); b.disabled = false; }
+    }));
     table.querySelectorAll('[data-code-toggle]').forEach(b => b.addEventListener('click', async ()=>{
       b.disabled = true;
       try{ await apiFetch('/codes/' + encodeURIComponent(b.dataset.codeToggle), { method:'PUT', body: JSON.stringify({ active: b.dataset.active !== '1' }) }); await load(); }
@@ -10513,10 +10558,12 @@ async function renderAdminCodes(){
       e.preventDefault();
       const btn = document.getElementById('dxCodeCreate'); btn.disabled = true; msg.textContent = '';
       const body = { label: document.getElementById('dxCodeLabel').value, code: document.getElementById('dxCodeCode').value || undefined,
-                     days: document.getElementById('dxCodeDays').value, maxUses: document.getElementById('dxCodeMax').value || null, expiresAt: document.getElementById('dxCodeExp').value || null };
+                     days: document.getElementById('dxCodeDays').value, maxUses: document.getElementById('dxCodeMax').value || null, expiresAt: document.getElementById('dxCodeExp').value || null,
+                     commissionPct: document.getElementById('dxCodePct').value || null };
       try{
         const c = await apiFetch('/codes', { method:'POST', body: JSON.stringify(body) });
-        msg.textContent = `${c.code} made: ${c.days} days for ${c.label}. Link: ${location.origin}/?code=${c.code}`;
+        msg.textContent = `${c.code} made: ${c.days} days for ${c.label}${c.commissionPct ? `, ${c.commissionPct}% creator share` : ''}. Link: ${location.origin}/?code=${c.code}`;
+        renderAdminPayouts();
         form.reset(); document.getElementById('dxCodeDays').value = '30';
         await load();
       }catch(err){ msg.textContent = 'Failed: ' + (err.message || 'Could not create the code.'); }
