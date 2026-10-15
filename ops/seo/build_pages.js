@@ -104,7 +104,7 @@ function lessonHtml(text) {
 
 const LOGO = `<svg class="pg-logo" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="82" fill="none" stroke-width="14"/><path d="M100,32 L114.1,85.9 L168,100 L114.1,114.1 L100,168 L85.9,114.1 L32,100 L85.9,85.9 Z"/><circle class="pg-logo-dot" cx="100" cy="100" r="14"/></svg>`;
 
-function page({ url, title, desc, body, jsonld = [], ogImage = '/img/og/og-default.jpg', scripts = '' }) {
+function page({ url, title, desc, body, jsonld = [], ogImage = '/img/og/og-default.jpg', scripts = '', noindex = false }) {
   const ld = jsonld.map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`).join('\n');
   return `<!DOCTYPE html>
 <html lang="en">
@@ -113,7 +113,7 @@ function page({ url, title, desc, body, jsonld = [], ogImage = '/img/og/og-defau
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
-<link rel="canonical" href="${SITE}${url}">
+${noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" href="${SITE}${url}">`}
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="The Guide">
 <meta property="og:title" content="${esc(title)}">
@@ -445,6 +445,32 @@ function quizResultPage(n) {
     body, ogImage: `/img/og/og-quiz-${n.id}.jpg` }) };
 }
 
+// ---------- the page every unknown address gets (web/_redirects sends them here with a real 404) ----------
+function notFoundPage(chs) {
+  const body = `
+<section class="pg-hero">
+  <p class="pg-k">Page not found</p>
+  <h1>This page doesn't exist</h1>
+  <p class="pg-lead">The link may be old or mistyped. Here's where to go instead.</p>
+  <div class="pg-ctas"><a class="pg-btn" href="/?utm_source=guide_pages&amp;utm_medium=organic&amp;utm_campaign=404">Open The Guide</a><a class="pg-btn pg-btn-2" href="/start/">See all ${chs.length} business guides</a></div>
+</section>`;
+  return page({ url: '/404.html', title: 'Page not found | The Guide', desc: 'This page does not exist. Browse the free business guides or open The Guide.', body, noindex: true });
+}
+
+// ---------- the homepage footer links to every guide, so Google finds them from the main page ----------
+// Kept between two markers in web/index.html and rewritten from the chapter list on every build.
+const HOME_START = '<!-- seo:guide-links (written by ops/seo/build_pages.js) -->';
+const HOME_END = '<!-- /seo:guide-links -->';
+function homeGuideLinks(chs) {
+  const file = path.join(WEB, 'index.html');
+  const html = fs.readFileSync(file, 'utf8');
+  const a = html.indexOf(HOME_START), b = html.indexOf(HOME_END);
+  if (a < 0 || b < a) throw new Error('web/index.html is missing the seo:guide-links markers in the landing footer.');
+  const links = chs.map(n => `<a href="/start/${PAGES[n.id].slug}/" translate="no">${esc(n.name)}</a>`).join(' · ');
+  const block = `${HOME_START}\n      <nav class="lp-foot-guides" aria-label="Free business guides"><p class="lp-foot-k">Free business guides</p><p>${links}</p></nav>\n      `;
+  return html.slice(0, a) + block + html.slice(b);
+}
+
 // ---------- write everything ----------
 function build() {
   const all = loadChapters();
@@ -463,6 +489,8 @@ function build() {
   const qz = quizPage(chs); files['quiz/index.html'] = qz.html; urls.push(qz.url);
   for (const n of chs.filter(x => !QUIZ_EXCLUDE.has(x.id))) { const p = quizResultPage(n); files[`quiz/${PAGES[n.id].slug}/index.html`] = p.html; }
   urls.push('/privacy.html', '/terms.html');
+  files['404.html'] = notFoundPage(chs);
+  files['index.html'] = homeGuideLinks(chs);
   files['sitemap.xml'] = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `  <url><loc>${SITE}${u}</loc></url>`).join('\n')}\n</urlset>\n`;
   files['robots.txt'] = `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n`;
   return { files, chs };

@@ -1,3 +1,13 @@
 # Members' one-page websites: theguide.company/s/<address> is drawn by the backend (src/sitePages.js).
 /s/*  https://guide-backend-production.up.railway.app/s/:splat  200
-/*    /index.html   200
+
+# Addresses the app itself sends people to (password reset, Stripe checkout and billing portal).
+# The app reads them from the address bar, so they all open the app page.
+/reset-password     /index.html  200
+/billing/*          /index.html  200
+/account            /index.html  200
+/account/*          /index.html  200
+
+# Anything else that isn't a real file is a real "not found" (a 404 status, so Google doesn't index
+# every mistyped address as a copy of the homepage). The page itself is built by ops/seo/build_pages.js.
+/*    /404.html   404
