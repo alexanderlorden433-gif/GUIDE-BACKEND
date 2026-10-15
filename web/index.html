@@ -5467,6 +5467,16 @@
   .module-head:first-child{margin-top:0;}
   .module-head.done .module-count{color:var(--grape-soft);}
 
+  /* member wins on the landing page, the guarantee line, the website opt-in */
+  .lp-wins{list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:0 var(--sp-6); border-top:1px solid var(--line);}
+  .lp-wins li{padding:var(--sp-4) 0; border-bottom:1px solid var(--line);}
+  .lp-wins p{margin:0 0 var(--sp-2); font-size:16px; color:var(--ink); max-width:60ch;}
+  .lp-wins span{font-size:14px; color:var(--ink-soft);}
+  .lp-plan .lp-guarantee{font-size:14px; color:var(--ink-2); margin:calc(-1 * var(--sp-4)) 0 var(--sp-5);}
+  .modal-guarantee{font-size:13px; line-height:1.5; color:var(--ink-soft); margin:var(--sp-2) 0 0; text-align:center;}
+  .win-post-form{flex-wrap:wrap;}
+  .win-site{display:flex; align-items:flex-start; gap:var(--sp-2); flex-basis:100%; font-size:13px; color:var(--ink-soft); line-height:1.4; cursor:pointer;}
+  .win-post-form .win-site input{flex:none; width:16px; height:16px; min-width:16px; min-height:0; padding:0; margin:2px 0 0; accent-color:var(--grape);}
   .lp-quiz-link{margin:var(--sp-4) 0 0; font-size:15px; color:var(--ink-soft);}
   .lp-quiz-link a{color:var(--grape-soft); font-weight:600;}
 
@@ -5820,6 +5830,14 @@
     </div>
   </section>
 
+  <section class="lp-section" id="lpWins" hidden>
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Wins from members</h2>
+      <p class="lp-lead">Shared by members in the app, shown here with their OK.</p>
+      <ul class="lp-wins" id="lpWinsList"></ul>
+    </div>
+  </section>
+
   <section class="lp-section">
     <div class="lp-wrap">
       <h2 class="lp-h2" style="text-align:center;">Start free, pay when it's worth it</h2>
@@ -5840,6 +5858,7 @@
           <p class="lp-amt"><span id="lpProAmt">$24.99</span><small id="lpProPer">/month</small></p>
           <p class="lp-per" id="lpProYear">or $149 a year, save $150 (50%)</p>
           <p class="lp-trial" id="lpProTrial">Try it free for 4 days. Cancel any time.</p>
+          <p class="lp-guarantee">7-day money-back guarantee on your first payment.</p>
           <ul>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Every module of all <span data-count-word>sixteen</span> courses</span></li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>The Guider, your AI mentor</span></li>
@@ -5857,6 +5876,7 @@
       <details><summary>How much time does it take?</summary><p>Lessons are short enough to do in a sitting. A module opens each week, so most people spend a few evenings a week on it rather than a whole weekend.</p></details>
       <details><summary>What if I pick the wrong chapter?</summary><p>Switch whenever you like. Pro opens all <span data-count-word>sixteen</span> courses, and whatever you've finished stays finished.</p></details>
       <details><summary>Can I cancel?</summary><p>Yes, in one tap from your account page. You keep Pro until the period you've paid for ends, and anything you've already finished stays open to you.</p></details>
+      <details><summary>What if Pro isn't for me?</summary><p>Email us within 7 days of your first payment and we'll refund it in full. No forms, no questions you have to answer.</p></details>
       <details><summary>Is this a get-rich-quick thing?</summary><p>No. It teaches how these businesses actually work: pricing, clients, contracts, delivery, money. Nobody can promise what you'll earn, and we don't.</p></details>
     </div>
   </section>
@@ -8309,6 +8329,18 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
     b.addEventListener('click', ()=> document.getElementById('landingSignupBtn').click());
   });
 
+  // wins members agreed to show here, approved by the owner; the section stays hidden until there are three
+  const winsSec = document.getElementById('lpWins');
+  if(winsSec && !winsSec.dataset.loaded){
+    winsSec.dataset.loaded = '1';
+    fetch(API_BASE_URL + '/public-wins').then(r => r.ok ? r.json() : { wins: [] }).then(d => {
+      const wins = (d && d.wins) || [];
+      if(wins.length < 3) return;
+      document.getElementById('lpWinsList').innerHTML = wins.map(w => `<li><p>${gvEsc(w.body)}</p><span>${gvEsc(w.name)} · ${new Date(w.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</span></li>`).join('');
+      winsSec.hidden = false;
+    }).catch(()=>{});
+  }
+
   // the free 7-day course: one email, one tap
   const courseForm = document.getElementById('lpCourseForm');
   if(courseForm && !courseForm.dataset.wired){
@@ -9567,6 +9599,7 @@ function openUpgradeModal(resumeAction){
     <div class="modal-start" id="upgradeStart"></div>
     <button type="button" class="modal-cta" id="upgradeCta">Continue to checkout →</button>
     <p class="modal-note" id="upgradeModalNote"></p>
+    <p class="modal-guarantee">7-day money-back guarantee: if Pro isn't for you, email us within 7 days of your first payment for a full refund.</p>
     <button type="button" class="modal-link" id="upgradeHaveCode">Have a partner code?</button>
     <div id="upgradeCodeWrap" hidden>${partnerCodeBoxHtml('upgCode', 'Your code')}</div>
   `;
@@ -9801,6 +9834,7 @@ const FAQ_DATA = [
     { q: "What's the \"Continue where you left off\" card?", a: "It remembers the last guide you opened and links straight back to it, so you don't have to hunt for it again next time you log in." },
   ]},
   { category: "Account & data", items: [
+    { q: "Can I get a refund?", a: "Yes. If Pro isn't for you, email TheGuide1@gmail.com within 7 days of your first payment and we'll refund it in full. You can also cancel any time from your account; you keep Pro until the period you paid for ends." },
     { q: "How do I change my password or delete my account?", a: "Open your account from the top bar. Password changes happen instantly; account deletion requires clicking the delete button twice to confirm, since it's permanent." },
     { q: "How do I back up my data?", a: "Go to Stats and use \"Back up everything (JSON)\" for a complete snapshot of your account, or \"Export data as CSV\" if you just want your tracked tool data in a spreadsheet-friendly format." },
     { q: "Is my data private?", a: "Your password is stored hashed, never as plain text, and your progress and tool data are tied to your account. The Privacy page explains what we collect and why." },
@@ -10330,6 +10364,10 @@ async function showAdmin(){
       </div>
       <div id="adminActionResult" class="dx-sub" style="margin-top:12px;"></div>
     </div>
+    <section class="dx-card" id="dxSiteWins">
+      <div class="dx-card-head"><div class="dx-label">Wins for the website</div><div class="dx-sub">Members ticked "show it on the website". Approved wins appear on the landing page once there are at least three.</div></div>
+      <div id="dxSiteWinsList"><div class="dx-empty">Nothing waiting.</div></div>
+    </section>
     <section class="dx-card" id="dxCodes">
       <div class="dx-card-head"><div class="dx-label">Partner codes</div><div class="dx-sub">A code gives free Pro days. Give one to each partner; the link form is theguide.company/?code=CODE</div></div>
       <form class="dx-codes-form" id="dxCodeForm">
@@ -10346,6 +10384,7 @@ async function showAdmin(){
   </div>`;
   const R = root.querySelector('#dxOwner');
   renderAdminCodes();
+  renderAdminSiteWins();
   const S = { ov: dxCacheGet('owner:' + DX_TZ), snap: dxCacheGet('ownerLive:' + DX_TZ), status: 'connecting' };
   if(S.snap && Date.now() - S.snap.at > 10 * 60 * 1000) S.snap = null; // too old to show as "live"
 
@@ -10511,6 +10550,28 @@ async function showAdmin(){
     catch(e){ document.getElementById('adminActionResult').textContent = 'Failed: ' + (e.message || 'unknown error'); }
     this.disabled = false; this.innerHTML = ico('flame') + ' Send streak reminders now';
   });
+}
+
+// Wins members offered for the landing page: approve or hide each one.
+async function renderAdminSiteWins(){
+  const box = document.getElementById('dxSiteWinsList');
+  if(!box) return;
+  let wins = [];
+  try{ wins = (await apiFetch('/public-wins/review')).wins || []; }
+  catch(e){ box.innerHTML = `<div class="dx-empty">${e.status === 503 ? 'Not ready yet, try again in a minute.' : 'Could not load the wins.'}</div>`; return; }
+  if(!wins.length){ box.innerHTML = '<div class="dx-empty">Nothing waiting. When a member ticks "show it on the website", it lands here.</div>'; return; }
+  const label = { waiting:'waiting', approved:'on the website', hidden:'hidden' };
+  box.innerHTML = `<table class="dx-codes-table"><tbody>${wins.map(w => `<tr>
+      <td style="white-space:normal">${dxEsc(w.body)}<div class="dx-sub">${dxEsc(w.name)} · ${new Date(w.createdAt).toLocaleDateString()}</div></td>
+      <td><span class="st${w.status === 'approved' ? '' : ' off'}">${label[w.status] || dxEsc(w.status)}</span></td>
+      <td>${w.status !== 'approved' ? `<button type="button" class="dx-btn" data-site-win="${dxEsc(w.winId)}" data-to="approved">Approve</button>` : ''}
+          ${w.status !== 'hidden' ? `<button type="button" class="dx-btn" data-site-win="${dxEsc(w.winId)}" data-to="hidden">Hide</button>` : ''}</td>
+    </tr>`).join('')}</tbody></table>`;
+  box.querySelectorAll('[data-site-win]').forEach(b => b.addEventListener('click', async ()=>{
+    b.disabled = true;
+    try{ await apiFetch('/public-wins/' + encodeURIComponent(b.dataset.siteWin), { method:'PUT', body: JSON.stringify({ status: b.dataset.to }) }); renderAdminSiteWins(); }
+    catch(e){ b.disabled = false; showAppToast('Could not update that win.', 'error'); }
+  }));
 }
 
 // Partner codes on the owner dashboard: make one, see uses, switch off.
@@ -13053,6 +13114,7 @@ async function loadCommunityWins(){
       <input type="text" id="ctabWinInput" placeholder="Share a win: first client, hit a goal, landed a deal…" maxlength="200">
       <select id="ctabWinEmoji"><option value="🏆">Milestone</option><option value="💰">Money</option><option value="🎉">Celebration</option><option value="🔥">On a roll</option><option value="⭐">Shout-out</option><option value="🚀">Launch</option></select>
       <button id="ctabWinPostBtn">Post</button>
+          <label class="win-site"><input type="checkbox" id="ctabWinSite"> Also show it on theguide.company, with the name members see, once it's checked</label>
     </div>
   `;
   document.getElementById('ctabWinPostBtn').addEventListener('click', async ()=>{
@@ -13061,9 +13123,10 @@ async function loadCommunityWins(){
     const text = (input.value||'').trim();
     if(!text){ showAppToast('Write something first!','error'); return; }
     try{
-      await apiFetch('/wins', { method:'POST', body: JSON.stringify({ body: text, emoji: emoji.value }) });
+      const site = document.getElementById('ctabWinSite');
+      const r = await apiFetch('/wins', { method:'POST', body: JSON.stringify({ body: text, emoji: emoji.value, showOnSite: !!(site && site.checked) }) });
       input.value = '';
-      showAppToast('Win posted!','success');
+      showAppToast(r && r.onSite === 'waiting' ? 'Win posted. It will show on the website once it is checked.' : 'Win posted!','success');
       loadCommunityWins();
     }catch(e){ showAppToast('Could not post. Try again.','error'); }
   });
@@ -13186,6 +13249,7 @@ async function loadWins(){
       <input type="text" id="winInput" placeholder="Share a win: first client, hit a goal, landed a deal…" maxlength="200">
       <select id="winEmoji"><option value="🏆">Milestone</option><option value="💰">Money</option><option value="🎉">Celebration</option><option value="🔥">On a roll</option><option value="⭐">Shout-out</option><option value="🚀">Launch</option></select>
       <button id="winPostBtn">Post</button>
+          <label class="win-site"><input type="checkbox" id="winSite"> Also show it on theguide.company, with the name members see, once it's checked</label>
     </div>
   `;
   document.getElementById('winPostBtn').addEventListener('click', postWin);
@@ -13209,8 +13273,10 @@ async function postWin(){
   const body = input.value.trim();
   if(!body) return;
   try {
-    await apiFetch('/wins', { method:'POST', body:JSON.stringify({body, emoji}) });
+    const site = document.getElementById('winSite');
+    const r = await apiFetch('/wins', { method:'POST', body:JSON.stringify({body, emoji, showOnSite: !!(site && site.checked)}) });
     input.value = '';
+    if(r && r.onSite === 'waiting') showAppToast('Win posted. It will show on the website once it is checked.', 'success');
     loadWins();
   } catch(e) {
     alert('Could not post. Try again.');
