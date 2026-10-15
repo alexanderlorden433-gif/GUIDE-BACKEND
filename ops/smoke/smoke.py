@@ -277,6 +277,7 @@ def fixture(state, method, path, body):
             return status, reply
         b = body or {}
         d = b.get('draft') or {}
+        msg = str(b.get('message') or b.get('description') or '')
         hour = ai['hour']
         if hour.get('included') and hour.get('state') != 'used':
             left = hour.get('writesLeft', 10) - 1
@@ -290,12 +291,28 @@ def fixture(state, method, path, body):
         else:
             ai['paid'] -= 1; paid_with = 'paid'
         state.setdefault('site_ai_paid_with', []).append(paid_with)
+        has_page = bool(d.get('name') or d.get('about') or [x for x in (d.get('services') or []) if (x or {}).get('name')])
+        # like the real one: a question changes nothing; "blue" recolours; otherwise a new page, or the page improved
+        if msg.strip().endswith('?'):
+            return 200, {'reply': 'Most lawn services near you charge $35 to $50 a cut. Check two local ones before you publish.', 'changed': False,
+                         'draft': d, 'tips': [], 'model': 'claude-fable-5-1', 'paidWith': paid_with, 'credits': site_ai_credits(ai), 'hour': ai['hour']}
         page = site_ai_page()
-        if b.get('mode') == 'improve':
+        if has_page:
             page = {**page, 'name': d.get('name') or page['name'], 'color': d.get('color') or page['color']}
+        if 'blue' in msg.lower():
+            page = {**(d if has_page else page), 'color': 'blue'}
         page.update({'email': d.get('email', ''), 'phone': d.get('phone', ''), 'nicheId': d.get('nicheId', ''), 'lang': b.get('lang') or 'en'})
-        return 200, {'draft': page, 'tips': ['Check these prices against two local lawn services.', '<img src=x onerror="window.__xss=1">Add your phone number.'],
+        reply = '<img src=x onerror="window.__xss=1">Here is your page: Green Mile Lawn Care with 3 services. Check the prices against two local lawn services. Want me to change the colour?'
+        return 200, {'reply': reply, 'changed': True, 'draft': page, 'tips': [],
                      'model': 'claude-fable-5-1', 'paidWith': paid_with, 'credits': site_ai_credits(ai), 'hour': ai['hour']}
+    # the live preview: a small stand-in for renderSitePage() in src/sites.js
+    if p == '/api/sites/preview' and method == 'POST':
+        d = (body or {}).get('data') or {}
+        state.setdefault('previews', []).append(d)
+        esc = lambda v: str(v or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        svcs = ''.join('<li>' + esc(x.get('name')) + ' ' + esc(x.get('price')) + '</li>' for x in (d.get('services') or []) if (x or {}).get('name'))
+        return 200, {'html': '<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:sans-serif;margin:24px;background:#fff;color:#111}</style></head><body data-color="' + esc(d.get('color')) + '"><h1 id="pvName">'
+                     + esc(d.get('name')) + '</h1><p>' + esc(d.get('tagline')) + '</p><ul>' + svcs + '</ul><a href="#ask">Ask for a quote</a><p id="ask">Form</p></body></html>'}
     # buying AI credits: state['credit_checkouts'] records the packs asked for; confirm adds them once
     if p == '/api/sites/credits/checkout' and method == 'POST':
         pack = next((x for x in SITE_PACKS if x['id'] == (body or {}).get('pack')), None)
@@ -502,9 +519,20 @@ def watch_errors(page, step_ref):
         t = msg.text
         if re.search(r'Failed to load resource|net::ERR_|ERR_FAILED|status of 40[34]|favicon', t):
             return
+        if SANDBOX_SW in t:
+            return
         problem(step_ref[0], 'console error', t)
+    def on_error(e):
+        if SANDBOX_SW in str(e):
+            return
+        problem(step_ref[0], 'JavaScript error', e)
     page.on('console', on_console)
-    page.on('pageerror', lambda e: problem(step_ref[0], 'JavaScript error', e))
+    page.on('pageerror', on_error)
+
+
+# The test browser blocks service workers by reaching into every frame (service_workers='block'), which throws in
+# My website's sandboxed page preview. It's the test setup, not the app: with service workers allowed it's silent.
+SANDBOX_SW = 'Service worker is disabled because the context is sandboxed'
 
 
 def shot(page, name):
@@ -3423,6 +3451,9 @@ def member_website(browser, base):
         page.wait_for_timeout(700)
         page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
         page.click('#siteNavBtn'); page.wait_for_timeout(900)
+        # this test is about the form, which sits folded under the website chat: open it
+        page.evaluate("(()=>{ const d = document.getElementById('siteEditBox'); if(d && !d.open) d.querySelector('summary').click(); })()")
+        page.wait_for_timeout(200)
         return step, ctx, st, page
 
     # 1) a free member makes a page, previews it, and is offered Pro to put it live
@@ -3961,13 +3992,15 @@ def side_business_quiz(browser, base):
     ctx.close()
 
 def website_ai(browser, base):
-    """My website → Let AI write your page: the member says what they do, the AI (Claude, src/siteAi.js) fills in the
-    whole page, a page that isn't live is saved as a draft, Undo puts the old page back, a live page waits for Save,
-    each write uses an AI credit (2 free to start), running out shows the packs, buying one goes to checkout and the
-    credits are there on return with the form as it was, and nothing the AI writes runs as page code."""
+    """My website → the website chat: the member describes their business in their own words, the AI (Claude,
+    src/siteAi.js) builds the page and the live preview shows it next to the chat; they keep chatting to change it
+    ("make it blue"), a question changes nothing, Undo puts the page back, a page that isn't live is saved as a draft
+    while a live one waits for Save. Each message uses an AI credit (2 free to start; Pro gets an hour a day), running
+    out shows the packs, buying one comes back with the chat and the half-typed message kept, the chat is kept with
+    the member's progress, and nothing the AI writes runs as page code."""
     init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
     def open_site(label, pro, site=None, vp=None, ai=None):
-        step = [f'AI website writer ({label})']
+        step = [f'website chat ({label})']
         vp = vp or {'width': 390, 'height': 844}
         mobile = vp['width'] < 600
         ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
@@ -3985,124 +4018,137 @@ def website_ai(browser, base):
             problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
         page.wait_for_timeout(700)
         page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
-        page.click('#siteNavBtn'); page.wait_for_timeout(900)
+        page.click('#siteNavBtn'); page.wait_for_timeout(1000)
         return step, ctx, st, page
-    val = lambda page, sel: page.evaluate(f"[...document.querySelectorAll('{sel}')].map(e => e.value)")
+    bubbles = lambda page: page.evaluate("[...document.querySelectorAll('#scMsgs .ai-msg:not(.thinking)')].map(e => (e.classList.contains('user') ? 'me: ' : 'ai: ') + e.textContent.trim())")
+    frame_text = lambda page: page.evaluate("""(()=>{ const f = document.getElementById('sbFrame'); try{ return f && f.contentDocument ? f.contentDocument.body.innerText : ''; }catch(e){ return 'opaque'; } })()""")
+    def preview_text(page):
+        for fr in page.frames:
+            if fr.url.startswith('blob:'):
+                try:
+                    return fr.evaluate("document.body.innerText")
+                except Exception:
+                    return ''
+        return ''
+    def send(page, text, wait=1300):
+        page.fill('#scInput', text); page.click('#scSend'); page.wait_for_timeout(wait)
 
-    # 1) a free member with no page yet: describe the business, the AI writes it, it's saved as a draft
+    # 1) a free member with no page yet
     got = open_site('free member, new page', False)
     if got:
         step, ctx, st, page = got
         card = page.inner_text('#siteAi') if page.locator('#siteAi').count() else ''
-        if 'Let AI write your page' in card and 'You have 2 free AI credits to try it' in card and 'Claude Fable 5.1' in card and page.locator('#saDesc').count() and not page.locator('#saBuy').count():
-            ok(step[0], 'the AI card leads the page: what to tell it, the 2 free credits, and the model')
+        empty = page.inner_text('#sbPreview') if page.locator('#sbPreview').count() else ''
+        if ('Website builder' in card and 'Tell me about your business' in card and 'You have 2 free AI credits to try it. Each message uses 1.' in card
+                and 'Claude Fable 5.1' in card and page.locator('#scInput').count() and page.locator('.sc-chip').count() == 3
+                and 'shows up here once you describe your business' in empty and not page.evaluate("document.getElementById('siteEditBox').open")):
+            ok(step[0], 'it opens as a chat (with 3 example messages and the 2 free credits) next to an empty page preview; the form is folded away')
         else:
-            problem(step[0], 'a new page should start with the AI card', card[:300])
-        page.click('#saWrite'); page.wait_for_timeout(300)
-        err = page.inner_text('#siteAi .sa-err')
-        if 'little about your business' in err and not st.get('site_ai_posts'):
-            ok(step[0], 'tapping Write with nothing typed asks for a few lines first (nothing is sent)')
+            problem(step[0], 'My website should open as a chat with a preview', {'card': card[:300], 'preview': empty[:120]})
+        page.click('#scSend'); page.wait_for_timeout(300)
+        page.locator('.sc-chip').first.click(); page.wait_for_timeout(200)
+        chip_text = page.input_value('#scInput')
+        if not st.get('site_ai_posts') and chip_text.startswith('I mow lawns'):
+            ok(step[0], 'Send with nothing typed does nothing; an example goes into the box to edit or send')
         else:
-            problem(step[0], 'an empty description should be caught before calling the AI', {'err': err, 'posts': st.get('site_ai_posts')})
-        page.select_option('#saKind', 'lawn')
-        page.fill('#saDesc', 'I mow lawns in Springfield on weekends. $40 a cut. Mostly busy families.')
+            problem(step[0], 'empty sends should do nothing and examples should fill the box', {'posts': st.get('site_ai_posts'), 'box': chip_text})
+        # the AI can't finish: the message comes back to the box, nothing is lost
+        st['site_ai_reply'] = (502, {'error': 'The page writer could not finish just now. Please try again.', 'credits': {'free': 2, 'paid': 0, 'total': 2}})
+        send(page, 'I mow lawns in Springfield on weekends. $40 a cut.', 900)
+        if page.input_value('#scInput') == 'I mow lawns in Springfield on weekends. $40 a cut.' and bubbles(page) == ['ai: ' + page.evaluate("document.querySelector('#scMsgs .ai-msg').textContent.trim()")] and 'could not finish' in page.inner_text('#siteAi'):
+            ok(step[0], "if the AI can't finish, it says so and the message goes back in the box (nothing lost)")
+        else:
+            problem(step[0], 'a failed send should put the message back', {'box': page.input_value('#scInput'), 'bubbles': bubbles(page)})
         held = []
         page.route('**/api/sites/ai', lambda route: held.append(route))
-        page.click('#saWrite'); page.wait_for_timeout(1500)
-        busy = page.inner_text('#siteAi') if page.locator('#siteAi').count() else ''
-        inert = page.evaluate("!!document.getElementById('siteForm').inert")
-        bar = page.evaluate("(document.getElementById('saBar')||{style:{}}).style.width || ''")
-        if 'Writing your page' in busy and 'about a minute' in busy and inert and bar not in ('', '0%'):
-            ok(step[0], 'while it writes: "Writing your page…", a moving bar, and the form is locked')
+        page.click('#scSend'); page.wait_for_timeout(1500)
+        b = bubbles(page)
+        thinking = page.locator('#scMsgs .ai-msg.thinking').count()
+        if b[-1:] == ['me: I mow lawns in Springfield on weekends. $40 a cut.'] and thinking and page.is_disabled('#scInput') and page.evaluate("!!document.getElementById('siteForm').inert"):
+            ok(step[0], 'sending: the message shows in the chat with a "writing…" reply, and the box and form wait')
         else:
-            problem(step[0], 'the writing state should show and lock the form', {'busy': busy[:200], 'inert': inert, 'bar': bar})
-        shot(page, 'phone-website-ai-writing')
+            problem(step[0], 'the sending state should show', {'bubbles': b, 'thinking': thinking})
+        shot(page, 'phone-website-chat-writing')
         if held:
-            req = held[0].request
-            body = req.post_data_json or {}
+            body = held[0].request.post_data_json or {}
             ch = body.get('chapter') or {}
-            if (body.get('mode') == 'write' and 'mow lawns in Springfield' in body.get('description', '') and body.get('lang') == 'en'
-                    and ch.get('name') and len(ch.get('tips') or []) >= 2 and any('price' in t.lower() or 'quote' in t.lower() for t in ch['tips'])
-                    and (body.get('draft') or {}).get('nicheId') == 'lawn'):
-                ok(step[0], 'it sends what they wrote, the kind of business, and that chapter\'s pricing lessons')
+            if (body.get('message', '').startswith('I mow lawns') and body.get('history') == [] and body.get('appLang') == 'en' and body.get('lang') == 'en'
+                    and body.get('tz') and ch.get('name') and len(ch.get('tips') or []) >= 2 and 'draft' in body):
+                ok(step[0], "it sends the message, the page so far, the time zone and the chapter's pricing lessons")
             else:
-                problem(step[0], 'the AI request is missing something', {'body': {k: body.get(k) for k in ('mode', 'description', 'lang', 'chapter')}})
+                problem(step[0], 'the chat request is missing something', {k: body.get(k) for k in ('message', 'history', 'appLang', 'lang', 'tz', 'chapter')})
             status, payload = fixture(st, 'POST', '/api/sites/ai', body)
             held[0].fulfill(status=status, json=payload, headers={'access-control-allow-origin': '*'})
-        else:
-            problem(step[0], 'Write my page should call the AI')
         page.unroute('**/api/sites/ai')
-        page.wait_for_timeout(1200)
-        services = val(page, '#sfSvcList .sf-svc [data-k="name"]')
-        reasons = val(page, '#siteForm .sf-hl')
-        faqs = val(page, '#sfFaqList .sf-faq [data-k="q"]')
-        if (page.input_value('#sfName') == 'Green Mile Lawn Care' and page.input_value('#sfSlug') == 'green-mile-lawn-care'
-                and services == ['Weekly mowing', 'Leaf cleanup', 'Hedge trim'] and reasons == ['Same day every week', 'Text when the job is done', 'No contracts']
-                and faqs[:1] == ['Do I need to be home?'] and len(faqs) == 3):
-            ok(step[0], 'the whole page lands in the form: name, address, services, reasons to pick them, questions')
-        else:
-            problem(step[0], 'the AI page should fill the form', {'name': page.input_value('#sfName'), 'services': services, 'reasons': reasons, 'faqs': faqs})
+        page.wait_for_timeout(1800)
+        b = bubbles(page)
+        xss = page.evaluate("!!window.__xss || !!document.querySelector('#scMsgs img')")
         saved = (st.get('site_saves') or [{}])[-1]
-        sd = saved.get('data') or {}
-        card = page.inner_text('#siteAi')
-        if (saved.get('published') is False and sd.get('name') == 'Green Mile Lawn Care' and len(sd.get('faq') or []) == 3 and sd.get('nicheId') == 'lawn'
-                and 'Not live yet' in page.inner_text('#siteStatus') and 'saved as a draft' in card):
-            ok(step[0], 'a new page is saved as a draft straight away, so Preview shows it')
+        pv = preview_text(page)
+        if (len(b) == 3 and 'Here is your page' in b[-1] and not xss and page.locator('.sc-acts [data-sc="undo"]').count()
+                and 'Green Mile Lawn Care' in pv and saved.get('published') is False and (saved.get('data') or {}).get('name') == 'Green Mile Lawn Care'
+                and 'Not live yet' in page.inner_text('#siteStatus') and 'You have 1 free AI credit' in page.inner_text('#siteAi')):
+            ok(step[0], 'the reply shows as text, the preview shows the new page, and it is saved as a draft (1 free credit left)')
         else:
-            problem(step[0], 'the written page should be saved as a draft', {'saved': saved, 'card': card[:200]})
-        tips = page.evaluate("[...document.querySelectorAll('#siteAi .sa-tips li')].map(li => li.textContent)")
-        xss = page.evaluate("!!window.__xss || !!document.querySelector('#siteAi img')")
-        if len(tips) == 2 and 'Check these prices' in tips[0] and not xss and 'Written by Claude Fable 5.1' in card and 'You have 1 free AI credit to try it' in card:
-            ok(step[0], 'its tips show as plain text, with who wrote it and the credits left')
-        else:
-            problem(step[0], 'the AI tips should show as text', {'tips': tips, 'xss': xss, 'card': card[:300]})
-        shot(page, 'phone-website-ai-done')
+            problem(step[0], 'the written page should show in the preview and save', {'bubbles': b, 'xss': xss, 'preview': pv[:80], 'saved': saved.get('data', {}).get('name')})
+        shot(page, 'phone-website-chat-done')
         no_sideways_scroll(page, step[0])
-        # Undo: the form goes back to how it was (empty)
-        page.click('#saUndo'); page.wait_for_timeout(500)
-        if page.input_value('#sfName') == '' and page.locator('#saUndo').count() == 0:
-            ok(step[0], 'Undo puts the old page back in the form')
+        # a question: answered, the page stays as it is
+        saves = len(st.get('site_saves') or [])
+        send(page, 'How much should I charge?')
+        q = (st.get('site_ai_posts') or [{}])[-1]
+        if 'charge $35 to $50' in bubbles(page)[-1] and len(st.get('site_saves') or []) == saves and len(q.get('history') or []) == 2:
+            ok(step[0], 'a question gets an answer and leaves the page alone; the chat so far goes along with it')
         else:
-            problem(step[0], 'Undo should restore the form', page.input_value('#sfName'))
-        # the second free credit, then out of credits: the packs show and Write doesn't call the AI
-        page.fill('#saDesc', 'I mow lawns in Springfield on weekends.')
-        page.click('#saWrite'); page.wait_for_timeout(1200)
+            problem(step[0], 'a question should not change the page', {'bubbles': bubbles(page)[-1:], 'history': q.get('history')})
+        # out of credits now: the packs, and nothing sent
         posts = len(st.get('site_ai_posts') or [])
         card = page.inner_text('#siteAi')
         packs = page.evaluate("[...document.querySelectorAll('#saBuy .sa-pack')].map(b => b.innerText.replace(/\\s+/g, ' ').trim())")
-        if "You're out of AI credits" in card and packs == ['5 credits $4.99 $1.00 a page', '15 credits $9.99 $0.67 a page', '40 credits $19.99 $0.50 a page'] and 'Credits never expire' in card and 'Pro includes 1 hour of AI writing every day' in card:
-            ok(step[0], 'out of credits: the three packs show with their prices and price a page (and what Pro includes)')
+        send(page, 'Make it blue', 500)
+        if ("You're out of AI credits" in card and packs == ['5 credits $4.99 $1.00 a page', '15 credits $9.99 $0.67 a page', '40 credits $19.99 $0.50 a page']
+                and 'Pro includes 1 hour of AI writing every day' in card and len(st.get('site_ai_posts') or []) == posts
+                and 'Pick a pack' in page.inner_text('#siteAi') and page.input_value('#scInput') == 'Make it blue'):
+            ok(step[0], 'out of credits: the packs show under the chat, and a new message waits in the box')
         else:
-            problem(step[0], 'running out of credits should show the packs', {'card': card[:300], 'packs': packs})
-        shot(page, 'phone-website-ai-packs')
-        page.click('#saWrite'); page.wait_for_timeout(400)
-        if len(st.get('site_ai_posts') or []) == posts and 'Pick a pack' in page.inner_text('#siteAi .sa-err'):
-            ok(step[0], 'tapping Write with no credits points to the packs (the AI is not called)')
-        else:
-            problem(step[0], 'with no credits, Write should not call the AI', page.inner_text('#siteAi')[:200])
-        page.fill('#sfTagline', 'Typed before buying')
-        page.click('#saBuy .sa-pack[data-pack="medium"]')
-        page.wait_for_timeout(2500)
+            problem(step[0], 'running out should show the packs and keep the message', {'card': card[:200], 'packs': packs})
+        shot(page, 'phone-website-chat-packs')
+        page.click('#saBuy .sa-pack[data-pack="medium"]'); page.wait_for_timeout(3000)
         card = page.inner_text('#siteAi') if page.locator('#siteAi').count() else ''
-        toast = page.evaluate("(document.querySelector('.app-toast, #appToast') || {}).textContent || ''")
-        if (st.get('credit_checkouts') == ['medium'] and visible(page, '#siteView', 3000) and 'You have 15 AI credits' in card
-                and not page.locator('#saBuy').count() and page.input_value('#sfTagline') == 'Typed before buying' and '?' not in page.url.split('/')[-1]):
-            ok(step[0], 'buying 15 credits: off to checkout, back on My website with 15 credits and the form as it was')
+        toast = page.evaluate("(document.getElementById('appToast') || {}).textContent || ''")
+        if (st.get('credit_checkouts') == ['medium'] and 'You have 15 AI credits' in card and page.input_value('#scInput') == 'Make it blue'
+                and len(bubbles(page)) == 5 and '15 AI credits added' in toast and 'Green Mile Lawn Care' in preview_text(page)):
+            ok(step[0], 'buying 15 credits: back on My website with 15 credits, the chat, the page and the waiting message')
         else:
-            problem(step[0], 'buying credits should come back to My website with the credits', {'checkouts': st.get('credit_checkouts'), 'card': card[:200], 'url': page.url, 'toast': toast,
-                    'tagline': page.input_value('#sfTagline') if page.locator('#sfTagline').count() else None})
-        if '15 AI credits added' in toast:
-            ok(step[0], 'a note says the 15 credits are in')
+            problem(step[0], 'buying credits should come back to the chat as it was', {'card': card[:200], 'box': page.input_value('#scInput') if page.locator('#scInput').count() else None, 'bubbles': len(bubbles(page)), 'toast': toast})
+        page.click('#scSend'); page.wait_for_timeout(1500)
+        saved = (st.get('site_saves') or [{}])[-1]
+        if (saved.get('data') or {}).get('color') == 'blue' and (st.get('previews') or [{}])[-1].get('color') == 'blue':
+            ok(step[0], '"Make it blue" recolours the page: saved and shown in the preview')
         else:
-            problem(step[0], 'buying should confirm with a note', toast)
-        page.goto(base + '/?credits_session=cs_test_smokemedium1234567890', wait_until='load'); page.wait_for_timeout(2000)
-        if site_ai_credits(st['site_ai'])['paid'] == 15 and 'You have 15 AI credits' in page.inner_text('#siteAi'):
-            ok(step[0], 'the same checkout is only counted once')
+            problem(step[0], 'asking for a change should change the page', saved.get('data', {}).get('color'))
+        page.click('.sc-acts [data-sc="undo"]'); page.wait_for_timeout(1200)
+        saved = (st.get('site_saves') or [{}])[-1]
+        if (saved.get('data') or {}).get('color') == 'green' and not page.locator('.sc-acts [data-sc="undo"]').count():
+            ok(step[0], 'Undo puts the page back the way it was (and saves it)')
         else:
-            problem(step[0], 'credits should be added once', st['site_ai'])
+            problem(step[0], 'Undo should restore the page', saved.get('data', {}).get('color'))
+        kept = len(((st['data'].get('business') or {}).get('siteChat')) or [])
+        page.reload(wait_until='load'); page.wait_for_timeout(1200)
+        page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
+        page.click('#siteNavBtn'); page.wait_for_timeout(1200)
+        if kept == 6 and len(bubbles(page)) == 7:
+            ok(step[0], 'the chat is kept with their progress and is there next time')
+        else:
+            problem(step[0], 'the chat should be kept', {'kept': kept, 'bubbles': len(bubbles(page))})
+        page.click('#siteAi [data-sc="clear"]'); page.wait_for_timeout(500)
+        if len(bubbles(page)) == 1 and 'Tell me what to change' in bubbles(page)[0] and 'Green Mile Lawn Care' in preview_text(page):
+            ok(step[0], 'Clear chat empties the chat and keeps the page')
+        else:
+            problem(step[0], 'Clear chat should keep the page', bubbles(page))
         finish(st, step[0]); ctx.close()
 
-    # 2) a Pro member with a live page: Make it better, which waits for Save; questions and language can be edited
+    # 2) a Pro member with a live page: the daily hour pays, changes wait for Save
     site = {'site': {'slug': 'pat-cleans', 'url': 'https://theguide.company/s/pat-cleans', 'previewKey': 'smokepreviewkey123456', 'published': True, 'updatedAt': TODAY,
                      'data': {'name': 'Pat Cleans', 'tagline': 'Deep cleans', 'area': 'Shelbyville', 'hours': '', 'about': '', 'email': 'pat@example.com', 'phone': '', 'color': 'blue', 'nicheId': 'cleaning',
                               'services': [{'name': 'Deep clean', 'price': '$150', 'note': ''}], 'highlights': [], 'faq': [], 'lang': 'en'}},
@@ -4111,76 +4157,62 @@ def website_ai(browser, base):
     if got:
         step, ctx, st, page = got
         card = page.inner_text('#siteAi')
-        if ('Let AI improve your page' in card and page.locator('#saBetter').count() and page.locator('#saDesc').count() == 0
-                and 'includes 1 hour of AI writing every day (up to 10 writes)' in card and 'You have 12' not in card and not page.locator('#saBuy').count()):
-            ok(step[0], 'a Pro page with content offers Make it better, and says Pro includes an hour of AI writing a day')
+        if ('Tell me what to change' in card and 'includes 1 hour of AI writing every day (up to 10 writes)' in card and 'You have 12' not in card
+                and 'Pat Cleans' in preview_text(page) and page.locator('.sc-chip').count() == 4):
+            ok(step[0], 'a live page: the chat asks what to change, the preview shows the page, and the Pro hour is there')
         else:
-            problem(step[0], 'a filled Pro page should offer Make it better and the daily hour', card[:300])
-        page.click('#saBetter'); page.wait_for_timeout(1200)
+            problem(step[0], 'a live page should open ready for changes', {'card': card[:300], 'preview': preview_text(page)[:80]})
+        page.locator('.sc-chip').first.click(); page.click('#scSend'); page.wait_for_timeout(1500)
         post = (st.get('site_ai_posts') or [{}])[-1]
-        saves = len(st.get('site_saves') or [])
-        card = page.inner_text('#siteAi')
         hour_line = page.inner_text('#saHour') if page.locator('#saHour').count() else ''
-        if st.get('site_ai_paid_with') == ['hour'] and 'Your AI hour: 9 free writes and 60 minutes left' in hour_line and post.get('tz'):
-            ok(step[0], "the write starts the Pro member's hour: free, with the minutes left (credits untouched)")
+        unsaved = page.inner_text('#sbPreview')
+        if (st.get('site_ai_paid_with') == ['hour'] and 'Your AI hour: 9 free writes and 60 minutes left' in hour_line and post.get('message') == 'Make it sound more professional'
+                and not st.get('site_saves') and "aren't on your live page yet" in unsaved and 'Green Mile' not in preview_text(page) and 'Pat Cleans' in preview_text(page)):
+            ok(step[0], 'the change uses the Pro hour, shows in the preview, and waits for Save on a live page')
         else:
-            problem(step[0], 'a Pro write should use the daily hour', {'paid_with': st.get('site_ai_paid_with'), 'hour': hour_line, 'tz': post.get('tz')})
-        if (post.get('mode') == 'improve' and (post.get('draft') or {}).get('name') == 'Pat Cleans' and page.input_value('#sfName') == 'Pat Cleans'
-                and page.input_value('#sfEmail') == 'pat@example.com' and len(val(page, '#sfSvcList .sf-svc [data-k="name"]')) == 3
-                and saves == 0 and 'Save changes to update your live page' in card):
-            ok(step[0], 'Make it better keeps their name and email, fills the page, and waits for Save on a live page')
-        else:
-            problem(step[0], 'improving a live page should fill the form and wait for Save', {'post': post.get('mode'), 'saves': saves, 'card': card[:200]})
-        page.click('#saWrite'); page.wait_for_timeout(300)
-        if page.locator('#saDesc').count() and page.locator('#saCancel').count():
-            ok(step[0], 'Write it again opens the description box first')
-        else:
-            problem(step[0], 'Write it again should ask what the business does first')
-        page.click('#saCancel'); page.wait_for_timeout(300)
-        page.click('#sfAddFaq'); page.wait_for_timeout(300)
-        rows = page.locator('#sfFaqList .sf-faq')
-        n = rows.count()
-        rows.nth(n - 1).locator('[data-k="q"]').fill('Do you bring supplies?')
-        rows.nth(n - 1).locator('[data-k="a"]').fill('Yes, everything.')
-        page.locator('#sfFaqList .sf-faq').first.locator('[data-del-faq]').click(); page.wait_for_timeout(300)
-        page.select_option('#sfLang', 'es')
-        page.click('#sfSave'); page.wait_for_timeout(800)
+            problem(step[0], 'a change to a live page should wait for Save', {'paid': st.get('site_ai_paid_with'), 'hour': hour_line, 'saves': st.get('site_saves'), 'preview': unsaved[:120]})
+        page.click('#sbSaveLive'); page.wait_for_timeout(900)
         saved = (st.get('site_saves') or [{}])[-1]
-        sd = saved.get('data') or {}
-        qs = [f.get('q') for f in sd.get('faq') or []]
-        if saved.get('published') is True and qs == ['How do I pay?', 'Which areas do you cover?', 'Do you bring supplies?'] and sd.get('lang') == 'es' and sd.get('color') == 'blue':
-            ok(step[0], 'questions can be added and removed, the page language changed, and Save keeps it live')
+        if saved.get('published') is True and (saved.get('data') or {}).get('email') == 'pat@example.com' and not page.locator('#sbSaveLive').count():
+            ok(step[0], 'Save changes puts it on the live page (their email kept)')
         else:
-            problem(step[0], 'editing questions and language should save', {'qs': qs, 'lang': sd.get('lang'), 'published': saved.get('published'), 'color': sd.get('color')})
-        shot(page, 'phone-website-ai-live')
+            problem(step[0], 'Save changes should update the live page', saved)
+        page.click('#siteEditBox > summary'); page.wait_for_timeout(300)
+        page.fill('#sfPhone', '555 123 4567'); page.wait_for_timeout(1300)
+        if (st.get('previews') or [{}])[-1].get('phone') == '555 123 4567' and page.locator('#sbSaveLive').count():
+            ok(step[0], 'editing the details by hand updates the preview too')
+        else:
+            problem(step[0], 'hand edits should show in the preview', (st.get('previews') or [{}])[-1].get('phone'))
+        shot(page, 'phone-website-chat-live')
         finish(st, step[0]); ctx.close()
 
-    # 2b) a Pro member who used today's hour and has no credits: the packs, and the hour comes back tomorrow
+    # 3) a Pro member who used today's hour and has no credits
     got = open_site('Pro member, hour used', True, site=site, ai={'ready': True, 'free': 0, 'paid': 0, 'hour': {'included': True, 'state': 'used', 'minutes': 60}})
     if got:
         step, ctx, st, page = got
         card = page.inner_text('#siteAi')
-        if "You've used today's AI hour" in card and page.locator('#saBuy .sa-pack').count() == 3 and 'putting your page live' not in card:
-            ok(step[0], 'hour used and no credits: says it comes back tomorrow and shows the packs')
+        send(page, 'Add window cleaning for $60', 500)
+        if ("You've used today's AI hour" in card and page.locator('#saBuy .sa-pack').count() == 3 and not st.get('site_ai_posts')
+                and 'used today' in page.inner_text('#siteAi .sc-err')):
+            ok(step[0], 'hour used and no credits: the packs show and the message waits')
         else:
             problem(step[0], 'a used hour with no credits should show the packs', card[:300])
-        page.click('#saBetter'); page.wait_for_timeout(400)
-        if not st.get('site_ai_posts') and 'used today' in page.inner_text('#siteAi .sa-err'):
-            ok(step[0], 'Make it better then points to the packs instead of calling the AI')
-        else:
-            problem(step[0], 'with the hour used and no credits, the AI should not be called', page.inner_text('#siteAi')[:200])
         finish(st, step[0]); ctx.close()
 
-    # 3) on a laptop, both looks, while it writes and when it's done
-    got = open_site('laptop', False, vp={'width': 1280, 'height': 800}, ai={'ready': True, 'free': 0, 'paid': 0})
+    # 4) on a laptop: the chat and the page side by side, both looks
+    got = open_site('laptop', True, site=site, vp={'width': 1280, 'height': 900}, ai={'ready': True, 'free': 2, 'paid': 0})
     if got:
         step, ctx, st, page = got
         no_sideways_scroll(page, step[0])
-        page.evaluate("document.getElementById('saBuy').scrollIntoView({block: 'center'})"); page.wait_for_timeout(200)
-        shot(page, 'desktop-website-ai-forest')
+        boxes = page.evaluate("[document.getElementById('siteAi').getBoundingClientRect(), document.getElementById('sbPreview').getBoundingClientRect()].map(r => [Math.round(r.left), Math.round(r.top), Math.round(r.width)])")
+        page.evaluate("document.getElementById('siteBuilder').scrollIntoView()"); page.wait_for_timeout(200)
+        shot(page, 'desktop-website-chat-forest')
         page.evaluate("document.documentElement.setAttribute('data-theme','purple')"); page.wait_for_timeout(200)
-        shot(page, 'desktop-website-ai-purple')
-        ok(step[0], 'the AI card shows on a laptop in both looks')
+        shot(page, 'desktop-website-chat-purple')
+        if boxes[0][0] < boxes[1][0] and abs(boxes[0][1] - boxes[1][1]) < 4 and boxes[1][2] > 400:
+            ok(step[0], 'on a laptop the chat and the page sit side by side, in both looks')
+        else:
+            problem(step[0], 'the chat and the preview should sit side by side on a laptop', boxes)
         finish(st, step[0]); ctx.close()
 
 

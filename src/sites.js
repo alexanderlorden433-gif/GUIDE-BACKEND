@@ -348,7 +348,7 @@ function renderSitePage(site, opts = {}) {
   };
   const jsonLd = d.faq.length ? [business, { '@context': 'https://schema.org', '@type': 'FAQPage',
     mainEntity: d.faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }] : business;
-  const body = `${opts.preview ? `<div class="preview">${W.preview}</div>` : ''}
+  const body = `${opts.preview && !opts.inApp ? `<div class="preview">${W.preview}</div>` : ''}
 <main class="wrap">
   <header class="top">
     <h1>${esc(d.name || W.placeholderName)}</h1>

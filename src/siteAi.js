@@ -1,14 +1,17 @@
-// The AI that writes a member's one-page website (My website → "Write my page" / "Make it better").
+// The AI that builds a member's one-page website, as a chat (My website): the member describes their business in
+// their own words, the AI writes the whole page, and they keep chatting to change it ("make it blue", "add hedge
+// trimming for $30"). Each turn sends the chat so far, the page as it is now and the new message; the answer is a
+// short reply for the chat plus the whole page (structured outputs, so it always matches the schema below), and the
+// page is cleaned by cleanSiteData() like anything else a member saves, so nothing reaches it unchecked.
 //
 // It uses the most capable Claude model this server can reach: Claude Fable 5.1 first, then Claude Opus 5.5,
 // then Claude Sonnet 5.5 if the account can't use the one before (set SITE_AI_MODEL to pick a different first
-// choice). The answer comes back as JSON that must match the schema below (structured outputs), and is then
-// cleaned by cleanSiteData() like anything else a member saves, so nothing reaches the page unchecked.
+// choice).
 //
-// Each write uses one AI credit (src/siteCredits.js): members start with a couple of free ones and buy packs
-// after that. Pro members (and the old Lifetime plan) write without credits during their daily AI hour. On top of credits there's a per-member daily cap (so a stuck button or a script can't burn a whole
-// pack) and an app-wide daily ceiling as an emergency brake (SITE_AI_DAILY_TOTAL). The daily counts live in the
-// SiteAiUse table (created in src/sites.js).
+// Each message uses one AI credit (src/siteCredits.js): members start with a couple of free ones and buy packs
+// after that. Pro members (and the old Lifetime plan) write without credits during their daily AI hour. On top of
+// credits there's a per-member daily cap (so a stuck button or a script can't burn a whole pack) and an app-wide
+// daily ceiling as an emergency brake (SITE_AI_DAILY_TOTAL). The daily counts live in the SiteAiUse table.
 const prisma = require('./db');
 const { state, cleanSiteData, COLORS } = require('./sites');
 const credits = require('./siteCredits');
@@ -17,6 +20,7 @@ const DAILY_CAP = 30;
 const TOTAL = () => Math.max(0, parseInt(process.env.SITE_AI_DAILY_TOTAL, 10) || 1000);
 const MODELS = () => [...new Set([process.env.SITE_AI_MODEL, 'claude-fable-5-1', 'claude-opus-5-5', 'claude-sonnet-5-5'].filter(Boolean))];
 const TIMEOUT_MS = 150 * 1000;
+const HISTORY = 10;          // earlier chat messages sent along with the new one
 // the model that wrote the last page, so My website can say which one it uses
 let lastModel = null;
 const currentModel = () => lastModel || MODELS()[0];
@@ -25,58 +29,81 @@ const str = { type: 'string' };
 const SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['name', 'tagline', 'area', 'hours', 'about', 'services', 'highlights', 'faq', 'color', 'tips'],
+  required: ['reply', 'changed', 'name', 'tagline', 'area', 'hours', 'about', 'services', 'highlights', 'faq', 'color', 'lang', 'phone', 'email'],
   properties: {
+    reply: { type: 'string', description: 'Your chat message to the owner: 1 to 3 short sentences, plain text, no emoji, no markdown.' },
+    changed: { type: 'boolean', description: 'true if you wrote or changed the page this turn; false if you only answered or asked something.' },
     name: { type: 'string', description: 'Business name, at most 60 characters. Keep the owner\'s name if they gave one.' },
     tagline: { type: 'string', description: 'One line under the name: what they do and for whom, at most 120 characters.' },
     area: { type: 'string', description: 'Where they work, at most 80 characters, or empty if unknown.' },
     hours: { type: 'string', description: 'When they work, at most 80 characters, or empty if unknown.' },
     about: { type: 'string', description: 'About the owner, first person, 2 to 4 short sentences, at most 600 characters.' },
     services: {
-      type: 'array', description: '3 to 6 services, the main one first.',
+      type: 'array', description: '1 to 8 services, the main one first (3 to 6 for a new page).',
       items: { type: 'object', additionalProperties: false, required: ['name', 'price', 'note'],
         properties: { name: { type: 'string', description: 'At most 60 characters.' },
           price: { type: 'string', description: 'Like "$40 a visit" or "from $120", at most 30 characters.' },
           note: { type: 'string', description: 'What is included, at most 140 characters, or empty.' } } },
     },
-    highlights: { type: 'array', description: 'Exactly 3 short, concrete reasons to pick them, each at most 90 characters.', items: str },
+    highlights: { type: 'array', description: 'Up to 3 short, concrete reasons to pick them (3 for a new page), each at most 90 characters.', items: str },
     faq: {
-      type: 'array', description: '3 to 5 questions customers really ask (what is included, how to book, how to pay, the area), with short answers.',
+      type: 'array', description: 'Up to 6 questions customers really ask (what is included, how to book, how to pay, the area), with short answers (3 to 5 for a new page).',
       items: { type: 'object', additionalProperties: false, required: ['q', 'a'],
         properties: { q: { type: 'string', description: 'At most 110 characters.' }, a: { type: 'string', description: 'At most 350 characters.' } } },
     },
-    color: { type: 'string', enum: Object.keys(COLORS), description: 'An accent colour that suits the business.' },
-    tips: { type: 'array', description: '2 or 3 short notes for the owner (not shown on the page): what to check or add before publishing, e.g. confirm prices against local competitors, add a phone number.', items: str },
+    color: { type: 'string', enum: Object.keys(COLORS), description: 'The page accent colour: keep the current one unless the owner asks for another (pick one that suits a new page).' },
+    lang: { type: 'string', enum: ['en', 'es'], description: 'The language of the page: keep the current one unless the owner asks for the page in the other language.' },
+    phone: { type: 'string', description: 'A phone number only if the owner typed a new one in their latest message, otherwise empty.' },
+    email: { type: 'string', description: 'An email address only if the owner typed a new one in their latest message, otherwise empty.' },
   },
 };
 
-function systemPrompt(lang) {
-  const spanish = lang === 'es';
+function systemPrompt(chatLang) {
   return [
-    'You write one-page websites for small businesses started by beginners using The Guide, an app that teaches people to start a side business (mostly in the US).',
-    'The page has: the business name, a one-line tagline, where and when they work, services with prices, three reasons to pick them, a short "about" in the owner\'s voice, and a few FAQs. Visitors ask for a quote through a form, so the page should make that the obvious next step.',
-    'Write plainly and warmly, in short sentences a customer reads in seconds. Be specific to this business. No hype words ("premier", "world-class", "unparalleled"), no emoji, no exclamation marks.',
-    'Honesty rules, always: never invent reviews, testimonials, ratings, awards, customer counts, years in business, licenses, certifications, insurance, guarantees, or anything else the owner did not tell you. If the owner gave facts, use them as given. Reasons to pick them must follow from what they actually do (for example "Same day every week" for a weekly route), not from claims about quality.',
-    'Prices: use the owner\'s prices when given. Otherwise suggest realistic beginner prices for that kind of work in the US, in US dollars, written like "$40 a visit", "from $120" or "$25 an hour", and add a tip telling the owner to check them against local competitors.',
-    'If the owner gave no business name, suggest a simple one that says what they do. Keep their contact details out of the text; the page shows them separately.',
-    spanish
-      ? 'Write everything (including the tips) in Spanish: neutral Latin American Spanish, addressing customers as "usted". Keep prices in US dollars.'
-      : 'Write everything in American English.',
+    'You are the website builder inside The Guide, an app that teaches beginners to start a side business (mostly in the US). You chat with the owner and build their one-page website.',
+    'Each turn you get their page as it is now (if they have one) and their latest message. You answer with a short chat reply and the whole page.',
+    '- No page yet: if they told you what their business is, write the whole page from it and make sensible, honest suggestions for anything they left out. If they have not said what their business is, set changed to false and ask what they do, where, for whom and what they charge.',
+    '- A page already exists: do what they ask and change only that. Keep everything else exactly as it is: same wording, prices, colour and language. For broad requests ("make it better", "more professional") improve the wording but keep their facts and prices.',
+    '- A question (about prices, wording, what to add): answer it in your reply. Change the page only if they asked you to.',
+    '- Anything that is not about their business or their page: say in one sentence that you can only help with their website, and set changed to false.',
+    'When changed is false, return the page exactly as you got it (or empty fields if there is no page).',
+    'The page has: the business name, a one-line tagline, where and when they work, services with prices, reasons to pick them, a short "about" in the owner\'s voice, and a few FAQs. Visitors ask for a quote through a form, so the page should make that the obvious next step.',
+    'Page writing: plain and warm, in short sentences a customer reads in seconds, specific to this business. No hype words ("premier", "world-class", "unparalleled"), no emoji, no exclamation marks.',
+    'Honesty rules, always: never invent reviews, testimonials, ratings, awards, customer counts, years in business, licenses, certifications, insurance, guarantees, or anything else the owner did not tell you. Use the owner\'s facts as given. Reasons to pick them must follow from what they actually do (for example "Same day every week" for a weekly route), not from claims about quality.',
+    'Prices: use the owner\'s prices when given. Otherwise suggest realistic beginner prices for that kind of work in the US, in US dollars, written like "$40 a visit", "from $120" or "$25 an hour".',
+    'If the owner gave no business name, suggest a simple one that says what they do.',
+    'Contact details: the page shows the owner\'s phone and email from their own fields. Fill the phone or email field only if they typed a new one in their latest message; otherwise leave it empty. Never put contact details in any other text.',
+    'Page language: text on the page is in English (American) or, when the page language is es, in neutral Latin American Spanish that addresses customers as "usted", with prices in US dollars.',
+    `Your reply: ${chatLang === 'es' ? 'in Spanish (the owner uses the app in Spanish), unless they write to you in English' : 'in the language the owner writes to you in'}. 1 to 3 short sentences, friendly and plain, no emoji, no markdown. Say what you made or changed. When you set or suggest prices, tell them to check local competitors before they publish. End with one short idea for what they could ask next.`,
   ].join('\n');
 }
 
-function userPrompt({ mode, description, draft, chapter }) {
+/** What the model sees this turn: the business, the page as it is now, and the new message. */
+function turnPrompt({ message, draft, chapter }) {
   const parts = [];
   if (chapter && chapter.name) {
-    parts.push(`Kind of business: ${chapter.name}${chapter.description ? ` (${chapter.description})` : ''}.`);
+    parts.push(`Kind of business (from the chapter they study in The Guide): ${chapter.name}${chapter.description ? ` (${chapter.description})` : ''}.`);
     if (chapter.tips && chapter.tips.length) parts.push('What The Guide teaches about pricing and offers for this business:\n- ' + chapter.tips.join('\n- '));
   }
-  if (description) parts.push(`What the owner says about their business:\n"""${description}"""`);
-  if (draft) parts.push(`Their page as it is now (JSON):\n${JSON.stringify(draft)}`);
-  parts.push(mode === 'improve'
-    ? 'Make this page better: clearer, more specific and more convincing to a customer. Keep every fact, name, price and contact detail the owner wrote unless it is clearly a placeholder; fill gaps (missing services, reasons to pick them, FAQs) in the same spirit.'
-    : 'Write the whole page from what the owner told you. Where they left something out, make a sensible, honest suggestion they can edit.');
+  parts.push(draft ? `Their page right now (JSON; "(set)" means they filled that in themselves):\n${JSON.stringify(draft)}` : 'They do not have a page yet.');
+  parts.push(`Their latest message:\n"""${message}"""`);
   return parts.join('\n\n');
+}
+
+/** The chat so far, as the API wants it: alternating turns that start with the owner. Short strings only. */
+function cleanHistory(h) {
+  const out = [];
+  for (const m of (Array.isArray(h) ? h : []).slice(-HISTORY)) {
+    if (!m || (m.role !== 'user' && m.role !== 'assistant')) continue;
+    const content = String(m.content == null ? '' : m.content).replace(/\r\n?/g, '\n').trim().slice(0, 1500);
+    if (!content) continue;
+    if (out.length && out[out.length - 1].role === m.role) out[out.length - 1].content += '\n\n' + content;
+    else out.push({ role: m.role, content });
+  }
+  while (out.length && out[0].role !== 'user') out.shift();
+  // the new message is a user turn, so the history must end with the assistant
+  while (out.length && out[out.length - 1].role !== 'assistant') out.pop();
+  return out;
 }
 
 /** Tidy what the app sends about the chapter: short strings only. */
@@ -144,23 +171,25 @@ async function callModel(model, body, apiKey, fetchImpl) {
 }
 
 /**
- * Writes (mode "write") or improves (mode "improve") a page. Returns {status, body} for the route to send.
- * `fetchImpl` is there so the checks can stand in for the real API.
+ * One chat turn: {message, history, draft, chapter, lang (the page's), appLang (the app's, for the reply), tz}.
+ * (The older {mode, description} form still works.) Returns {status, body} for the route to send; body is
+ * {reply, changed, draft, model, paidWith, credits, hour}. `fetchImpl` lets the checks stand in for the real API.
  */
-async function writePage({ userId, mode, description, draft, chapter, lang, tz }, fetchImpl = fetch) {
+async function writePage({ userId, message, history, draft, chapter, lang, appLang, tz, mode, description }, fetchImpl = fetch) {
   if (!state.ready) return { status: 503, body: { error: 'Websites are not ready yet. Try again in a minute.' } };
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return { status: 503, body: { error: 'The page writer is not set up yet.' } };
-  mode = mode === 'improve' ? 'improve' : 'write';
-  description = String(description == null ? '' : description).replace(/\r\n?/g, '\n').trim().slice(0, 2000);
   const current = draft && typeof draft === 'object' ? cleanSiteData(draft) : null;
-  const pageLang = lang === 'es' || lang === 'en' ? lang : (current ? current.lang : 'en');
-  if (mode === 'write' && description.length < 10) {
+  const hasPage = !!(current && (current.name || current.services.length || current.about));
+  if (message == null && (description != null || mode)) {
+    message = mode === 'improve' ? 'Make my page better: clearer, more specific and more convincing, keeping my facts and prices.' : description;
+  }
+  message = String(message == null ? '' : message).replace(/\r\n?/g, '\n').trim().slice(0, 1500);
+  if (message.length < 2) return { status: 400, body: { error: 'Type a message first.' } };
+  if (!hasPage && message.length < 10 && mode !== 'improve' && !cleanHistory(history).length) {
     return { status: 400, body: { error: 'Tell it a little about your business first: what you do, where, and for whom.' } };
   }
-  if (mode === 'improve' && !(current && (current.name || current.services.length || current.about))) {
-    return { status: 400, body: { error: 'There is nothing to improve yet. Write a few lines about your business, then tap Write my page.' } };
-  }
+  const pageLang = lang === 'es' || lang === 'en' ? lang : (current ? current.lang : 'en');
   if ((await usedByEveryone()) >= TOTAL()) {
     return { status: 503, body: { error: 'The page writer is very busy today. Please try again tomorrow.' } };
   }
@@ -179,11 +208,12 @@ async function writePage({ userId, mode, description, draft, chapter, lang, tz }
           ? 'Free tries are all taken for today. Buy a pack to write now, or try again tomorrow.'
           : "You're out of AI credits. Pick a pack to keep writing." } };
   }
-  const forModel = current ? Object.assign({}, current, { email: current.email ? '(set)' : '', phone: current.phone ? '(set)' : '' }) : null;
+  // the model never sees the contact details the owner typed into their page
+  const forModel = hasPage ? Object.assign({}, current, { email: current.email ? '(set)' : '', phone: current.phone ? '(set)' : '', lang: pageLang }) : null;
   const body = {
     max_tokens: 16000,
-    system: systemPrompt(pageLang),
-    messages: [{ role: 'user', content: userPrompt({ mode, description, draft: forModel, chapter: cleanChapter(chapter) }) }],
+    system: systemPrompt(appLang === 'es' ? 'es' : 'en'),
+    messages: cleanHistory(history).concat([{ role: 'user', content: turnPrompt({ message, draft: forModel, chapter: cleanChapter(chapter) }) }]),
     output_config: { format: { type: 'json_schema', schema: SCHEMA } },
   };
   let result = null;
@@ -205,15 +235,20 @@ async function writePage({ userId, mode, description, draft, chapter, lang, tz }
   console.log(`[site-ai] wrote a page with ${result.model}: ${u.input_tokens || 0} tokens in, ${u.output_tokens || 0} out`);
   await credits.logUse(userId, spent.bucket, result.model, result.usage).catch(err => console.error('[site-ai] could not log the write:', err.message));
   const ai = result.data || {};
-  // the owner's own contact details, address and look stay as they set them
-  const merged = cleanSiteData(Object.assign({}, ai, {
-    email: current ? current.email : '', phone: current ? current.phone : '',
-    nicheId: current ? current.nicheId : '', lang: pageLang,
-    color: current && mode === 'improve' ? current.color : ai.color,
-  }));
-  const tips = (Array.isArray(ai.tips) ? ai.tips : []).slice(0, 3).map(t => String(t).slice(0, 240));
+  const reply = String(ai.reply || '').replace(/\s+\n/g, '\n').trim().slice(0, 1200) || (ai.changed ? 'Done. Have a look at your page.' : '');
+  let page = current || cleanSiteData({ lang: pageLang });
+  let changed = false;
+  if (ai.changed) {
+    const typed = cleanSiteData({ email: ai.email, phone: ai.phone });
+    // the owner's own contact details stay, unless they just typed new ones in the chat; the business type stays
+    const next = cleanSiteData(Object.assign({}, ai, {
+      email: typed.email || (current ? current.email : ''), phone: typed.phone || (current ? current.phone : ''),
+      nicheId: current ? current.nicheId : '', lang: ai.lang === 'es' || ai.lang === 'en' ? ai.lang : pageLang,
+    }));
+    if (next.name || next.services.length || next.about) { page = next; changed = true; }
+  }
   const [left, hour] = await Promise.all([credits.getCredits(userId), credits.hourState(userId, tz)]);
-  return { status: 200, body: { draft: merged, tips, model: result.model, paidWith: spent.bucket, credits: left, hour } };
+  return { status: 200, body: { reply, changed, draft: page, tips: [], model: result.model, paidWith: spent.bucket, credits: left, hour } };
 }
 
 module.exports = { writePage, currentModel, SCHEMA, DAILY_CAP, MODELS };
