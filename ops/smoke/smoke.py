@@ -251,14 +251,31 @@ def fixture(state, method, path, body):
             return 403, {'error': 'Not authorized.'}
         b = body or {}
         row = {'id': f'c{len(state.get("code_rows", [])) + 1}', 'code': (str(b.get('code') or '') or 'RND-ABC123').upper().replace(' ', ''), 'label': b.get('label'), 'days': int(b.get('days') or 0),
-               'maxUses': b.get('maxUses'), 'uses': 0, 'active': True, 'expiresAt': None, 'createdAt': TODAY, 'state': 'ok'}
+               'maxUses': b.get('maxUses'), 'uses': 0, 'active': True, 'expiresAt': None, 'createdAt': TODAY, 'state': 'ok',
+               'commissionPct': int(b['commissionPct']) if b.get('commissionPct') else None}
         state.setdefault('code_rows', []).insert(0, row)
         return 201, row
+    if p == '/api/codes/payouts' and method == 'GET':
+        if not state.get('owner'):
+            return 403, {'error': 'Not authorized.'}
+        rows = state.get('payouts', [])
+        return 200, {'month': 'x', 'payouts': rows, 'totalOwed': round(sum(r['owed'] for r in rows if not r.get('paid')), 2)}
+    m = re.match(r'^/api/codes/([^/]+)/payouts$', p)
+    if m and method == 'POST':
+        for r in state.get('payouts', []):
+            if r['codeId'] == m.group(1):
+                r['paid'] = {'amount': float((body or {}).get('amount') or 0), 'at': TODAY}
+        state.setdefault('payout_posts', []).append((m.group(1), body))
+        return 200, {'ok': True}
     if p.startswith('/api/codes/') and method == 'PUT':
         cid = p.rsplit('/', 1)[1]
         for row in state.get('code_rows', []):
             if row['id'] == cid:
-                row['active'] = bool((body or {}).get('active')); row['state'] = 'ok' if row['active'] else 'inactive'
+                if 'commissionPct' in (body or {}):
+                    v = (body or {}).get('commissionPct'); row['commissionPct'] = int(v) if str(v or '').strip() not in ('', '0') else None
+                    state.setdefault('share_puts', []).append((cid, row['commissionPct']))
+                if 'active' in (body or {}) or 'commissionPct' not in (body or {}):
+                    row['active'] = bool((body or {}).get('active')); row['state'] = 'ok' if row['active'] else 'inactive'
                 return 200, row
         return 404, {'error': 'Code not found.'}
     # the free 7-day course: the landing page posts an email
@@ -3174,6 +3191,46 @@ def design_polish(browser, base):
         ctx.close(); ctx2.close()
 
 
+def creator_payouts(browser, base):
+    """Owner dashboard: a code can carry a creator share, and the payouts card shows each creator's cut
+    for a month and lets the owner mark it paid."""
+    step = ['creator payouts (owner)']
+    ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block')
+    st = new_state(True); st['owner'] = True
+    st['code_rows'] = [{'id': 'c1', 'code': 'PEAK30', 'label': 'Peak Freelance', 'days': 30, 'maxUses': None, 'uses': 4, 'active': True, 'expiresAt': None,
+                        'createdAt': TODAY, 'state': 'ok', 'commissionPct': 30}]
+    st['payouts'] = [{'codeId': 'c1', 'code': 'PEAK30', 'label': 'Peak Freelance', 'commissionPct': 30, 'members': 4, 'paying': 2,
+                      'payments': 3, 'revenue': 74.97, 'owed': 22.49, 'paid': None}]
+    attach_backend(ctx, st)
+    ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    answers = iter(['22.49'])
+    page.on('dialog', lambda d: d.accept(next(answers, '')))
+    page.goto(base + '/', wait_until='load'); page.wait_for_timeout(1500)
+    page.evaluate('showAdmin()'); page.wait_for_timeout(1800)
+    r = page.evaluate("""(()=>({ share: (document.querySelector('[data-code-share="c1"]')||{}).textContent || '',
+      field: !!document.getElementById('dxCodePct'), rows: document.querySelectorAll('#dxPayTable tr').length,
+      text: (document.getElementById('dxPayTable')||{}).innerText || '', total: (document.getElementById('dxPayTotal')||{}).textContent || '' }))()""")
+    if '30%' in r['share'] and r['field'] and r['rows'] == 2 and '$22.49' in r['text'] and '$74.97' in r['text'] and '$22.49' in r['total']:
+        ok(step[0], 'the codes card shows each creator share and the payouts card shows what members paid and the 30% owed')
+    else:
+        problem(step[0], 'the creator payouts card is wrong', r)
+    btn = page.locator('[data-pay-code="c1"]')
+    if btn.count():
+        btn.click(); page.wait_for_timeout(700)
+        posts = st.get('payout_posts') or []
+        paid = page.evaluate("(document.getElementById('dxPayTable')||{}).innerText || ''")
+        if posts and posts[-1][0] == 'c1' and str(posts[-1][1].get('amount')) == '22.49' and 'paid $22.49' in paid:
+            ok(step[0], 'Mark paid records the amount for that month and the row shows it as paid')
+        else:
+            problem(step[0], 'Mark paid did not record the payout', {'posts': posts, 'text': paid[:120]})
+    else:
+        problem(step[0], 'no Mark paid button on an unpaid creator')
+    finish(st, step[0]); ctx.close()
+
+
+
+
 def landing_trust(browser, base):
     """Trust on the landing page: member wins appear only when at least three are approved; the 7-day
     money-back guarantee shows on the Pro card, in the FAQ and in the Pro box; members can offer a win."""
@@ -3229,6 +3286,7 @@ def landing_trust(browser, base):
 
 
 
+
 def billing_email_links(browser, base):
     """The billing emails link back with ?open=upgrade ("Pick up where you left off") and ?open=account
     ("Open my account"): the first opens the Pro box for a free member, the second opens account settings."""
@@ -3245,6 +3303,7 @@ def billing_email_links(browser, base):
         else:
             problem(step[0], f'?open={which} did not open the right screen')
         finish(st, step[0]); ctx.close()
+
 
 
 def public_pages(browser, base):
@@ -3331,6 +3390,7 @@ def public_pages(browser, base):
     else:
         problem(step[0], 'the app page is missing its title, description or share picture', r)
     finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3426,8 +3486,9 @@ def main():
         account_settings(browser, base)
         manage_subscription(browser, base)
         design_polish(browser, base)
-        landing_trust(browser, base)
+        creator_payouts(browser, base)
         save_retry(browser, base)
+        landing_trust(browser, base)
         billing_email_links(browser, base)
         public_pages(browser, base)
         side_business_quiz(browser, base)
