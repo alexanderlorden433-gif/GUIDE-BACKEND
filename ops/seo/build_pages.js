@@ -135,14 +135,14 @@ ${ld}
 <body>
 <header class="pg-top"><div class="pg-wrap pg-top-in">
   <a class="pg-brand" href="/">${LOGO}<span>The Guide</span></a>
-  <nav class="pg-nav" aria-label="Site"><a href="/start/">Business guides</a><a href="/tools/">Free calculators</a><a class="pg-btn pg-btn-sm" href="/?utm_source=guide_pages&amp;utm_medium=organic&amp;utm_campaign=header">Start free</a></nav>
+  <nav class="pg-nav" aria-label="Site"><a href="/quiz/">Quiz</a><a href="/start/">Business guides</a><a href="/tools/">Free calculators</a><a class="pg-btn pg-btn-sm" href="/?utm_source=guide_pages&amp;utm_medium=organic&amp;utm_campaign=header">Start free</a></nav>
 </div></header>
 <main class="pg-wrap">
 ${body}
 </main>
 <footer class="pg-foot"><div class="pg-wrap">
   <p>Guides reflect general practice, not guaranteed outcomes. Nothing here is financial, legal or tax advice.</p>
-  <p><a href="/">The Guide</a> · <a href="/start/">Business guides</a> · <a href="/tools/">Free calculators</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+  <p><a href="/">The Guide</a> · <a href="/quiz/">Side business quiz</a> · <a href="/start/">Business guides</a> · <a href="/tools/">Free calculators</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
 </div></footer>
 ${scripts}
 </body>
@@ -249,7 +249,7 @@ function hubPage(chs) {
   <p class="pg-k">Business guides</p>
   <h1>Start a side business, step by step</h1>
   <p class="pg-lead">${chs.length} real businesses, each taught as a course with modules in order. Every guide below has its first module free to read, and every lesson ends with one thing to do.</p>
-  <div class="pg-ctas"><a class="pg-btn" href="/?utm_source=guide_pages&amp;utm_medium=organic&amp;utm_campaign=hub">Start free</a><a class="pg-btn pg-btn-2" href="/tools/">Free calculators</a></div>
+  <div class="pg-ctas"><a class="pg-btn" href="/?utm_source=guide_pages&amp;utm_medium=organic&amp;utm_campaign=hub">Start free</a><a class="pg-btn pg-btn-2" href="/quiz/">Not sure? Take the 2-minute quiz</a></div>
 </section>
 ${groups.filter(g => g[1].length).map(([name, list]) => `
 <section class="pg-sec">
@@ -351,18 +351,117 @@ function toolsHub(count) {
     desc: 'Free calculators for freelancers and side businesses: hourly rate, profit margin and job quotes. No signup, nothing sent anywhere.', body, ogImage: '/img/og/og-tools.jpg' }) };
 }
 
+// ---------- the quiz: "Which side business fits you?" ----------
+// Each answer adds points to the businesses it suits. Trading is not a business, so it's never a quiz match.
+const QUIZ = [
+  { q: 'Where would you rather work?', a: [
+    ['Outside, or at people\'s homes', { lawn: 3, cleaning: 3, detailing: 3, handyman: 3, pets: 3, local: 3 }],
+    ['At a desk, online', { ecommerce: 3, affiliate: 3, writing: 3, va: 3, social: 3, marketing: 3, design: 3 }],
+    ['Behind a camera', { video: 3, photo: 3, ugc: 3, creator: 3 }],
+    ['Face to face with people', { coaching: 3, realestate: 3, pets: 1, local: 1 }],
+  ] },
+  { q: 'How much could you spend to get started?', a: [
+    ['Under $100', { writing: 2, va: 2, affiliate: 2, ugc: 2, social: 2, pets: 2, cleaning: 1, coaching: 1 }],
+    ['$100 to $500', { design: 2, marketing: 2, creator: 1, coaching: 2, detailing: 2, cleaning: 2, local: 1 }],
+    ['$500 to $2,000', { lawn: 2, handyman: 2, photo: 2, video: 2, ecommerce: 2 }],
+    ['More, for the right business', { realestate: 2, ecommerce: 1, video: 1, lawn: 1 }],
+  ] },
+  { q: 'How many hours a week can you give it?', a: [
+    ['Under 5', { affiliate: 2, ugc: 2, writing: 1, creator: 1 }],
+    ['5 to 10', { social: 2, va: 2, design: 2, pets: 2, writing: 2, creator: 1 }],
+    ['10 to 20', { cleaning: 2, lawn: 2, detailing: 2, ecommerce: 2, photo: 2, video: 2, marketing: 2, coaching: 2 }],
+    ['20 or more', { handyman: 2, local: 2, realestate: 2, ecommerce: 1 }],
+  ] },
+  { q: 'Which sounds most like you?', a: [
+    ['I like fixing things and making them look good', { handyman: 4, detailing: 3, cleaning: 3, lawn: 3 }],
+    ['I\'m good with words', { writing: 4, marketing: 3, coaching: 3, social: 2 }],
+    ['I\'m creative and visual', { design: 4, photo: 3, video: 3, ugc: 3, creator: 3 }],
+    ['I\'m organized and reliable', { va: 4, social: 3, local: 3, ecommerce: 3 }],
+    ['I love animals', { pets: 5 }],
+  ] },
+  { q: 'Which would you rather spend a Saturday doing?', a: [
+    ['Making a car look new again', { detailing: 4 }],
+    ['Photographing people, places or products', { photo: 4, ugc: 1 }],
+    ['Filming and editing a short video', { video: 4, ugc: 2, creator: 2 }],
+    ['Writing, planning or organizing', { writing: 2, va: 2, social: 2, marketing: 2 }],
+    ['Selling something I picked or made', { ecommerce: 4, affiliate: 3 }],
+    ['Helping someone sort out a problem', { coaching: 2, handyman: 2, local: 2, realestate: 2 }],
+    ['Mowing, gardening or tidying outdoors', { lawn: 4, cleaning: 2 }],
+    ['Looking after someone\'s dog or cat', { pets: 4 }],
+  ] },
+  { q: 'When do you want your first paying customer?', a: [
+    ['This month', { cleaning: 2, lawn: 2, pets: 2, detailing: 2, handyman: 2, va: 2, writing: 2 }],
+    ['In one to three months', { social: 2, design: 2, ugc: 2, photo: 2, video: 2, coaching: 2, local: 2, marketing: 2 }],
+    ['I\'m fine building slowly', { ecommerce: 2, affiliate: 3, creator: 2, realestate: 2 }],
+  ] },
+  { q: 'How do you feel about putting yourself out there?', a: [
+    ['I enjoy it, camera and all', { creator: 3, ugc: 2, coaching: 2, realestate: 2 }],
+    ['Some is fine', { photo: 1, video: 1, social: 1, marketing: 1, design: 1, local: 1 }],
+    ['I\'d rather stay behind the scenes', { writing: 2, va: 2, ecommerce: 2, affiliate: 2, cleaning: 1, lawn: 1, handyman: 1, detailing: 1, pets: 1 }],
+  ] },
+];
+const QUIZ_EXCLUDE = new Set(['trading']);
+
+function quizData(chs) {
+  return chs.filter(n => !QUIZ_EXCLUDE.has(n.id)).map(n => {
+    const g = n.guides[0] || {};
+    return { id: n.id, name: n.name, slug: PAGES[n.id].slug, line: plain(n.breakdown && n.breakdown.oneLiner ? n.breakdown.oneLiner : n.description),
+             cost: n.breakdown && n.breakdown.cost ? plain(n.breakdown.cost) : '', step: plain(g.action || ''), lesson: plain(g.title || '') };
+  });
+}
+
+function quizPage(chs) {
+  const url = '/quiz/';
+  const data = { questions: QUIZ.map(x => ({ q: x.q, a: x.a.map(([t, w]) => ({ t, w })) })), businesses: quizData(chs) };
+  const body = `
+<section class="pg-hero">
+  <p class="pg-k">2-minute quiz · free, no signup</p>
+  <h1>Which side business fits you?</h1>
+  <p class="pg-lead">Seven quick questions about your time, money and what you enjoy. You get your best match, two others worth a look, and the first real step to take.</p>
+</section>
+<section class="qz" id="quiz" aria-live="polite">
+  <noscript><p>The quiz needs JavaScript. You can still <a href="/start/">browse every business guide</a>.</p></noscript>
+</section>
+<script type="application/json" id="quizData">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+  return { url, html: page({ url, title: 'Which side business fits you? Free 2-minute quiz | The Guide',
+    desc: 'Seven quick questions about your time, money and what you enjoy. Get your best side business match and the first step to start it. Free, no signup.',
+    body, ogImage: '/img/og/og-quiz.jpg', scripts: '<script src="/quiz/quiz.js" defer></script>' }) };
+}
+
+// A shareable result: /quiz/<business>/ shows the match and invites the next person to take the quiz.
+function quizResultPage(n) {
+  const meta = PAGES[n.id], url = `/quiz/${meta.slug}/`;
+  const g = n.guides[0] || {};
+  const body = `
+<section class="pg-hero">
+  <p class="pg-k">Side business quiz result</p>
+  <h1>${esc(n.name)}</h1>
+  <p class="pg-lead">${esc(plain(n.breakdown && n.breakdown.oneLiner ? n.breakdown.oneLiner + '. ' + n.description : n.description))}</p>
+  ${g.action ? `<div class="pg-step"><b>The first step</b><p>${esc(g.action)}</p></div>` : ''}
+  <div class="pg-ctas"><a class="pg-btn" href="/quiz/">Take the quiz yourself</a><a class="pg-btn pg-btn-2" href="/start/${meta.slug}/">Read the free guide</a></div>
+</section>`;
+  return { url, html: page({ url, title: `My side business match: ${n.name} | The Guide quiz`,
+    desc: `${n.name} came out on top in The Guide's 2-minute side business quiz. Take it yourself and see your own match and its first step.`,
+    body, ogImage: `/img/og/og-quiz-${n.id}.jpg` }) };
+}
+
 // ---------- write everything ----------
 function build() {
   const all = loadChapters();
   const chs = all.filter(n => PAGES[n.id] && !HIDDEN.has(n.id));
   const missing = all.filter(n => !PAGES[n.id] && !HIDDEN.has(n.id)).map(n => n.id);
   if (missing.length) throw new Error(`No public page settings for chapter(s): ${missing.join(', ')}. Add them to PAGES in ops/seo/build_pages.js (or to HIDDEN).`);
+  for (const x of QUIZ) for (const [, w] of x.a) for (const id of Object.keys(w)) {
+    if (!chs.some(n => n.id === id)) throw new Error(`Quiz answer points at "${id}", which is not a public chapter.`);
+  }
   const files = {};
   const hub = hubPage(chs); files['start/index.html'] = hub.html;
   const urls = ['/', hub.url];
   for (const n of chs) { const p = chapterPage(n, chs); files[`start/${PAGES[n.id].slug}/index.html`] = p.html; urls.push(p.url); }
   const th = toolsHub(chs.length); files['tools/index.html'] = th.html; urls.push(th.url);
   for (const t of TOOLS) { const p = toolPage(t); files[`tools/${t.slug}/index.html`] = p.html.replace('{{COUNT}}', String(chs.length)); urls.push(p.url); }
+  const qz = quizPage(chs); files['quiz/index.html'] = qz.html; urls.push(qz.url);
+  for (const n of chs.filter(x => !QUIZ_EXCLUDE.has(x.id))) { const p = quizResultPage(n); files[`quiz/${PAGES[n.id].slug}/index.html`] = p.html; }
   urls.push('/privacy.html', '/terms.html');
   files['sitemap.xml'] = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `  <url><loc>${SITE}${u}</loc></url>`).join('\n')}\n</urlset>\n`;
   files['robots.txt'] = `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n`;
@@ -380,7 +479,7 @@ for (const [rel, html] of Object.entries(files)) {
   fs.writeFileSync(full, html);
 }
 // pages for chapters that no longer exist
-for (const dir of ['start']) {
+for (const dir of ['start', 'quiz']) {
   const base = path.join(WEB, dir);
   if (!fs.existsSync(base)) continue;
   for (const d of fs.readdirSync(base)) {

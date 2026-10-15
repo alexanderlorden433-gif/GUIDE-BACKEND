@@ -59,6 +59,8 @@ def main():
     for c in chapters:
         name = FOR_CH.get(c['icon'].replace('️', ''), 'compass')
         jobs.append((f"og-{c['id']}", card(f"{c['name']} · free step-by-step course", c['h1'], f"{c['mods']} modules, {c['lessons']} lessons with narrated videos. Read Module 1 free.", icon_svg(name))))
+        if c['id'] != 'trading':   # never a quiz match
+            jobs.append((f"og-quiz-{c['id']}", card('Side business quiz · my match', c['name'], 'Seven quick questions about your time, money and what you enjoy. Take the 2-minute quiz and find yours.', icon_svg(name))))
     with sync_playwright() as p:
         b = p.chromium.launch()
         pg = b.new_page(viewport={'width': 1200, 'height': 630})

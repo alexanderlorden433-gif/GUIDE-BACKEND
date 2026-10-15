@@ -3258,6 +3258,57 @@ def public_pages(browser, base):
     finish(st, step[0]); ctx.close()
 
 
+def side_business_quiz(browser, base):
+    """The 'Which side business fits you?' quiz: seven questions, a match with its real first step, links that
+    carry the business into the app, a shareable result page, and the free-course email box."""
+    for device, vp, mobile in (('phone', {'width': 375, 'height': 812}, True), ('desktop', {'width': 1280, 'height': 800}, False)):
+        step = [f'{device}: side business quiz']
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        st = new_state(False); attach_backend(ctx, st)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/quiz/', wait_until='load'); page.wait_for_timeout(400)
+        n = 0
+        while page.locator('.qz-opt').count() and n < 12:
+            page.locator('.qz-opt').first.click(); page.wait_for_timeout(80); n += 1
+        if not visible(page, '.qz-match', 3000):
+            problem(step[0], 'the quiz did not reach a result', n); ctx.close(); continue
+        r = page.evaluate("""(()=>({ match: document.querySelector('.qz-match').textContent, step: (document.querySelector('#quiz .pg-step p')||{}).textContent || '',
+          start: document.querySelector('#quiz .pg-btn').getAttribute('href'), guide: document.querySelectorAll('#quiz .pg-btn')[1].getAttribute('href'),
+          more: document.querySelectorAll('.qz-more li').length, wide: document.documentElement.scrollWidth - innerWidth }))()""")
+        if n == 7 and r['match'] and len(r['step']) > 20 and 'start=' in r['start'] and 'utm_source=quiz' in r['start'] and r['guide'].startswith('/start/') and r['more'] == 2 and r['wide'] <= 1:
+            ok(step[0], f"7 questions lead to a match ({r['match']}) with its first step, two more to look at, and links into the app and the free guide")
+        else:
+            problem(step[0], 'the quiz result is incomplete', dict(r, questions=n))
+        slug = r['guide'].strip('/').split('/')[-1] if r['guide'] else ''
+        share = os.path.join(ROOT, 'web', 'quiz', slug, 'index.html')
+        if not (slug and os.path.isfile(share) and r['match'] in open(share).read()):
+            problem(step[0], 'the shareable result page for this match is missing', slug)
+        # the free course box: a bad email is caught, a real one goes to /api/leads with the quiz as its source
+        page.fill('#qzEmail', 'nope'); page.click('.qz-mail button'); page.wait_for_timeout(200)
+        bad = page.inner_text('.qz-msg')
+        page.fill('#qzEmail', 'Quiz@Example.com'); page.click('.qz-mail button'); page.wait_for_timeout(600)
+        leads = st.get('leads') or []
+        if 'real email' in bad and leads and leads[-1]['email'] == 'quiz@example.com' and str(leads[-1].get('source', '')).startswith('quiz-') and visible(page, '.qz-done', 2000):
+            ok(step[0], 'the free course box catches a bad email and signs up a real one, tagged with the quiz match')
+        else:
+            problem(step[0], 'the free course box on the quiz result did not work', {'bad': bad, 'leads': leads[-1:]})
+        if device == 'phone':
+            shot(page, 'phone-41-quiz-result')
+        ctx.close()
+    # the landing page points people who can't decide to the quiz
+    step = ['side business quiz (landing)']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    attach_backend(ctx, new_state(False))
+    ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load'); page.wait_for_timeout(800)
+    if page.evaluate("!!document.querySelector('#lpStepOne a[href=\"/quiz/\"], .lp-quiz-link a[href=\"/quiz/\"]')"):
+        ok(step[0], '"Not sure which to pick? Take the 2-minute quiz" sits next to Try step one')
+    else:
+        problem(step[0], 'the landing page should link to the quiz next to Try step one')
+    ctx.close()
+
+
 def main():
     srv, base = serve_web()
     t0 = time.time()
@@ -3301,6 +3352,7 @@ def main():
         manage_subscription(browser, base)
         design_polish(browser, base)
         public_pages(browser, base)
+        side_business_quiz(browser, base)
         save_retry(browser, base)
         browser.close()
     srv.shutdown()
