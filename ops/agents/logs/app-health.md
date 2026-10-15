@@ -65,3 +65,15 @@
 - src/index-15.html is an unused old copy of the app (ask before deleting).
 - Still open: delete account vs Stripe subscription (asked 10-06); terms.html old prices (asked 10-06).
 - Next step-5 area: src/routes/live.js + push.js (new features from #27/#33).
+
+## 2026-10-15 (Thu)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway status on main 8e174bc = success.
+- Since last notes: #35 and #36 MERGED. Claude agent merged #37–#44 (certificates, live pull, trial card, live tab…). Open by others: #45 partner codes, #46 [sensitive] free email course.
+- check.sh on main: ALL PASS.
+- Opened PR #47 agent/app-health/2026-10-15-save-retry: saveProgress() failures were silent → now one toast + retry (5s doubling to 2 min, and on `online`), "Your progress is saved." on recovery. No retry on 4xx except 429. console.error→warn. Smoke step save_retry (fixture: state['put_fail']=N aborts N PUT /api/account). Fails on main.
+- Opened PR #48 agent/app-health/2026-10-15-live-edit: PATCH /api/live/:id rejected edits once a call started >5 min ago (form always resends startsAt) → host couldn't fix a broken link mid-call. Unchanged time now skips the past check. live.js exports readCallFields; check_backend step 6. Fails on main.
+- #47 and #48 touch different files (merge cleanly).
+- Step 5 area: live.js + push.js → otherwise solid (auth, Pro gating, input cleaning, rate limits, join link only to Pro while room open).
+- Note: app home shows "0 / 876 lessons" (packs added) vs the "756 guides" claim in CLAUDE.md/marketing — not changing claims; mention to Alexander if it comes up again.
+- Still queued: aiChat rate limit per IP not per account. Still open with Alexander: delete account vs Stripe subscription (10-06), terms.html old prices (10-06).
+- Next step-5 area: src/routes/billing.js webhook edge cases (read-only review) or certificates (#41).
