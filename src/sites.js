@@ -81,6 +81,14 @@ const DDL = [
     CONSTRAINT "SiteAiCreditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "SiteAiCreditLog_stripeSession_key" ON "SiteAiCreditLog"("stripeSession")`,
+  // Pro's daily AI hour (src/siteCredits.js): when a member's hour started, one row per member per (their) day
+  `CREATE TABLE IF NOT EXISTS "SiteAiHour" (
+    "userId" TEXT NOT NULL,
+    "day" TEXT NOT NULL,
+    "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "SiteAiHour_pkey" PRIMARY KEY ("userId", "day"),
+    CONSTRAINT "SiteAiHour_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+  )`,
   `CREATE INDEX IF NOT EXISTS "SiteAiCreditLog_kind_createdAt_idx" ON "SiteAiCreditLog"("kind", "createdAt")`,
 ];
 

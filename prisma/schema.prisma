@@ -53,6 +53,7 @@ model User {
   siteAiUses           SiteAiUse[]
   siteAiCredit         SiteAiCredit?
   siteAiCreditLogs     SiteAiCreditLog[]
+  siteAiHours          SiteAiHour[]
 
   @@index([stripeCustomerId])
   @@index([referredByCode])
@@ -495,6 +496,16 @@ model SiteAiCreditLog {
   createdAt     DateTime @default(now())
 
   @@index([kind, createdAt])
+}
+
+// When a Pro member's daily AI hour started (src/siteCredits.js): one row per member per day (their time zone).
+model SiteAiHour {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day       String
+  startedAt DateTime @default(now())
+
+  @@id([userId, day])
 }
 
 // Wins a member offered for the public landing page (src/routes/publicWins.js). Shown only once

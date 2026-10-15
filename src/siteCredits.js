@@ -7,9 +7,16 @@
 // A write that fails gives its credit back. Credits never expire.
 //
 // Buying credits is separate from Pro: it never makes anyone Pro, and putting a page live still needs Pro.
-// The tables are created in src/sites.js (SiteAiCredit, SiteAiCreditLog).
+//
+// Pro members (and members from the old Lifetime plan, for good) also get one hour of AI writing a day without
+// using credits. The hour starts with their first write of the day (their own day, from the time zone the app
+// sends) and lasts 60 minutes; after it, credits work as usual. The per-member cap of writes a day in
+// src/siteAi.js still applies inside the hour.
+//
+// The tables are created in src/sites.js (SiteAiCredit, SiteAiCreditLog, SiteAiHour).
 const crypto = require('crypto');
 const prisma = require('./db');
+const { isProUser } = require('./pro');
 
 const WELCOME = 2;   // free credits every member starts with
 const PACKS = [
@@ -62,13 +69,14 @@ async function refundCredit(userId, bucket) {
 
 /** Notes a finished write: which credit it used, the model, and the tokens (what it really cost). */
 async function logUse(userId, bucket, model, usage) {
+  // bucket: 'free' | 'paid' | 'hour' (Pro's daily hour: no credit used, but still logged for what it cost)
   const u = usage || {};
   const n = (v) => (Number.isFinite(v) ? Math.round(v) : null);
   const input = n((u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0));
   await prisma.$executeRawUnsafe(
     `INSERT INTO "SiteAiCreditLog" ("id", "userId", "kind", "free", "paid", "model", "inputTokens", "outputTokens")
      VALUES ($1::text, $2::text, 'use', $3::int, $4::int, $5::text, $6::int, $7::int)`,
-    crypto.randomUUID(), userId, bucket === 'free' ? -1 : 0, bucket === 'free' ? 0 : -1, String(model || '').slice(0, 60), input, n(u.output_tokens));
+    crypto.randomUUID(), userId, bucket === 'free' ? -1 : 0, bucket === 'paid' ? -1 : 0, String(model || '').slice(0, 60), input, n(u.output_tokens));
 }
 
 /**
@@ -98,9 +106,57 @@ async function grantFromCheckout(session) {
   return { ok: true, added: rows[0] ? pack.credits : 0, userId: m.userId, pack: pack.id };
 }
 
+// ---------------------------------------------------------------- Pro's daily AI hour
+const HOUR_MINUTES = 60;
+const DEFAULT_TZ = 'America/New_York';
+
+/** A time zone name the app sent, if it's a real one. */
+function cleanTz(tz) {
+  tz = String(tz || '').slice(0, 64);
+  if (!/^(?:UTC|[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+){1,2})$/.test(tz)) return DEFAULT_TZ;
+  try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); return tz; } catch (e) { return DEFAULT_TZ; }
+}
+/** The member's date today, like 2026-10-15, in their time zone. */
+function localDay(tz) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: cleanTz(tz), year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+}
+
+/** Pro members, and the old Lifetime plan forever, get the daily AI hour. */
+async function hasDailyHour(userId) {
+  if (await isProUser(userId)) return true;
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { planType: true } });
+  return !!(u && u.planType === 'lifetime');
+}
+
+/**
+ * Where today's hour stands: {included: false} for members without one, otherwise
+ * {included: true, state: 'ready' | 'active' | 'used', minutesLeft, secondsLeft}.
+ * Times are worked out in the database, so the server's and the database's clocks can't disagree.
+ */
+async function hourState(userId, tz, included) {
+  if (included === undefined) included = await hasDailyHour(userId);
+  if (!included) return { included: false, minutes: HOUR_MINUTES };
+  const rows = await prisma.$queryRawUnsafe(
+    `SELECT GREATEST(0, EXTRACT(EPOCH FROM ("startedAt" + make_interval(mins => $3::int) - CURRENT_TIMESTAMP)))::int AS "secondsLeft"
+       FROM "SiteAiHour" WHERE "userId" = $1::text AND "day" = $2::text`, userId, localDay(tz), HOUR_MINUTES);
+  if (!rows[0]) return { included: true, minutes: HOUR_MINUTES, state: 'ready' };
+  const secondsLeft = rows[0].secondsLeft;
+  if (secondsLeft > 0) return { included: true, minutes: HOUR_MINUTES, state: 'active', secondsLeft, minutesLeft: Math.ceil(secondsLeft / 60) };
+  return { included: true, minutes: HOUR_MINUTES, state: 'used' };
+}
+
+/** For a write: starts today's hour if it hasn't started. True when the hour is running, so the write is free. */
+async function useDailyHour(userId, tz) {
+  if (!(await hasDailyHour(userId))) return false;
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO "SiteAiHour" ("userId", "day") VALUES ($1::text, $2::text) ON CONFLICT ("userId", "day") DO NOTHING`, userId, localDay(tz));
+  return (await hourState(userId, tz, true)).state === 'active';
+}
+
 /** The packs as the app shows them. */
 function packsForApp() {
   return PACKS.map(p => ({ id: p.id, credits: p.credits, price: p.cents / 100, each: Math.round(p.cents / p.credits) / 100 }));
 }
 
-module.exports = { WELCOME, PACKS, packById, packsForApp, getCredits, spendCredit, refundCredit, logUse, grantFromCheckout, FREE_DAILY_TOTAL };
+module.exports = { WELCOME, PACKS, packById, packsForApp, getCredits, spendCredit, refundCredit, logUse, grantFromCheckout, FREE_DAILY_TOTAL,
+  HOUR_MINUTES, cleanTz, localDay, hasDailyHour, hourState, useDailyHour };

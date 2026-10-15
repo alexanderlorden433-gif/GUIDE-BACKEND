@@ -1319,7 +1319,6 @@
  "Get more credits": "Conseguir más créditos",
  "AI credit packs": "Paquetes de créditos de IA",
  "One-time payment through Stripe. Credits never expire, and a write that fails gives its credit back.": "Pago único a través de Stripe. Los créditos no vencen, y si una escritura falla te devolvemos el crédito.",
- "One-time payment through Stripe. Credits never expire, and a write that fails gives its credit back. Credits are for the AI writer only; putting your page live is part of Pro.": "Pago único a través de Stripe. Los créditos no vencen, y si una escritura falla te devolvemos el crédito. Los créditos son solo para el escritor con IA; publicar tu página es parte de Pro.",
  "You're out of AI credits. Pick a pack to keep writing.": "Ya no tienes créditos de IA. Elige un paquete para seguir escribiendo.",
  "Free tries are all taken for today. Buy a pack to write now, or try again tomorrow.": "Las pruebas gratis de hoy ya se agotaron. Compra un paquete para escribir ahora o inténtalo mañana.",
  "That's a lot of writes for one day. Please try again tomorrow.": "Son muchas escrituras para un solo día. Inténtalo de nuevo mañana.",
@@ -1327,5 +1326,10 @@
  "The payment has not gone through yet. Your credits will show up as soon as it does.": "El pago todavía no se ha completado. Tus créditos aparecerán en cuanto se complete.",
  "Pick a pack.": "Elige un paquete.",
  "That checkout link looks wrong.": "Ese enlace de pago no parece correcto.",
- "Checkout not found.": "No encontramos ese pago."
+ "Checkout not found.": "No encontramos ese pago.",
+ "Your AI hour: 1 minute left. Writes are free until then.": "Tu hora de IA: queda 1 minuto. Hasta entonces, escribir es gratis.",
+ "You've used today's AI hour. It comes back tomorrow; credits work anytime.": "Ya usaste tu hora de IA de hoy. Vuelve mañana; los créditos funcionan siempre.",
+ "Your plan includes 1 hour of AI writing every day. It starts with your first write.": "Tu plan incluye 1 hora de escritura con IA cada día. Empieza con tu primera escritura.",
+ "You've used today's AI hour. It comes back tomorrow, or pick a pack to keep writing now.": "Ya usaste tu hora de IA de hoy. Vuelve mañana, o elige un paquete para seguir escribiendo ahora.",
+ "One-time payment through Stripe. Credits never expire, and a write that fails gives its credit back. Pro includes 1 hour of AI writing every day, and putting your page live.": "Pago único a través de Stripe. Los créditos no vencen, y si una escritura falla te devolvemos el crédito. Pro incluye 1 hora de escritura con IA cada día y publicar tu página."
 }

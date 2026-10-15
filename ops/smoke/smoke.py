@@ -87,8 +87,10 @@ SITE_PACKS = [{'id': 'small', 'credits': 5, 'price': 4.99, 'each': 1.0}, {'id': 
 
 
 def site_ai_state(state):
-    """The fake member's AI credits (like GET /api/sites/mine → ai.credits): 2 free to start."""
-    return state.setdefault('site_ai', {'ready': True, 'free': 2, 'paid': 0})
+    """The fake member's AI credits (like GET /api/sites/mine → ai.credits): 2 free to start; Pro's daily hour."""
+    ai = state.setdefault('site_ai', {'ready': True, 'free': 2, 'paid': 0})
+    ai.setdefault('hour', {'included': bool(state['pro']), 'state': 'ready', 'minutes': 60})
+    return ai
 
 
 def site_ai_credits(ai):
@@ -250,7 +252,7 @@ def fixture(state, method, path, body):
         ai = site_ai_state(state)
         if method == 'GET':
             return 200, {'site': sw['site'], 'requests': sw['requests'], 'unseen': len([r for r in sw['requests'] if not r['seen']]), 'pro': state['pro'], 'colors': colors,
-                         'ai': {'ready': ai['ready'], 'model': 'claude-fable-5-1', 'credits': site_ai_credits(ai), 'packs': SITE_PACKS}}
+                         'ai': {'ready': ai['ready'], 'model': 'claude-fable-5-1', 'credits': site_ai_credits(ai), 'hour': ai['hour'], 'packs': SITE_PACKS}}
         if method == 'PUT':
             b = body or {}
             d = b.get('data') or {}
@@ -275,18 +277,24 @@ def fixture(state, method, path, body):
             return status, reply
         b = body or {}
         d = b.get('draft') or {}
-        if ai['free'] + ai['paid'] <= 0:
-            return 402, {'error': "You're out of AI credits. Pick a pack to keep writing.", 'buy': True, 'credits': site_ai_credits(ai), 'packs': SITE_PACKS}
-        if ai['free'] > 0:
-            ai['free'] -= 1
+        hour = ai['hour']
+        if hour.get('included') and hour.get('state') != 'used':
+            ai['hour'] = {**hour, 'state': 'active', 'secondsLeft': hour.get('secondsLeft', 3600), 'minutesLeft': 60}
+            paid_with = 'hour'
+        elif ai['free'] + ai['paid'] <= 0:
+            return 402, {'error': "You've used today's AI hour. It comes back tomorrow, or pick a pack to keep writing now." if hour.get('included') else "You're out of AI credits. Pick a pack to keep writing.",
+                         'buy': True, 'credits': site_ai_credits(ai), 'hour': hour, 'packs': SITE_PACKS}
+        elif ai['free'] > 0:
+            ai['free'] -= 1; paid_with = 'free'
         else:
-            ai['paid'] -= 1
+            ai['paid'] -= 1; paid_with = 'paid'
+        state.setdefault('site_ai_paid_with', []).append(paid_with)
         page = site_ai_page()
         if b.get('mode') == 'improve':
             page = {**page, 'name': d.get('name') or page['name'], 'color': d.get('color') or page['color']}
         page.update({'email': d.get('email', ''), 'phone': d.get('phone', ''), 'nicheId': d.get('nicheId', ''), 'lang': b.get('lang') or 'en'})
         return 200, {'draft': page, 'tips': ['Check these prices against two local lawn services.', '<img src=x onerror="window.__xss=1">Add your phone number.'],
-                     'model': 'claude-fable-5-1', 'credits': site_ai_credits(ai)}
+                     'model': 'claude-fable-5-1', 'paidWith': paid_with, 'credits': site_ai_credits(ai), 'hour': ai['hour']}
     # buying AI credits: state['credit_checkouts'] records the packs asked for; confirm adds them once
     if p == '/api/sites/credits/checkout' and method == 'POST':
         pack = next((x for x in SITE_PACKS if x['id'] == (body or {}).get('pack')), None)
@@ -4061,8 +4069,8 @@ def website_ai(browser, base):
         posts = len(st.get('site_ai_posts') or [])
         card = page.inner_text('#siteAi')
         packs = page.evaluate("[...document.querySelectorAll('#saBuy .sa-pack')].map(b => b.innerText.replace(/\\s+/g, ' ').trim())")
-        if "You're out of AI credits" in card and packs == ['5 credits $4.99 $1.00 a page', '15 credits $9.99 $0.67 a page', '40 credits $19.99 $0.50 a page'] and 'Credits never expire' in card and 'part of Pro' in card:
-            ok(step[0], 'out of credits: the three packs show with their prices and price a page')
+        if "You're out of AI credits" in card and packs == ['5 credits $4.99 $1.00 a page', '15 credits $9.99 $0.67 a page', '40 credits $19.99 $0.50 a page'] and 'Credits never expire' in card and 'Pro includes 1 hour of AI writing every day' in card:
+            ok(step[0], 'out of credits: the three packs show with their prices and price a page (and what Pro includes)')
         else:
             problem(step[0], 'running out of credits should show the packs', {'card': card[:300], 'packs': packs})
         shot(page, 'phone-website-ai-packs')
@@ -4102,14 +4110,20 @@ def website_ai(browser, base):
     if got:
         step, ctx, st, page = got
         card = page.inner_text('#siteAi')
-        if 'Let AI improve your page' in card and page.locator('#saBetter').count() and page.locator('#saDesc').count() == 0 and 'You have 12 AI credits' in card and page.locator('#saMore').count():
-            ok(step[0], 'a page with content offers Make it better (and Write it again)')
+        if ('Let AI improve your page' in card and page.locator('#saBetter').count() and page.locator('#saDesc').count() == 0
+                and 'includes 1 hour of AI writing every day' in card and 'You have 12' not in card and not page.locator('#saBuy').count()):
+            ok(step[0], 'a Pro page with content offers Make it better, and says Pro includes an hour of AI writing a day')
         else:
-            problem(step[0], 'a filled page should offer Make it better', card[:300])
+            problem(step[0], 'a filled Pro page should offer Make it better and the daily hour', card[:300])
         page.click('#saBetter'); page.wait_for_timeout(1200)
         post = (st.get('site_ai_posts') or [{}])[-1]
         saves = len(st.get('site_saves') or [])
         card = page.inner_text('#siteAi')
+        hour_line = page.inner_text('#saHour') if page.locator('#saHour').count() else ''
+        if st.get('site_ai_paid_with') == ['hour'] and 'Your AI hour: 60 minutes left' in hour_line and post.get('tz'):
+            ok(step[0], "the write starts the Pro member's hour: free, with the minutes left (credits untouched)")
+        else:
+            problem(step[0], 'a Pro write should use the daily hour', {'paid_with': st.get('site_ai_paid_with'), 'hour': hour_line, 'tz': post.get('tz')})
         if (post.get('mode') == 'improve' and (post.get('draft') or {}).get('name') == 'Pat Cleans' and page.input_value('#sfName') == 'Pat Cleans'
                 and page.input_value('#sfEmail') == 'pat@example.com' and len(val(page, '#sfSvcList .sf-svc [data-k="name"]')) == 3
                 and saves == 0 and 'Save changes to update your live page' in card):
@@ -4138,6 +4152,22 @@ def website_ai(browser, base):
         else:
             problem(step[0], 'editing questions and language should save', {'qs': qs, 'lang': sd.get('lang'), 'published': saved.get('published'), 'color': sd.get('color')})
         shot(page, 'phone-website-ai-live')
+        finish(st, step[0]); ctx.close()
+
+    # 2b) a Pro member who used today's hour and has no credits: the packs, and the hour comes back tomorrow
+    got = open_site('Pro member, hour used', True, site=site, ai={'ready': True, 'free': 0, 'paid': 0, 'hour': {'included': True, 'state': 'used', 'minutes': 60}})
+    if got:
+        step, ctx, st, page = got
+        card = page.inner_text('#siteAi')
+        if "You've used today's AI hour" in card and page.locator('#saBuy .sa-pack').count() == 3 and 'putting your page live' not in card:
+            ok(step[0], 'hour used and no credits: says it comes back tomorrow and shows the packs')
+        else:
+            problem(step[0], 'a used hour with no credits should show the packs', card[:300])
+        page.click('#saBetter'); page.wait_for_timeout(400)
+        if not st.get('site_ai_posts') and 'used today' in page.inner_text('#siteAi .sa-err'):
+            ok(step[0], 'Make it better then points to the packs instead of calling the AI')
+        else:
+            problem(step[0], 'with the hour used and no credits, the AI should not be called', page.inner_text('#siteAi')[:200])
         finish(st, step[0]); ctx.close()
 
     # 3) on a laptop, both looks, while it writes and when it's done

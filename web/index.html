@@ -5598,6 +5598,7 @@
   .sa-err{margin:0; font-size:14px; font-weight:500; color:rgb(var(--danger-rgb)); max-width:68ch;}
   .sa-err:empty{display:none;}
   .sa-note{font-size:13px; line-height:1.5; color:var(--ink-soft); max-width:68ch;}
+  .sa-hour.on{color:var(--ink); font-weight:500;}
   .sa-bar{height:4px; border-radius:2px; background:var(--line); overflow:hidden;}
   .sa-bar span{display:block; height:100%; width:0; background:var(--grape); transition:width 1s linear;}
   .sa-done{border-top:1px solid var(--line); padding-top:var(--sp-3); display:grid; gap:var(--sp-2);}
@@ -18256,6 +18257,37 @@ function showSite(){
 // The AI page writer (POST /sites/ai, src/siteAi.js): the member says what they do in a few lines and Claude
 // writes the whole page into the form below. Nothing is public until they put it live.
 let siteAi = { busy: '', started: 0, open: false, desc: '', error: '', buying: false, last: null };
+// the member's time zone: Pro's daily AI hour resets at their midnight
+const SITE_TZ = (()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){ return ''; } })();
+let siteHourTimer = null;
+/** Keeps the time left on the daily hour as an end time on this device, so the countdown can tick. */
+function siteSetHour(h){
+  if(!siteState || !siteState.ai || !h) return;
+  siteState.ai.hour = Object.assign({}, h, h.state === 'active' ? { until: Date.now() + (h.secondsLeft || 0) * 1000 } : {});
+}
+function siteHourLine(h){
+  if(!h || !h.included) return '';
+  if(h.state === 'active'){
+    const m = Math.max(1, Math.ceil(((h.until || Date.now()) - Date.now()) / 60000));
+    return m === 1 ? 'Your AI hour: 1 minute left. Writes are free until then.' : `Your AI hour: ${m} minutes left. Writes are free until then.`;
+  }
+  if(h.state === 'used') return "You've used today's AI hour. It comes back tomorrow; credits work anytime.";
+  return 'Your plan includes 1 hour of AI writing every day. It starts with your first write.';
+}
+/** Every 20 seconds while the hour runs: update the minutes, and when it ends, redraw (credits take over). */
+function siteHourTick(){
+  clearInterval(siteHourTimer);
+  const h = siteState && siteState.ai && siteState.ai.hour;
+  if(!h || h.state !== 'active') return;
+  siteHourTimer = setInterval(()=>{
+    const el = document.getElementById('saHour');
+    const hh = siteState && siteState.ai && siteState.ai.hour;
+    if(!el || !el.isConnected || !hh || hh.state !== 'active'){ clearInterval(siteHourTimer); return; }
+    if(Date.now() >= hh.until){ hh.state = 'used'; clearInterval(siteHourTimer); if(!siteAi.busy){ readSiteForm(); renderSiteView(); } return; }
+    const line = siteHourLine(hh);
+    if(el.dataset.en !== line){ el.dataset.en = line; el.textContent = line; }
+  }, 20000);
+}
 const SITE_AI_NAMES = { 'claude-fable-5-1': 'Claude Fable 5.1', 'claude-opus-5-5': 'Claude Opus 5.5', 'claude-sonnet-5-5': 'Claude Sonnet 5.5' };
 const SITE_AI_STEPS = ['Reading what you wrote…', 'Working out your services and prices…', 'Writing why people should pick you…',
   'Answering the questions customers ask…', 'Checking it reads well…', 'Almost there…'];
@@ -18288,15 +18320,17 @@ function siteAiHtml(d){
       <div class="site-row"><button type="button" class="site-text" id="saUndo">Undo, put my old page back</button></div>
     </div>` : '';
   const c = ai.credits || { free: 0, paid: 0, total: 0 };
+  const h = ai.hour || { included: false };
+  const hourOpen = !!(h.included && h.state !== 'used');   // a Pro member's daily hour is still to come or running
   const creditLine = c.total <= 0 ? "You're out of AI credits. Each write uses 1."
     : !c.paid ? (c.free === 1 ? 'You have 1 free AI credit to try it. Each write uses 1.' : `You have ${c.free} free AI credits to try it. Each write uses 1.`)
     : (c.total === 1 ? 'You have 1 AI credit. Each write uses 1.' : `You have ${c.total} AI credits. Each write uses 1.`);
   const money = (n)=> '$' + Number(n).toFixed(2);
-  const packs = siteAi.buying || c.total <= 0 ? `<div class="sa-buy" id="saBuy">
+  const packs = siteAi.buying || (c.total <= 0 && !hourOpen) ? `<div class="sa-buy" id="saBuy">
       <p class="sa-tips-h">Get more AI credits</p>
       <div class="sa-packs" role="group" aria-label="AI credit packs">${(ai.packs || []).map(p => `<button type="button" class="sa-pack" data-pack="${gvEsc(p.id)}">
           <b>${p.credits} credits</b><span class="sa-price">${money(p.price)}</span><small>${money(p.each)} a page</small></button>`).join('')}</div>
-      <small class="sa-note">One-time payment through Stripe. Credits never expire, and a write that fails gives its credit back.${siteState.pro ? '' : ' Credits are for the AI writer only; putting your page live is part of Pro.'}</small>
+      <small class="sa-note">One-time payment through Stripe. Credits never expire, and a write that fails gives its credit back.${h.included ? '' : ' Pro includes 1 hour of AI writing every day, and putting your page live.'}</small>
     </div>` : '';
   return `<section class="site-ai" id="siteAi">
       <div class="ss-head">${ico('sparkles')}<b>${has ? 'Let AI improve your page' : 'Let AI write your page'}</b></div>
@@ -18315,9 +18349,10 @@ function siteAiHtml(d){
         ${showForm
           ? `<button type="button" class="live-btn primary" id="saWrite">${ico('sparkles')} Write my page</button>${has ? '<button type="button" class="site-text" id="saCancel">Cancel</button>' : ''}`
           : `<button type="button" class="live-btn primary" id="saBetter">${ico('sparkles')} Make it better</button><button type="button" class="live-btn" id="saWrite">Write it again</button>`}
-        ${packs || c.total <= 0 ? '' : '<button type="button" class="site-text" id="saMore">Get more credits</button>'}
+        ${packs || c.total <= 0 || hourOpen ? '' : '<button type="button" class="site-text" id="saMore">Get more credits</button>'}
       </div>
-      <small class="sa-note" id="saLeft">${creditLine}</small>
+      ${h.included ? `<small class="sa-note sa-hour${h.state === 'active' ? ' on' : ''}" id="saHour">${siteHourLine(h)}</small>` : ''}
+      ${hourOpen ? '' : `<small class="sa-note" id="saLeft">${creditLine}</small>`}
       ${packs}
       <small class="sa-note" id="saModel">${last && last.model ? `Written by ${gvEsc(SITE_AI_NAMES[last.model] || 'Claude')}, made by Anthropic.` : `Uses ${gvEsc(model)}, made by Anthropic.`} Check prices and details before you put it live.</small>
     </section>`;
@@ -18343,8 +18378,9 @@ async function siteAiRun(mode){
     const t = document.getElementById('saDesc'); if(t) t.focus();
     return;
   }
-  if(ai.credits && ai.credits.total <= 0){
-    siteAi.error = "You're out of AI credits. Pick a pack to keep writing.";
+  const hourOpen = !!(ai.hour && ai.hour.included && ai.hour.state !== 'used');
+  if(ai.credits && ai.credits.total <= 0 && !hourOpen){
+    siteAi.error = ai.hour && ai.hour.included ? "You've used today's AI hour. It comes back tomorrow, or pick a pack to keep writing now." : "You're out of AI credits. Pick a pack to keep writing.";
     siteAi.buying = true;
     renderSiteView();
     const b = document.getElementById('saBuy'); if(b && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -18356,12 +18392,13 @@ async function siteAiRun(mode){
   siteAiTick();
   try{
     const r = await apiFetch('/sites/ai', { method: 'POST', body: JSON.stringify({ mode, description: siteAi.desc.trim(), draft: d,
-      chapter: siteAiChapter(d.nicheId), lang: d.lang === 'es' ? 'es' : 'en' }) });
+      chapter: siteAiChapter(d.nicheId), lang: d.lang === 'es' ? 'es' : 'en', tz: SITE_TZ }) });
     if(!siteDraft) siteDraft = siteNew();
     const prev = JSON.parse(JSON.stringify(siteDraft.data));
     siteDraft.data = r.draft;
     if(!siteDraft.slugTouched || !siteDraft.slug) siteDraft.slug = siteSlugify(r.draft.name);
     if(r.credits) ai.credits = r.credits;
+    if(r.hour) siteSetHour(r.hour);
     ai.model = r.model || ai.model;
     const live = !!(siteState.site && siteState.site.published);
     siteAi.busy = ''; siteAi.open = false;
@@ -18376,6 +18413,7 @@ async function siteAiRun(mode){
     siteAi.busy = '';
     const b = e.body || {};
     if(b.credits) ai.credits = b.credits;
+    if(b.hour) siteSetHour(b.hour);
     if(b.packs) ai.packs = b.packs;
     siteAi.error = b.error || (e.status ? 'The page writer could not finish just now. Please try again.' : 'Your connection dropped. Check it and try again.');
     siteAi.buying = !!b.buy;
@@ -18461,7 +18499,7 @@ async function renderSiteView(fresh){
   const box = document.getElementById('siteContent');
   if(fresh || !siteState){
     box.innerHTML = skeletonCards(3);
-    try{ siteState = await apiFetch('/sites/mine'); }
+    try{ siteState = await apiFetch('/sites/mine?tz=' + encodeURIComponent(SITE_TZ)); siteSetHour(siteState.ai && siteState.ai.hour); }
     catch(e){ box.innerHTML = `<div class="tool-empty">Your website couldn't load just now. Check your connection and try again.</div>`; return; }
     siteDraft = null;
     const kept = siteTakeKept();   // back from buying credits: the form as they left it
@@ -18573,6 +18611,7 @@ async function renderSiteView(fresh){
   box.innerHTML = status + siteAiHtml(d) + requests + editor;
   const form = document.getElementById('siteForm');
   if(siteAi.busy){ form.inert = true; form.classList.add('busy'); siteAiTick(); }
+  siteHourTick();
   wireSiteView();
 }
 
@@ -18649,7 +18688,8 @@ function wireSiteView(){
   if(aiBox) aiBox.addEventListener('click', (e)=>{
     const b = e.target.closest('button');
     if(!b || b.disabled) return;
-    const none = !!(siteState.ai && siteState.ai.credits && siteState.ai.credits.total <= 0);
+    const sai = siteState.ai || {};
+    const none = !!(sai.credits && sai.credits.total <= 0 && !(sai.hour && sai.hour.included && sai.hour.state !== 'used'));
     if(b.id === 'saWrite'){
       if(siteHasContent(siteDraft.data) && !siteAi.open && !none){
         readSiteForm(); siteAi.open = true; siteAi.error = ''; renderSiteView();

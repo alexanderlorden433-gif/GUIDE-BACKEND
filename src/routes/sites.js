@@ -32,12 +32,14 @@ async function mySite(userId) {
   return rows[0] || null;
 }
 
-// ---------- GET /api/sites/mine ----------
-// The member's page (or null), the latest requests from it, and the colours a page can have.
+// ---------- GET /api/sites/mine?tz=America/Chicago ----------
+// The member's page (or null), the latest requests from it, the colours a page can have, and the AI writer's
+// state: credits, Pro's daily hour (worked out in the member's time zone), and the packs.
 router.get('/mine', async (req, res) => {
   res.set('Cache-Control', 'no-store');
-  const [site, pro, mine] = await Promise.all([mySite(req.user.id), isProUser(req.user.id), credits.getCredits(req.user.id)]);
-  const ai = { ready: !!process.env.ANTHROPIC_API_KEY, model: currentModel(), credits: mine, packs: credits.packsForApp() };
+  const [site, pro, mine, hour] = await Promise.all([mySite(req.user.id), isProUser(req.user.id), credits.getCredits(req.user.id),
+    credits.hourState(req.user.id, req.query.tz)]);
+  const ai = { ready: !!process.env.ANTHROPIC_API_KEY, model: currentModel(), credits: mine, hour, packs: credits.packsForApp() };
   if (!site) return res.json({ site: null, requests: [], unseen: 0, pro, colors: COLORS, ai });
   const requests = await prisma.$queryRawUnsafe(
     `SELECT * FROM "SiteRequest" WHERE "siteId" = $1::text ORDER BY "createdAt" DESC LIMIT 100`, site.id);
@@ -45,9 +47,9 @@ router.get('/mine', async (req, res) => {
 });
 
 // ---------- POST /api/sites/ai ----------
-// The AI writes the page {mode: "write"|"improve", description, draft, chapter: {name, description, tips}, lang}.
-// Uses one AI credit. Answers {draft, tips, model, credits}; nothing is saved here, the app shows it in the
-// editor first. Out of credits: 402 {buy: true, credits, packs}.
+// The AI writes the page {mode: "write"|"improve", description, draft, chapter: {name, description, tips}, lang, tz}.
+// Free during a Pro member's daily AI hour, otherwise uses one AI credit. Answers {draft, tips, model, paidWith,
+// credits, hour}; nothing is saved here, the app shows it in the editor first. Out of both: 402 {buy: true, …}.
 // A write takes up to a minute, so on top of the daily limit there's a short-term one per member.
 const aiBurst = rateLimit({ windowMs: 10 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false,
                             keyGenerator: (req) => 'site-ai:' + req.user.id,
@@ -55,7 +57,7 @@ const aiBurst = rateLimit({ windowMs: 10 * 60 * 1000, max: 8, standardHeaders: t
 router.post('/ai', aiBurst, async (req, res) => {
   const b = req.body || {};
   const r = await writePage({ userId: req.user.id, mode: b.mode, description: b.description, draft: b.draft,
-                              chapter: b.chapter, lang: b.lang });
+                              chapter: b.chapter, lang: b.lang, tz: b.tz });
   res.status(r.status).json(r.body);
 });
 

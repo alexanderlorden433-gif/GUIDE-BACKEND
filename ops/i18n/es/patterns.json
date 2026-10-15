@@ -522,5 +522,9 @@
  [
   "^\\$([\\d.]+) a page$",
   "$$1 por página"
+ ],
+ [
+  "^Your AI hour: (\\d+) minutes left\\. Writes are free until then\\.$",
+  "Tu hora de IA: quedan $1 minutos. Hasta entonces, escribir es gratis."
  ]
 ]

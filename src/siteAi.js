@@ -6,7 +6,7 @@
 // cleaned by cleanSiteData() like anything else a member saves, so nothing reaches the page unchecked.
 //
 // Each write uses one AI credit (src/siteCredits.js): members start with a couple of free ones and buy packs
-// after that. On top of credits there's a per-member daily cap (so a stuck button or a script can't burn a whole
+// after that. Pro members (and the old Lifetime plan) write without credits during their daily AI hour. On top of credits there's a per-member daily cap (so a stuck button or a script can't burn a whole
 // pack) and an app-wide daily ceiling as an emergency brake (SITE_AI_DAILY_TOTAL). The daily counts live in the
 // SiteAiUse table (created in src/sites.js).
 const prisma = require('./db');
@@ -147,7 +147,7 @@ async function callModel(model, body, apiKey, fetchImpl) {
  * Writes (mode "write") or improves (mode "improve") a page. Returns {status, body} for the route to send.
  * `fetchImpl` is there so the checks can stand in for the real API.
  */
-async function writePage({ userId, mode, description, draft, chapter, lang }, fetchImpl = fetch) {
+async function writePage({ userId, mode, description, draft, chapter, lang, tz }, fetchImpl = fetch) {
   if (!state.ready) return { status: 503, body: { error: 'Websites are not ready yet. Try again in a minute.' } };
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return { status: 503, body: { error: 'The page writer is not set up yet.' } };
@@ -167,14 +167,17 @@ async function writePage({ userId, mode, description, draft, chapter, lang }, fe
   if (!(await takeUse(userId, DAILY_CAP))) {
     return { status: 429, body: { error: "That's a lot of writes for one day. Please try again tomorrow." } };
   }
-  const spent = await credits.spendCredit(userId);
+  // Pro's daily hour first (free while it runs), then credits
+  const spent = (await credits.useDailyHour(userId, tz)) ? { bucket: 'hour' } : await credits.spendCredit(userId);
   if (!spent.bucket) {
     await giveBack(userId).catch(() => {});
-    const left = await credits.getCredits(userId);
-    return { status: 402, body: { buy: true, credits: left, packs: credits.packsForApp(),
-      error: spent.reason === 'free_busy'
-        ? 'Free tries are all taken for today. Buy a pack to write now, or try again tomorrow.'
-        : "You're out of AI credits. Pick a pack to keep writing." } };
+    const [left, hour] = await Promise.all([credits.getCredits(userId), credits.hourState(userId, tz)]);
+    return { status: 402, body: { buy: true, credits: left, hour, packs: credits.packsForApp(),
+      error: hour.included
+        ? "You've used today's AI hour. It comes back tomorrow, or pick a pack to keep writing now."
+        : spent.reason === 'free_busy'
+          ? 'Free tries are all taken for today. Buy a pack to write now, or try again tomorrow.'
+          : "You're out of AI credits. Pick a pack to keep writing." } };
   }
   const forModel = current ? Object.assign({}, current, { email: current.email ? '(set)' : '', phone: current.phone ? '(set)' : '' }) : null;
   const body = {
@@ -192,9 +195,9 @@ async function writePage({ userId, mode, description, draft, chapter, lang }, fe
   if (!result || !result.ok) {
     console.error('[site-ai] could not write the page:', result && result.status, result && result.error);
     await giveBack(userId).catch(err => console.error('[site-ai] could not give the write back:', err.message));
-    await credits.refundCredit(userId, spent.bucket).catch(err => console.error('[site-ai] could not give the credit back:', err.message));
+    if (spent.bucket !== 'hour') await credits.refundCredit(userId, spent.bucket).catch(err => console.error('[site-ai] could not give the credit back:', err.message));
     const msg = result && result.error === 'timeout' ? 'That took too long. Please try again.' : 'The page writer could not finish just now. Please try again.';
-    return { status: 502, body: { error: msg, credits: await credits.getCredits(userId).catch(() => undefined) } };
+    return { status: 502, body: { error: msg, credits: await credits.getCredits(userId).catch(() => undefined), hour: await credits.hourState(userId, tz).catch(() => undefined) } };
   }
   lastModel = result.model;
   const u = result.usage || {};
@@ -208,7 +211,8 @@ async function writePage({ userId, mode, description, draft, chapter, lang }, fe
     color: current && mode === 'improve' ? current.color : ai.color,
   }));
   const tips = (Array.isArray(ai.tips) ? ai.tips : []).slice(0, 3).map(t => String(t).slice(0, 240));
-  return { status: 200, body: { draft: merged, tips, model: result.model, credits: await credits.getCredits(userId) } };
+  const [left, hour] = await Promise.all([credits.getCredits(userId), credits.hourState(userId, tz)]);
+  return { status: 200, body: { draft: merged, tips, model: result.model, paidWith: spent.bucket, credits: left, hour } };
 }
 
 module.exports = { writePage, currentModel, SCHEMA, DAILY_CAP, MODELS };
