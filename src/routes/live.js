@@ -90,7 +90,9 @@ function readCallFields(b, existing) {
   if (!existing || b.startsAt !== undefined) {
     const t = new Date(b.startsAt);
     if (isNaN(t.getTime())) return { error: 'Pick a date and time for the call.' };
-    if (t.getTime() < now - 5 * 60 * 1000) return { error: 'That time has already passed. Pick a time in the future.' };
+    // Editing a call that has already started (e.g. to fix the link mid-call) sends its time back unchanged: that's fine.
+    const sameTime = existing && t.getTime() === new Date(existing.startsAt).getTime();
+    if (!sameTime && t.getTime() < now - 5 * 60 * 1000) return { error: 'That time has already passed. Pick a time in the future.' };
     if (t.getTime() > now + 180 * 24 * 60 * 60 * 1000) return { error: 'Calls can be scheduled up to 6 months ahead.' };
     out.startsAt = t.toISOString();
   }
@@ -398,3 +400,4 @@ router.get('/:id/join', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.readCallFields = readCallFields; // for ops/check_backend.js

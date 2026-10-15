@@ -38,6 +38,11 @@ notes = []
 shots = []
 
 
+# The look's accent colour (var(--grape)) as the browser computes it, e.g. "rgb(63, 203, 147)".
+ACCENT_JS = ("(()=>{const i=document.createElement('i'); i.style.color='var(--grape)'; document.body.appendChild(i);"
+             " const c=getComputedStyle(i).color; i.remove(); return c;})()")
+
+
 def problem(step, what, detail=''):
     problems.append({'step': step, 'what': what, 'detail': str(detail)[:400]})
     print(f'  ✗ [{step}] {what} {str(detail)[:200]}')
@@ -460,10 +465,10 @@ def logged_out(browser, base, device, viewport, mobile):
             problem(step[0], 'sign-up screen did not open')
         shot(page, f'{device}-02-signup')
         no_sideways_scroll(page, step[0])
-        # the main button must use the app's gradient, not the browser's plain white default
-        look = page.eval_on_selector('#authSubmitBtn', "b => { const c = getComputedStyle(b); return {bg: c.backgroundImage, w: b.getBoundingClientRect().width, card: b.closest('.auth-card').getBoundingClientRect().width}; }")
-        if 'gradient' in look['bg'] and look['w'] > look['card'] * 0.6:
-            ok(step[0], 'sign-up / log-in button is styled (full-width gradient)')
+        # the main button must be the app's solid accent button, not the browser's plain white default
+        look = page.eval_on_selector('#authSubmitBtn', "b => { const c = getComputedStyle(b); return {bg: c.backgroundColor, accent: ACCENT_RGB(), w: b.getBoundingClientRect().width, card: b.closest('.auth-card').getBoundingClientRect().width}; }".replace('ACCENT_RGB()', ACCENT_JS))
+        if look['bg'] == look['accent'] and look['w'] > look['card'] * 0.6:
+            ok(step[0], 'sign-up / log-in button is styled (full-width, accent colour)')
         else:
             problem(step[0], 'sign-up / log-in button looks like a plain browser button', look)
     except Exception as e:
@@ -1324,8 +1329,8 @@ def pro_peeks(browser, base):
         problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return
     page.wait_for_timeout(800)
     page.evaluate("openNiche(NICHES[0].id); setCourseView('list')"); page.wait_for_timeout(700)
-    got = page.evaluate("""(()=>{ const g=[...document.querySelectorAll('#nicheView .guide.locked')].find(x=>x.querySelector('.lock-tag') && x.querySelector('.lock-tag').innerText.includes('Pro'));
-      if(!g) return null; g.querySelector('.guide-row').click();
+    got = page.evaluate("""(()=>{ const g=[...document.querySelectorAll('#nicheView .guide.locked')].find(x=>x.querySelector('.lock-tag') && x.querySelector('.lock-tag').textContent.includes('Pro'));
+      if(!g) return null; g.scrollIntoView({block:'start'}); g.querySelector('.guide-row').click();
       const c=g.querySelector('.guide-content'); const modal=document.getElementById('upgradeModal');
       return {open:g.classList.contains('open'), text:c.innerText, blurred:!!c.querySelector('.peek-blur'), unlock:!!c.querySelector('.peek-unlock'),
               modalOpen: !!(modal && modal.style.display && modal.style.display !== 'none')}; })()""")
@@ -1915,10 +1920,10 @@ def business_ledger(browser, base):
         else:
             ok(step[0], 'every field and button in the business tools is styled for the app')
 
-        # 3. the one primary action wears the brand gradient
-        grad = page.evaluate("getComputedStyle(document.getElementById('invGenerateBtn')).backgroundImage")
-        if 'gradient' not in grad:
-            problem(step[0], 'the Create invoice button is not the brand gradient', grad)
+        # 3. the one primary action wears the accent colour
+        grad = page.evaluate("(()=>({bg: getComputedStyle(document.getElementById('invGenerateBtn')).backgroundColor, accent: ACCENT_RGB()}))()".replace('ACCENT_RGB()', ACCENT_JS))
+        if grad['bg'] != grad['accent']:
+            problem(step[0], 'the Create invoice button is not the accent colour', grad)
         else:
             ok(step[0], 'Create invoice is the one gradient button on the screen')
 
@@ -2315,7 +2320,7 @@ def new_look(browser, base):
         page.wait_for_timeout(800)
         page.evaluate("document.querySelectorAll('.landing-view img').forEach(i=>{i.loading='eager'})")
         page.wait_for_timeout(1200)
-        r = page.evaluate("(()=>{const im=[...document.querySelectorAll('.landing-view img')]; return {n:im.length, purple:im.filter(i=>i.getAttribute('src').includes('img/purple/')).length, broken:im.filter(i=>i.complete&&i.naturalWidth===0).length};})()")
+        r = page.evaluate("(()=>{const im=[...document.querySelectorAll('.landing-view img[src*=\"img/\"]')]; return {n:im.length, purple:im.filter(i=>i.getAttribute('src').includes('img/purple/')).length, broken:im.filter(i=>i.complete&&i.naturalWidth===0).length};})()")
         want_purple = r['n'] if look == 'purple' else 0
         if r['n'] < 5 or r['purple'] != want_purple or r['broken']:
             problem(step[0], f'landing pictures do not match the {look} look', r)
@@ -2965,6 +2970,62 @@ def daily_step(browser, base):
     ctx.close()
 
 
+def design_polish(browser, base):
+    """The October 2026 polish pass: real prices on the landing page, a cover picture on the tour video, no emoji used
+    as icons, no "Loading…" text, no justified text, nothing wider than a phone, and one button size."""
+    EMOJI = r"/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{2705}\u{274C}]/u"
+    scan = ("(()=>{const out={emoji:[], justified:0, loading:0, wide:document.documentElement.scrollWidth - innerWidth};"
+            " const re=" + EMOJI + ";"
+            " for(const e of document.querySelectorAll('body *')){ if(e.closest('.gv-frame')) continue;"
+            "  const cs=getComputedStyle(e); if(cs.display==='none'||cs.visibility==='hidden') continue;"
+            "  if(cs.textAlign==='justify' && e.textContent.trim()) out.justified++;"
+            "  if(!e.children.length){ const t=e.textContent.trim(); if(/^Loading/.test(t)) out.loading++; if(re.test(t)) out.emoji.push(t.slice(0,40)); } }"
+            " return out;})()")
+    for device, vp, mobile in (('phone', {'width': 375, 'height': 812}, True), ('desktop', {'width': 1280, 'height': 800}, False)):
+        step = [f'{device}: design polish']
+        # the landing page, signed out
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        attach_backend(ctx, new_state(False))
+        ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load'); page.wait_for_timeout(1200)
+        price = page.evaluate("({amt: document.getElementById('lpProAmt').textContent, year: document.getElementById('lpProYear').textContent})")
+        if re.match(r'^\$\d', price['amt']) and re.search(r'\$\d.*a year, save \$\d+', price['year']):
+            ok(step[0], f"the Pro card shows a real price ({price['amt']}) and the yearly saving")
+        else:
+            problem(step[0], 'the Pro card on the landing page is missing its price or yearly saving', price)
+        page.evaluate("document.getElementById('lpTour').scrollIntoView()"); page.wait_for_timeout(900)
+        cover = page.evaluate("(()=>{const i=document.querySelector('.lp-tour-poster'), f=document.querySelector('.lp-tour-frame'); return {img: !!(i && i.complete && i.naturalWidth > 0), h: f ? Math.round(f.getBoundingClientRect().height) : 0}})()")
+        if cover['img'] and cover['h'] > 150:
+            ok(step[0], 'the tour video shows its cover picture before it loads')
+        else:
+            problem(step[0], 'the tour video area is empty before it loads', cover)
+        r = page.evaluate(scan)
+        btn = page.evaluate("(()=>{const b=document.querySelector('.lp-cta'), g=document.querySelector('.lp-cta-ghost'); const s=x=>{const c=getComputedStyle(x); return [Math.round(x.getBoundingClientRect().height), c.borderRadius]}; return {primary:s(b), secondary:s(g)}})()")
+        # the app, signed in
+        ctx2 = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        attach_backend(ctx2, new_state(False))
+        ctx2.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        app = ctx2.new_page(); watch_errors(app, step)
+        app.goto(base + '/', wait_until='load'); app.wait_for_timeout(1500)
+        found = {'landing': r}
+        for name, js in (('home', 'showHome()'), ('chapter', 'openNiche(NICHES[0].id)'), ('earn', 'showEarnTab()'), ('community', 'showCommunityTab()'), ('pro box', 'openUpgradeModal()')):
+            app.evaluate(js); app.wait_for_timeout(900)
+            found[name] = app.evaluate(scan)
+            if name == 'pro box':
+                app.keyboard.press('Escape')
+        bad = {k: v for k, v in found.items() if v['emoji'] or v['justified'] or v['loading'] or v['wide'] > 1}
+        if bad:
+            problem(step[0], 'emoji icons, justified text, "Loading…" text or sideways scrolling found', bad)
+        else:
+            ok(step[0], 'no emoji icons, no justified text, no "Loading…" text and nothing wider than the screen (landing, home, chapter, earn, community, Pro box)')
+        if btn['primary'][0] == btn['secondary'][0] == 44 and btn['primary'][1] == btn['secondary'][1] == '10px':
+            ok(step[0], 'primary and secondary buttons share one height (44px) and one corner radius')
+        else:
+            problem(step[0], 'primary and secondary buttons differ in height or corner radius', btn)
+        ctx.close(); ctx2.close()
+
+
 def main():
     srv, base = serve_web()
     t0 = time.time()
@@ -3004,6 +3065,7 @@ def main():
         step_one_demo(browser, base)
         account_settings(browser, base)
         manage_subscription(browser, base)
+        design_polish(browser, base)
         save_retry(browser, base)
         browser.close()
     srv.shutdown()
