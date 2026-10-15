@@ -157,3 +157,14 @@ Things worth remembering:
   function (git's line hunks interleave two new test functions and break them). Script idea: 3-way merge each
   `def` separately; union the calls in main().
 - Live-check limit: WebFetch here refuses theguide.company / railway URLs unless they appear in a user message.
+
+## 2026-10-15 (AI website writer, PR #60)
+- My website → "Let AI write your page": POST /api/sites/ai → src/siteAi.js. Models tried in order: SITE_AI_MODEL,
+  claude-fable-5-1, claude-opus-5-5, claude-sonnet-5-5 (404/403/400-mentioning-model → next). Structured outputs via
+  `output_config.format` (json_schema; every object additionalProperties:false, all fields required, no min/max).
+  Don't send `thinking`/`temperature`. max_tokens 16000 covers thinking + JSON.
+- Limits: Pro 10/day, free 2/day, app-wide SITE_AI_DAILY_TOTAL (default 200). Use is reserved atomically before the
+  call (INSERT … ON CONFLICT … WHERE n < limit RETURNING) and given back on failure. Table SiteAiUse.
+- Page data gained highlights[3], faq[≤6] {q,a} and lang (en|es); public page draws them (+ FAQPage JSON-LD).
+- Smoke test website_ai holds the /api/sites/ai request with page.route to screenshot the "writing" state.
+- Test Postgres harness (/tmp/pgt) must run as user claude: `runuser -u claude -- node start.js`.
