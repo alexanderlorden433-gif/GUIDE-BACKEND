@@ -3751,6 +3751,19 @@ def public_pages(browser, base):
         bad_ofm = 'OnlyFans' in get('/start/index.html')
         if bad_ofm:
             problem(step[0], 'the OnlyFans chapter must not have a public page')
+        # The homepage links to every guide (so Google finds them from the main page), unknown addresses get a
+        # real 404 page that isn't indexed, and the app's own addresses (reset, billing, account) still open the app.
+        home = get('/index.html')
+        missing = [u for u in guides if f'href="{u}"' not in home]
+        nf = get('/404.html')
+        rules = [l.split() for l in open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'web', '_redirects'), encoding='utf8') if l.strip() and not l.startswith('#')]
+        app_routes = {r[0] for r in rules if len(r) >= 3 and r[1] == '/index.html' and r[2] == '200'}
+        if (not missing and 'OnlyFans' not in home.split('seo:guide-links')[1] and 'content="noindex"' in nf and '<h1>' in nf
+                and rules and rules[-1] == ['/*', '/404.html', '404'] and {'/reset-password', '/billing/*', '/account'} <= app_routes
+                and '"@type": "FAQPage"' in home):
+            ok(step[0], f'the homepage footer links to all {len(guides)} guides, has FAQ schema, and unknown addresses get a noindex 404 page')
+        else:
+            problem(step[0], 'homepage guide links / 404 page / redirect rules are wrong', {'missing links': missing[:5], 'rules': rules[-2:]})
     except Exception as e:
         problem(step[0], 'could not read the sitemap or pages', e)
 
