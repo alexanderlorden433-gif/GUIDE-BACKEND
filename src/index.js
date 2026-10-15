@@ -23,8 +23,10 @@ const analyticsRoutes = require('./routes/analytics');
 const liveRoutes = require('./routes/live');
 const pushRoutes = require('./routes/push');
 const codesRoutes = require('./routes/codes');
+const publicWinsRoutes = require('./routes/publicWins');
 const leadsRoutes = require('./routes/leads');
 const leadsCourse = require('./leads');
+const billingEmails = require('./billingEmails');
 const { ensurePushTable } = require('./push');
 const clientStatusRoutes = require('./routes/clientStatus');
 const sitesRoutes = require('./routes/sites');
@@ -113,6 +115,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/discussion', discussionRoutes);
+app.use('/api/public-wins', publicWinsRoutes);
 app.use('/api/wins', winsRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/network', networkRoutes);
@@ -142,7 +145,9 @@ app.listen(PORT, () => {
   aiChatRoutes.ensureGuiderTable();
   ensurePushTable();
   codesRoutes.ensureCodeTables();
+  publicWinsRoutes.ensurePublicWinsTable();
   leadsCourse.ensureLeadTable().then(ok => { if (ok) leadsCourse.scheduleLeadCourse(); });
+  billingEmails.ensureEmailTable().then(ok => { if (ok) billingEmails.scheduleBillingEmails(); });
   clientStatusRoutes.ensureClientStatusTable();
   memberSites.ensureSiteTables();
   scheduleLiveReminders(); // does nothing until the tables exist

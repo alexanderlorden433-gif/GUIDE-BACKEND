@@ -184,6 +184,7 @@ model Win {
   body      String
   emoji     String   @default("🎉")
   reactions WinReaction[]
+  publicOffer WinPublic?
   createdAt DateTime @default(now())
 
   @@index([createdAt])
@@ -383,8 +384,21 @@ model PromoCode {
   uses      Int      @default(0)
   active    Boolean  @default(true)
   expiresAt DateTime?
+  commissionPct Int?
   createdAt DateTime @default(now())
   redemptions PromoRedemption[]
+  payouts   PartnerPayout[]
+}
+
+// Creator payouts: what was paid to a code's partner for a month (src/routes/codes.js).
+model PartnerPayout {
+  id     String    @id
+  codeId String
+  month  String
+  amount Float
+  paidAt DateTime  @default(now())
+  code   PromoCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  @@unique([codeId, month])
 }
 
 model PromoRedemption {
@@ -439,4 +453,26 @@ model SiteRequest {
   createdAt DateTime   @default(now())
 
   @@index([siteId, createdAt])
+}
+
+// Wins a member offered for the public landing page (src/routes/publicWins.js). Shown only once
+// the owner approves. Created at startup with CREATE TABLE IF NOT EXISTS; declared here so the schema matches.
+model WinPublic {
+  winId      String    @id
+  status     String    @default("waiting")
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+  win        Win       @relation(fields: [winId], references: [id], onDelete: Cascade)
+  @@index([status])
+}
+
+// Billing emails (src/billingEmails.js): which one-time emails went out (trial ending, checkout left).
+// Created at startup with CREATE TABLE IF NOT EXISTS; declared here so the schema matches.
+model EmailSent {
+  id     String   @id
+  kind   String
+  ref    String
+  userId String?
+  sentAt DateTime @default(now())
+  @@unique([kind, ref])
 }

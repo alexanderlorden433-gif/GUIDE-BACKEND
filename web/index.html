@@ -3,7 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>The Guide</title>
+<title>The Guide: start a real side business, step by step</title>
+<meta name="description" content="Pick a real business, from lawn care and cleaning to e-commerce and UGC, and follow it as a course: modules in order, narrated video lessons and an AI mentor. Module 1 of every course is free.">
+<link rel="canonical" href="https://theguide.company/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Guide">
+<meta property="og:title" content="The Guide: start a real side business, step by step">
+<meta property="og:description" content="Real businesses taught as courses, one step at a time. Module 1 of every course is free.">
+<meta property="og:url" content="https://theguide.company/">
+<meta property="og:image" content="https://theguide.company/img/og/og-default.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"The Guide","url":"https://theguide.company","logo":"https://theguide.company/icons/icon-512.png"}</script>
 
 <!-- PWA: install-to-home-screen + offline support -->
 <link rel="manifest" href="manifest.json">
@@ -1797,7 +1809,7 @@
   .code-row .live-btn{flex:none;}
   .modal-link{display:block; margin:12px auto 0; font:600 13px 'Inter',sans-serif; color:var(--ink-soft); text-decoration:underline; background:none; border:0; cursor:pointer;}
   #upgradeCodeWrap{margin-top:12px; text-align:left;}
-  .dx-codes-form{display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr auto; gap:8px; align-items:end; margin:0 0 12px;}
+  .dx-codes-form{display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr auto; gap:8px; align-items:end; margin:0 0 12px;}
   .dx-codes-form label{display:flex; flex-direction:column; gap:4px; font-size:11.5px; color:var(--ink-soft); min-width:0;}
   .dx-codes-form input{width:100%; min-width:0; padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:500 13px 'Inter',sans-serif;}
   .dx-codes-table{width:100%; border-collapse:collapse; font-size:13px;}
@@ -3899,7 +3911,7 @@
     gap:12px;
     padding:16px 16px;
     background:var(--card-2);
-    color:var(--on-accent);
+    color:var(--ink);
   }
   .ai-chat-header .mascot-logo{
     width:36px;
@@ -3915,9 +3927,9 @@
     line-height:1.2;
   }
   .ai-chat-header-sub{
-    font-size:11px;
-    opacity:0.85;
-    margin-top:1px;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:2px;
   }
   .ai-chat-clear-btn{
     background:rgba(255,255,255,0.15);
@@ -4038,8 +4050,8 @@
     font-size:13px;
     padding:0 16px;
     border-radius:10px;
-    border:1px solid var(--line);
-    background:var(--card-2);
+    border:1px solid transparent;
+    background:var(--grape);
     color:var(--on-accent);
     cursor:pointer;
     flex-shrink:0;
@@ -5355,6 +5367,55 @@
   .ts-go{min-height:var(--btn-h); padding:0 24px; border-radius:var(--r-btn); font:600 15px/1.2 'Inter',sans-serif; background:var(--grape); color:var(--on-accent); border:1px solid transparent;}
   .today-step.quiet .ts-go{background:transparent; color:var(--ink); border:1px solid var(--line-2);}
 
+  /* the 30-day plan: the card on Home, the sheet that makes it, the plan page */
+  .plan-card{background:var(--card); border-radius:var(--r-card); padding:var(--sp-5); margin-bottom:var(--sp-6);}
+  .pc-top{display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-3); margin-bottom:var(--sp-3);}
+  .pc-label{font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft); min-width:0;}
+  .pc-day{font-size:14px; font-weight:600; color:var(--ink); white-space:nowrap; font-variant-numeric:tabular-nums;}
+  .pc-title{font-size:18px; font-weight:600; line-height:1.3; color:var(--ink); margin-bottom:var(--sp-2);}
+  .pc-bar{height:6px; border-radius:3px; background:var(--line); overflow:hidden;}
+  .pc-bar i{display:block; height:100%; border-radius:inherit; background:var(--grape);}
+  .pc-count{font-size:13px; color:var(--ink-soft); margin-top:var(--sp-2);}
+  .pc-line{font-size:15px; line-height:1.5; color:var(--ink-2); margin:var(--sp-3) 0 var(--sp-4); max-width:68ch;}
+  .plan-card.offer .pc-line{margin-top:0;}
+  .pc-line b{color:var(--ink); font-weight:600;}
+  .pc-open{color:var(--ink-soft);}
+  .pc-row{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2);}
+  .pc-row .live-btn{flex:none;}
+  .pc-text{min-height:var(--btn-h); padding:0 var(--sp-3); border:0; background:none; color:var(--ink-soft); font:500 14px 'Inter',sans-serif; cursor:pointer;}
+  .pc-text:hover{color:var(--ink);}
+  .pl-q{display:block; font-size:14px; font-weight:600; color:var(--ink); margin:var(--sp-4) 0 var(--sp-2);}
+  .pl-select{width:100%; min-height:var(--btn-h); padding:0 var(--sp-3); border:1px solid var(--line-2); border-radius:var(--r-btn); background:var(--bg); color:var(--ink); font:500 15px 'Inter',sans-serif;}
+  .pl-goals{display:flex; flex-direction:column; gap:var(--sp-2);}
+  .pl-goal{min-height:var(--btn-h); padding:var(--sp-2) var(--sp-4); text-align:left; border:1px solid var(--line-2); border-radius:var(--r-btn); background:transparent; color:var(--ink); font:500 15px/1.3 'Inter',sans-serif; cursor:pointer;}
+  .pl-goal.on{border-color:var(--grape); box-shadow:inset 0 0 0 1px var(--grape);}
+  .pl-note{font-size:13px; line-height:1.5; color:var(--ink-soft); margin:var(--sp-4) 0;}
+  .pl-head{display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-3); margin-bottom:var(--sp-2);}
+  .pl-now{font-size:18px; font-weight:600; color:var(--ink);}
+  .pl-count{font-size:14px; color:var(--ink-soft);}
+  .pl-bar{margin-bottom:var(--sp-6);}
+  .pl-week{margin-bottom:var(--sp-6);}
+  .pl-week-h{display:flex; flex-direction:column; gap:2px; margin:0 0 var(--sp-2); padding-bottom:var(--sp-2); border-bottom:1px solid var(--line); font-size:17px; font-weight:600; color:var(--ink);}
+  .pl-week-h small{font-size:13px; font-weight:400; color:var(--ink-soft); letter-spacing:0;}
+  .pl-day{display:flex; align-items:flex-start; gap:var(--sp-3); width:100%; min-height:var(--btn-h); padding:var(--sp-3) 0; border:0; border-bottom:1px solid var(--line); background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;}
+  @media (hover:hover){ .pl-day:hover .pl-what{color:var(--grape-soft);} }
+  .pl-num{flex:none; width:32px; height:32px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line-2); color:var(--ink-2); font-size:13px; font-weight:600; font-variant-numeric:tabular-nums;}
+  .pl-num .ico{width:16px; height:16px;}
+  .pl-day.done .pl-num{background:var(--grape); border-color:transparent; color:var(--on-accent);}
+  .pl-day.today .pl-num{border-color:var(--grape); color:var(--grape-soft);}
+  .pl-day.done.today .pl-num{color:var(--on-accent);}
+  .pl-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+  .pl-when{font-size:12.5px; color:var(--ink-soft);}
+  .pl-what{font-size:15px; font-weight:500; line-height:1.35; color:var(--ink); transition:color .15s ease;}
+  .pl-sub{font-size:13px; line-height:1.45; color:var(--ink-soft);}
+  .pl-day.soft .pl-what{color:var(--ink-2); font-weight:400;}
+  .pl-day.done .pl-what{color:var(--ink-2);}
+  .pl-day.locked .pl-what{color:var(--ink-soft);}
+  .pl-tag{flex:none; display:inline-flex; align-items:center; gap:4px; margin-top:6px; font-size:12.5px; font-weight:500; color:var(--ink-soft); white-space:nowrap;}
+  .pl-tag .ico{width:13px; height:13px;}
+  .pl-tag.now{color:var(--grape-soft); font-weight:600;}
+  .pl-actions{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); padding-top:var(--sp-2);}
+
   /* chapters: a list of rows */
   .niche-grid{gap:0 var(--sp-6); border-top:1px solid var(--line);}
   .niche-card{flex-direction:row; align-items:flex-start; gap:var(--sp-4); background:none; border:0; border-bottom:1px solid var(--line); border-radius:0; padding:var(--sp-4) 0; box-shadow:none; contain-intrinsic-size:auto 112px;}
@@ -5507,6 +5568,22 @@
   .module-head, .module-head.done{background:none; border:0; border-top:1px solid var(--line); border-radius:0; padding:var(--sp-5) 0 var(--sp-3); margin:var(--sp-6) 0 0;}
   .module-head:first-child{margin-top:0;}
   .module-head.done .module-count{color:var(--grape-soft);}
+
+  .dx-payouts-bar{display:flex; align-items:end; gap:var(--sp-4); flex-wrap:wrap; margin:0 0 var(--sp-3);}
+  .dx-payouts-bar label{display:flex; flex-direction:column; gap:var(--sp-1); font-size:12px; color:var(--ink-soft);}
+  .dx-payouts-bar input{padding:var(--sp-2) var(--sp-3); border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:500 13px 'Inter',sans-serif;}
+  /* member wins on the landing page, the guarantee line, the website opt-in */
+  .lp-wins{list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:0 var(--sp-6); border-top:1px solid var(--line);}
+  .lp-wins li{padding:var(--sp-4) 0; border-bottom:1px solid var(--line);}
+  .lp-wins p{margin:0 0 var(--sp-2); font-size:16px; color:var(--ink); max-width:60ch;}
+  .lp-wins span{font-size:14px; color:var(--ink-soft);}
+  .lp-plan .lp-guarantee{font-size:14px; color:var(--ink-2); margin:calc(-1 * var(--sp-4)) 0 var(--sp-5);}
+  .modal-guarantee{font-size:13px; line-height:1.5; color:var(--ink-soft); margin:var(--sp-2) 0 0; text-align:center;}
+  .win-post-form{flex-wrap:wrap;}
+  .win-site{display:flex; align-items:flex-start; gap:var(--sp-2); flex-basis:100%; font-size:13px; color:var(--ink-soft); line-height:1.4; cursor:pointer;}
+  .win-post-form .win-site input{flex:none; width:16px; height:16px; min-width:16px; min-height:0; padding:0; margin:2px 0 0; accent-color:var(--grape);}
+  .lp-quiz-link{margin:var(--sp-4) 0 0; font-size:15px; color:var(--ink-soft);}
+  .lp-quiz-link a{color:var(--grape-soft); font-weight:600;}
 
   /* ---------- loading and empty states ---------- */
   .skel-wrap{display:block;}
@@ -5698,6 +5775,7 @@
         <h2 class="lp-h2">Try step one. No signup.</h2>
         <p class="lp-lead">Pick a business. This is the first real thing you would do in its course.</p>
         <div class="lp-pick" id="lpPick" role="group" aria-label="Pick a business"></div>
+        <p class="lp-quiz-link">Not sure which to pick? <a href="/quiz/">Take the 2-minute quiz</a></p>
       </div>
       <div class="lp-demo" id="lpDemo" aria-live="polite"></div>
     </div>
@@ -5857,6 +5935,14 @@
     </div>
   </section>
 
+  <section class="lp-section" id="lpWins" hidden>
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Wins from members</h2>
+      <p class="lp-lead">Shared by members in the app, shown here with their OK.</p>
+      <ul class="lp-wins" id="lpWinsList"></ul>
+    </div>
+  </section>
+
   <section class="lp-section">
     <div class="lp-wrap">
       <h2 class="lp-h2" style="text-align:center;">Start free, pay when it's worth it</h2>
@@ -5877,6 +5963,7 @@
           <p class="lp-amt"><span id="lpProAmt">$24.99</span><small id="lpProPer">/month</small></p>
           <p class="lp-per" id="lpProYear">or $149 a year, save $150 (50%)</p>
           <p class="lp-trial" id="lpProTrial">Try it free for 4 days. Cancel any time.</p>
+          <p class="lp-guarantee">7-day money-back guarantee on your first payment.</p>
           <ul>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Every module of all <span data-count-word>sixteen</span> courses</span></li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>The Guider, your AI mentor</span></li>
@@ -5894,6 +5981,7 @@
       <details><summary>How much time does it take?</summary><p>Lessons are short enough to do in a sitting. A module opens each week, so most people spend a few evenings a week on it rather than a whole weekend.</p></details>
       <details><summary>What if I pick the wrong chapter?</summary><p>Switch whenever you like. Pro opens all <span data-count-word>sixteen</span> courses, and whatever you've finished stays finished.</p></details>
       <details><summary>Can I cancel?</summary><p>Yes, in one tap from your account page. You keep Pro until the period you've paid for ends, and anything you've already finished stays open to you.</p></details>
+      <details><summary>What if Pro isn't for me?</summary><p>Email us within 7 days of your first payment and we'll refund it in full. No forms, no questions you have to answer.</p></details>
       <details><summary>Is this a get-rich-quick thing?</summary><p>No. It teaches how these businesses actually work: pricing, clients, contracts, delivery, money. Nobody can promise what you'll earn, and we don't.</p></details>
     </div>
   </section>
@@ -5911,7 +5999,7 @@
 
   <footer class="lp-foot">
     <div class="lp-wrap">
-      Questions? Email <a href="mailto:TheGuide1@gmail.com">TheGuide1@gmail.com</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
+      <a href="/start/">Business guides</a> · <a href="/tools/">Free calculators</a> · Questions? Email <a href="mailto:TheGuide1@gmail.com">TheGuide1@gmail.com</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
     </div>
   </footer>
 </div>
@@ -6140,6 +6228,7 @@
       <div id="homeGreetingWrap"></div>
       <div id="trialWrap"></div>
       <div id="todayStepWrap"></div>
+      <div id="planWrap"></div>
       <div id="dailyDigestWrap"></div>
       <div id="liveHomeWrap"></div>
       <div id="continueCardWrap"></div>
@@ -6198,6 +6287,13 @@
       <h2 class="page-title">My website</h2>
       <p class="page-sub">A one-page website for your business: what you offer, your prices, and a form that sends requests straight to you here.</p>
       <div id="siteContent"></div>
+    </div>
+
+    <div id="planView" style="display:none;">
+      <button class="back-btn" id="planBackBtn">← Home</button>
+      <h2 class="page-title">Your 30-day plan</h2>
+      <p class="page-sub" id="planSub"></p>
+      <div id="planContent"></div>
     </div>
 
     <div id="businessView" class="biz-wide" style="display:none;">
@@ -6670,6 +6766,7 @@ let streakReminderOptOut = false;
 let communityNotifsOff = false;
 let userProfile = { displayName: '', bio: '' };
 let trialInfo = null; // {startedAt:'YYYY-MM-DD', days} when this member started Pro on the free trial
+let dayPlan = null;   // the 30-day plan: {nicheId, start:'YYYY-MM-DD', goal, from, checkins:{day:'YYYY-MM-DD'}}
 let tourIndex = 0;
 const TOUR_STEPS = [
   { selector: '#nicheGrid', title: "Welcome to The Guide", text: "These are your chapters, each with 40 guides plus real business tools built in. Quick 20-second tour?" },
@@ -8295,6 +8392,10 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
     const real = (n)=> n && n.guides && n.guides[0] && n.guides[0].action;
     let list = FEATURED.map(id=> NICHES.find(n=> n.id === id)).filter(real);
     if(list.length < 4) list = NICHES.filter(real).slice(0, 8);
+    // ?start=<chapter> from a business guide page or the quiz: lead with that business
+    let wanted = null;
+    try{ const id = new URLSearchParams(window.location.search).get('start'); wanted = id && NICHES.find(n=> n.id === id && real(n)); }catch(e){}
+    if(wanted){ list = [wanted, ...list.filter(n=> n.id !== wanted.id)].slice(0, 8); }
     pick.innerHTML = list.map(n=> `<button type="button" data-id="${gvEsc(n.id)}" aria-pressed="false"><em>${nicheIco(n)}</em>${gvEsc(n.name)}</button>`).join('');
     const show = (n, chosen)=>{
       if(chosen){ try{ sessionStorage.setItem('guide_demo_pick', n.id); }catch(e){} }   // sign-up starts them on this business
@@ -8331,7 +8432,11 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
       const n = b && list.find(x=> x.id === b.dataset.id);
       if(n) show(n, true);
     });
-    show(list[0], false);
+    show(list[0], !!wanted);
+    if(wanted && !window.__startHandled){
+      window.__startHandled = true;
+      setTimeout(()=>{ const b = document.getElementById('landingSignupBtn'); if(b && !currentEmail) b.click(); }, 400);
+    }
   }
 
   // scroll to a section
@@ -8345,6 +8450,18 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
   view.querySelectorAll('[data-lp-signup]').forEach(b=>{
     b.addEventListener('click', ()=> document.getElementById('landingSignupBtn').click());
   });
+
+  // wins members agreed to show here, approved by the owner; the section stays hidden until there are three
+  const winsSec = document.getElementById('lpWins');
+  if(winsSec && !winsSec.dataset.loaded){
+    winsSec.dataset.loaded = '1';
+    fetch(API_BASE_URL + '/public-wins').then(r => r.ok ? r.json() : { wins: [] }).then(d => {
+      const wins = (d && d.wins) || [];
+      if(wins.length < 3) return;
+      document.getElementById('lpWinsList').innerHTML = wins.map(w => `<li><p>${gvEsc(w.body)}</p><span>${gvEsc(w.name)} · ${new Date(w.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</span></li>`).join('');
+      winsSec.hidden = false;
+    }).catch(()=>{});
+  }
 
   // the free 7-day course: one email, one tap
   const courseForm = document.getElementById('lpCourseForm');
@@ -8798,7 +8915,8 @@ async function saveProgress(){
           streakReminderOptOut: streakReminderOptOut,
           communityNotifsOff: communityNotifsOff,
           userProfile: userProfile,
-          trial: trialInfo
+          trial: trialInfo,
+          dayPlan: dayPlan
         }
       })
     });
@@ -8883,6 +9001,7 @@ async function loginApp(email, record, userId){
   communityNotifsOff = !!record.communityNotifsOff;
   userProfile = record.userProfile || { displayName: '', bio: '' };
   trialInfo = (record.trial && record.trial.startedAt) ? record.trial : null;
+  dayPlan = cleanDayPlan(record.dayPlan);
   ensureToolsData();
   ensureRecurringInvoices();
   checkCommunityActivity();
@@ -9476,6 +9595,7 @@ function hideAllViews(){
   nicheView.style.display = 'none';
   todayView.style.display = 'none';
   document.getElementById('siteView').style.display = 'none';
+  document.getElementById('planView').style.display = 'none';
   businessView.style.display = 'none';
   statsView.style.display = 'none';
   helpView.style.display = 'none';
@@ -9606,6 +9726,7 @@ function openUpgradeModal(resumeAction){
     <div class="modal-start" id="upgradeStart"></div>
     <button type="button" class="modal-cta" id="upgradeCta">Continue to checkout →</button>
     <p class="modal-note" id="upgradeModalNote"></p>
+    <p class="modal-guarantee">7-day money-back guarantee: if Pro isn't for you, email us within 7 days of your first payment for a full refund.</p>
     <button type="button" class="modal-link" id="upgradeHaveCode">Have a partner code?</button>
     <div id="upgradeCodeWrap" hidden>${partnerCodeBoxHtml('upgCode', 'Your code')}</div>
   `;
@@ -9841,6 +9962,7 @@ const FAQ_DATA = [
     { q: "What's the \"Continue where you left off\" card?", a: "It remembers the last guide you opened and links straight back to it, so you don't have to hunt for it again next time you log in." },
   ]},
   { category: "Account & data", items: [
+    { q: "Can I get a refund?", a: "Yes. If Pro isn't for you, email TheGuide1@gmail.com within 7 days of your first payment and we'll refund it in full. You can also cancel any time from your account; you keep Pro until the period you paid for ends." },
     { q: "How do I change my password or delete my account?", a: "Open your account from the top bar. Password changes happen instantly; account deletion requires clicking the delete button twice to confirm, since it's permanent." },
     { q: "How do I back up my data?", a: "Go to Stats and use \"Back up everything (JSON)\" for a complete snapshot of your account, or \"Export data as CSV\" if you just want your tracked tool data in a spreadsheet-friendly format." },
     { q: "Is my data private?", a: "Your password is stored hashed, never as plain text, and your progress and tool data are tied to your account. The Privacy page explains what we collect and why." },
@@ -10370,6 +10492,10 @@ async function showAdmin(){
       </div>
       <div id="adminActionResult" class="dx-sub" style="margin-top:12px;"></div>
     </div>
+    <section class="dx-card" id="dxSiteWins">
+      <div class="dx-card-head"><div class="dx-label">Wins for the website</div><div class="dx-sub">Members ticked "show it on the website". Approved wins appear on the landing page once there are at least three.</div></div>
+      <div id="dxSiteWinsList"><div class="dx-empty">Nothing waiting.</div></div>
+    </section>
     <section class="dx-card" id="dxCodes">
       <div class="dx-card-head"><div class="dx-label">Partner codes</div><div class="dx-sub">A code gives free Pro days. Give one to each partner; the link form is theguide.company/?code=CODE</div></div>
       <form class="dx-codes-form" id="dxCodeForm">
@@ -10378,14 +10504,22 @@ async function showAdmin(){
         <label>Days<input id="dxCodeDays" type="number" min="1" max="365" value="30" required></label>
         <label>Max uses<input id="dxCodeMax" type="number" min="1" placeholder="no limit"></label>
         <label>Expires<input id="dxCodeExp" type="date"></label>
+        <label>Creator share %<input id="dxCodePct" type="number" min="0" max="90" placeholder="none"></label>
         <button type="submit" class="dx-btn" id="dxCodeCreate">Create</button>
       </form>
       <div class="dx-sub" id="dxCodeMsg"></div>
       <div class="dx-codes-wrap"><table class="dx-codes-table" id="dxCodeTable"><tbody></tbody></table></div>
     </section>
+    <section class="dx-card" id="dxPayouts">
+      <div class="dx-card-head"><div class="dx-label">Creator payouts</div><div class="dx-sub">What members brought in by a code with a creator share paid in a month, and the creator's cut. A member counts for the first code they used. Refunds are not taken off: check Stripe before you pay.</div></div>
+      <div class="dx-payouts-bar"><label>Month<input id="dxPayMonth" type="month"></label><span class="dx-sub" id="dxPayTotal"></span></div>
+      <div class="dx-codes-wrap"><table class="dx-codes-table" id="dxPayTable"><tbody></tbody></table></div>
+    </section>
   </div>`;
   const R = root.querySelector('#dxOwner');
   renderAdminCodes();
+  renderAdminPayouts();
+  renderAdminSiteWins();
   const S = { ov: dxCacheGet('owner:' + DX_TZ), snap: dxCacheGet('ownerLive:' + DX_TZ), status: 'connecting' };
   if(S.snap && Date.now() - S.snap.at > 10 * 60 * 1000) S.snap = null; // too old to show as "live"
 
@@ -10553,17 +10687,73 @@ async function showAdmin(){
   });
 }
 
+// Creator payouts: pick a month, see what each creator's members paid and the creator's cut, note what you paid.
+async function renderAdminPayouts(){
+  const table = document.querySelector('#dxPayTable tbody'), monthIn = document.getElementById('dxPayMonth'), total = document.getElementById('dxPayTotal');
+  if(!table || !monthIn) return;
+  if(!monthIn.value){ const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); monthIn.value = d.toISOString().slice(0, 7); }
+  if(!monthIn.dataset.wired){ monthIn.dataset.wired = '1'; monthIn.addEventListener('change', renderAdminPayouts); }
+  const money = (n)=> '$' + Number(n || 0).toFixed(2);
+  let r;
+  try{ r = await apiFetch('/codes/payouts?month=' + encodeURIComponent(monthIn.value)); }
+  catch(e){ table.innerHTML = `<tr><td class="dx-sub">${dxEsc(e.message || 'Could not load payouts.')}</td></tr>`; total.textContent = ''; return; }
+  const rows = r.payouts || [];
+  total.textContent = rows.length ? `Still to pay for this month: ${money(r.totalOwed)}` : '';
+  table.innerHTML = rows.length ? `<tr><th>Creator</th><th>Code</th><th>Share</th><th>Members</th><th>Paying now</th><th>Payments</th><th>They paid</th><th>Owed</th><th></th></tr>` + rows.map(p => `<tr>
+      <td>${dxEsc(p.label)}</td><td><code>${dxEsc(p.code)}</code></td><td>${p.commissionPct}%</td><td>${p.members}</td><td>${p.paying}</td><td>${p.payments}</td>
+      <td>${money(p.revenue)}</td><td><b>${money(p.owed)}</b></td>
+      <td>${p.paid ? `<span class="st">paid ${money(p.paid.amount)}</span>` : (p.owed > 0 ? `<button type="button" class="dx-btn" data-pay-code="${dxEsc(p.codeId)}" data-owed="${p.owed}">Mark paid</button>` : '')}</td>
+    </tr>`).join('') : '<tr><td class="dx-sub">No codes with a creator share yet. Give a code a share (for example 30%) above.</td></tr>';
+  table.querySelectorAll('[data-pay-code]').forEach(b => b.addEventListener('click', async ()=>{
+    const v = prompt('Amount you paid this creator for ' + monthIn.value, b.dataset.owed);
+    if(v === null) return;
+    b.disabled = true;
+    try{ await apiFetch('/codes/' + encodeURIComponent(b.dataset.payCode) + '/payouts', { method:'POST', body: JSON.stringify({ month: monthIn.value, amount: v }) }); renderAdminPayouts(); }
+    catch(e){ b.disabled = false; showAppToast(e.message || 'Could not save that.', 'error'); }
+  }));
+}
+
+// Wins members offered for the landing page: approve or hide each one.
+async function renderAdminSiteWins(){
+  const box = document.getElementById('dxSiteWinsList');
+  if(!box) return;
+  let wins = [];
+  try{ wins = (await apiFetch('/public-wins/review')).wins || []; }
+  catch(e){ box.innerHTML = `<div class="dx-empty">${e.status === 503 ? 'Not ready yet, try again in a minute.' : 'Could not load the wins.'}</div>`; return; }
+  if(!wins.length){ box.innerHTML = '<div class="dx-empty">Nothing waiting. When a member ticks "show it on the website", it lands here.</div>'; return; }
+  const label = { waiting:'waiting', approved:'on the website', hidden:'hidden' };
+  box.innerHTML = `<table class="dx-codes-table"><tbody>${wins.map(w => `<tr>
+      <td style="white-space:normal">${dxEsc(w.body)}<div class="dx-sub">${dxEsc(w.name)} · ${new Date(w.createdAt).toLocaleDateString()}</div></td>
+      <td><span class="st${w.status === 'approved' ? '' : ' off'}">${label[w.status] || dxEsc(w.status)}</span></td>
+      <td>${w.status !== 'approved' ? `<button type="button" class="dx-btn" data-site-win="${dxEsc(w.winId)}" data-to="approved">Approve</button>` : ''}
+          ${w.status !== 'hidden' ? `<button type="button" class="dx-btn" data-site-win="${dxEsc(w.winId)}" data-to="hidden">Hide</button>` : ''}</td>
+    </tr>`).join('')}</tbody></table>`;
+  box.querySelectorAll('[data-site-win]').forEach(b => b.addEventListener('click', async ()=>{
+    b.disabled = true;
+    try{ await apiFetch('/public-wins/' + encodeURIComponent(b.dataset.siteWin), { method:'PUT', body: JSON.stringify({ status: b.dataset.to }) }); renderAdminSiteWins(); }
+    catch(e){ b.disabled = false; showAppToast('Could not update that win.', 'error'); }
+  }));
+}
+
 // Partner codes on the owner dashboard: make one, see uses, switch off.
 async function renderAdminCodes(){
   const table = document.querySelector('#dxCodeTable tbody'), msg = document.getElementById('dxCodeMsg'), form = document.getElementById('dxCodeForm');
   if(!table || !form) return;
   const paint = (codes)=>{
-    table.innerHTML = codes.length ? `<tr><th>Code</th><th>For</th><th>Days</th><th>Used</th><th>Expires</th><th>State</th><th></th></tr>` + codes.map(c => `<tr>
+    table.innerHTML = codes.length ? `<tr><th>Code</th><th>For</th><th>Days</th><th>Used</th><th>Share</th><th>Expires</th><th>State</th><th></th></tr>` + codes.map(c => `<tr>
         <td><code>${dxEsc(c.code)}</code></td><td>${dxEsc(c.label)}</td><td>${c.days}</td><td>${c.uses}${c.maxUses != null ? ' / ' + c.maxUses : ''}</td>
+        <td><button type="button" class="dx-btn" data-code-share="${dxEsc(c.id)}" data-pct="${c.commissionPct == null ? '' : c.commissionPct}" title="Set the creator's share">${c.commissionPct == null ? 'None' : c.commissionPct + '%'}</button></td>
         <td>${c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : '—'}</td>
         <td><span class="st${c.state === 'ok' ? '' : ' off'}">${dxEsc({ok:'live', inactive:'off', expired:'expired', used_up:'used up'}[c.state] || c.state)}</span></td>
         <td><button type="button" class="dx-btn" data-code-toggle="${dxEsc(c.id)}" data-active="${c.active ? '1' : '0'}">${c.active ? 'Turn off' : 'Turn on'}</button></td>
       </tr>`).join('') : '<tr><td class="dx-sub">No codes yet. Make the first one above.</td></tr>';
+    table.querySelectorAll('[data-code-share]').forEach(b => b.addEventListener('click', async ()=>{
+      const v = prompt('Creator share for this code, in % (1 to 90). Leave empty for none.', b.dataset.pct);
+      if(v === null) return;
+      b.disabled = true;
+      try{ await apiFetch('/codes/' + encodeURIComponent(b.dataset.codeShare), { method:'PUT', body: JSON.stringify({ commissionPct: v.trim() }) }); await load(); renderAdminPayouts(); }
+      catch(e){ msg.textContent = 'Failed: ' + (e.message || 'Could not set the share.'); b.disabled = false; }
+    }));
     table.querySelectorAll('[data-code-toggle]').forEach(b => b.addEventListener('click', async ()=>{
       b.disabled = true;
       try{ await apiFetch('/codes/' + encodeURIComponent(b.dataset.codeToggle), { method:'PUT', body: JSON.stringify({ active: b.dataset.active !== '1' }) }); await load(); }
@@ -10577,10 +10767,12 @@ async function renderAdminCodes(){
       e.preventDefault();
       const btn = document.getElementById('dxCodeCreate'); btn.disabled = true; msg.textContent = '';
       const body = { label: document.getElementById('dxCodeLabel').value, code: document.getElementById('dxCodeCode').value || undefined,
-                     days: document.getElementById('dxCodeDays').value, maxUses: document.getElementById('dxCodeMax').value || null, expiresAt: document.getElementById('dxCodeExp').value || null };
+                     days: document.getElementById('dxCodeDays').value, maxUses: document.getElementById('dxCodeMax').value || null, expiresAt: document.getElementById('dxCodeExp').value || null,
+                     commissionPct: document.getElementById('dxCodePct').value || null };
       try{
         const c = await apiFetch('/codes', { method:'POST', body: JSON.stringify(body) });
-        msg.textContent = `${c.code} made: ${c.days} days for ${c.label}. Link: ${location.origin}/?code=${c.code}`;
+        msg.textContent = `${c.code} made: ${c.days} days for ${c.label}${c.commissionPct ? `, ${c.commissionPct}% creator share` : ''}. Link: ${location.origin}/?code=${c.code}`;
+        renderAdminPayouts();
         form.reset(); document.getElementById('dxCodeDays').value = '30';
         await load();
       }catch(err){ msg.textContent = 'Failed: ' + (err.message || 'Could not create the code.'); }
@@ -11004,6 +11196,7 @@ function renderHome(){
     if(liveWrapEl) liveWrapEl.innerHTML = '';
     continueWrap.innerHTML = '';
     renderTodayStep(true);
+    renderPlanCard(true);
     yourChaptersHead.style.display = 'none';
     moreChaptersHead.style.display = 'flex';
     moreChaptersHead.querySelector('h3').textContent = 'All chapters';
@@ -11018,6 +11211,7 @@ function renderHome(){
   renderLiveHome();
   // Today's step is the one thing to do next. When it is there, it takes the place of "Continue where you left off".
   const hasStep = renderTodayStep();
+  renderPlanCard();
   if(hasStep){
     continueWrap.innerHTML = '';
   } else if(lastVisited){
@@ -11322,6 +11516,7 @@ function openNiche(id){
   const niche = NICHES.find(n=>n.id===id);
   hideAllViews();
   nicheView.style.display = '';
+  window.scrollTo(0, 0); // a chapter opens at its top, even when its card was tapped further down Home
   searchResults.innerHTML = "";
   searchInput.value = "";
 
@@ -11682,7 +11877,9 @@ function pickTodayStep(){
   const sel = (selectedNiches || []).filter(id=> NICHES.some(n=> n.id === id));
   const mine = sel.length ? NICHES.filter(n=> sel.includes(n.id)) : NICHES;
   const lastId = lastVisited && lastVisited.nicheId;
-  const rank = (s)=> s.niche.id === lastId ? 0 : (nicheCompleted(s.niche) > 0 ? 1 : 2);
+  // while a 30-day plan runs, its chapter comes first, so Today's step and the plan agree
+  const planId = planRunning() ? dayPlan.nicheId : null;
+  const rank = (s)=> s.niche.id === planId ? -1 : s.niche.id === lastId ? 0 : (nicheCompleted(s.niche) > 0 ? 1 : 2);
   const byRank = (a, b)=> rank(a) - rank(b);
   const all = NICHES.map(nicheNextStep).filter(Boolean);
   const inMine = all.filter(s=> mine.includes(s.niche));
@@ -11838,6 +12035,354 @@ function goToLesson(nicheId, title){
   openGuideRow(row);
   if(!row.classList.contains('locked')){ lastVisited = { nicheId, title }; saveProgress(); }
   try{ row.scrollIntoView({ block: 'center' }); }catch(e){}
+}
+
+// ---------- The 30-day plan ----------
+// The member picks a chapter and what they want by day 30. The plan lays that chapter's next lessons out one
+// day at a time: a module a week (the pace the modules open at), spread over six days, then a check-in with
+// The Guider on day 7. Day 29 is for catching up and day 30 is the look back. The Guider can see the plan
+// (the server reads it from the member's saved progress), so the check-ins are about them, not generic.
+const PLAN_DAYS = 30;
+const PLAN_GOALS = {
+  first_customer: { label: 'My first paying customer', you: 'your first paying customer', me: 'my first paying customer' },
+  first_500: { label: 'My first $500 from it', you: 'your first $500 from it', me: 'my first $500 from it' },
+  set_up: { label: 'Set up and ready to sell', you: 'set up and ready to sell', me: 'being set up and ready to sell' },
+  grow: { label: 'More customers than I have now', you: 'more customers than you have now', me: 'more customers than I have now' },
+  trade_plan: { label: 'A written trading plan I stick to', you: 'a written trading plan you stick to', me: 'a written trading plan I stick to' },
+  practice: { label: 'A month of practice trades in my journal', you: 'a month of practice trades in your journal', me: 'a month of practice trades in my journal' },
+  basics: { label: 'The basics down before I risk real money', you: 'the basics down before you risk real money', me: 'the basics down before I risk real money' },
+};
+const planGoalKeys = (nicheId)=> nicheId === 'trading' ? ['trade_plan', 'practice', 'basics'] : ['first_customer', 'first_500', 'set_up', 'grow'];
+const planAddDays = (str, n)=> dateMinusDays(str, -n);
+const planDateLabel = (str)=> new Date(str + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+/** A saved plan, checked: anything that doesn't fit is dropped rather than trusted. */
+function cleanDayPlan(p){
+  if(!p || typeof p !== 'object' || !NICHES.some(n=> n.id === p.nicheId) || !/^\d{4}-\d{2}-\d{2}$/.test(String(p.start))) return null;
+  const checkins = {};
+  if(p.checkins && typeof p.checkins === 'object'){
+    Object.keys(p.checkins).forEach(k=>{ if(/^\d{1,2}$/.test(k) && typeof p.checkins[k] === 'string') checkins[k] = p.checkins[k]; });
+  }
+  return { nicheId: p.nicheId, start: p.start, goal: PLAN_GOALS[p.goal] ? p.goal : null,
+    from: Math.max(0, parseInt(p.from, 10) || 0), checkins, made: typeof p.made === 'string' ? p.made : p.start };
+}
+function planNiche(){ return dayPlan ? NICHES.find(n=> n.id === dayPlan.nicheId) || null : null; }
+/** Which day of the plan today is: 1 to 30, under 1 before it starts, over 30 once it's over. */
+function planDay(){ return dayPlan ? dayNum(todayStr()) - dayNum(dayPlan.start) + 1 : 0; }
+function planRunning(){ return !!dayPlan && !!planNiche() && planDay() <= PLAN_DAYS; }
+
+/** The 30 days. Week n is one module: its lessons spread over six days (a day with nothing in it is a
+ *  catch-up day), then the check-in. Built from where the member was when they made the plan. */
+function buildPlanDays(niche, from){
+  const guides = niche.guides, days = [];
+  let i = Math.min(Math.max(0, from || 0), guides.length);
+  for(let w = 1; w <= 4; w++){
+    const mod = i < guides.length ? guides[i].mod : null;
+    const idxs = [];
+    while(i < guides.length && guides[i].mod === mod) idxs.push(i++);
+    const slots = [[], [], [], [], [], []];
+    idxs.forEach((gi, k)=> slots[Math.floor(k * 6 / idxs.length)].push(gi));
+    slots.forEach(s=> days.push({ day: days.length + 1, week: w, mod, type: s.length ? 'lessons' : 'catchup', lessons: s }));
+    days.push({ day: days.length + 1, week: w, mod, type: 'checkin', lessons: [] });
+  }
+  days.push({ day: 29, week: 5, mod: null, type: 'catchup', lessons: [] });
+  days.push({ day: 30, week: 5, mod: null, type: 'finish', lessons: [] });
+  return days;
+}
+const planLessonDone = (niche, gi)=> completed.has(niche.id + '|' + niche.guides[gi].title);
+/** Done or not, and why a lesson day can't be opened yet ('pro' or 'week'). Catch-up days are never "done". */
+function planDayState(niche, d){
+  let done = false, lock = '', wait = 0;
+  if(d.type === 'lessons'){
+    const next = d.lessons.find(gi=> !planLessonDone(niche, gi));
+    done = next == null;
+    if(!done){
+      const g = niche.guides[next];
+      if(moduleIsPro(g)) lock = 'pro';
+      else if((wait = moduleDaysLeft(niche.id, g.mod)) > 0) lock = 'week';
+    }
+  } else if(d.type === 'checkin' || d.type === 'finish'){
+    done = !!dayPlan.checkins[d.day];
+  }
+  return { done, lock, wait };
+}
+/** Steps are the lesson days and the check-ins; catch-up days don't count either way. */
+function planSummary(niche, days){
+  const steps = days.filter(d=> d.type !== 'catchup');
+  return { total: steps.length, done: steps.filter(d=> planDayState(niche, d).done).length };
+}
+/** When a plan can start: today, or the day the module it begins with opens. */
+function planStartFor(niche, from){
+  const g = niche.guides[from];
+  const wait = g && !moduleIsPro(g) ? moduleDaysLeft(niche.id, g.mod) : 0;
+  return planAddDays(todayStr(), wait);
+}
+function planDayText(niche, d){
+  if(d.type === 'lessons') return d.lessons.map(gi=> niche.guides[gi].title);
+  if(d.type === 'checkin') return ['Check in with The Guider'];
+  if(d.type === 'finish') return ['Look back with The Guider'];
+  return ['Catch-up day'];
+}
+function planDaySub(d){
+  if(d.type === 'checkin') return `How week ${d.week} went, and what to focus on next.`;
+  if(d.type === 'finish') return 'What worked, and what your next 30 days should be.';
+  if(d.type === 'catchup') return 'Finish anything you skipped, or put your last step to work.';
+  return '';
+}
+
+// ----- Home: the plan card, or the offer to make one -----
+function renderPlanCard(clearOnly){
+  const wrap = document.getElementById('planWrap');
+  if(!wrap) return;
+  const niche = planNiche();
+  const t = planDay();
+  if(clearOnly || homeViewMode === 'chapters'){ wrap.innerHTML = ''; return; }
+  if(!niche || t > PLAN_DAYS + 7){ renderPlanOffer(wrap); return; }
+  const days = buildPlanDays(niche, dayPlan.from), s = planSummary(niche, days);
+  const pct = s.total ? Math.round(s.done / s.total * 100) : 0;
+  const head = `<div class="pc-top"><span class="pc-label">30-day plan · ${gvEsc(niche.name)}</span><span class="pc-day">${t < 1 ? 'Starts soon' : t > PLAN_DAYS ? '30 days done' : `Day ${t} of ${PLAN_DAYS}`}</span></div>
+    <div class="pc-bar" role="progressbar" aria-label="Plan progress" aria-valuemin="0" aria-valuemax="${s.total}" aria-valuenow="${s.done}"><i style="width:${pct}%"></i></div>
+    <div class="pc-count">${s.done} of ${s.total} steps done</div>`;
+  let line = '', primary = '';
+  if(t < 1){
+    line = `Your next module opens on ${gvEsc(planDateLabel(dayPlan.start))}, so day 1 is then.`;
+  } else if(t > PLAN_DAYS){
+    if(dayPlan.checkins[PLAN_DAYS]){ line = 'You finished your 30 days. Make a new plan when you are ready.'; primary = `<button type="button" class="live-btn primary" id="planNewHome">Make a new plan</button>`; }
+    else { line = 'Your 30 days are up. Look back with The Guider and plan what comes next.'; primary = `<button type="button" class="live-btn primary" data-plan-checkin="${PLAN_DAYS}">${ico('guider')} Look back with The Guider</button>`; }
+  } else {
+    const d = days[t - 1], st = planDayState(niche, d);
+    const what = planDayText(niche, d);
+    line = d.type === 'checkin' ? `<b>Today:</b> your week ${d.week} check-in. Tell The Guider how it went and get your focus for ${d.week < 4 ? `week ${d.week + 1}` : 'the last two days'}.`
+      : d.type === 'finish' ? '<b>Today:</b> day 30. Look back with The Guider and plan what comes next.'
+      : `<b>Today:</b> ${gvEsc(what[0])}${what.length > 1 ? `, and ${what.length - 1} more` : ''}.`;
+    if(st.done) line += ' Done.';
+    const open = days.filter(x=> x.day < t && x.type === 'lessons' && !planDayState(niche, x).done).length;
+    if(open) line += ` <span class="pc-open">${open} earlier day${open === 1 ? ' is' : 's are'} still open.</span>`;
+    if((d.type === 'checkin' || d.type === 'finish') && !st.done){
+      primary = `<button type="button" class="live-btn primary" data-plan-checkin="${d.day}">${ico('guider')} ${d.type === 'finish' ? 'Look back with The Guider' : 'Check in with The Guider'}</button>`;
+    }
+  }
+  wrap.innerHTML = `<section class="plan-card" id="planCard">${head}<div class="pc-line">${line}</div>
+      <div class="pc-row">${primary}<button type="button" class="live-btn" id="planSeeBtn">See my plan</button></div></section>`;
+  document.getElementById('planSeeBtn').addEventListener('click', showPlan);
+  const nb = document.getElementById('planNewHome');
+  if(nb) nb.addEventListener('click', openPlanMaker);
+  wrap.querySelectorAll('[data-plan-checkin]').forEach(b=> b.addEventListener('click', ()=> planCheckin(+b.dataset.planCheckin)));
+}
+function renderPlanOffer(wrap){
+  const hid = userProfile && userProfile.planOfferHidden;
+  if(hid && dayNum(todayStr()) - dayNum(hid) < 14){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `<section class="plan-card offer" id="planOffer">
+      <div class="pc-top"><span class="pc-label">30-day plan</span></div>
+      <div class="pc-title">Get a plan for your next 30 days</div>
+      <div class="pc-line">A small step every day from the chapter you pick, and a check-in with The Guider every week.</div>
+      <div class="pc-row"><button type="button" class="live-btn" id="planOfferGo">${ico('calendar')} Make my plan</button><button type="button" class="pc-text" id="planOfferHide">Not now</button></div>
+    </section>`;
+  document.getElementById('planOfferGo').addEventListener('click', openPlanMaker);
+  document.getElementById('planOfferHide').addEventListener('click', ()=>{
+    userProfile.planOfferHidden = todayStr(); saveProgress(); wrap.innerHTML = '';
+  });
+}
+
+// ----- making a plan -----
+function openPlanMaker(){
+  const open = NICHES.filter(n=> firstOpenIndex(n) < n.guides.length);
+  if(!open.length){ showAppToast('You have finished every chapter.', 'info'); return; }
+  const mine = (selectedNiches || []).filter(id=> open.some(n=> n.id === id));
+  const others = open.map(n=> n.id).filter(id=> !mine.includes(id));
+  const fav = [dayPlan && dayPlan.nicheId, lastVisited && lastVisited.nicheId, mine[0], others[0]].find(id=> id && open.some(n=> n.id === id));
+  const opt = (id)=> `<option value="${id}"${id === fav ? ' selected' : ''}>${gvEsc(NICHES.find(n=> n.id === id).name)}</option>`;
+  const options = mine.length && others.length
+    ? `<optgroup label="Your chapters">${mine.map(opt).join('')}</optgroup><optgroup label="Other chapters">${others.map(opt).join('')}</optgroup>`
+    : [...mine, ...others].map(opt).join('');
+  const card = openStepLayer(`
+    <button type="button" class="step-x" aria-label="Close"><i data-ico="x"></i></button>
+    <div class="sc-kicker">30-day plan</div>
+    <div class="sc-title">Make your 30-day plan</div>
+    <div class="sc-sub">A small step every day from one chapter, a catch-up day when you need one, and a check-in with The Guider every 7 days.</div>
+    <label class="pl-q" for="planNicheSel">Which business?</label>
+    <select id="planNicheSel" class="pl-select">${options}</select>
+    <div class="pl-q" id="planGoalQ">What do you want by day 30?</div>
+    <div class="pl-goals" role="radiogroup" aria-labelledby="planGoalQ" id="planGoals"></div>
+    <p class="pl-note" id="planNote"></p>
+    <button type="button" class="sc-btn" id="planMakeGo">Make my plan</button>`);
+  const sel = card.querySelector('#planNicheSel');
+  let goal = null;
+  const paint = ()=>{
+    const niche = NICHES.find(n=> n.id === sel.value);
+    const keys = planGoalKeys(niche.id);
+    if(!keys.includes(goal)) goal = (dayPlan && keys.includes(dayPlan.goal)) ? dayPlan.goal : keys[0];
+    card.querySelector('#planGoals').innerHTML = keys.map(k=> `<button type="button" class="pl-goal${k === goal ? ' on' : ''}" role="radio" aria-checked="${k === goal}" data-goal="${k}">${gvEsc(PLAN_GOALS[k].label)}</button>`).join('');
+    card.querySelector('#planNote').textContent = planMakerNote(niche);
+  };
+  sel.addEventListener('change', paint);
+  card.querySelector('#planGoals').addEventListener('click', (e)=>{
+    const b = e.target.closest('[data-goal]');
+    if(b){ goal = b.dataset.goal; paint(); }
+  });
+  card.querySelector('#planMakeGo').addEventListener('click', ()=>{
+    const niche = NICHES.find(n=> n.id === sel.value);
+    if(!niche) return;
+    courseStart(niche.id, true);
+    const from = firstOpenIndex(niche);
+    dayPlan = { nicheId: niche.id, start: planStartFor(niche, from), goal, from, checkins: {}, made: todayStr() };
+    if(selectedNiches.length && !selectedNiches.includes(niche.id)) selectedNiches.push(niche.id);
+    saveProgress();
+    closeStepLayer();
+    showPlan();
+    showAppToast('Your 30-day plan is ready.', 'success');
+  });
+  paint();
+}
+/** One line under the questions: where the plan starts, and what's in Pro. */
+function planMakerNote(niche){
+  const from = firstOpenIndex(niche), g = niche.guides[from];
+  const mod = niche.modules && niche.modules[g.mod];
+  const inMod = niche.guides.filter(x=> x.mod === g.mod);
+  const k = inMod.indexOf(g) + 1;
+  const start = planStartFor(niche, from);
+  const where = k > 1 ? `Picks up where you are: Module ${g.mod + 1}, lesson ${k} of ${inMod.length}.` : `Starts with Module ${g.mod + 1}${mod ? `, “${mod.title}”` : ''}.`;
+  const bits = [where];
+  if(start !== todayStr()) bits.push(`That module opens on ${planDateLabel(start)}, so day 1 is then.`);
+  if(!isPro) bits.push(g.mod === 0 ? 'Week 1 is free. The weeks after it use Pro lessons.' : 'You have finished the free module, so this plan uses Pro lessons.');
+  if(planRunning()) bits.push('This replaces your current plan.');
+  return bits.join(' ');
+}
+
+// ----- the plan page -----
+function showPlan(){
+  if(!planNiche()){ openPlanMaker(); return; }
+  hideAllViews();
+  document.getElementById('planView').style.display = '';
+  currentNicheId = null;
+  setActiveBottomTab('bottomTabHome');
+  renderPlanView();
+  window.scrollTo(0, 0);
+  // a few days in, open the page at today rather than at day 1
+  const today = document.querySelector('#planContent .pl-day.today');
+  if(today && planDay() > 3) try{ today.scrollIntoView({ block: 'center' }); }catch(e){}
+}
+function renderPlanView(){
+  const box = document.getElementById('planContent'), sub = document.getElementById('planSub');
+  const niche = planNiche();
+  if(!niche){ box.innerHTML = ''; sub.textContent = ''; return; }
+  const days = buildPlanDays(niche, dayPlan.from), t = planDay(), s = planSummary(niche, days);
+  const goal = PLAN_GOALS[dayPlan.goal];
+  sub.innerHTML = `${nicheIco(niche)} ${gvEsc(niche.name)}${goal ? ` · Goal by day 30: ${gvEsc(goal.you)}` : ''}`;
+  const pct = s.total ? Math.round(s.done / s.total * 100) : 0;
+  const now = t < 1 ? `Starts ${planDateLabel(dayPlan.start)}` : t > PLAN_DAYS ? '30 days done' : `Day ${t} of ${PLAN_DAYS}`;
+  let html = `<div class="pl-head"><span class="pl-now">${gvEsc(now)}</span><span class="pl-count">${s.done} of ${s.total} steps done</span></div>
+    <div class="pc-bar pl-bar"><i style="width:${pct}%"></i></div>`;
+  for(let w = 1; w <= 5; w++){
+    const wd = days.filter(d=> d.week === w);
+    const mod = wd[0].mod, m = mod != null && niche.modules ? niche.modules[mod] : null;
+    const title = w === 5 ? 'The finish' : `Week ${w}`;
+    const note = w === 5 ? 'Days 29 and 30' : m ? `Module ${mod + 1} · ${m.title}` : 'Practice what you learned';
+    html += `<section class="pl-week"><h3 class="pl-week-h"><span>${title}</span><small>${gvEsc(note)}</small></h3>`;
+    wd.forEach(d=>{
+      const st = planDayState(niche, d);
+      const lines = planDayText(niche, d), subl = planDaySub(d);
+      const isToday = d.day === t;
+      const tag = st.done ? '' : st.lock === 'pro' ? `<span class="pl-tag">${ico('lock')} Pro</span>`
+        : st.lock === 'week' ? `<span class="pl-tag">Opens in ${st.wait} day${st.wait === 1 ? '' : 's'}</span>`
+        : isToday ? '<span class="pl-tag now">Today</span>' : '';
+      const kind = d.type === 'lessons' ? '' : d.type === 'catchup' ? ' soft' : ' talk';
+      html += `<button type="button" class="pl-day${kind}${isToday ? ' today' : ''}${st.done ? ' done' : ''}${st.lock ? ' locked' : ''}" data-day="${d.day}">
+          <span class="pl-num" aria-hidden="true">${st.done ? ico('check') : d.type === 'checkin' || d.type === 'finish' ? ico('guider') : d.day}</span>
+          <span class="pl-body"><span class="pl-when">Day ${d.day} · ${gvEsc(planDateLabel(planAddDays(dayPlan.start, d.day - 1)))}${st.done ? ' · done' : ''}</span>
+            ${lines.map(x=> `<span class="pl-what">${gvEsc(x)}</span>`).join('')}${subl ? `<span class="pl-sub">${gvEsc(subl)}</span>` : ''}</span>
+          ${tag}
+        </button>`;
+    });
+    html += `</section>`;
+  }
+  html += `<div class="pl-actions">
+      <button type="button" class="live-btn" id="planAskBtn">${ico('guider')} Ask The Guider about my plan</button>
+      <button type="button" class="live-btn" id="planRemakeBtn">Make a new plan</button>
+      <button type="button" class="pc-text" id="planStopBtn">Stop this plan</button>
+    </div>`;
+  box.innerHTML = html;
+  document.getElementById('planAskBtn').addEventListener('click', ()=>{
+    const g = PLAN_GOALS[dayPlan.goal];
+    const dayBit = t < 1 ? 'My 30-day plan starts soon.' : t > PLAN_DAYS ? 'I have finished my 30-day plan.' : `I'm on day ${t} of my 30-day plan.`;
+    openGuiderWith(niche.id, `${dayBit}${g ? ` My goal by day 30: ${g.me}.` : ''} I've done ${s.done} of ${s.total} steps. `);
+  });
+  document.getElementById('planRemakeBtn').addEventListener('click', openPlanMaker);
+  document.getElementById('planStopBtn').addEventListener('click', ()=>{
+    if(!confirm('Stop your 30-day plan? The lessons you finished stay finished.')) return;
+    dayPlan = null; saveProgress(); showHome();
+  });
+}
+document.getElementById('planBackBtn').addEventListener('click', ()=> showHome());
+document.getElementById('planContent').addEventListener('click', (e)=>{
+  const b = e.target.closest('.pl-day');
+  if(b) planOpenDay(+b.dataset.day);
+});
+function planOpenDay(n){
+  const niche = planNiche();
+  if(!niche) return;
+  const d = buildPlanDays(niche, dayPlan.from)[n - 1];
+  if(!d) return;
+  if(d.type === 'lessons'){
+    const st = planDayState(niche, d);
+    if(st.lock === 'pro'){ openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }); return; }
+    if(st.lock === 'week'){ showAppToast(`This module opens in ${st.wait} day${st.wait === 1 ? '' : 's'}.`, 'info'); return; }
+    const gi = d.lessons.find(i=> !planLessonDone(niche, i));
+    goToLesson(niche.id, niche.guides[gi == null ? d.lessons[0] : gi].title);
+    return;
+  }
+  if(d.type === 'checkin' || d.type === 'finish'){
+    if(d.day > planDay()){ showAppToast(`This check-in opens on day ${d.day}.`, 'info'); return; }
+    planCheckin(d.day);
+    return;
+  }
+  // a catch-up day takes you to the first lesson you haven't finished in the chapter
+  const next = nicheNextStep(niche);
+  if(next && !next.lock) goToLesson(niche.id, next.guide.title); else openNiche(niche.id);
+}
+
+// ----- check-ins: The Guider opens with the message ready, the member reads it, edits it and sends it -----
+let planPendingCheckin = null; // {nicheId, day} until the message is sent
+function planCheckinText(day){
+  const niche = planNiche(), days = buildPlanDays(niche, dayPlan.from);
+  const g = PLAN_GOALS[dayPlan.goal];
+  const goalBit = g ? ` My goal by day 30: ${g.me}.` : '';
+  if(day >= PLAN_DAYS){
+    const s = planSummary(niche, days);
+    return `Day 30 of my 30-day plan.${goalBit} I finished ${s.done} of ${s.total} steps. Help me look back: what should I keep doing, and what should my next 30 days focus on?`;
+  }
+  const w = Math.ceil(day / 7);
+  const wk = days.filter(d=> d.week === w && d.type === 'lessons');
+  const done = wk.filter(d=> planDayState(niche, d).done).length;
+  const next = w < 4 ? `in week ${w + 1}` : 'in the last two days of the plan';
+  return `Week ${w} check-in for my 30-day plan.${goalBit} This week I finished ${done} of ${wk.length} steps. What should I focus on ${next}${done < wk.length ? ', and how do I catch up on what I missed' : ''}?`;
+}
+function planCheckin(day){
+  const niche = planNiche();
+  if(!niche) return;
+  planPendingCheckin = { nicheId: niche.id, day };
+  openGuiderWith(niche.id, planCheckinText(day));
+}
+/** Called when a message goes to The Guider: a check-in counts once it's sent. */
+function planCheckinSent(nicheId){
+  const p = planPendingCheckin;
+  if(!p || !dayPlan || p.nicheId !== nicheId || dayPlan.nicheId !== nicheId) return;
+  dayPlan.checkins[p.day] = todayStr();
+  planPendingCheckin = null;
+}
+/** Opens The Guider in a chapter with a message typed in, ready to edit and send. */
+function openGuiderWith(nicheId, text){
+  openNiche(nicheId);
+  setActiveBottomTab('bottomTabGuider');
+  const tabEl = subNav.querySelector('[data-sub="aichat"]');
+  if(tabEl) selectTab(tabEl);
+  const input = document.getElementById('aiChatInput');
+  if(!input) return;
+  input.value = text;
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight + 2, 140) + 'px';
+  try{ input.focus({ preventScroll: true }); input.setSelectionRange(text.length, text.length); }catch(e){}
+  try{ input.scrollIntoView({ block: 'center' }); }catch(e){}
 }
 
 /** Course view: the path map or the plain list. A tap on the switch is remembered; opening a lesson is not. */
@@ -12836,10 +13381,21 @@ async function renderPushOffer(){
 // ?open=live (from a tapped push notification) opens the Live screen once the app is in
 function handleOpenParam(){
   const params = new URLSearchParams(window.location.search);
+  // ?start=<chapter> (from the public business guides and the quiz) opens that chapter
+  const start = params.get('start');
+  if(start && typeof NICHES !== 'undefined' && NICHES.some(n => n.id === start)){
+    params.delete('start');
+    const q = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (q ? '?' + q : ''));
+    setTimeout(()=> openNiche(start), 300);
+  }
   const open = params.get('open');
   if(!open) return;
   window.history.replaceState({}, '', window.location.pathname);
   if(open === 'live') setTimeout(()=> showLive(), 300);
+  // from the billing emails: "Pick up where you left off" and "Open my account"
+  if(open === 'upgrade') setTimeout(()=>{ if(!isPro) openUpgradeModal(); }, 500);
+  if(open === 'account') setTimeout(()=>{ const b = document.getElementById('accountBtn'); if(b) b.click(); }, 500);
 }
 
 // One line on Home about the next call, so nobody has to go looking for it.
@@ -13082,6 +13638,7 @@ async function loadCommunityWins(){
       <input type="text" id="ctabWinInput" placeholder="Share a win: first client, hit a goal, landed a deal…" maxlength="200">
       <select id="ctabWinEmoji"><option value="🏆">Milestone</option><option value="💰">Money</option><option value="🎉">Celebration</option><option value="🔥">On a roll</option><option value="⭐">Shout-out</option><option value="🚀">Launch</option></select>
       <button id="ctabWinPostBtn">Post</button>
+          <label class="win-site"><input type="checkbox" id="ctabWinSite"> Also show it on theguide.company, with the name members see, once it's checked</label>
     </div>
   `;
   document.getElementById('ctabWinPostBtn').addEventListener('click', async ()=>{
@@ -13090,9 +13647,10 @@ async function loadCommunityWins(){
     const text = (input.value||'').trim();
     if(!text){ showAppToast('Write something first!','error'); return; }
     try{
-      await apiFetch('/wins', { method:'POST', body: JSON.stringify({ body: text, emoji: emoji.value }) });
+      const site = document.getElementById('ctabWinSite');
+      const r = await apiFetch('/wins', { method:'POST', body: JSON.stringify({ body: text, emoji: emoji.value, showOnSite: !!(site && site.checked) }) });
       input.value = '';
-      showAppToast('Win posted!','success');
+      showAppToast(r && r.onSite === 'waiting' ? 'Win posted. It will show on the website once it is checked.' : 'Win posted!','success');
       loadCommunityWins();
     }catch(e){ showAppToast('Could not post. Try again.','error'); }
   });
@@ -13215,6 +13773,7 @@ async function loadWins(){
       <input type="text" id="winInput" placeholder="Share a win: first client, hit a goal, landed a deal…" maxlength="200">
       <select id="winEmoji"><option value="🏆">Milestone</option><option value="💰">Money</option><option value="🎉">Celebration</option><option value="🔥">On a roll</option><option value="⭐">Shout-out</option><option value="🚀">Launch</option></select>
       <button id="winPostBtn">Post</button>
+          <label class="win-site"><input type="checkbox" id="winSite"> Also show it on theguide.company, with the name members see, once it's checked</label>
     </div>
   `;
   document.getElementById('winPostBtn').addEventListener('click', postWin);
@@ -13238,8 +13797,10 @@ async function postWin(){
   const body = input.value.trim();
   if(!body) return;
   try {
-    await apiFetch('/wins', { method:'POST', body:JSON.stringify({body, emoji}) });
+    const site = document.getElementById('winSite');
+    const r = await apiFetch('/wins', { method:'POST', body:JSON.stringify({body, emoji, showOnSite: !!(site && site.checked)}) });
     input.value = '';
+    if(r && r.onSite === 'waiting') showAppToast('Win posted. It will show on the website once it is checked.', 'success');
     loadWins();
   } catch(e) {
     alert('Could not post. Try again.');
@@ -17691,6 +18252,7 @@ async function sendAiChatMessage(niche, text){
   if(!aiChatHistory[niche.id]) aiChatHistory[niche.id] = [];
 
   aiChatHistory[niche.id].push({role:'user', content:text});
+  planCheckinSent(niche.id);
   renderAiChatMessages();
   saveProgress();
 
@@ -18831,7 +19393,8 @@ function buildFullBackupObject(){
     hasSeenTour: hasSeenTour,
     hasSeenWelcome: hasSeenWelcome,
     weeklyDigestOptOut: weeklyDigestOptOut,
-    streakReminderOptOut: streakReminderOptOut
+    streakReminderOptOut: streakReminderOptOut,
+    dayPlan: dayPlan
   };
 }
 
@@ -18911,6 +19474,7 @@ fullRestoreSubmitBtn.addEventListener('click', async ()=>{
     hasSeenWelcome = !!parsed.hasSeenWelcome;
     weeklyDigestOptOut = !!parsed.weeklyDigestOptOut;
     streakReminderOptOut = !!parsed.streakReminderOptOut;
+    dayPlan = cleanDayPlan(parsed.dayPlan);
 
     await saveProgress();
 
