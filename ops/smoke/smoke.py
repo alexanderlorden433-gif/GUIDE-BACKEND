@@ -3883,6 +3883,113 @@ def side_business_quiz(browser, base):
         problem(step[0], 'the landing page should link to the quiz next to Try step one')
     ctx.close()
 
+def find_new_things(browser, base):
+    """The newer parts of the app are easy to find: links at the top of the landing page, a one-time "New in
+    The Guide" card and a row of shortcuts on Home, the plan and website first in the account menu, a 30-day plan
+    button on every chapter, and My website in the Business tools."""
+    step = ['finding things: landing']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    attach_backend(ctx, new_state(False))
+    ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load'); page.wait_for_timeout(1000)
+    links = page.evaluate("[...document.querySelectorAll('.lp-nav a')].map(a=>a.getAttribute('href'))")
+    if links == ['/start/', '/tools/', '/quiz/'] and page.locator('.lp-nav [data-lp-scroll="lpPricing"]').count() == 1:
+        ok(step[0], 'the top of the landing page links to the free guides, calculators, the quiz and pricing')
+    else:
+        problem(step[0], 'the landing page links are missing', links)
+    page.click('.lp-nav [data-lp-scroll="lpPricing"]'); page.wait_for_timeout(900)
+    top = page.evaluate("document.getElementById('lpPricing').getBoundingClientRect().top")
+    if -50 < top < 300:
+        ok(step[0], 'Pricing scrolls to the prices')
+    else:
+        problem(step[0], 'Pricing should scroll to the prices', top)
+    no_sideways_scroll(page, step[0])
+    shot(page, 'phone-landing-links')
+    ctx.close()
+
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}"
+    for pro in (False, True):
+        step = [f"finding things: {'Pro' if pro else 'free'} member"]
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(pro)
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); continue
+        page.wait_for_timeout(900)
+        news = page.evaluate("[...document.querySelectorAll('#newsCard [data-news]')].map(b=>b.dataset.news)")
+        tiles = page.evaluate("[...document.querySelectorAll('#shortcutsWrap .tool-tile')].map(b=>b.dataset.go)")
+        if news == ['plan', 'site', 'lang'] and tiles == ['plan', 'site', 'guider', 'business', 'live', 'calc']:
+            ok(step[0], 'Home says what is new and shows six shortcuts (plan, website, Guider, business tools, live calls, calculators)')
+        else:
+            problem(step[0], 'Home should show the news card and the shortcuts', {'news': news, 'tiles': tiles})
+        shot(page, f"phone-home-shortcuts-{'pro' if pro else 'free'}")
+        page.click('#shortcutsWrap [data-go="plan"]'); page.wait_for_timeout(500)
+        if visible(page, '#planNicheSel', 2000):
+            ok(step[0], 'the 30-day plan shortcut opens the plan questions')
+        else:
+            problem(step[0], 'the 30-day plan shortcut should open the plan')
+        page.evaluate("closeStepLayer()")
+        page.click('#shortcutsWrap [data-go="site"]'); page.wait_for_timeout(800)
+        if visible(page, '#siteView', 2000):
+            ok(step[0], 'the My website shortcut opens My website')
+        else:
+            problem(step[0], 'the My website shortcut should open My website')
+        page.evaluate("showHome()"); page.wait_for_timeout(400)
+        page.click('#shortcutsWrap [data-go="business"]'); page.wait_for_timeout(600)
+        opened = page.evaluate("({biz: getComputedStyle(document.getElementById('businessView')).display !== 'none', pay: document.getElementById('upgradeOverlay').classList.contains('open')})")
+        if (pro and opened['biz']) or (not pro and opened['pay']):
+            ok(step[0], 'Business tools opens the tools for Pro, and the Pro box for a free member')
+        else:
+            problem(step[0], 'the Business tools shortcut went to the wrong place', opened)
+        close_paywall(page)
+        page.evaluate("document.getElementById('upgradeOverlay').classList.remove('open'); showHome()"); page.wait_for_timeout(400)
+        page.click('#newsDone'); page.wait_for_timeout(500)
+        if page.locator('#newsCard').count() == 0 and (st['data'].get('userProfile') or {}).get('newsSeen'):
+            ok(step[0], 'Got it hides the news card for good')
+        else:
+            problem(step[0], 'Got it should hide the news card and remember it', st['data'].get('userProfile'))
+        page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
+        first = page.evaluate("[...document.querySelectorAll('#accountMenu .account-menu-item')].slice(0,2).map(b=>b.id)")
+        if first == ['planNavBtn', 'siteNavBtn']:
+            ok(step[0], 'the account menu starts with My 30-day plan and My website')
+        else:
+            problem(step[0], 'the plan and website should be first in the account menu', first)
+        page.evaluate("document.getElementById('accountMenuClose').click()"); page.wait_for_timeout(200)
+        page.evaluate("openNiche('cleaning')"); page.wait_for_timeout(600)
+        page.click('#chapterPlanBtn'); page.wait_for_timeout(500)
+        sel = page.evaluate("(document.getElementById('planNicheSel')||{}).value")
+        if sel == 'cleaning':
+            ok(step[0], "a chapter's 30-day plan button starts a plan for that chapter")
+        else:
+            problem(step[0], "the chapter's plan button should pick that chapter", sel)
+        page.evaluate("closeStepLayer()")
+        if pro:
+            page.evaluate("showBusiness()"); page.wait_for_timeout(500)
+            page.click('#businessSubNav [data-biz="website"]'); page.wait_for_timeout(700)
+            if visible(page, '#siteView', 2000):
+                ok(step[0], 'Business tools has a My website tab')
+            else:
+                problem(step[0], 'the My website tab in Business tools should open My website')
+        no_sideways_scroll(page, step[0])
+        finish(st, step[0]); ctx.close()
+    # someone who joined after these launched doesn't need the "new" card
+    step = ['finding things: new member']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(False); st['joinedAt'] = '2026-10-20T10:00:00Z'
+    attach_backend(ctx, st); ctx.add_init_script(init)
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load'); page.wait_for_timeout(1200)
+    if page.locator('#newsCard').count() == 0 and page.locator('#shortcutsWrap .tool-tile').count() == 6:
+        ok(step[0], 'a member who joined later sees the shortcuts but not the "new" card')
+    else:
+        problem(step[0], 'a new member should see shortcuts only')
+    finish(st, step[0]); ctx.close()
+
+
 def main():
     srv, base = serve_web()
     t0 = time.time()
@@ -3925,6 +4032,7 @@ def main():
         account_settings(browser, base)
         manage_subscription(browser, base)
         design_polish(browser, base)
+        find_new_things(browser, base)
         spanish(browser, base)
         save_retry(browser, base)
         member_website(browser, base)

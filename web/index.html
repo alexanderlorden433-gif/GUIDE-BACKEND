@@ -5427,6 +5427,36 @@
   .pl-tag.now{color:var(--grape-soft); font-weight:600;}
   .pl-actions{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); padding-top:var(--sp-2);}
 
+  /* finding things: landing links, "New in The Guide", the shortcuts on Home, "New" tags, the owner jump bar */
+  .lp-nav{display:flex; flex-wrap:wrap; gap:var(--sp-1) var(--sp-4); margin:calc(var(--sp-3) * -1) 0 var(--sp-5);}
+  .lp-nav a, .lp-nav button{border:0; background:none; padding:var(--sp-1) 0; color:var(--ink-2); font:500 14px 'Inter',sans-serif; text-decoration:none; cursor:pointer;}
+  .lp-nav a:hover, .lp-nav button:hover{color:var(--ink); text-decoration:underline;}
+  .news-card{background:var(--card); border-radius:var(--r-card); padding:var(--sp-5); margin-bottom:var(--sp-6);}
+  .news-row{display:flex; align-items:center; gap:var(--sp-3); width:100%; min-height:var(--btn-h); padding:var(--sp-3) 0; border:0; border-bottom:1px solid var(--line); background:none; color:var(--ink); text-align:left; font:inherit; cursor:pointer;}
+  .news-row > i[data-ico]{color:var(--ink-soft);}
+  .news-ico{flex:none; width:36px; height:36px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; background:var(--card-2); color:var(--ink-2);}
+  .news-ico .ico{width:18px; height:18px;}
+  .news-txt{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+  .news-txt b{font-weight:600; font-size:15px;}
+  .news-txt small{font-size:13px; line-height:1.45; color:var(--ink-soft);}
+  @media (hover:hover){ .news-row:hover b{color:var(--grape-soft);} }
+  .news-card .pc-row{margin-top:var(--sp-4);}
+  .home-tools{margin-bottom:var(--sp-6);}
+  .home-tools-h{font-size:17px; font-weight:600; margin:0 0 var(--sp-3);}
+  .tool-tiles{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:var(--sp-2);}
+  @media (min-width:720px){ .tool-tiles{grid-template-columns:repeat(6, minmax(0, 1fr));} }
+  .tool-tile{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-2); min-height:84px; padding:var(--sp-3) var(--sp-2); border:1px solid var(--line); border-radius:var(--r-card); background:var(--card); color:var(--ink); font:500 13px/1.25 'Inter',sans-serif; text-align:center; cursor:pointer;}
+  .tool-tile:hover{border-color:var(--line-2);}
+  .tt-ico{color:var(--ink-2);}
+  .tt-ico .ico{width:22px; height:22px;}
+  .new-tag{font-style:normal; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--gold);}
+  .tool-tile .new-tag{position:absolute; top:6px; right:8px;}
+  .sub-tab .new-tag{margin-left:4px; vertical-align:middle;}
+  .account-menu-item > span.ami-new{flex:none; margin-left:auto; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--gold);}
+  .dx-jump{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); margin:0 0 var(--sp-4);}
+  .dx-jump-n{margin-left:6px; font-weight:700; color:var(--gold);}
+  .dx-jump-n:empty{display:none;}
+
   /* chapters: a list of rows */
   .niche-grid{gap:0 var(--sp-6); border-top:1px solid var(--line);}
   .niche-card{flex-direction:row; align-items:flex-start; gap:var(--sp-4); background:none; border:0; border-bottom:1px solid var(--line); border-radius:0; padding:var(--sp-4) 0; box-shadow:none; contain-intrinsic-size:auto 112px;}
@@ -5747,6 +5777,12 @@
           <b>The Guide</b>
           <button type="button" class="lp-lang" data-lang-switch translate="no">Español</button>
         </div>
+        <nav class="lp-nav lp-rise" aria-label="More from The Guide">
+          <a href="/start/">Free guides</a>
+          <a href="/tools/">Calculators</a>
+          <a href="/quiz/">Business quiz</a>
+          <button type="button" data-lp-scroll="lpPricing">Pricing</button>
+        </nav>
         <h1 class="lp-h1 lp-rise d1"><span>You don't need more videos.</span><span class="lp-grad">You need them in order.</span></h1>
         <p class="lp-sub lp-rise d2"><span data-count-word="cap">Sixteen</span> real businesses, each taught as a proper course: modules in sequence, narrated video lessons, and an AI mentor for the moment you get stuck.</p>
         <div class="lp-ctas lp-rise d3">
@@ -5955,7 +5991,7 @@
     </div>
   </section>
 
-  <section class="lp-section">
+  <section class="lp-section" id="lpPricing">
     <div class="lp-wrap">
       <h2 class="lp-h2" style="text-align:center;">Start free, pay when it's worth it</h2>
       <p class="lp-lead" style="text-align:center; margin-inline:auto;">You can read the whole first module of all <span data-count-word>sixteen</span> courses without paying anything.</p>
@@ -6175,9 +6211,10 @@
               <button type="button" class="amh-x" id="accountMenuClose" aria-label="Close menu"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
             </div>
             <div class="account-menu-group">
+              <button class="account-menu-item" id="planNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/><path d="m9 15 2 2 4-4"/></svg><span>My 30-day plan</span><span class="ami-new">New</span></button>
+              <button class="account-menu-item" id="siteNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 3.6 9A14 14 0 0 1 12 21a14 14 0 0 1-3.6-9A14 14 0 0 1 12 3z"/></svg><span>My website</span><span class="ami-new">New</span><span class="nav-badge" id="siteBadge" style="display:none;"></span></button>
               <button class="account-menu-item" id="todayNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>Today</span><span class="nav-badge" id="todayBadge" style="display:none;"></span></button>
               <button class="account-menu-item" id="statsNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-6"/></svg><span>Stats</span></button>
-              <button class="account-menu-item" id="siteNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 3.6 9A14 14 0 0 1 12 21a14 14 0 0 1-3.6-9A14 14 0 0 1 12 3z"/></svg><span>My website</span><span class="nav-badge" id="siteBadge" style="display:none;"></span></button>
               <button class="account-menu-item" id="partnersNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M19.5 20v-1.4a3.4 3.4 0 0 0-2.6-3.3M15.6 5.2a3.2 3.2 0 0 1 0 6"/></svg><span>Partners</span></button>
               <button class="account-menu-item" id="adminNavBtn" role="menuitem" style="display:none;"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg><span>Owner dashboard</span></button>
               <button class="account-menu-item" id="marketingNavBtn" role="menuitem" style="display:none;"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4a1 1 0 0 0 1 1h3l5 4V5L9 9H5a1 1 0 0 0-1 1Z"/><path d="M17.5 9.5a4 4 0 0 1 0 5"/></svg><span>Marketing dashboard</span></button>
@@ -6245,6 +6282,8 @@
       <div id="homeGreetingWrap"></div>
       <div id="trialWrap"></div>
       <div id="todayStepWrap"></div>
+      <div id="newsWrap"></div>
+      <div id="shortcutsWrap"></div>
       <div id="planWrap"></div>
       <div id="dailyDigestWrap"></div>
       <div id="liveHomeWrap"></div>
@@ -6319,6 +6358,7 @@
       <p class="page-sub">Cross-chapter tools that work across everything you track, not tied to one niche.</p>
       <div class="sub-nav-scroller">
       <div class="sub-nav" id="businessSubNav">
+        <button class="sub-tab" data-biz="website">My website <span class="new-tag">NEW</span></button>
         <button class="sub-tab active" data-biz="invoicing">Invoicing</button>
         <button class="sub-tab" data-biz="expenses">Expenses</button>
         <button class="sub-tab" data-biz="revenue">Recurring Revenue <span class="pro-tag">YEARLY</span></button>
@@ -10119,6 +10159,11 @@ document.getElementById('bottomTabEarn').addEventListener('click', ()=>{
 
 // ---------- Help / FAQ ----------
 const FAQ_DATA = [
+  { category: "New in The Guide", items: [
+    { q: "How do I make a 30-day plan?", a: "On Home, tap 30-day plan under Your tools. You can also start one from any chapter (the 30-day plan button at the top) or from the account menu. Pick a business and what you want by day 30, and you get one small step a day, with a check-in with The Guider every 7 days." },
+    { q: "How do I get my own website?", a: "On Home, tap My website under Your tools, or open it from the account menu. Add your business name, your services and prices, and how to reach you, then tap Save and preview. Putting the page live is part of Pro. Requests people send from your page show up there, and you can add them to your Lead Pipeline." },
+    { q: "Can I use The Guide in Spanish?", a: "Yes. Tap your picture at the top right, then Español. Tap English in the same place to switch back. The free lessons are in Spanish; the Pro lessons are still being translated." },
+  ]},
   { category: "Getting around", items: [
     { q: "What's free and what needs Pro?", a: `Module 1 of every course is free forever: ${freeLessonCount()} lessons across all ${NICHES.length} chapters. Pro opens the remaining ${proLessonCount()} lessons plus Tools, Templates, the AI mentor, the Today view and Stats. Anything you have already finished stays open to you either way.` },
     { q: "What is the Today view?", a: "One screen showing everything due or overdue across every chapter you use (follow-ups, discovery calls, showings, scheduled jobs, recurring tasks and low-stock alerts), sorted soonest first, so you don't have to check each chapter separately." },
@@ -10612,6 +10657,12 @@ async function showAdmin(){
       <button class="dx-btn" id="dxPrivacy" title="Mask customer emails, turn on before filming or screen-sharing"></button>
       <button class="dx-btn" id="dxGoMarketing"><i data-ico="megaphone"></i>Marketing dashboard →</button>
     </div>
+    <nav class="dx-jump" aria-label="Jump to your owner tools">
+      <span class="dx-sub">Jump to</span>
+      <button type="button" class="dx-btn" data-jump="dxSiteWins">Wins to approve<b class="dx-jump-n" id="dxWinsWaiting"></b></button>
+      <button type="button" class="dx-btn" data-jump="dxCodes">Partner codes</button>
+      <button type="button" class="dx-btn" data-jump="dxPayouts">Creator payouts</button>
+    </nav>
     <section class="dx-card dx-goal" id="dxGoal">
       <div class="dx-goal-top">
         <div><div class="dx-label">Road to $1,000,000 · all-time revenue</div><div class="dx-goal-num"><span id="dxGoalNow">$0</span><span class="dx-goal-of"> / $1,000,000</span></div></div>
@@ -10691,6 +10742,10 @@ async function showAdmin(){
     </section>
   </div>`;
   const R = root.querySelector('#dxOwner');
+  R.querySelectorAll('[data-jump]').forEach(b=> b.addEventListener('click', ()=>{
+    const el = document.getElementById(b.dataset.jump);
+    if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
   renderAdminCodes();
   renderAdminPayouts();
   renderAdminSiteWins();
@@ -10894,6 +10949,9 @@ async function renderAdminSiteWins(){
   let wins = [];
   try{ wins = (await apiFetch('/public-wins/review')).wins || []; }
   catch(e){ box.innerHTML = `<div class="dx-empty">${e.status === 503 ? 'Not ready yet, try again in a minute.' : 'Could not load the wins.'}</div>`; return; }
+  const waiting = wins.filter(w => w.status === 'waiting').length;
+  const badge = document.getElementById('dxWinsWaiting');
+  if(badge) badge.textContent = waiting ? String(waiting) : '';
   if(!wins.length){ box.innerHTML = '<div class="dx-empty">Nothing waiting. When a member ticks "show it on the website", it lands here.</div>'; return; }
   const label = { waiting:'waiting', approved:'on the website', hidden:'hidden' };
   box.innerHTML = `<table class="dx-codes-table"><tbody>${wins.map(w => `<tr>
@@ -11371,6 +11429,7 @@ function renderHome(){
     continueWrap.innerHTML = '';
     renderTodayStep(true);
     renderPlanCard(true);
+    renderNews(true); renderShortcuts(true);
     yourChaptersHead.style.display = 'none';
     moreChaptersHead.style.display = 'flex';
     moreChaptersHead.querySelector('h3').textContent = 'All chapters';
@@ -11386,6 +11445,7 @@ function renderHome(){
   // Today's step is the one thing to do next. When it is there, it takes the place of "Continue where you left off".
   const hasStep = renderTodayStep();
   renderPlanCard();
+  renderNews(); renderShortcuts();
   if(hasStep){
     continueWrap.innerHTML = '';
   } else if(lastVisited){
@@ -11701,6 +11761,7 @@ function openNiche(id){
       <p>${niche.description}</p>
     </div>
     <div class="niche-actions">
+      <button type="button" class="ai-chat-clear-btn" id="chapterPlanBtn">${ico('calendar')} ${dayPlan && dayPlan.nicheId === niche.id ? 'My 30-day plan' : '30-day plan'}</button>
       <button type="button" class="ai-chat-clear-btn" id="chapterListenBtn">Listen to chapter</button>
       <button type="button" class="ai-chat-clear-btn" id="chapterPdfBtn">Save chapter as PDF ${isPro ? '' : ico('lock')}</button>
     </div>
@@ -11708,6 +11769,9 @@ function openNiche(id){
   document.getElementById('chapterPdfBtn').addEventListener('click', ()=>{
     if(!isPro){ openUpgradeModal({ type: 'tab', nicheId: niche.id, tab: 'guides' }); return; }
     printChapterPDF(niche);
+  });
+  document.getElementById('chapterPlanBtn').addEventListener('click', ()=>{
+    if(dayPlan && dayPlan.nicheId === niche.id && planNiche()) showPlan(); else openPlanMaker(niche.id);
   });
   document.getElementById('chapterListenBtn').addEventListener('click', (e)=>{
     toggleChapterSpeech(niche, e.currentTarget);
@@ -12360,13 +12424,77 @@ function renderPlanOffer(wrap){
   });
 }
 
+// ---------- Finding things: what's new, and shortcuts on Home ----------
+// The newer parts of the app (the 30-day plan, My website, Spanish) were only a tap away for people who knew
+// where to look. Home now says what's new once, and keeps a row of shortcuts to the main tools.
+const NEWS_ID = '2026-10-plan-site-es';
+const NEW_UNTIL = '2026-11-30'; // the "New" tags on the shortcuts and in the menu go away after this
+const isNewStill = ()=> todayStr() <= NEW_UNTIL;
+function renderNews(clearOnly){
+  const wrap = document.getElementById('newsWrap');
+  if(!wrap) return;
+  const joined = joinedAt ? String(joinedAt).slice(0, 10) : '';
+  if(clearOnly || homeViewMode === 'chapters' || (userProfile && userProfile.newsSeen === NEWS_ID) || (joined && joined > '2026-10-15')){
+    wrap.innerHTML = ''; return;
+  }
+  const row = (key, icon, title, sub)=> `<button type="button" class="news-row" data-news="${key}"><span class="news-ico">${ico(icon)}</span><span class="news-txt"><b>${title}</b><small>${sub}</small></span><i data-ico="chevron"></i></button>`;
+  wrap.innerHTML = `<section class="news-card" id="newsCard" aria-label="New in The Guide">
+      <div class="pc-top"><span class="pc-label">New in The Guide</span></div>
+      ${row('plan', 'calendar', 'Your 30-day plan', 'One small step a day, with a check-in from The Guider every week.')}
+      ${row('site', 'globe', 'Your own website', 'A one-page site for your business, with a form that sends quote requests to you here.')}
+      ${LANG === 'en' ? row('lang', 'globe', 'The Guide en español', 'Switch the app to Spanish, and back, from your account menu.') : ''}
+      <div class="pc-row"><button type="button" class="live-btn" id="newsDone">Got it</button></div>
+    </section>`;
+  wrap.querySelectorAll('[data-news]').forEach(b=> b.addEventListener('click', ()=>{
+    const k = b.dataset.news;
+    if(k === 'plan') openPlanFromAnywhere();
+    else if(k === 'site') showSite();
+    else if(k === 'lang'){ markNewsSeen(); setLanguage('es'); }
+  }));
+  document.getElementById('newsDone').addEventListener('click', ()=>{ markNewsSeen(); wrap.innerHTML = ''; });
+}
+function markNewsSeen(){ userProfile.newsSeen = NEWS_ID; saveProgress(); }
+/** The plan from a shortcut: the plan page if there is one, otherwise the two questions that make one. */
+function openPlanFromAnywhere(){ if(planNiche() && planDay() <= PLAN_DAYS + 7) showPlan(); else openPlanMaker(); }
+
+function renderShortcuts(clearOnly){
+  const wrap = document.getElementById('shortcutsWrap');
+  if(!wrap) return;
+  if(clearOnly || homeViewMode === 'chapters'){ wrap.innerHTML = ''; return; }
+  const fresh = isNewStill() ? '<em class="new-tag">New</em>' : '';
+  const item = (go, icon, label, tag)=> `<button type="button" class="tool-tile" data-go="${go}"><span class="tt-ico">${ico(icon)}</span><span class="tt-label">${label}</span>${tag || ''}</button>`;
+  wrap.innerHTML = `<section class="home-tools" aria-label="Shortcuts">
+      <h3 class="home-tools-h">Your tools</h3>
+      <div class="tool-tiles">
+        ${item('plan', 'calendar', '30-day plan', fresh)}
+        ${item('site', 'globe', 'My website', fresh)}
+        ${item('guider', 'guider', 'The Guider')}
+        ${item('business', 'briefcase', 'Business tools')}
+        ${item('live', 'live', 'Live calls')}
+        ${item('calc', 'calculator', 'Calculators')}
+      </div>
+    </section>`;
+  wrap.querySelectorAll('[data-go]').forEach(b=> b.addEventListener('click', ()=> goShortcut(b.dataset.go)));
+}
+function goShortcut(go){
+  if(go === 'plan') openPlanFromAnywhere();
+  else if(go === 'site') showSite();
+  else if(go === 'guider'){ const t = document.getElementById('bottomTabGuider'); if(t) t.click(); }
+  else if(go === 'business'){ if(isPro) showBusiness(); else openUpgradeModal({ type: 'business' }); }
+  else if(go === 'live') showLive();
+  else if(go === 'calc') window.open('/tools/', '_blank', 'noopener');
+}
+document.getElementById('planNavBtn').addEventListener('click', openPlanFromAnywhere);
+// the "New" tags in the account menu go away with the ones on Home
+if(!isNewStill()) document.querySelectorAll('.ami-new').forEach(el=> el.remove());
+
 // ----- making a plan -----
-function openPlanMaker(){
+function openPlanMaker(prefer){
   const open = NICHES.filter(n=> firstOpenIndex(n) < n.guides.length);
   if(!open.length){ showAppToast('You have finished every chapter.', 'info'); return; }
   const mine = (selectedNiches || []).filter(id=> open.some(n=> n.id === id));
   const others = open.map(n=> n.id).filter(id=> !mine.includes(id));
-  const fav = [dayPlan && dayPlan.nicheId, lastVisited && lastVisited.nicheId, mine[0], others[0]].find(id=> id && open.some(n=> n.id === id));
+  const fav = [typeof prefer === 'string' ? prefer : null, dayPlan && dayPlan.nicheId, lastVisited && lastVisited.nicheId, mine[0], others[0]].find(id=> id && open.some(n=> n.id === id));
   const opt = (id)=> `<option value="${id}"${id === fav ? ' selected' : ''}>${gvEsc(NICHES.find(n=> n.id === id).name)}</option>`;
   const options = mine.length && others.length
     ? `<optgroup label="Your chapters">${mine.map(opt).join('')}</optgroup><optgroup label="Other chapters">${others.map(opt).join('')}</optgroup>`
@@ -16697,6 +16825,7 @@ function showBusiness(){
 
 businessSubNav.querySelectorAll('.sub-tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
+    if(tab.dataset.biz === 'website'){ showSite(); return; } // its own screen, also in the account menu
     if(YEARLY_ONLY_TABS.has(tab.dataset.biz) && planType !== 'yearly'){
       businessPanelWrap.innerHTML = `
         <div class="today-empty" style="text-align:left; padding:24px;">
