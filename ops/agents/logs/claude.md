@@ -178,3 +178,4 @@ Things worth remembering:
   Table SiteAiHour (userId, day = member's local date from the tz the app sends, startedAt); time left is computed
   in SQL (no server/DB clock mismatch). useDailyHour() runs before spendCredit(); hour writes log free=0 paid=0.
   Lifetime = User.planType 'lifetime' (also counts if isPro got switched off). 30/day write cap still applies.
+- Pro's hour is capped at 10 writes (HOUR_WRITES; SiteAiHour.writes, taken with a conditional UPDATE … RETURNING). Alexander chose this to protect margin.
