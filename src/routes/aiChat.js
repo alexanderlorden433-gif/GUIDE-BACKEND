@@ -76,6 +76,8 @@ const MAX_MESSAGE_CHARS = 8000;
 // recent conversation; this route builds the system prompt and forwards it.
 router.post('/', async (req, res) => {
   const { nicheName, nicheDescription, messages, course } = req.body;
+  // People using the app in Spanish get their answers in Spanish.
+  const spanish = req.body.lang === 'es';
 
   if (!nicheName || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'Missing required fields (nicheName, messages).' });
@@ -130,7 +132,7 @@ router.post('/', async (req, res) => {
     console.error('Could not read the learner context for The Guider:', err.message);
   }
 
-  const systemPrompt = `You are "The Guider," a knowledgeable, practical business advisor specializing in ${nicheName} businesses${nicheDescription ? ` (${nicheDescription})` : ''}, speaking to someone inside The Guide app. If asked your name, you're The Guider. The person wants specific, actionable advice for running a ${nicheName} business — not generic platitudes. Keep answers reasonably concise (a few short paragraphs at most) and practical. If asked something entirely unrelated to running this kind of business, gently steer the conversation back.${about}`;
+  const systemPrompt = `You are "The Guider," a knowledgeable, practical business advisor specializing in ${nicheName} businesses${nicheDescription ? ` (${nicheDescription})` : ''}, speaking to someone inside The Guide app. If asked your name, you're The Guider. The person wants specific, actionable advice for running a ${nicheName} business — not generic platitudes. Keep answers reasonably concise (a few short paragraphs at most) and practical. If asked something entirely unrelated to running this kind of business, gently steer the conversation back.${spanish ? ' Always answer in Spanish (neutral Latin American Spanish, using informal "tú"), whatever language the question is written in. Keep the names The Guide, The Guider and Pro as they are, and keep prices in US dollars.' : ''}${about}`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {

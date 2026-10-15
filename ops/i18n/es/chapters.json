@@ -1,0 +1,970 @@
+{
+ "video": {
+  "name": "Videografía",
+  "description": "Precios, contratos y cómo convertir tus grabaciones en un negocio.",
+  "modules": [
+   {
+    "title": "Empieza aquí: arma tu negocio de video",
+    "goal": "Elige tu especialidad, arma un equipo confiable y resuelve el seguro y una cuenta de negocio antes de tu primera grabación pagada."
+   },
+   {
+    "title": "Ponle precio a tus paquetes y extras",
+    "goal": "Crea dos o tres paquetes claros, ponles precio con confianza y ofrece extras que tus clientes de verdad quieran."
+   },
+   {
+    "title": "Encuentra tus primeros clientes",
+    "goal": "Arma un reel y un portafolio enfocados, consigue aliados que te recomienden y responde las consultas rápido y por escrito."
+   },
+   {
+    "title": "Reserva clientes con condiciones sólidas",
+    "goal": "Usa un contrato claro, anticipos, límites de revisiones y derechos de uso para que cada reserva te proteja a ti y a tu cliente."
+   },
+   {
+    "title": "Planea y haz una grabación sin contratiempos",
+    "goal": "Lleva cada proyecto con un mismo proceso claro y vuelve de cada grabación con el material organizado y respaldado."
+   },
+   {
+    "title": "Edita, entrega y cobra",
+    "goal": "Edita más rápido, maneja con calma los pedidos extra y cierra cada proyecto con un testimonio y una factura pagada."
+   },
+   {
+    "title": "Crece con clientes que regresan y recomendaciones",
+    "goal": "Convierte cada grabación en marketing, gana clientes que regresan y que llegan por recomendación, y revisa tus tarifas y condiciones cada año."
+   }
+  ],
+  "breakdown": null
+ },
+ "photo": {
+  "name": "Fotografía",
+  "description": "Cómo encontrar tu nicho, recibir a tus clientes y cobrar más allá de la sesión.",
+  "modules": [
+   {
+    "title": "Encuentra tu nicho y prepárate para fotografiar",
+    "goal": "Elige qué vas a fotografiar, arma un portafolio que atraiga ese trabajo y reúne un equipo en el que puedas confiar."
+   },
+   {
+    "title": "Cobra más allá de la sesión",
+    "goal": "Arma paquetes que paguen tu tiempo, suma impresiones, álbumes y extras, y ten lista una guía de precios para enviar."
+   },
+   {
+    "title": "Haz que te encuentren sin gastar mucho en anuncios",
+    "goal": "Recibe consultas constantes gracias a tu trabajo real, aliados locales y unos pocos números que de verdad sigues."
+   },
+   {
+    "title": "Asegura el trabajo y aclara las expectativas",
+    "goal": "Cobra un anticipo, recibe bien a cada cliente y ten listas tus políticas para lluvia, inasistencias y días de enfermedad."
+   },
+   {
+    "title": "El día de la sesión y una edición tranquila",
+    "goal": "Sigue una secuencia repetible en cada sesión, protege los archivos y edita las galerías sin agotarte."
+   },
+   {
+    "title": "Entrega bien y protege tu trabajo",
+    "goal": "Entrega galerías que se vean profesionales, vende impresiones y deja claros tus derechos y permisos."
+   },
+   {
+    "title": "Crece con recomendaciones y un equipo",
+    "goal": "Convierte cada trabajo terminado en nuevas reservas y recomendaciones, y suma ayuda cuando tengas la agenda llena."
+   }
+  ],
+  "breakdown": null
+ },
+ "marketing": {
+  "name": "Marketing digital",
+  "description": "Canales, sistemas de contenido y tus primeras pruebas de anuncios.",
+  "modules": [
+   {
+    "title": "Empieza aquí: conoce a quién le hablas",
+    "goal": "Ten claro a quién te diriges con tu marketing, elige el único canal en el que te vas a enfocar y arma una bio que venda."
+   },
+   {
+    "title": "Planea contenido que puedas sostener",
+    "goal": "Define tus pilares, un día para producir en bloque y un calendario simple para saber siempre qué vas a publicar después."
+   },
+   {
+    "title": "Crea publicaciones que hagan detenerse a la gente",
+    "goal": "Muéstrate como persona, prueba los formatos que llegan a gente nueva y sácale más provecho a cada idea que tengas."
+   },
+   {
+    "title": "Convierte la atención en posibles clientes",
+    "goal": "Construye el camino que va de una publicación útil a un recurso gratis, una secuencia de correos y una oferta clara."
+   },
+   {
+    "title": "Haz que te encuentren y gánate su confianza",
+    "goal": "Aparece en las búsquedas de lo que escriben tus clientes y respalda lo que dices con pruebas que puedan verificar."
+   },
+   {
+    "title": "Haz anuncios sin desperdiciar dinero",
+    "goal": "Prueba anuncios con un presupuesto pequeño, aprende qué funciona y mide con honestidad tu costo por resultado."
+   },
+   {
+    "title": "Mide lo que importa y luego crece",
+    "goal": "Sigue los números ligados al dinero, repite lo que funciona y crece con aliados y recomendaciones."
+   }
+  ],
+  "breakdown": null
+ },
+ "trading": {
+  "name": "Trading e inversión",
+  "description": "Manejo del riesgo y hábitos — contenido educativo, no asesoría financiera.",
+  "modules": [
+   {
+    "title": "Empieza con dinero que puedas perder",
+    "goal": "Define tu presupuesto de trading y tus reglas de riesgo antes de hacer una sola operación."
+   },
+   {
+    "title": "Elige un estilo y una plataforma",
+    "goal": "Elige el estilo de trading que encaje con tu semana y un bróker que de verdad hayas probado."
+   },
+   {
+    "title": "Controla el riesgo en cada operación",
+    "goal": "Pon límites por escrito a cada operación y a la cuenta completa, antes de que algo salga mal."
+   },
+   {
+    "title": "Arma un plan y ponlo a prueba",
+    "goal": "Convierte una idea vaga en reglas escritas que hayas probado con datos históricos y en una cuenta demo."
+   },
+   {
+    "title": "Organiza tu día de trading",
+    "goal": "Empieza cada sesión con un plan escrito y límites que den por terminado el día por ti."
+   },
+   {
+    "title": "Maneja la emoción, la euforia y la presión",
+    "goal": "Toma tus decisiones con calma y reconoce a quienes te venden certezas."
+   },
+   {
+    "title": "Revisión, registros e impuestos",
+    "goal": "Crea hábitos semanales y mensuales que te muestren qué funciona y mantengan tu papeleo en orden."
+   }
+  ],
+  "breakdown": null
+ },
+ "ecommerce": {
+  "name": "Comercio electrónico",
+  "description": "Cómo elegir productos, convertir visitas en ventas y lograr que tus clientes regresen.",
+  "modules": [
+   {
+    "title": "Elige un producto que valga la pena vender",
+    "goal": "Elige un producto, comprueba que haya demanda, decide cómo lo vas a conseguir y vender, y conoce lo que de verdad te deja cada pedido."
+   },
+   {
+    "title": "Crea una tienda que venda",
+    "goal": "Arma una tienda y páginas de producto que muestren con claridad lo que vendes y respondan las dudas de los compradores antes de que pregunten."
+   },
+   {
+    "title": "Gánate su confianza y facilita el pago",
+    "goal": "Quita las dudas y trabas que frenan a la gente al pagar, desde la preocupación por las devoluciones hasta páginas lentas y métodos de pago que faltan."
+   },
+   {
+    "title": "Promociona primero con correo y luego con anuncios",
+    "goal": "Configura los correos que recuperan ventas perdidas y luego juzga cada anuncio y canal por la ganancia, no por los clics."
+   },
+   {
+    "title": "Envía pedidos y atiende a tus clientes",
+    "goal": "Empaca, envía y responde a tus clientes siempre de la misma forma confiable, para que tus reseñas sigan siendo buenas cuando crezcan los pedidos."
+   },
+   {
+    "title": "Controla tu inventario, tu dinero y tus riesgos",
+    "goal": "Mantén en existencia tus productos más vendidos, detecta el inventario lento y los productos que pierden dinero, y protege tu tienda del fraude y los contracargos."
+   },
+   {
+    "title": "Crece con compradores que regresan y nuevos canales",
+    "goal": "Convierte a quienes compran por primera vez en clientes frecuentes y suma nuevos canales de venta sin perder de vista la ganancia."
+   }
+  ],
+  "breakdown": null
+ },
+ "design": {
+  "name": "Diseño gráfico e identidad de marca",
+  "description": "Precios, contratos y cómo armar un portafolio que atraiga a los clientes correctos.",
+  "modules": [
+   {
+    "title": "Empieza aquí: arma tu negocio de diseño",
+    "goal": "Arma un portafolio enfocado, crea una imagen de marca coherente para ti y pon en orden tu dinero antes de tu primer proyecto pagado."
+   },
+   {
+    "title": "Ponle precio a tu trabajo de diseño",
+    "goal": "Elige un modelo de precios, organiza tus servicios en niveles claros y responde cualquier consulta con precios seguros."
+   },
+   {
+    "title": "Encuentra clientes y gana proyectos",
+    "goal": "Atrae posibles clientes más interesados, elige los proyectos correctos y convierte las consultas en propuestas por escrito y aceptadas."
+   },
+   {
+    "title": "Contratos que te protegen",
+    "goal": "Pon por escrito el alcance, el pago, las revisiones, las reuniones y la propiedad, y cobra antes de empezar."
+   },
+   {
+    "title": "Lleva un proyecto sin contratiempos",
+    "goal": "Convierte pedidos vagos en un resumen claro del proyecto, presenta conceptos sólidos y reúne comentarios con los que puedas actuar."
+   },
+   {
+    "title": "Revisiones y entrega final",
+    "goal": "Mantén las revisiones bajo control y entrega un conjunto de archivos completo y organizado que tu cliente pueda usar por años."
+   },
+   {
+    "title": "Construye un negocio que dure",
+    "goal": "Descubre qué trabajo paga mejor, mantén tus precios al día, protege tu equipo y suma ingresos más allá de los proyectos de clientes."
+   }
+  ],
+  "breakdown": null
+ },
+ "writing": {
+  "name": "Redacción freelance y publicitaria",
+  "description": "Precios, contratos y cómo conseguir clientes escribiendo como freelance.",
+  "modules": [
+   {
+    "title": "Elige tu especialidad y crea muestras",
+    "goal": "Elige una especialidad de redacción y arma un portafolio pequeño que muestre a tus clientes que puedes hacer su tipo de trabajo."
+   },
+   {
+    "title": "Define tus precios y lo básico de tu dinero",
+    "goal": "Elige un modelo de precios, cotiza rápido y con seguridad, y organiza tu dinero antes de la primera factura."
+   },
+   {
+    "title": "Encuentra clientes y presenta tu propuesta",
+    "goal": "Contacta a los negocios correctos, preséntales bien tu idea y envía una propuesta que reciba un sí."
+   },
+   {
+    "title": "Acuerda las condiciones antes de escribir",
+    "goal": "Ten un contrato, un anticipo y un alcance por escrito antes de teclear la primera frase."
+   },
+   {
+    "title": "De las instrucciones al borrador pulido",
+    "goal": "Haz una buena entrevista inicial, mantén constante la voz de cada cliente y convierte un primer borrador desordenado en un texto preciso."
+   },
+   {
+    "title": "Entrega, revisa y cierra con aprobación",
+    "goal": "Entrega el trabajo de forma ordenada, consigue comentarios útiles y cierra los proyectos sin reescrituras gratis."
+   },
+   {
+    "title": "Consigue trabajo constante y mejor pagado",
+    "goal": "Convierte proyectos sueltos en trabajo mensual, sube tus tarifas de forma intencional y mantén una carga de trabajo razonable."
+   }
+  ],
+  "breakdown": null
+ },
+ "social": {
+  "name": "Gestión de redes sociales",
+  "description": "Precios, contratos y cómo manejar las redes sociales de otros negocios.",
+  "modules": [
+   {
+    "title": "Empieza aquí: define tu servicio",
+    "goal": "Define qué ofreces, qué plataformas cubres y a quién vas a atender, y empieza a reunir pruebas reales."
+   },
+   {
+    "title": "Ponle precio a contratos mensuales, adicionales y extras",
+    "goal": "Fija el precio del contrato mensual según el alcance y cobra aparte los anuncios, las plataformas extra y la cobertura de fin de semana."
+   },
+   {
+    "title": "Consigue tus primeros clientes",
+    "goal": "Encuentra a tus primeros clientes, preséntales tu servicio, da seguimiento a tus propuestas y firma un contrato con un alcance claro."
+   },
+   {
+    "title": "Recibe bien a cada cliente",
+    "goal": "Empieza cada cuenta en orden, con los accesos correctos, los archivos de marca, metas reales y un plan para los días malos."
+   },
+   {
+    "title": "Planea, aprueba y publica contenido",
+    "goal": "Llena más rápido el calendario de cada cliente y consigue que aprueben las publicaciones a tiempo, por escrito y sin retrasos interminables."
+   },
+   {
+    "title": "Reporta resultados y aguanta las caídas",
+    "goal": "Envía reportes mensuales claros, muestra lo que funciona y maneja con calma las caídas de alcance cuando cambian las plataformas."
+   },
+   {
+    "title": "Crece sin agotarte",
+    "goal": "Maneja más cuentas trabajando por bloques, con límites de tiempo, ayuda de colaboradores externos y una revisión anual de tus precios."
+   }
+  ],
+  "breakdown": null
+ },
+ "creator": {
+  "name": "Creador/a de contenido e influencer",
+  "description": "Monetización, acuerdos con marcas y cómo construir un negocio de contenido sostenible.",
+  "modules": [
+   {
+    "title": "Empieza aquí: elige tu especialidad",
+    "goal": "Elige tu plataforma y tu nicho, conoce cómo ganan dinero los creadores y arma un sistema que te mantenga publicando."
+   },
+   {
+    "title": "Haz crecer una audiencia que interactúe",
+    "goal": "Construye una audiencia más pequeña pero de verdad comprometida y llega a gente nueva sin dispersarte demasiado."
+   },
+   {
+    "title": "Prepárate para los acuerdos con marcas",
+    "goal": "Arma un kit de medios honesto y una tabla de tarifas para responder con confianza el primer correo de una marca."
+   },
+   {
+    "title": "Negocia y firma el acuerdo",
+    "goal": "Responde a una primera oferta con tus propios números y lee las cláusulas que deciden cuánto vale de verdad un acuerdo."
+   },
+   {
+    "title": "Conserva la confianza de tu audiencia",
+    "goal": "Indica bien cuándo una publicación es pagada, separa los anuncios de tus recomendaciones honestas y promete solo lo que controlas."
+   },
+   {
+    "title": "Protege tus ingresos de los cambios de plataforma",
+    "goal": "Reparte tus ingresos en más de una fuente y construye un canal con tu audiencia que de verdad sea tuyo."
+   },
+   {
+    "title": "Construye un negocio que puedas sostener",
+    "goal": "Separa tu dinero, respalda tu trabajo y pon los límites que te permitan seguir creando por años."
+   }
+  ],
+  "breakdown": null
+ },
+ "coaching": {
+  "name": "Coaching y consultoría",
+  "description": "Precios, llamadas de diagnóstico y cómo llevar procesos que logren resultados reales.",
+  "modules": [
+   {
+    "title": "Empieza aquí: a quién ayudas y cómo",
+    "goal": "Define a quién ayudas, ten claro dónde termina tu papel, da forma a tu método y elige cómo cobrarlo."
+   },
+   {
+    "title": "Define tus condiciones antes del primer día",
+    "goal": "Ten listo un acuerdo para firmar, políticas claras y todo bien organizado antes de que empiece tu primer cliente."
+   },
+   {
+    "title": "Consigue tus primeros clientes que paguen",
+    "goal": "Consigue tus primeros clientes sin testimonios y haz llamadas de diagnóstico que cierren sin presionar."
+   },
+   {
+    "title": "Da sesiones que tus clientes valoren",
+    "goal": "Dale a cada sesión una estructura, tareas por escrito y notas que mantengan el progreso a la vista."
+   },
+   {
+    "title": "Demuestra resultados y respeta tus límites",
+    "goal": "Fija metas medibles, muestra a tus clientes qué cambió y evita que los pedidos fuera del alcance y las inasistencias se coman tu semana."
+   },
+   {
+    "title": "Convierte resultados en recomendaciones",
+    "goal": "Reúne pruebas mientras están frescas, luego pide recomendaciones y crea alianzas que te envíen clientes interesados."
+   },
+   {
+    "title": "Crece sin agotarte",
+    "goal": "Suma trabajo en grupo, limita tu número de clientes a un nivel que puedas sostener y sube tus tarifas a medida que crecen tus resultados."
+   }
+  ],
+  "breakdown": null
+ },
+ "va": {
+  "name": "Servicios de asistente virtual",
+  "description": "Precios, límites y cómo llevar un negocio de asistente virtual confiable.",
+  "modules": [
+   {
+    "title": "Empieza aquí: define tu oferta de asistente virtual",
+    "goal": "Elige una especialidad y un tipo de cliente, ten claro qué herramientas mencionar, fija tus precios y organiza el dinero de tu negocio."
+   },
+   {
+    "title": "Encuentra tus primeros clientes",
+    "goal": "Ten claro a quién contactar primero, cómo dar seguimiento, qué clientes rechazar y cómo lograr que tus clientes contentos te traigan más."
+   },
+   {
+    "title": "Define tus condiciones y tus límites",
+    "goal": "Firma un contrato claro y fija horarios de trabajo, tiempos de respuesta y reglas para pedidos urgentes que tus clientes respeten."
+   },
+   {
+    "title": "Recibe a tus clientes y protege sus accesos",
+    "goal": "Haz un proceso de bienvenida fluido y repetible, y maneja cada contraseña y archivo como lo haría cualquier asistente virtual de confianza."
+   },
+   {
+    "title": "Registra tus horas y cobra",
+    "goal": "Registra tu tiempo con precisión, detecta pronto los pedidos fuera del alcance, mantén informados a tus clientes y cobra cada factura a tiempo."
+   },
+   {
+    "title": "Maneja tu carga de trabajo entre varios clientes",
+    "goal": "Atiende a varios clientes con calma, protege tu tiempo de concentración, pon un tope a tu capacidad y planea tus días libres sin descuidar el trabajo."
+   },
+   {
+    "title": "Crea sistemas y crece",
+    "goal": "Documenta tu trabajo para que otros puedan hacerlo, domina a fondo las herramientas que usan tus clientes y mantén tus tarifas al día."
+   }
+  ],
+  "breakdown": null
+ },
+ "local": {
+  "name": "Negocio de servicios locales",
+  "description": "Cómo fijar precios, organizar tu agenda y hacer crecer un negocio local de servicios manuales.",
+  "modules": [
+   {
+    "title": "Arma tu negocio de servicios locales",
+    "goal": "Elige un servicio y una zona donde puedas destacar, pon tu negocio en regla, contrata un seguro y aparta dinero desde tu primer trabajo."
+   },
+   {
+    "title": "Pon precio a tu trabajo y cotiza",
+    "goal": "Elige un modelo de precios, fija un mínimo y envía cotizaciones por escrito que te consigan trabajos sin bajar tu precio."
+   },
+   {
+    "title": "Consigue tus primeros clientes",
+    "goal": "Atrae tus primeros trabajos con un perfil local completo, pidiendo recomendaciones directamente y con aliados cercanos en lugar de anuncios."
+   },
+   {
+    "title": "Construye una reputación duradera",
+    "goal": "Convierte los trabajos terminados en reseñas y testimonios, y maneja las quejas para que un cliente molesto siga siendo tu cliente."
+   },
+   {
+    "title": "Lleva una agenda confiable",
+    "goal": "Pon todos los trabajos en un solo calendario con márgenes de tiempo reales y recordatorios, para que nada se empalme ni se te pase."
+   },
+   {
+    "title": "Protege tu tiempo y tu margen",
+    "goal": "Defiende tu calendario de las cancelaciones de último momento, cobra tus facturas más rápido y evita que los costos de insumos y del vehículo se coman tu margen."
+   },
+   {
+    "title": "Crece con trabajo recurrente y mejores tarifas",
+    "goal": "Convierte trabajos sueltos en planes recurrentes, descubre qué trabajos sí te dejan dinero, sube tus precios y suma ayuda."
+   }
+  ],
+  "breakdown": null
+ },
+ "realestate": {
+  "name": "Bienes raíces",
+  "description": "Licencias, posibles clientes y análisis de operaciones para agentes e inversionistas.",
+  "modules": [
+   {
+    "title": "Elige tu camino y empieza bien",
+    "goal": "Entiende las licencias, lo que de verdad te queda en el bolsillo y qué camino va con tu dinero y tu tiempo, antes de gastar un dólar."
+   },
+   {
+    "title": "Consigue posibles clientes sin presupuesto para anuncios",
+    "goal": "Crea un flujo constante de posibles clientes con tus contactos, casas abiertas y seguimiento, y descubre qué fuentes de verdad terminan en ventas."
+   },
+   {
+    "title": "Recibe bien a compradores y vendedores",
+    "goal": "Empieza bien con cada cliente, fija expectativas honestas desde el principio y deja de pasar fines de semana con compradores que todavía no pueden comprar."
+   },
+   {
+    "title": "Fija el precio, publica y promociona una casa",
+    "goal": "Pon precio con ventas comparables reales, escribe anuncios que los compradores crean y detecta un problema de precio antes de que el anuncio se estanque."
+   },
+   {
+    "title": "Ofertas, contratos y cierre",
+    "goal": "Entiende las contingencias, negocia con calma y lleva cada operación de modo que ningún plazo ni documento se te escape."
+   },
+   {
+    "title": "Haz los números de una inversión",
+    "goal": "Analiza una propiedad de renta con honestidad, entiende tus opciones de financiamiento y ten reservas para que una sorpresa no te hunda."
+   },
+   {
+    "title": "Crece con recomendaciones y buenos proveedores",
+    "goal": "Convierte las operaciones cerradas en clientes que regresan y arma el equipo de proveedores que mantiene cada operación a tiempo."
+   }
+  ],
+  "breakdown": null
+ },
+ "ugc": {
+  "name": "Creador/a de contenido UGC",
+  "description": "Tarifas, briefs y cómo crear un negocio haciendo contenido para marcas, sin necesitar muchos seguidores.",
+  "modules": [
+   {
+    "title": "Empieza aquí: haz tus primeros videos UGC",
+    "goal": "Aprende por qué pagan las marcas a los creadores de contenido UGC y graba tus primeros videos de muestra con buenos ganchos, buena luz y buen sonido."
+   },
+   {
+    "title": "Pon precio a tus videos y a tus derechos",
+    "goal": "Fija tarifas que cobren por separado el contenido y su uso, y decide cuándo vale la pena aceptar producto gratis."
+   },
+   {
+    "title": "Encuentra marcas y preséntales tu propuesta",
+    "goal": "Descubre de dónde sale el trabajo UGC, arma tu kit de medios y envía propuestas que las marcas sí contestan."
+   },
+   {
+    "title": "Cierra los términos y luego lee el brief",
+    "goal": "Acuerda el pago, las revisiones y lo que puedes compartir, y luego convierte cada brief en una lista de verificación para grabar."
+   },
+   {
+    "title": "Graba y edita sin repetir tomas",
+    "goal": "Crea una rutina de grabación que te dé material útil a la primera y edita para que el video siga sintiéndose real."
+   },
+   {
+    "title": "Entrega, cobra y mantén tu agenda llena",
+    "goal": "Protege tu material, factura para cobrar a tiempo y busca marcas con un sistema, no a las carreras."
+   },
+   {
+    "title": "Crece con contratos mensuales y trabajo recurrente",
+    "goal": "Convierte a clientes contentos de un solo trabajo en trabajo mensual, sube tus tarifas con pruebas y suelta a los que te cuestan dinero."
+   }
+  ],
+  "breakdown": null
+ },
+ "ofm": {
+  "name": "Gestión de OnlyFans",
+  "description": "Cómo llevar un negocio de gestión de creadores: precios, contratos y la operación diaria de las cuentas.",
+  "modules": [
+   {
+    "title": "Empieza aquí: el trabajo y sus reglas",
+    "goal": "Entiende qué hace un gestor de creadores, define tus propios estándares y trabaja dentro de las reglas de la plataforma desde el primer día."
+   },
+   {
+    "title": "Tu tarifa y el acuerdo",
+    "goal": "Pon precio a tu servicio según el alcance y firma un acuerdo que proteja al creador y a ti."
+   },
+   {
+    "title": "Encuentra creadores y empieza bien",
+    "goal": "Consigue tus primeros clientes con un contacto honesto y luego haz una buena incorporación para que el primer mes vaya con calma."
+   },
+   {
+    "title": "Planea contenido que retenga suscriptores",
+    "goal": "Lleva un calendario en el que el creador pueda confiar y aprende qué funciona de verdad con su público."
+   },
+   {
+    "title": "Mensajes que mantienen la confianza",
+    "goal": "Maneja los mensajes con suscriptores con la voz del creador, dentro de sus límites y sin agotarte."
+   },
+   {
+    "title": "Dinero, registros y disputas",
+    "goal": "Lleva registros financieros en orden, protégete en disputas de pago y conoce lo que de verdad te paga cada cliente."
+   },
+   {
+    "title": "Haz crecer la cuenta y tu cartera de clientes",
+    "goal": "Haz crecer las cuentas con expectativas honestas, entrega buenos reportes y escala tu propio negocio sin que baje la calidad."
+   }
+  ],
+  "breakdown": null
+ },
+ "affiliate": {
+  "name": "Marketing de afiliados",
+  "description": "Gana comisiones promocionando productos en los que crees, desde Amazon hasta TikTok Shop y más.",
+  "modules": [
+   {
+    "title": "Empieza aquí: lo básico, con honestidad",
+    "goal": "Entiende cómo funcionan las comisiones, elige tus primeros programas y avisa de cada enlace de afiliado como corresponde."
+   },
+   {
+    "title": "Únete a Amazon, TikTok Shop y redes de afiliados",
+    "goal": "Inscríbete en los principales programas para principiantes, crea tus primeros enlaces y respeta las reglas de cada programa."
+   },
+   {
+    "title": "Crea contenido que genere confianza",
+    "goal": "Planea contenido útil que resuelva problemas reales, compare opciones con justicia y lleve a ventas más grandes."
+   },
+   {
+    "title": "Mide qué funciona y luego crece",
+    "goal": "Mide cada enlace, quita lo que no vende, mantén actualizado lo que funciona y crece con comisiones recurrentes."
+   }
+  ],
+  "breakdown": null
+ },
+ "cleaning": {
+  "name": "Limpieza y lavado a presión",
+  "description": "Limpia casas y oficinas pequeñas, y lava a presión entradas de autos, patios, fachadas y terrazas para gente de tu zona.",
+  "modules": [
+   {
+    "title": "Empieza aquí: tu primera oferta",
+    "goal": "Entiende los dos lados del trabajo, arma tu negocio de forma simple y legal, y escribe una primera oferta acotada que ya hayas practicado."
+   },
+   {
+    "title": "Equípate y trabaja con seguridad",
+    "goal": "Lleva el equipo correcto, evita errores con químicos y superficies, y termina cada trabajo con el mismo cuidado."
+   },
+   {
+    "title": "Encuentra y gana clientes",
+    "goal": "Consigue tus primeros clientes entre la gente de tu zona, muestra tu trabajo con permiso y envía cotizaciones que reciban un sí."
+   },
+   {
+    "title": "Manéjalo como un negocio",
+    "goal": "Cotiza con un alcance claro y un mínimo, resuelve problemas, lleva cuentas simples y consigue clientes que regresen."
+   }
+  ],
+  "breakdown": {
+   "group": "local",
+   "oneLiner": "Limpia casas y lava entradas de autos para gente cerca de ti",
+   "cost": "Bajo a medio: el kit de limpieza es barato; la hidrolavadora cuesta más",
+   "difficulty": "Fácil de empezar",
+   "pieces": [
+    {
+     "title": "Qué es",
+     "body": "Un servicio de una sola persona en el que limpias casas y oficinas pequeñas, y lavas a presión entradas de autos, patios, fachadas y terrazas. Los clientes pagan por un resultado terminado y por el tiempo que se ahorran.",
+     "points": [
+      "Limpieza de casas y oficinas pequeñas",
+      "Lavado de entradas de autos, patios, fachadas y terrazas",
+      "Pago por trabajo o con visitas periódicas"
+     ]
+    },
+    {
+     "title": "Para quién es",
+     "body": "Personas confiables, a las que no les molesta el trabajo físico y que pueden hablar con los vecinos. No necesitas un título, pero sí ser una persona de confianza y cuidadosa.",
+     "points": [
+      "Responsable y puntual, siempre",
+      "Sin problema con el trabajo físico y manual",
+      "Te animas a pedir trabajo en tu zona"
+     ]
+    },
+    {
+     "title": "Una semana normal",
+     "body": "Una mezcla de trabajos, cotizaciones y tareas administrativas: algunas limpiezas o lavados, unas cuantas cotizaciones, fotos, mensajes y contabilidad. El clima puede mover los trabajos al aire libre.",
+     "points": [
+      "Trabajos en días fijos y cotizaciones entre uno y otro",
+      "El clima puede cambiar los días de lavado al aire libre",
+      "Una o dos horas para mensajes y cuentas"
+     ]
+    },
+    {
+     "title": "Cuánto cuesta empezar",
+     "body": "Para limpiar necesitas un kit básico. Una hidrolavadora cuesta más, pero puedes rentar una al principio. Suma el seguro y cualquier registro local. Los costos varían mucho, así que pide cotizaciones reales.",
+     "points": [
+      "Productos de limpieza y una aspiradora",
+      "Hidrolavadora y boquillas, o renta al principio",
+      "Seguro, registro y un plan de teléfono"
+     ]
+    },
+    {
+     "title": "Herramientas que usarás",
+     "body": "Paños, cepillos y limpiadores para las casas. Una hidrolavadora, mangueras, boquillas y un limpiador de superficies para exteriores. Equipo de seguridad, un teléfono y un calendario.",
+     "points": [
+      "Paños de microfibra, trapeador y aspiradora",
+      "Hidrolavadora y limpiador de superficies",
+      "Perfil de Empresa de Google y un calendario"
+     ]
+    },
+    {
+     "title": "Lo difícil",
+     "body": "El trabajo es físico y el clima puede cancelar trabajos. Los primeros meses suelen ser lentos, algunos clientes son exigentes y un mal movimiento puede dañar una propiedad.",
+     "points": [
+      "Trabajo físico y músculos adoloridos",
+      "Un arranque lento mientras la gente te conoce",
+      "Riesgo de daños: prueba primero y ten seguro"
+     ]
+    }
+   ]
+  }
+ },
+ "lawn": {
+  "name": "Cuidado de jardines y paisajismo",
+  "description": "Corta, recorta y arregla el césped de tus vecinos en una ruta semanal, y luego suma limpiezas, mantillo y plantaciones sencillas.",
+  "modules": [
+   {
+    "title": "Empieza aquí: tu primera oferta de corte de césped",
+    "goal": "Entiende el trabajo, arma tu negocio de forma simple y legal, y escribe una oferta clara de corte semanal con un precio inicial."
+   },
+   {
+    "title": "Haz bien el trabajo: equipo y seguridad",
+    "goal": "Elige y mantén tu equipo, trabaja con seguridad, y corta, recorta y perfila cada jardín con limpieza y a buen tiempo."
+   },
+   {
+    "title": "Encuentra y gana tus primeros clientes",
+    "goal": "Consigue tus primeros clientes cerca de casa, muestra tu trabajo en internet y cotiza cada jardín con claridad y por escrito."
+   },
+   {
+    "title": "Manéjalo como un negocio",
+    "goal": "Agrupa a tus clientes en rutas compactas, planea según las temporadas, mantén el dinero simple, resuelve problemas y aprende cuándo crecer."
+   }
+  ],
+  "breakdown": {
+   "group": "local",
+   "oneLiner": "Mantén impecable el césped del vecindario cada semana",
+   "cost": "Bajo a medio: equipo básico y seguro",
+   "difficulty": "Fácil de empezar",
+   "pieces": [
+    {
+     "title": "Qué es",
+     "body": "Cortas, recortas, perfilas y arreglas el césped en casa de tus clientes con un horario regular, y luego sumas limpiezas, mantillo y plantaciones sencillas.",
+     "points": [
+      "Cortar el césped cada semana es el servicio principal",
+      "Las limpiezas y el mantillo llenan las otras temporadas",
+      "Vas a la casa de cada cliente"
+     ]
+    },
+    {
+     "title": "Para quién es",
+     "body": "Personas a las que les gusta trabajar al aire libre, que llegan a tiempo y no tienen problema con el trabajo físico con calor, viento y lluvia.",
+     "points": [
+      "Puedes cumplir un horario semanal",
+      "No te molestan el ruido, el sudor ni la tierra",
+      "Te gusta ver un antes y después claro"
+     ]
+    },
+    {
+     "title": "Una semana normal",
+     "body": "Cortas el césped en días fijos por vecindario, cotizas jardines nuevos, respondes mensajes, envías facturas y mantienes tu equipo en buen estado.",
+     "points": [
+      "Corta en rutas compactas en días fijos",
+      "Cotiza y escribe a clientes nuevos",
+      "Factura, anota el dinero y da mantenimiento al equipo"
+     ]
+    },
+    {
+     "title": "Cuánto cuesta empezar",
+     "body": "Una podadora, una recortadora, una sopladora, equipo de seguridad, recipientes para gasolina y seguro, además de una forma de transportarlo todo. El equipo usado puede bajar el costo.",
+     "points": [
+      "Herramientas básicas y equipo de seguridad",
+      "Seguro y cualquier registro local",
+      "Una camioneta, furgoneta o remolque para llevar el equipo"
+     ]
+    },
+    {
+     "title": "Herramientas que usarás",
+     "body": "Equipo motorizado, una herramienta de mapas para medir jardines, tu teléfono para fotos y cotizaciones, y una forma sencilla de facturar.",
+     "points": [
+      "Podadora, recortadora, sopladora y bordeadora",
+      "Mapa satelital, cámara del teléfono, calendario",
+      "Perfil de Empresa de Google y una app de pagos"
+     ]
+    },
+    {
+     "title": "Lo difícil",
+     "body": "Trabajo físico con cualquier clima, meses flojos fuera de temporada, mucha competencia y máquinas que se descomponen en mal momento.",
+     "points": [
+      "Lluvia, calor y meses lentos en invierno",
+      "Otros jardineros suelen cobrar barato",
+      "Los hábitos seguros importan en cada jardín"
+     ]
+    }
+   ]
+  }
+ },
+ "detailing": {
+  "name": "Detallado de autos a domicilio",
+  "description": "Limpia autos en la casa o el trabajo de tus clientes con un kit pequeño, un menú sencillo y un trabajo cuidadoso y honesto.",
+  "modules": [
+   {
+    "title": "Empieza aquí: tu primer auto limpio",
+    "goal": "Entiende el trabajo, revisa dónde puedes lavar y arma un menú sencillo para ofrecer a tu primer cliente."
+   },
+   {
+    "title": "Equipo, productos y un proceso seguro",
+    "goal": "Elige un kit básico, planea el agua y la electricidad, y sigue un orden fijo por dentro y por fuera para nunca dañar el auto de un cliente."
+   },
+   {
+    "title": "Encuentra y gana clientes",
+    "goal": "Consigue tus primeros clientes entre vecinos, edificios de apartamentos, lugares de trabajo y flotas, muestra tu trabajo con permiso y cotiza a partir de fotos."
+   },
+   {
+    "title": "Manéjalo como un negocio",
+    "goal": "Cobra según el tamaño y el estado del auto, planea tus días, maneja las quejas, lleva cuentas simples y aprende servicios avanzados antes de venderlos."
+   }
+  ],
+  "breakdown": {
+   "group": "local",
+   "oneLiner": "Deja los autos como nuevos en la puerta del cliente",
+   "cost": "Bajo a medio: desde unos cientos de dólares",
+   "difficulty": "Fácil de empezar",
+   "pieces": [
+    {
+     "title": "Qué es",
+     "body": "Vas a la casa o al trabajo del cliente y limpias su auto donde está estacionado: lavado, aspirado, limpieza interior, vidrios, ruedas y una cera o sellador.",
+     "points": [
+      "Lavar a mano y secar el exterior",
+      "Aspirar y limpiar el interior",
+      "Limpiar vidrios y aplicar cera o sellador"
+     ]
+    },
+    {
+     "title": "Para quién es",
+     "body": "Personas a las que les gusta el trabajo práctico y físico, que se fijan en los pequeños detalles y disfrutan conversar con los clientes. Para empezar basta con un auto y algunas cosas básicas.",
+     "points": [
+      "Te gusta el trabajo manual y ordenado",
+      "Tienes un auto que puede llevar los productos",
+      "Tienes paciencia con los detalles"
+     ]
+    },
+    {
+     "title": "Una semana normal",
+     "body": "Unos cuantos trabajos al principio, más tiempo para reservas, manejar, preparar y recoger. La lluvia, el calor y el frío pueden cambiar tus planes.",
+     "points": [
+      "Responde solicitudes de cotización y agenda trabajos",
+      "Maneja, limpia uno o dos autos y recoge",
+      "Publica fotos y da seguimiento a tus clientes"
+     ]
+    },
+    {
+     "title": "Cuánto cuesta empezar",
+     "body": "Un kit básico, una aspiradora decente, un plan para el agua y la electricidad, y seguro. Los costos varían según el lugar, así que ponle precio a tu propia lista antes de comprar.",
+     "points": [
+      "Cubetas, guantes de lavado, microfibra, productos",
+      "Aspiradora y un plan de agua y electricidad",
+      "Seguro y cualquier registro local"
+     ]
+    },
+    {
+     "title": "Herramientas que usarás",
+     "body": "Herramientas manuales sencillas y un teléfono. Reservas, cotizas y cobras desde tu teléfono, y limpias con un kit pequeño y bien elegido.",
+     "points": [
+      "Dos cubetas con separadores de suciedad",
+      "Microfibra gruesa y cepillos suaves",
+      "Teléfono para fotos, cotizaciones y cobros"
+     ]
+    },
+    {
+     "title": "Lo difícil",
+     "body": "Es un trabajo cansado, el arranque es lento y los autos sucios toman más tiempo del que esperas. Las reglas sobre el agua y el clima pueden frenarte un día entero.",
+     "points": [
+      "Las reglas de agua y escurrimiento cambian según el lugar",
+      "El clima y las temporadas cambian tu calendario",
+      "Reclamos por rayones y clientes difíciles"
+     ]
+    }
+   ]
+  }
+ },
+ "handyman": {
+  "name": "Reparaciones del hogar",
+  "description": "Haz pequeñas reparaciones, instalaciones y armado de muebles en casas, desde montar televisores hasta resanar paredes, con seguridad y dentro de las reglas locales.",
+  "modules": [
+   {
+    "title": "Empieza aquí: una lista corta de trabajos seguros",
+    "goal": "Elige cinco trabajos que hagas bien, aprende hasta dónde llegan las reparaciones del hogar, regístrate de forma simple y escribe tu primer menú de trabajos."
+   },
+   {
+    "title": "Haz el trabajo bien y con seguridad",
+    "goal": "Arma un kit básico de herramientas, trabaja con seguridad, acuerda el alcance por escrito y toma fotos de cada trabajo."
+   },
+   {
+    "title": "Encuentra y gana clientes",
+    "goal": "Consigue tus primeros trabajos con conocidos, vecinos, arrendadores y Google, y haz que cada trabajo terminado te traiga el siguiente."
+   },
+   {
+    "title": "Manéjalo como un negocio",
+    "goal": "Pon precio a tus trabajos, resuelve problemas con calma, agrupa tu agenda, lleva cuentas simples y consigue clientes que regresen."
+   }
+  ],
+  "breakdown": {
+   "group": "local",
+   "oneLiner": "Arregla, monta y arma cosas pequeñas en casa de la gente",
+   "cost": "Bajo a medio: herramientas, seguro y cualquier cuota local",
+   "difficulty": "Media",
+   "pieces": [
+    {
+     "title": "Qué es",
+     "body": "Haces pequeñas reparaciones e instalaciones en casa de tus clientes, como montar televisores, armar muebles, resanar paredes y arreglar puertas.",
+     "points": [
+      "Montar televisores, repisas y espejos",
+      "Resanar, pintar y sellar áreas pequeñas",
+      "Arreglar puertas y cambiar herrajes"
+     ]
+    },
+    {
+     "title": "Para quién es",
+     "body": "Personas hábiles, ordenadas y confiables, a las que les gusta conversar con los clientes. Tampoco te debe molestar el trabajo físico.",
+     "points": [
+      "Confiable y puntual",
+      "Sin problema con escaleras y con estar de pie",
+      "Paciencia con los clientes y los trabajos pequeños"
+     ]
+    },
+    {
+     "title": "Una semana normal",
+     "body": "Respondes consultas, cotizas algunos trabajos, agrupas el trabajo por zona y luego facturas y actualizas tus cuentas. Las semanas pueden ser disparejas, sobre todo al principio.",
+     "points": [
+      "Responde consultas y agenda visitas",
+      "Agrupa trabajos por zona y por día",
+      "Facturas, fotos y cuentas simples"
+     ]
+    },
+    {
+     "title": "Cuánto cuesta empezar",
+     "body": "Sobre todo herramientas, equipo de seguridad, una escalera de tijera y seguro, además de las cuotas de registro o licencia que haya. Los costos varían mucho según la zona, así que pide cotizaciones locales.",
+     "points": [
+      "Herramientas básicas y equipo de seguridad",
+      "Seguro de responsabilidad civil y registro",
+      "Un vehículo, gasolina y un teléfono para el negocio"
+     ]
+    },
+    {
+     "title": "Herramientas que usarás",
+     "body": "Un taladro inalámbrico, un nivel, un detector de vigas y herramientas manuales hacen casi todo el trabajo. Las apps del teléfono se encargan de fotos, agenda, facturas y cobros.",
+     "points": [
+      "Taladro, nivel, detector de vigas, escalera de tijera",
+      "Square o Stripe para cobrar",
+      "Perfil de Empresa de Google y un calendario"
+     ]
+    },
+    {
+     "title": "Lo difícil",
+     "body": "Tus límites van primero: oficios que requieren licencia, topes en dólares y seguridad. El arranque puede ser lento, el trabajo es físico y los trabajos pequeños dejan márgenes bajos.",
+     "points": [
+      "Respetar las reglas locales de licencias",
+      "Un arranque lento y semanas disparejas",
+      "Trabajo físico y márgenes bajos"
+     ]
+    }
+   ]
+  }
+ },
+ "pets": {
+  "name": "Servicios para mascotas",
+  "description": "Pasea perros, haz visitas a domicilio y cuida mascotas en su propia casa, empezando en pequeño en tu vecindario.",
+  "modules": [
+   {
+    "title": "Empieza aquí: tus primeros servicios",
+    "goal": "Elige tus primeros servicios y tu zona, revisa las reglas locales y la cobertura de seguro, y conoce a tu primer dueño con confianza."
+   },
+   {
+    "title": "Haz el trabajo con seguridad",
+    "goal": "Pon tus reglas por escrito, protege las llaves, pasea perros con seguridad y aprende qué hacer en una emergencia."
+   },
+   {
+    "title": "Encuentra y gana clientes",
+    "goal": "Date a conocer con vecinos, veterinarios y grupos locales, crea un perfil gratis en internet, envía actualizaciones y pide reseñas."
+   },
+   {
+    "title": "Manéjalo como un negocio",
+    "goal": "Pon precio a tus visitas, planea tus rutas, lleva cuentas simples y pon límites para que el trabajo sea sostenible."
+   }
+  ],
+  "breakdown": {
+   "group": "local",
+   "oneLiner": "Pasea y cuida mascotas mientras sus dueños no están",
+   "cost": "Bajo: unos cientos de dólares, sobre todo seguro y equipo",
+   "difficulty": "Fácil de empezar",
+   "pieces": [
+    {
+     "title": "Qué es",
+     "body": "Paseas perros, haces visitas para alimentar y cuidar mascotas, y te quedas en casa del dueño cuando no está. No es una pensión ni una guardería.",
+     "points": [
+      "Paseos de perros de unos 20 a 60 minutos",
+      "Visitas para comida, agua, juego y arenero",
+      "Cuidado por la noche o todo el día en casa del dueño"
+     ]
+    },
+    {
+     "title": "Para quién es",
+     "body": "Personas confiables, tranquilas con los animales y contentas de trabajar al aire libre con cualquier clima, en un lugar donde muchos hogares tienen mascotas.",
+     "points": [
+      "Responsable y puntual, incluso con lluvia",
+      "Tranquilidad con animales de cualquier humor",
+      "Te sientes a gusto cuando te confían una casa"
+     ]
+    },
+    {
+     "title": "Una semana normal",
+     "body": "Bloques cortos y regulares de paseos y visitas, con mensajes, fotos de actualización y reuniones de presentación acomodadas entre ellos.",
+     "points": [
+      "Más trabajo en las mañanas, a mediodía y al anochecer",
+      "Una breve actualización con foto después de cada visita",
+      "Los días festivos y las vacaciones escolares suelen ser lo más ocupado"
+     ]
+    },
+    {
+     "title": "Cuánto cuesta empezar",
+     "body": "Sobre todo el seguro, unas buenas correas, bolsas y un botiquín de primeros auxilios, además del registro del negocio que pida tu zona. Los costos varían según el lugar.",
+     "points": [
+      "Seguro del negocio y cualquier fianza",
+      "Correas, bolsas para desechos, toallas y botiquín",
+      "Registro del negocio, si tu zona lo pide"
+     ]
+    },
+    {
+     "title": "Herramientas que usarás",
+     "body": "Un teléfono, un calendario, una app de mensajes y una forma de cobrar, además de un Perfil de Empresa de Google gratis para que tus vecinos te encuentren.",
+     "points": [
+      "Google Calendar o un programa de agenda como Jobber",
+      "Square, Stripe o PayPal para cobrar",
+      "Perfil de Empresa de Google y una hoja de cuidados para cada mascota"
+     ]
+    },
+    {
+     "title": "Lo difícil",
+     "body": "El mal clima, madrugar, mascotas asustadas o difíciles, cancelaciones de último momento, la presión de los días festivos y el peso de ser responsable de una mascota.",
+     "points": [
+      "Agenda llena en días de lluvia, calor o hielo",
+      "Mascotas asustadas, enfermas o difíciles de manejar",
+      "Un arranque lento mientras ganas confianza y reseñas"
+     ]
+    }
+   ]
+  }
+ }
+}

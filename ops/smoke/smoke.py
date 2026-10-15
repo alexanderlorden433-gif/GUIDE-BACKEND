@@ -262,8 +262,9 @@ def fixture(state, method, path, body):
                 return 403, {'error': "You've used today's free question. It comes back tomorrow, or go Pro for unlimited questions.", 'upgrade': True, 'left': 0, 'limit': 1}
             state['ai_free_left'] = left - 1
             state.setdefault('ai_posts', []).append(body)
-            return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': left - 1, 'limit': 1}
-        return 200, {'reply': 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': None, 'limit': None}
+            return 200, {'reply': state.get('ai_reply') or 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': left - 1, 'limit': 1}
+        state.setdefault('ai_posts', []).append(body)
+        return 200, {'reply': state.get('ai_reply') or 'Start with three packages: Basic, Standard and Premium. Price by deliverables, not hours.', 'left': None, 'limit': None}
     # partner codes: state['codes'] = {'PEAK30': {'days': 30, 'label': 'Peak Freelance'}}
     if p == '/api/codes/redeem' and method == 'POST':
         code = str((body or {}).get('code') or '').strip().upper().replace(' ', '')
@@ -3224,6 +3225,105 @@ def design_polish(browser, base):
         ctx.close(); ctx2.close()
 
 
+def spanish(browser, base):
+    """The app in Spanish (?lang=es, remembered): the landing page, Home, a chapter and a Module 1 lesson read in
+    Spanish; progress is still saved under the English lesson titles; lessons not translated yet say so; The Guider
+    is asked to answer in Spanish; and one tap switches back to English."""
+    step = ['spanish: landing']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    attach_backend(ctx, new_state(False))
+    ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/?lang=es', wait_until='load'); page.wait_for_timeout(1200)
+    r = page.evaluate("""(()=>({lang: document.documentElement.lang, h1: document.querySelector('.lp-h1').innerText,
+        sw: document.querySelector('.lp-lang').textContent, img: document.querySelector('.lp-phone img').getAttribute('src'),
+        cta: document.getElementById('landingSignupBtn').textContent, saved: localStorage.getItem('guide_lang')}))()""")
+    if r['lang'] == 'es' and 'No necesitas' in r['h1'] and r['sw'] == 'English' and r['img'].startswith('img/es/') and r['cta'] != 'Start free' and r['saved'] == 'es':
+        ok(step[0], '?lang=es shows the landing page in Spanish, with Spanish pictures, and remembers it')
+    else:
+        problem(step[0], 'the landing page should be in Spanish', r)
+    shot(page, 'phone-es-landing')
+    no_sideways_scroll(page, step[0])
+    page.click('.lp-lang'); page.wait_for_timeout(1500)
+    r = page.evaluate("({lang: document.documentElement.lang, h1: document.querySelector('.lp-h1').innerText, sw: document.querySelector('.lp-lang').textContent, es: typeof window.GUIDE_ES, saved: localStorage.getItem('guide_lang')})")
+    if r['lang'] == 'en' and "You don't need more videos" in r['h1'] and r['sw'] == 'Español' and r['es'] == 'undefined' and r['saved'] == 'en':
+        ok(step[0], 'the English button switches back, and English pages never load the Spanish file')
+    else:
+        problem(step[0], 'switching back to English did not work', r)
+    ctx.close()
+
+    for pro in (False, True):
+        step = [f"spanish: {'Pro' if pro else 'free'} member"]
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(pro)
+        attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');localStorage.setItem('guide_lang','es');}catch(e){}")
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); continue
+        page.wait_for_timeout(900)
+        home = page.inner_text('#homeView')
+        if 'Hola de nuevo' in home and 'lecciones' in home and "Today's step" not in home:
+            ok(step[0], 'Home is in Spanish')
+        else:
+            problem(step[0], 'Home should be in Spanish', home[:200])
+        page.evaluate("openNiche('lawn')"); page.wait_for_timeout(800)
+        head = page.inner_text('#nicheHeaderBlock')
+        first = page.evaluate("(()=>{const g=document.querySelector('#guideList .guide'); return {title: g.querySelector('.guide-title').textContent, mod: document.querySelector('#guideList .module-title').textContent}})()")
+        if 'Cuidado de jardines' in head and first['title'].startswith('Cómo es') and first['mod'] and 'Start here' not in first['mod']:
+            ok(step[0], 'the chapter name, module and lesson titles are in Spanish')
+        else:
+            problem(step[0], 'the chapter should be in Spanish', {'head': head[:80], 'first': first})
+        page.click('#guideList .guide:not(.locked) .guide-row'); page.wait_for_timeout(500)
+        body = page.inner_text('#guideList .guide.open .guide-content')
+        if 'cortas el césped' in body and 'Seguir leyendo' in body and 'Mark as complete' not in body:
+            ok(step[0], 'a Module 1 lesson reads in Spanish')
+        else:
+            problem(step[0], 'the Module 1 lesson should be in Spanish', body[:200])
+        page.click('#guideList .guide.open .mark-btn'); page.wait_for_timeout(700)
+        if 'lawn|What a one-person lawn business really is' in st['data'].get('completed', []):
+            ok(step[0], 'finishing a lesson saves progress under its English title, so it carries across languages')
+        else:
+            problem(step[0], 'progress should be saved under the English lesson title', st['data'].get('completed'))
+        page.evaluate("closeStepLayer()")
+        if pro:
+            # finish Module 1, then open the first lesson of Module 2 (not translated yet)
+            page.evaluate("(()=>{const n=NICHES.find(x=>x.id==='lawn'); n.guides.filter(g=>g.mod===0).forEach(g=>completed.add('lawn|'+g.title)); renderNicheDetail(); const g2=n.guides.find(g=>g.mod===1); const row=[...document.querySelectorAll('#guideList .guide')].find(x=>x.dataset.gv===gvId('lawn', g2.title)); if(row) row.querySelector('.guide-row').click();})()")
+            page.wait_for_timeout(500)
+            note = page.evaluate("(()=>{const n=document.querySelector('.guide.open .lang-note'); return n ? n.textContent : ''})()")
+            if 'todavía está en inglés' in note:
+                ok(step[0], 'a lesson not translated yet says it is still in English')
+            else:
+                problem(step[0], 'an untranslated lesson should say it is still in English', note)
+            page.evaluate("(()=>{const t=document.querySelector('#subNav [data-sub=\"aichat\"]'); t.click();})()"); page.wait_for_timeout(700)
+            page.fill('#aiChatInput', '¿Cuánto cobro por cortar un jardín?'); page.click('#aiChatSendBtn'); page.wait_for_timeout(800)
+            sent = (st.get('ai_posts') or [{}])[-1]
+            if sent.get('lang') == 'es':
+                ok(step[0], 'The Guider is asked to answer in Spanish')
+            else:
+                problem(step[0], 'The Guider request should say the app is in Spanish', sent)
+            shot(page, 'phone-es-guider')
+        page.evaluate("showHome(); const s=document.getElementById('search'); s.value='césped'; s.dispatchEvent(new Event('input'))"); page.wait_for_timeout(600)
+        res = page.inner_text('#searchResults')
+        if 'césped' in res.lower():
+            ok(step[0], 'search finds lessons by their Spanish words')
+        else:
+            problem(step[0], 'searching in Spanish should find lessons', res[:200])
+        page.evaluate("const s=document.getElementById('search'); s.value=''; s.dispatchEvent(new Event('input'))")
+        page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
+        label = page.inner_text('#langNavBtn')
+        if 'English' in label:
+            ok(step[0], 'the account menu offers English')
+        else:
+            problem(step[0], 'the account menu should offer English', label)
+        no_sideways_scroll(page, step[0])
+        shot(page, f"phone-es-{'pro' if pro else 'free'}-menu")
+        finish(st, step[0]); ctx.close()
+
+
+
+
 def member_website(browser, base):
     """My website: a member fills in a one-page site, saves it, previews it; going live is Pro. Requests from the
     page are listed, can be added to the Lead Pipeline (shown as text, never as page code) and deleted."""
@@ -3358,6 +3458,7 @@ def member_website(browser, base):
         shot(page, 'desktop-website-purple')
         ok(step[0], 'My website opens on a laptop')
         finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3503,6 +3604,7 @@ def thirty_day_plan(browser, base):
 
 
 
+
 def creator_payouts(browser, base):
     """Owner dashboard: a code can carry a creator share, and the payouts card shows each creator's cut
     for a month and lets the owner mark it paid."""
@@ -3539,6 +3641,7 @@ def creator_payouts(browser, base):
     else:
         problem(step[0], 'no Mark paid button on an unpaid creator')
     finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3603,6 +3706,7 @@ def landing_trust(browser, base):
 
 
 
+
 def billing_email_links(browser, base):
     """The billing emails link back with ?open=upgrade ("Pick up where you left off") and ?open=account
     ("Open my account"): the first opens the Pro box for a free member, the second opens account settings."""
@@ -3619,6 +3723,7 @@ def billing_email_links(browser, base):
         else:
             problem(step[0], f'?open={which} did not open the right screen')
         finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3708,6 +3813,7 @@ def public_pages(browser, base):
     else:
         problem(step[0], 'the app page is missing its title, description or share picture', r)
     finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3806,8 +3912,9 @@ def main():
         account_settings(browser, base)
         manage_subscription(browser, base)
         design_polish(browser, base)
-        member_website(browser, base)
+        spanish(browser, base)
         save_retry(browser, base)
+        member_website(browser, base)
         thirty_day_plan(browser, base)
         creator_payouts(browser, base)
         landing_trust(browser, base)

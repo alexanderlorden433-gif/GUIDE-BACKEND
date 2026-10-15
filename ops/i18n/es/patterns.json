@@ -1,0 +1,482 @@
+[
+ [
+  "^Day (\\d+) · (.+) · done$",
+  "Día $1 · $2 · hecho"
+ ],
+ [
+  "^Day (\\d+) · (.+)$",
+  "Día $1 · $2"
+ ],
+ [
+  "^Day (\\d+) of (\\d+)$",
+  "Día $1 de $2"
+ ],
+ [
+  "^30-day plan · (.+)$",
+  "Plan de 30 días · $1"
+ ],
+ [
+  "^(\\d+) of (\\d+) steps done$",
+  "$1 de $2 pasos hechos"
+ ],
+ [
+  "^Your week (\\d+) check-in\\. Tell The Guider how it went and get your focus for week (\\d+)\\.$",
+  "Tu revisión de la semana $1. Cuéntale a The Guider cómo te fue y recibe tu enfoque para la semana $2."
+ ],
+ [
+  "^, and (\\d+) more$",
+  ", y $1 más"
+ ],
+ [
+  "^1 earlier day is still open\\.$",
+  "Todavía tienes 1 día anterior pendiente."
+ ],
+ [
+  "^(\\d+) earlier days are still open\\.$",
+  "Todavía tienes $1 días anteriores pendientes."
+ ],
+ [
+  "^(.+) · Goal by day 30: (.+)$",
+  "$1 · Meta para el día 30: $2"
+ ],
+ [
+  "^Week (\\d+)$",
+  "Semana $1"
+ ],
+ [
+  "^Module (\\d+) · (.+)$",
+  "Módulo $1 · $2"
+ ],
+ [
+  "^How week (\\d+) went, and what to focus on next\\.$",
+  "Cómo te fue en la semana $1 y en qué enfocarte ahora."
+ ],
+ [
+  "^Starts with Module (\\d+), “(.+)”\\.$",
+  "Empieza con el Módulo $1, “$2”."
+ ],
+ [
+  "^Starts with Module (\\d+)\\.$",
+  "Empieza con el Módulo $1."
+ ],
+ [
+  "^Picks up where you are: Module (\\d+), lesson (\\d+) of (\\d+)\\.$",
+  "Sigue desde donde vas: Módulo $1, lección $2 de $3."
+ ],
+ [
+  "^That module opens on (.+), so day 1 is then\\.$",
+  "Ese módulo se abre el $1, así que ese será el día 1."
+ ],
+ [
+  "^Your next module opens on (.+), so day 1 is then\\.$",
+  "Tu próximo módulo se abre el $1, así que ese será el día 1."
+ ],
+ [
+  "^Starts (.+)$",
+  "Empieza: $1"
+ ],
+ [
+  "^Requests from your page <span class=\"site-new\">(\\d+) new</span>$",
+  "Solicitudes desde tu página <span class=\"site-new\">$1 nuevas</span>"
+ ],
+ [
+  "^Service (\\d+)$",
+  "Servicio $1"
+ ],
+ [
+  "^Price for service (\\d+)$",
+  "Precio del servicio $1"
+ ],
+ [
+  "^Note for service (\\d+)$",
+  "Nota del servicio $1"
+ ],
+ [
+  "^Remove service (\\d+)$",
+  "Quitar el servicio $1"
+ ],
+ [
+  "^This module opens in (\\d+) days?\\.$",
+  "Este módulo se abre en $1 día(s)."
+ ],
+ [
+  "^This check-in opens on day (\\d+)\\.$",
+  "Esta revisión se abre el día $1."
+ ],
+ [
+  "^(.+) is in your Lead Pipeline\\.$",
+  "$1 ya está en tu embudo de contactos."
+ ],
+ [
+  "^Delete the request from (.+)\\?$",
+  "¿Borrar la solicitud de $1?"
+ ],
+ [
+  "^<b>Your step:</b> (.+)$",
+  "<b>Tu paso:</b> $1"
+ ],
+ [
+  "^<b>Your step</b>(.+)$",
+  "<b>Tu paso</b>$1"
+ ],
+ [
+  "^Welcome back, (.+)\\.$",
+  "Hola de nuevo, $1."
+ ],
+ [
+  "^Welcome, (.+)\\.$",
+  "Te damos la bienvenida, $1."
+ ],
+ [
+  "^Good morning, (.+)\\.$",
+  "Buenos días, $1."
+ ],
+ [
+  "^Good afternoon, (.+)\\.$",
+  "Buenas tardes, $1."
+ ],
+ [
+  "^Good evening, (.+)\\.$",
+  "Buenas noches, $1."
+ ],
+ [
+  "^<b>Your free question for today is ready\\.</b> Free members get (\\d+) a day\\. Pro members ask as much as they like\\.$",
+  "<b>Tu pregunta gratis de hoy está lista.</b> Los miembros gratis tienen $1 al día. Los miembros Pro preguntan todo lo que quieran."
+ ],
+ [
+  "^Ask The Guider anything about running a <strong>(.+)</strong> business: pricing, clients, workflow, whatever's on your mind\\. It can see how far you are through this chapter and the figures in your own trackers, so ask about your actual numbers\\. Answers are AI-generated and won't always be perfect; use judgment\\.$",
+  "Pregúntale a The Guider lo que quieras sobre tu negocio de <strong>$1</strong>: precios, clientes, cómo organizarte, lo que tengas en mente. Puede ver cuánto llevas de este capítulo y los números de tus propios registros, así que pregunta por tus cifras reales. Las respuestas las genera una IA y no siempre serán perfectas; usa tu criterio."
+ ],
+ [
+  "^<strong>Posts here are public to everyone using The Guide who opens (.+)\\.</strong> Keep it constructive\\.$",
+  "<strong>Lo que publiques aquí lo ve cualquier persona en The Guide que abra $1.</strong> Mantén un tono constructivo."
+ ],
+ [
+  "^No posts yet in (.+) · be the first to start a conversation\\.$",
+  "Todavía no hay publicaciones en $1 · sé la primera persona en iniciar una conversación."
+ ],
+ [
+  "^<b>Templates are part of Pro\\.</b> (\\d+) ready-to-send (.+) templates: contracts, pitch emails, estimates\\. Here is a peek\\.$",
+  "<b>Las plantillas son parte de Pro.</b> $1 plantillas de $2 listas para enviar: contratos, correos de presentación, cotizaciones. Aquí tienes un adelanto."
+ ],
+ [
+  "^Track clients, follow-ups, and more for (.+) -- right in the app, no spreadsheet needed\\.$",
+  "Lleva el registro de clientes, seguimientos y más para $1, aquí mismo en la app, sin hojas de cálculo."
+ ],
+ [
+  "^<strong>Profiles here are public to everyone using The Guide who opens (.+)</strong>, not just people you know\\. Only share contact info you're genuinely comfortable being public\\. Creating a profile is entirely optional\\.$",
+  "<strong>Los perfiles de aquí los ve cualquier persona en The Guide que abra $1</strong>, no solo la gente que conoces. Comparte solo los datos de contacto que te parezca bien hacer públicos. Crear un perfil es totalmente opcional."
+ ],
+ [
+  "^If you're experienced in (.+) and want to help beginners or connect with other advanced people, create a short public profile\\.$",
+  "Si tienes experiencia en $1 y quieres ayudar a quienes empiezan o conectar con otras personas con experiencia, crea un perfil público corto."
+ ],
+ [
+  "^Other (.+) mentors & networkers$",
+  "Otros mentores y contactos de $1"
+ ],
+ [
+  "^No other (.+) mentors listed yet\\. Be the first!$",
+  "Todavía no hay otros mentores de $1. ¡Sé el primero!"
+ ],
+ [
+  "^1 day$",
+  "1 día"
+ ],
+ [
+  "^Lesson (\\d+): (.+), part of Pro$",
+  "Lección $1: $2, parte de Pro"
+ ],
+ [
+  "^Lesson (\\d+): (.+), locked until you finish the one before$",
+  "Lección $1: $2, se abre cuando termines la anterior"
+ ],
+ [
+  "^Lesson (\\d+): (.+), your step$",
+  "Lección $1: $2, tu paso"
+ ],
+ [
+  "^Lesson (\\d+): (.+), done$",
+  "Lección $1: $2, hecha"
+ ],
+ [
+  "^Lesson (\\d+): (.+), opens later$",
+  "Lección $1: $2, se abre más adelante"
+ ],
+ [
+  "^Lesson (\\d+) of (\\d+) · (\\d+) min read · (.+)$",
+  "Lección $1 de $2 · $3 min de lectura · $4"
+ ],
+ [
+  "^Lesson (\\d+) of (\\d+)$",
+  "Lección $1 de $2"
+ ],
+ [
+  "^(.+) · lesson (\\d+) of (\\d+)$",
+  "$1 · lección $2 de $3"
+ ],
+ [
+  "^Next up · (.+) · lesson (\\d+) of (\\d+)$",
+  "Lo que sigue · $1 · lección $2 de $3"
+ ],
+ [
+  "^Module (\\d+)$",
+  "Módulo $1"
+ ],
+ [
+  "^Module (\\d+) · Free$",
+  "Módulo $1 · Gratis"
+ ],
+ [
+  "^Module (\\d+) of (\\d+)$",
+  "Módulo $1 de $2"
+ ],
+ [
+  "^(\\d+) modules · (\\d+) lessons$",
+  "$1 módulos · $2 lecciones"
+ ],
+ [
+  "^(\\d+) lessons$",
+  "$1 lecciones"
+ ],
+ [
+  "^(\\d+) of (\\d+) done$",
+  "$1 de $2 hechas"
+ ],
+ [
+  "^(\\d+) of (\\d+) complete$",
+  "$1 de $2 completadas"
+ ],
+ [
+  "^(\\d+) Guides$",
+  "$1 guías"
+ ],
+ [
+  "^(\\d+) min read$",
+  "$1 min de lectura"
+ ],
+ [
+  "^(\\d+) min read · or come back tomorrow$",
+  "$1 min de lectura · o vuelve mañana"
+ ],
+ [
+  "^(\\d+) min$",
+  "$1 min"
+ ],
+ [
+  "^Watch video · (\\d+:\\d\\d)$",
+  "Video en inglés · $1"
+ ],
+ [
+  "^Screen (\\d+) of (\\d+)$",
+  "Pantalla $1 de $2"
+ ],
+ [
+  "^Step (\\d+) of (\\d+)$",
+  "Paso $1 de $2"
+ ],
+ [
+  "^Step (\\d+)$",
+  "Paso $1"
+ ],
+ [
+  "^[Oo]pens in 1 day$",
+  "Se abre en 1 día"
+ ],
+ [
+  "^[Oo]pens in (\\d+) days$",
+  "Se abre en $1 días"
+ ],
+ [
+  "^Your next module opens in 1 day$",
+  "Tu próximo módulo se abre en 1 día"
+ ],
+ [
+  "^Your next module opens in (\\d+) days$",
+  "Tu próximo módulo se abre en $1 días"
+ ],
+ [
+  "^The next module opens in 1 day\\.$",
+  "El próximo módulo se abre en 1 día."
+ ],
+ [
+  "^The next module opens in (\\d+) days\\.$",
+  "El próximo módulo se abre en $1 días."
+ ],
+ [
+  "^This module opens in (\\d+) days?\\. Until then, finish what's open or look at another chapter\\.$",
+  "Este módulo se abre en $1 día(s). Mientras tanto, termina lo que ya está abierto o mira otro capítulo."
+ ],
+ [
+  "^(\\d+) days?$",
+  "$1 días"
+ ],
+ [
+  "^(\\d+)-Day Streak$",
+  "Racha de $1 días"
+ ],
+ [
+  "^(\\d+) days? streak$",
+  "Racha de $1 días"
+ ],
+ [
+  "^Day (\\d+) of your streak\\.$",
+  "Día $1 de tu racha."
+ ],
+ [
+  "^(\\d+) of (\\d+) lessons? done$",
+  "$1 de $2 lecciones hechas"
+ ],
+ [
+  "^(\\d+) lessons? done$",
+  "$1 lecciones hechas"
+ ],
+ [
+  "^(\\d+) questions? to The Guider$",
+  "$1 preguntas a The Guider"
+ ],
+ [
+  "^(\\d+)-day streak$",
+  "racha de $1 días"
+ ],
+ [
+  "^Finish all (\\d+) lessons and earn the <b>(.+)</b> certificate, with your name on it\\.$",
+  "Termina las $1 lecciones y obtén el certificado de <b>$2</b>, con tu nombre."
+ ],
+ [
+  "^\\$([\\d.,]+)/mo$",
+  "$$1/mes"
+ ],
+ [
+  "^\\$([\\d.,]+)/yr$",
+  "$$1/año"
+ ],
+ [
+  "^\\$([\\d.,]+)/hr$",
+  "$$1/hora"
+ ],
+ [
+  "^or \\$([\\d.,]+) a year, save \\$([\\d.,]+) \\((\\d+)%\\)$",
+  "o $$1 al año, ahorras $$2 ($3%)"
+ ],
+ [
+  "^Start free, then Pro from \\$([\\d.,]+)/mo$",
+  "Empieza gratis; después, Pro desde $$1/mes"
+ ],
+ [
+  "^Try it free for (\\d+) days$",
+  "Pruébalo gratis por $1 días"
+ ],
+ [
+  "^Try it free for (\\d+) days\\. Cancel any time\\.$",
+  "Pruébalo gratis por $1 días. Cancela cuando quieras."
+ ],
+ [
+  "^Free for (\\d+) days, then it renews automatically unless you cancel\\. Cancel any time from your account\\.$",
+  "Gratis por $1 días; después se renueva solo, a menos que canceles. Cancela cuando quieras desde tu cuenta."
+ ],
+ [
+  "^About (\\d+) months free, billed once a year$",
+  "Unos $1 meses gratis, se cobra una vez al año"
+ ],
+ [
+  "^Module 1 of all (\\d+) courses is free forever\\. Pro opens the other (\\d+) lessons, plus unlimited questions to the AI mentor, templates, client trackers and PDF exports\\.$",
+  "El Módulo 1 de los $1 cursos es gratis para siempre. Pro abre las otras $2 lecciones, además de preguntas ilimitadas al mentor con IA, plantillas, registros de clientes y descargas en PDF."
+ ],
+ [
+  "^Step one of (\\d+) in (.+) is ready\\. Module 1 \\((\\d+) lessons\\) is free, so you can open it right now\\. A free account saves your progress\\.$",
+  "El paso uno de $1 en $2 está listo. El Módulo 1 ($3 lecciones) es gratis, así que puedes abrirlo ahora mismo. Una cuenta gratis guarda tu progreso."
+ ],
+ [
+  "^You finished Module 1 of (.+) in a day\\.$",
+  "Terminaste el Módulo 1 de $1 en un día."
+ ],
+ [
+  "^You finished Module 1 of (.+) in (\\d+) days\\.$",
+  "Terminaste el Módulo 1 de $1 en $2 días."
+ ],
+ [
+  "^You finished Module 1 of (.+)\\.$",
+  "Terminaste el Módulo 1 de $1."
+ ],
+ [
+  "^(.+): the free part is done$",
+  "$1: terminaste la parte gratis"
+ ],
+ [
+  "^Your Pro trial ends in (\\d+) days\\.$",
+  "Tu prueba de Pro termina en $1 días."
+ ],
+ [
+  "^(\\d+) more lessons?$",
+  "$1 lecciones más"
+ ],
+ [
+  "^(\\d+) templates?$",
+  "$1 plantillas"
+ ],
+ [
+  "^(\\d+) trackers?$",
+  "$1 registros"
+ ],
+ [
+  "^Ask The Guider a (.+) question…$",
+  "Pregúntale a The Guider sobre $1…"
+ ],
+ [
+  "^Your (.+) business assistant$",
+  "Tu asistente para $1"
+ ],
+ [
+  "^Hi, I'm The Guider\\. Ask me your first (.+) question below\\.$",
+  "Hola, soy The Guider. Hazme abajo tu primera pregunta sobre $1."
+ ],
+ [
+  "^Free members get (\\d+) a day\\. Pro members ask as much as they like\\.$",
+  "Los miembros gratis tienen $1 al día. Los miembros Pro preguntan todo lo que quieran."
+ ],
+ [
+  "^(\\d+) new$",
+  "$1 nuevas"
+ ],
+ [
+  "^(\\d+)/(\\d+)$",
+  "$1/$2"
+ ],
+ [
+  "^(.+) · (\\d+) of (\\d+) done$",
+  "$1 · $2 de $3 hechas"
+ ],
+ [
+  "^(\\d+) days in a row$",
+  "$1 días seguidos"
+ ],
+ [
+  "^(\\d+)h ago$",
+  "hace $1 h"
+ ],
+ [
+  "^(\\d+)m ago$",
+  "hace $1 min"
+ ],
+ [
+  "^(\\d+)d ago$",
+  "hace $1 d"
+ ],
+ [
+  "^Guides done \\((\\d+)%\\)$",
+  "Guías hechas ($1%)"
+ ],
+ [
+  "^Lessons done \\((\\d+)%\\)$",
+  "Lecciones hechas ($1%)"
+ ],
+ [
+  "^Next milestone: (\\d+) Pro referrals$",
+  "Próxima meta: $1 referidos Pro"
+ ],
+ [
+  "^(\\d+) Chapters Done$",
+  "$1 capítulos terminados"
+ ]
+]
