@@ -3,7 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>The Guide</title>
+<title>The Guide: start a real side business, step by step</title>
+<meta name="description" content="Pick a real business, from lawn care and cleaning to e-commerce and UGC, and follow it as a course: modules in order, narrated video lessons and an AI mentor. Module 1 of every course is free.">
+<link rel="canonical" href="https://theguide.company/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Guide">
+<meta property="og:title" content="The Guide: start a real side business, step by step">
+<meta property="og:description" content="Real businesses taught as courses, one step at a time. Module 1 of every course is free.">
+<meta property="og:url" content="https://theguide.company/">
+<meta property="og:image" content="https://theguide.company/img/og/og-default.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"The Guide","url":"https://theguide.company","logo":"https://theguide.company/icons/icon-512.png"}</script>
 
 <!-- PWA: install-to-home-screen + offline support -->
 <link rel="manifest" href="manifest.json">
@@ -5455,6 +5467,9 @@
   .module-head:first-child{margin-top:0;}
   .module-head.done .module-count{color:var(--grape-soft);}
 
+  .lp-quiz-link{margin:var(--sp-4) 0 0; font-size:15px; color:var(--ink-soft);}
+  .lp-quiz-link a{color:var(--grape-soft); font-weight:600;}
+
   /* ---------- loading and empty states ---------- */
   .skel-wrap{display:block;}
   .skeleton{background:var(--card-2); background-image:none; animation:skelPulse 1.4s ease-in-out infinite; border-radius:6px;}
@@ -5645,6 +5660,7 @@
         <h2 class="lp-h2">Try step one. No signup.</h2>
         <p class="lp-lead">Pick a business. This is the first real thing you would do in its course.</p>
         <div class="lp-pick" id="lpPick" role="group" aria-label="Pick a business"></div>
+        <p class="lp-quiz-link">Not sure which to pick? <a href="/quiz/">Take the 2-minute quiz</a></p>
       </div>
       <div class="lp-demo" id="lpDemo" aria-live="polite"></div>
     </div>
@@ -5858,7 +5874,7 @@
 
   <footer class="lp-foot">
     <div class="lp-wrap">
-      Questions? Email <a href="mailto:TheGuide1@gmail.com">TheGuide1@gmail.com</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
+      <a href="/start/">Business guides</a> · <a href="/tools/">Free calculators</a> · Questions? Email <a href="mailto:TheGuide1@gmail.com">TheGuide1@gmail.com</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
     </div>
   </footer>
 </div>
@@ -8234,6 +8250,10 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
     const real = (n)=> n && n.guides && n.guides[0] && n.guides[0].action;
     let list = FEATURED.map(id=> NICHES.find(n=> n.id === id)).filter(real);
     if(list.length < 4) list = NICHES.filter(real).slice(0, 8);
+    // ?start=<chapter> from a business guide page or the quiz: lead with that business
+    let wanted = null;
+    try{ const id = new URLSearchParams(window.location.search).get('start'); wanted = id && NICHES.find(n=> n.id === id && real(n)); }catch(e){}
+    if(wanted){ list = [wanted, ...list.filter(n=> n.id !== wanted.id)].slice(0, 8); }
     pick.innerHTML = list.map(n=> `<button type="button" data-id="${gvEsc(n.id)}" aria-pressed="false"><em>${nicheIco(n)}</em>${gvEsc(n.name)}</button>`).join('');
     const show = (n, chosen)=>{
       if(chosen){ try{ sessionStorage.setItem('guide_demo_pick', n.id); }catch(e){} }   // sign-up starts them on this business
@@ -8270,7 +8290,11 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
       const n = b && list.find(x=> x.id === b.dataset.id);
       if(n) show(n, true);
     });
-    show(list[0], false);
+    show(list[0], !!wanted);
+    if(wanted && !window.__startHandled){
+      window.__startHandled = true;
+      setTimeout(()=>{ const b = document.getElementById('landingSignupBtn'); if(b && !currentEmail) b.click(); }, 400);
+    }
   }
 
   // scroll to a section
@@ -12772,6 +12796,14 @@ async function renderPushOffer(){
 // ?open=live (from a tapped push notification) opens the Live screen once the app is in
 function handleOpenParam(){
   const params = new URLSearchParams(window.location.search);
+  // ?start=<chapter> (from the public business guides and the quiz) opens that chapter
+  const start = params.get('start');
+  if(start && typeof NICHES !== 'undefined' && NICHES.some(n => n.id === start)){
+    params.delete('start');
+    const q = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (q ? '?' + q : ''));
+    setTimeout(()=> openNiche(start), 300);
+  }
   const open = params.get('open');
   if(!open) return;
   window.history.replaceState({}, '', window.location.pathname);
