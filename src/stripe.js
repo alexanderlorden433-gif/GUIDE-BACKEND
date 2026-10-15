@@ -42,6 +42,38 @@ async function createCheckoutSession({ user, plan, trial }) {
 }
 
 /**
+ * A one-time Stripe Checkout for a pack of AI website credits (src/siteCredits.js). The price is written
+ * into the session, so nothing has to be set up in the Stripe dashboard. `kind: 'site_credits'` in the
+ * metadata is what tells the webhook this is credits, not Pro: it must never turn on Pro.
+ */
+async function createCreditsCheckout({ user, pack }) {
+  const session = await stripe.checkout.sessions.create({
+    mode: 'payment',
+    // cards (with Apple Pay and Google Pay) are paid on the spot, so the credits can be added straight away
+    payment_method_types: ['card'],
+    customer: user.stripeCustomerId || undefined,
+    customer_email: user.stripeCustomerId ? undefined : user.email,
+    line_items: [{
+      quantity: 1,
+      price_data: {
+        currency: 'usd',
+        unit_amount: pack.cents,
+        product_data: {
+          name: `AI website credits (${pack.credits})`,
+          description: `${pack.credits} AI writes of your page on The Guide. Credits never expire.`,
+        },
+      },
+    }],
+    payment_intent_data: { description: `The Guide: ${pack.credits} AI website credits` },
+    success_url: `${process.env.APP_URL}/billing/credits?credits_session={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.APP_URL}/billing/cancelled?open=website`,
+    client_reference_id: user.id,
+    metadata: { kind: 'site_credits', userId: user.id, pack: pack.id, credits: String(pack.credits) },
+  });
+  return session;
+}
+
+/**
  * Creates a Stripe Billing Portal session so an existing customer can manage
  * or cancel their subscription without you building that UI yourself.
  */
@@ -85,4 +117,4 @@ async function getPlanPrices() {
   return out;
 }
 
-module.exports = { stripe, createCheckoutSession, createPortalSession, getPlanPrices, TRIAL_DAYS };
+module.exports = { stripe, createCheckoutSession, createCreditsCheckout, createPortalSession, getPlanPrices, TRIAL_DAYS };

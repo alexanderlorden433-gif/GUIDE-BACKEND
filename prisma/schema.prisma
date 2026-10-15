@@ -51,6 +51,8 @@ model User {
   promoRedemptions     PromoRedemption[]
   memberSite           MemberSite?
   siteAiUses           SiteAiUse[]
+  siteAiCredit         SiteAiCredit?
+  siteAiCreditLogs     SiteAiCreditLog[]
 
   @@index([stripeCustomerId])
   @@index([referredByCode])
@@ -464,6 +466,35 @@ model SiteAiUse {
   n      Int    @default(0)
 
   @@id([userId, day])
+}
+
+// A member's AI website credits (src/siteCredits.js): free ones to try, then bought packs.
+model SiteAiCredit {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  free      Int      @default(0)
+  paid      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+// Every change to them: a pack bought (one row per Stripe checkout), a write used, a failed write given back.
+model SiteAiCreditLog {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind          String
+  free          Int      @default(0)
+  paid          Int      @default(0)
+  pack          String?
+  amountCents   Int?
+  stripeSession String?  @unique
+  model         String?
+  inputTokens   Int?
+  outputTokens  Int?
+  createdAt     DateTime @default(now())
+
+  @@index([kind, createdAt])
 }
 
 // Wins a member offered for the public landing page (src/routes/publicWins.js). Shown only once

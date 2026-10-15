@@ -193,6 +193,11 @@ function checkMemberSites() {
   if (objs.length && objs.every(o => o.additionalProperties === false && Object.keys(o.properties).every(k => o.required.includes(k)))
       && !/minLength|maxLength|maxItems|minimum|maximum/.test(JSON.stringify(siteAi.SCHEMA)) && siteAi.MODELS()[0]) ok('the AI page writer loads and asks for a page format the API accepts');
   else bad('the AI page writer schema would be refused by the API (every object needs additionalProperties: false and all fields required)');
+  // AI credits: every pack makes a profit even if a write costs 40 cents (the top of the estimate) after Stripe's 2.9% + 30c
+  const { PACKS, WELCOME } = require(path.join(ROOT, 'src', 'siteCredits'));
+  const margin = (p) => (p.cents - (p.cents * 0.029 + 30) - p.credits * 40) / p.cents;
+  if (PACKS.length && PACKS.every(p => margin(p) > 0.1) && WELCOME <= 3) ok('every AI credit pack makes money even at 40 cents a write, after Stripe');
+  else bad('an AI credit pack would lose money at 40 cents a write (or too many free credits): ' + PACKS.map(p => p.id + ' ' + Math.round(margin(p) * 100) + '%').join(', '));
   if (sites.slugProblem('admin') && sites.slugProblem('theguide') && !sites.slugProblem('joes-lawns')) ok("member web addresses can't take The Guide's own names");
   else bad("member web address rules are off (reserved names or a normal name)");
 }

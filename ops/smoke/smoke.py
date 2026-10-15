@@ -82,9 +82,17 @@ def new_state(pro=True):
     }
 
 
+SITE_PACKS = [{'id': 'small', 'credits': 5, 'price': 4.99, 'each': 1.0}, {'id': 'medium', 'credits': 15, 'price': 9.99, 'each': 0.67},
+              {'id': 'large', 'credits': 40, 'price': 19.99, 'each': 0.5}]
+
+
 def site_ai_state(state):
-    """How many AI page writes the fake member has left today (like GET /api/sites/mine → ai)."""
-    return state.setdefault('site_ai', {'ready': True, 'limit': 10 if state['pro'] else 2, 'left': 10 if state['pro'] else 2})
+    """The fake member's AI credits (like GET /api/sites/mine → ai.credits): 2 free to start."""
+    return state.setdefault('site_ai', {'ready': True, 'free': 2, 'paid': 0})
+
+
+def site_ai_credits(ai):
+    return {'free': ai['free'], 'paid': ai['paid'], 'total': ai['free'] + ai['paid']}
 
 
 def site_ai_page():
@@ -242,7 +250,7 @@ def fixture(state, method, path, body):
         ai = site_ai_state(state)
         if method == 'GET':
             return 200, {'site': sw['site'], 'requests': sw['requests'], 'unseen': len([r for r in sw['requests'] if not r['seen']]), 'pro': state['pro'], 'colors': colors,
-                         'ai': {'ready': ai['ready'], 'limit': ai['limit'], 'left': ai['left'], 'proLimit': 10, 'model': 'claude-fable-5-1'}}
+                         'ai': {'ready': ai['ready'], 'model': 'claude-fable-5-1', 'credits': site_ai_credits(ai), 'packs': SITE_PACKS}}
         if method == 'PUT':
             b = body or {}
             d = b.get('data') or {}
@@ -267,13 +275,38 @@ def fixture(state, method, path, body):
             return status, reply
         b = body or {}
         d = b.get('draft') or {}
-        ai['left'] = max(0, ai['left'] - 1)
+        if ai['free'] + ai['paid'] <= 0:
+            return 402, {'error': "You're out of AI credits. Pick a pack to keep writing.", 'buy': True, 'credits': site_ai_credits(ai), 'packs': SITE_PACKS}
+        if ai['free'] > 0:
+            ai['free'] -= 1
+        else:
+            ai['paid'] -= 1
         page = site_ai_page()
         if b.get('mode') == 'improve':
             page = {**page, 'name': d.get('name') or page['name'], 'color': d.get('color') or page['color']}
         page.update({'email': d.get('email', ''), 'phone': d.get('phone', ''), 'nicheId': d.get('nicheId', ''), 'lang': b.get('lang') or 'en'})
         return 200, {'draft': page, 'tips': ['Check these prices against two local lawn services.', '<img src=x onerror="window.__xss=1">Add your phone number.'],
-                     'model': 'claude-fable-5-1', 'left': ai['left'], 'limit': ai['limit']}
+                     'model': 'claude-fable-5-1', 'credits': site_ai_credits(ai)}
+    # buying AI credits: state['credit_checkouts'] records the packs asked for; confirm adds them once
+    if p == '/api/sites/credits/checkout' and method == 'POST':
+        pack = next((x for x in SITE_PACKS if x['id'] == (body or {}).get('pack')), None)
+        if not pack:
+            return 400, {'error': 'Pick a pack.'}
+        state.setdefault('credit_checkouts', []).append(pack['id'])
+        # the real one is a Stripe page that comes back to /billing/credits?credits_session=…; the test server has no /billing
+        return 200, {'url': '/?credits_session=cs_test_smoke' + pack['id'] + '1234567890'}
+    if p == '/api/sites/credits/confirm' and method == 'POST':
+        ai = site_ai_state(state)
+        sid = str((body or {}).get('session') or '')
+        pack = next((x for x in SITE_PACKS if sid == 'cs_test_smoke' + x['id'] + '1234567890'), None)
+        if not pack:
+            return 404, {'error': 'Checkout not found.'}
+        done = state.setdefault('credit_confirmed', [])
+        added = 0 if sid in done else pack['credits']
+        if added:
+            done.append(sid)
+            ai['paid'] += added
+        return 200, {'added': added, 'pack': pack['credits'], 'credits': site_ai_credits(ai)}
     m = re.match(r'^/api/sites/requests/([^/]+)$', p)
     if m:
         sw = state.setdefault('site', {'site': None, 'requests': []})
@@ -3921,9 +3954,10 @@ def side_business_quiz(browser, base):
 def website_ai(browser, base):
     """My website → Let AI write your page: the member says what they do, the AI (Claude, src/siteAi.js) fills in the
     whole page, a page that isn't live is saved as a draft, Undo puts the old page back, a live page waits for Save,
-    the daily limit offers Pro to free members, and nothing the AI writes runs as page code."""
+    each write uses an AI credit (2 free to start), running out shows the packs, buying one goes to checkout and the
+    credits are there on return with the form as it was, and nothing the AI writes runs as page code."""
     init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
-    def open_site(label, pro, site=None, vp=None):
+    def open_site(label, pro, site=None, vp=None, ai=None):
         step = [f'AI website writer ({label})']
         vp = vp or {'width': 390, 'height': 844}
         mobile = vp['width'] < 600
@@ -3931,6 +3965,8 @@ def website_ai(browser, base):
         st = new_state(pro)
         if site:
             st['site'] = site
+        if ai:
+            st['site_ai'] = ai
         attach_backend(ctx, st)
         ctx.add_init_script(init)
         page = ctx.new_page(); watch_errors(page, step)
@@ -3949,8 +3985,8 @@ def website_ai(browser, base):
     if got:
         step, ctx, st, page = got
         card = page.inner_text('#siteAi') if page.locator('#siteAi').count() else ''
-        if 'Let AI write your page' in card and '2 of 2 free AI writes left today' in card and 'Claude Fable 5.1' in card and page.locator('#saDesc').count():
-            ok(step[0], 'the AI card leads the page: what to tell it, the free writes left, and the model')
+        if 'Let AI write your page' in card and 'You have 2 free AI credits to try it' in card and 'Claude Fable 5.1' in card and page.locator('#saDesc').count() and not page.locator('#saBuy').count():
+            ok(step[0], 'the AI card leads the page: what to tell it, the 2 free credits, and the model')
         else:
             problem(step[0], 'a new page should start with the AI card', card[:300])
         page.click('#saWrite'); page.wait_for_timeout(300)
@@ -4007,8 +4043,8 @@ def website_ai(browser, base):
             problem(step[0], 'the written page should be saved as a draft', {'saved': saved, 'card': card[:200]})
         tips = page.evaluate("[...document.querySelectorAll('#siteAi .sa-tips li')].map(li => li.textContent)")
         xss = page.evaluate("!!window.__xss || !!document.querySelector('#siteAi img')")
-        if len(tips) == 2 and 'Check these prices' in tips[0] and not xss and 'Written by Claude Fable 5.1' in card and '1 of 2 free AI writes left today' in card:
-            ok(step[0], 'its tips show as plain text, with who wrote it and the writes left')
+        if len(tips) == 2 and 'Check these prices' in tips[0] and not xss and 'Written by Claude Fable 5.1' in card and 'You have 1 free AI credit to try it' in card:
+            ok(step[0], 'its tips show as plain text, with who wrote it and the credits left')
         else:
             problem(step[0], 'the AI tips should show as text', {'tips': tips, 'xss': xss, 'card': card[:300]})
         shot(page, 'phone-website-ai-done')
@@ -4019,21 +4055,42 @@ def website_ai(browser, base):
             ok(step[0], 'Undo puts the old page back in the form')
         else:
             problem(step[0], 'Undo should restore the form', page.input_value('#sfName'))
-        # the daily limit: a free member is offered Pro
-        st['site_ai_reply'] = (429, {'error': "That's all 2 free AI writes for today. Pro members get 10 a day.", 'left': 0, 'limit': 2, 'upgrade': True})
+        # the second free credit, then out of credits: the packs show and Write doesn't call the AI
         page.fill('#saDesc', 'I mow lawns in Springfield on weekends.')
-        page.click('#saWrite'); page.wait_for_timeout(900)
+        page.click('#saWrite'); page.wait_for_timeout(1200)
+        posts = len(st.get('site_ai_posts') or [])
         card = page.inner_text('#siteAi')
-        if "That's all 2 free AI writes" in card and page.locator('#saPro').count() and page.is_disabled('#saWrite'):
-            ok(step[0], 'at the daily limit: says so plainly, the button rests, and Pro is one tap away')
+        packs = page.evaluate("[...document.querySelectorAll('#saBuy .sa-pack')].map(b => b.innerText.replace(/\\s+/g, ' ').trim())")
+        if "You're out of AI credits" in card and packs == ['5 credits $4.99 $1.00 a page', '15 credits $9.99 $0.67 a page', '40 credits $19.99 $0.50 a page'] and 'Credits never expire' in card and 'part of Pro' in card:
+            ok(step[0], 'out of credits: the three packs show with their prices and price a page')
         else:
-            problem(step[0], 'the daily limit should be explained with a way to Pro', card[:300])
-        page.click('#saPro'); page.wait_for_timeout(600)
-        if visible(page, '#upgradeOverlay', 2000):
-            ok(step[0], 'See Pro opens the Pro window')
+            problem(step[0], 'running out of credits should show the packs', {'card': card[:300], 'packs': packs})
+        shot(page, 'phone-website-ai-packs')
+        page.click('#saWrite'); page.wait_for_timeout(400)
+        if len(st.get('site_ai_posts') or []) == posts and 'Pick a pack' in page.inner_text('#siteAi .sa-err'):
+            ok(step[0], 'tapping Write with no credits points to the packs (the AI is not called)')
         else:
-            problem(step[0], 'See Pro should open the Pro window')
-        close_paywall(page)
+            problem(step[0], 'with no credits, Write should not call the AI', page.inner_text('#siteAi')[:200])
+        page.fill('#sfTagline', 'Typed before buying')
+        page.click('#saBuy .sa-pack[data-pack="medium"]')
+        page.wait_for_timeout(2500)
+        card = page.inner_text('#siteAi') if page.locator('#siteAi').count() else ''
+        toast = page.evaluate("(document.querySelector('.app-toast, #appToast') || {}).textContent || ''")
+        if (st.get('credit_checkouts') == ['medium'] and visible(page, '#siteView', 3000) and 'You have 15 AI credits' in card
+                and not page.locator('#saBuy').count() and page.input_value('#sfTagline') == 'Typed before buying' and '?' not in page.url.split('/')[-1]):
+            ok(step[0], 'buying 15 credits: off to checkout, back on My website with 15 credits and the form as it was')
+        else:
+            problem(step[0], 'buying credits should come back to My website with the credits', {'checkouts': st.get('credit_checkouts'), 'card': card[:200], 'url': page.url, 'toast': toast,
+                    'tagline': page.input_value('#sfTagline') if page.locator('#sfTagline').count() else None})
+        if '15 AI credits added' in toast:
+            ok(step[0], 'a note says the 15 credits are in')
+        else:
+            problem(step[0], 'buying should confirm with a note', toast)
+        page.goto(base + '/?credits_session=cs_test_smokemedium1234567890', wait_until='load'); page.wait_for_timeout(2000)
+        if site_ai_credits(st['site_ai'])['paid'] == 15 and 'You have 15 AI credits' in page.inner_text('#siteAi'):
+            ok(step[0], 'the same checkout is only counted once')
+        else:
+            problem(step[0], 'credits should be added once', st['site_ai'])
         finish(st, step[0]); ctx.close()
 
     # 2) a Pro member with a live page: Make it better, which waits for Save; questions and language can be edited
@@ -4041,11 +4098,11 @@ def website_ai(browser, base):
                      'data': {'name': 'Pat Cleans', 'tagline': 'Deep cleans', 'area': 'Shelbyville', 'hours': '', 'about': '', 'email': 'pat@example.com', 'phone': '', 'color': 'blue', 'nicheId': 'cleaning',
                               'services': [{'name': 'Deep clean', 'price': '$150', 'note': ''}], 'highlights': [], 'faq': [], 'lang': 'en'}},
             'requests': []}
-    got = open_site('Pro member, live page', True, site=site)
+    got = open_site('Pro member, live page', True, site=site, ai={'ready': True, 'free': 0, 'paid': 12})
     if got:
         step, ctx, st, page = got
         card = page.inner_text('#siteAi')
-        if 'Let AI improve your page' in card and page.locator('#saBetter').count() and page.locator('#saDesc').count() == 0 and '10 of 10 AI writes left today' in card:
+        if 'Let AI improve your page' in card and page.locator('#saBetter').count() and page.locator('#saDesc').count() == 0 and 'You have 12 AI credits' in card and page.locator('#saMore').count():
             ok(step[0], 'a page with content offers Make it better (and Write it again)')
         else:
             problem(step[0], 'a filled page should offer Make it better', card[:300])
@@ -4084,10 +4141,11 @@ def website_ai(browser, base):
         finish(st, step[0]); ctx.close()
 
     # 3) on a laptop, both looks, while it writes and when it's done
-    got = open_site('laptop', False, vp={'width': 1280, 'height': 800})
+    got = open_site('laptop', False, vp={'width': 1280, 'height': 800}, ai={'ready': True, 'free': 0, 'paid': 0})
     if got:
         step, ctx, st, page = got
         no_sideways_scroll(page, step[0])
+        page.evaluate("document.getElementById('saBuy').scrollIntoView({block: 'center'})"); page.wait_for_timeout(200)
         shot(page, 'desktop-website-ai-forest')
         page.evaluate("document.documentElement.setAttribute('data-theme','purple')"); page.wait_for_timeout(200)
         shot(page, 'desktop-website-ai-purple')

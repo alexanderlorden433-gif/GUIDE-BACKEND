@@ -7,7 +7,9 @@ const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { isProUser } = require('../pro');
 const { SITE_ORIGIN, COLORS, state, oneLine, slugify, slugProblem, cleanSiteData, publishProblem } = require('../sites');
-const { writePage, usedToday, currentModel, DAILY } = require('../siteAi');
+const { writePage, currentModel } = require('../siteAi');
+const credits = require('../siteCredits');
+const { stripe, createCreditsCheckout } = require('../stripe');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -34,9 +36,8 @@ async function mySite(userId) {
 // The member's page (or null), the latest requests from it, and the colours a page can have.
 router.get('/mine', async (req, res) => {
   res.set('Cache-Control', 'no-store');
-  const [site, pro, used] = await Promise.all([mySite(req.user.id), isProUser(req.user.id), usedToday(req.user.id)]);
-  const limit = pro ? DAILY.pro : DAILY.free;
-  const ai = { ready: !!process.env.ANTHROPIC_API_KEY, limit, left: Math.max(0, limit - used), proLimit: DAILY.pro, model: currentModel() };
+  const [site, pro, mine] = await Promise.all([mySite(req.user.id), isProUser(req.user.id), credits.getCredits(req.user.id)]);
+  const ai = { ready: !!process.env.ANTHROPIC_API_KEY, model: currentModel(), credits: mine, packs: credits.packsForApp() };
   if (!site) return res.json({ site: null, requests: [], unseen: 0, pro, colors: COLORS, ai });
   const requests = await prisma.$queryRawUnsafe(
     `SELECT * FROM "SiteRequest" WHERE "siteId" = $1::text ORDER BY "createdAt" DESC LIMIT 100`, site.id);
@@ -45,17 +46,52 @@ router.get('/mine', async (req, res) => {
 
 // ---------- POST /api/sites/ai ----------
 // The AI writes the page {mode: "write"|"improve", description, draft, chapter: {name, description, tips}, lang}.
-// Answers {draft, tips, model, left, limit}; nothing is saved here, the app shows it in the editor first.
+// Uses one AI credit. Answers {draft, tips, model, credits}; nothing is saved here, the app shows it in the
+// editor first. Out of credits: 402 {buy: true, credits, packs}.
 // A write takes up to a minute, so on top of the daily limit there's a short-term one per member.
 const aiBurst = rateLimit({ windowMs: 10 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false,
                             keyGenerator: (req) => 'site-ai:' + req.user.id,
                             message: { error: 'Too many tries in a row. Wait a few minutes, then try again.' } });
 router.post('/ai', aiBurst, async (req, res) => {
   const b = req.body || {};
-  const pro = await isProUser(req.user.id);
-  const r = await writePage({ userId: req.user.id, pro, mode: b.mode, description: b.description, draft: b.draft,
+  const r = await writePage({ userId: req.user.id, mode: b.mode, description: b.description, draft: b.draft,
                               chapter: b.chapter, lang: b.lang });
   res.status(r.status).json(r.body);
+});
+
+// ---------- POST /api/sites/credits/checkout ----------
+// {pack: "small"|"medium"|"large"} → {url} of a Stripe Checkout page for that pack of AI credits.
+router.post('/credits/checkout', async (req, res) => {
+  const pack = credits.packById((req.body || {}).pack);
+  if (!pack) return res.status(400).json({ error: 'Pick a pack.' });
+  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  try {
+    const session = await createCreditsCheckout({ user, pack });
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('[credits] checkout error:', err.message);
+    res.status(500).json({ error: 'Could not start checkout. Please try again.' });
+  }
+});
+
+// ---------- POST /api/sites/credits/confirm ----------
+// {session: "cs_…"} when the member comes back from checkout: adds the credits now rather than waiting for
+// Stripe's webhook (whichever comes first adds them; the other finds them already added). Only the member who
+// paid can confirm their own checkout. Answers {added, credits}.
+router.post('/credits/confirm', async (req, res) => {
+  const id = String((req.body || {}).session || '');
+  if (!/^cs_(test|live)_[A-Za-z0-9]{10,200}$/.test(id)) return res.status(400).json({ error: 'That checkout link looks wrong.' });
+  let session;
+  try { session = await stripe.checkout.sessions.retrieve(id); }
+  catch (err) { return res.status(404).json({ error: 'Checkout not found.' }); }
+  if (!session.metadata || session.metadata.kind !== 'site_credits' || session.metadata.userId !== req.user.id) {
+    return res.status(404).json({ error: 'Checkout not found.' });
+  }
+  const g = await credits.grantFromCheckout(session);
+  if (!g.ok) return res.status(409).json({ error: 'The payment has not gone through yet. Your credits will show up as soon as it does.', credits: await credits.getCredits(req.user.id) });
+  const pack = credits.packById(g.pack);
+  res.json({ added: g.added, pack: pack ? pack.credits : 0, credits: await credits.getCredits(req.user.id) });
 });
 
 // ---------- PUT /api/sites/mine ----------

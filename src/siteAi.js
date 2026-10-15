@@ -5,14 +5,16 @@
 // choice). The answer comes back as JSON that must match the schema below (structured outputs), and is then
 // cleaned by cleanSiteData() like anything else a member saves, so nothing reaches the page unchecked.
 //
-// Each call costs real money (the most capable model is also the priciest, roughly 20 to 40 cents a page), so
-// members get a daily number of AI writes (more for Pro), and the whole app has a daily ceiling as a backstop
-// (SITE_AI_DAILY_TOTAL). The counts live in the SiteAiUse table (created in src/sites.js).
+// Each write uses one AI credit (src/siteCredits.js): members start with a couple of free ones and buy packs
+// after that. On top of credits there's a per-member daily cap (so a stuck button or a script can't burn a whole
+// pack) and an app-wide daily ceiling as an emergency brake (SITE_AI_DAILY_TOTAL). The daily counts live in the
+// SiteAiUse table (created in src/sites.js).
 const prisma = require('./db');
 const { state, cleanSiteData, COLORS } = require('./sites');
+const credits = require('./siteCredits');
 
-const DAILY = { pro: 10, free: 2 };
-const TOTAL = () => Math.max(0, parseInt(process.env.SITE_AI_DAILY_TOTAL, 10) || 200);
+const DAILY_CAP = 30;
+const TOTAL = () => Math.max(0, parseInt(process.env.SITE_AI_DAILY_TOTAL, 10) || 1000);
 const MODELS = () => [...new Set([process.env.SITE_AI_MODEL, 'claude-fable-5-1', 'claude-opus-5-5', 'claude-sonnet-5-5'].filter(Boolean))];
 const TIMEOUT_MS = 150 * 1000;
 // the model that wrote the last page, so My website can say which one it uses
@@ -105,10 +107,6 @@ async function giveBack(userId) {
   await prisma.$executeRawUnsafe(
     `UPDATE "SiteAiUse" SET "n" = GREATEST("n" - 1, 0) WHERE "userId" = $1::text AND "day" = $2::text`, userId, today());
 }
-async function usedToday(userId) {
-  const rows = await prisma.$queryRawUnsafe(`SELECT "n" FROM "SiteAiUse" WHERE "userId" = $1::text AND "day" = $2::text`, userId, today());
-  return rows[0] ? rows[0].n : 0;
-}
 async function usedByEveryone() {
   const rows = await prisma.$queryRawUnsafe(`SELECT COALESCE(SUM("n"), 0)::int AS n FROM "SiteAiUse" WHERE "day" = $1::text`, today());
   return rows[0] ? rows[0].n : 0;
@@ -137,7 +135,7 @@ async function callModel(model, body, apiKey, fetchImpl) {
     if (json.stop_reason === 'max_tokens') return { ok: false, retryNextModel: false, status: 200, error: 'max_tokens' };
     const block = (json.content || []).find(b => b.type === 'text');
     if (!block) return { ok: false, retryNextModel: false, status: 200, error: 'no text' };
-    return { ok: true, data: JSON.parse(block.text), model };
+    return { ok: true, data: JSON.parse(block.text), model, usage: json.usage || null };
   } catch (err) {
     return { ok: false, retryNextModel: false, status: 0, error: err.name === 'AbortError' ? 'timeout' : err.message };
   } finally {
@@ -149,7 +147,7 @@ async function callModel(model, body, apiKey, fetchImpl) {
  * Writes (mode "write") or improves (mode "improve") a page. Returns {status, body} for the route to send.
  * `fetchImpl` is there so the checks can stand in for the real API.
  */
-async function writePage({ userId, pro, mode, description, draft, chapter, lang }, fetchImpl = fetch) {
+async function writePage({ userId, mode, description, draft, chapter, lang }, fetchImpl = fetch) {
   if (!state.ready) return { status: 503, body: { error: 'Websites are not ready yet. Try again in a minute.' } };
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return { status: 503, body: { error: 'The page writer is not set up yet.' } };
@@ -163,13 +161,20 @@ async function writePage({ userId, pro, mode, description, draft, chapter, lang 
   if (mode === 'improve' && !(current && (current.name || current.services.length || current.about))) {
     return { status: 400, body: { error: 'There is nothing to improve yet. Write a few lines about your business, then tap Write my page.' } };
   }
-  const limit = pro ? DAILY.pro : DAILY.free;
   if ((await usedByEveryone()) >= TOTAL()) {
     return { status: 503, body: { error: 'The page writer is very busy today. Please try again tomorrow.' } };
   }
-  const used = await takeUse(userId, limit);
-  if (!used) {
-    return { status: 429, body: { error: pro ? `That's all ${limit} AI writes for today. It resets tomorrow.` : `That's all ${limit} free AI writes for today. Pro members get ${DAILY.pro} a day.`, left: 0, limit, upgrade: !pro } };
+  if (!(await takeUse(userId, DAILY_CAP))) {
+    return { status: 429, body: { error: "That's a lot of writes for one day. Please try again tomorrow." } };
+  }
+  const spent = await credits.spendCredit(userId);
+  if (!spent.bucket) {
+    await giveBack(userId).catch(() => {});
+    const left = await credits.getCredits(userId);
+    return { status: 402, body: { buy: true, credits: left, packs: credits.packsForApp(),
+      error: spent.reason === 'free_busy'
+        ? 'Free tries are all taken for today. Buy a pack to write now, or try again tomorrow.'
+        : "You're out of AI credits. Pick a pack to keep writing." } };
   }
   const forModel = current ? Object.assign({}, current, { email: current.email ? '(set)' : '', phone: current.phone ? '(set)' : '' }) : null;
   const body = {
@@ -187,10 +192,14 @@ async function writePage({ userId, pro, mode, description, draft, chapter, lang 
   if (!result || !result.ok) {
     console.error('[site-ai] could not write the page:', result && result.status, result && result.error);
     await giveBack(userId).catch(err => console.error('[site-ai] could not give the write back:', err.message));
+    await credits.refundCredit(userId, spent.bucket).catch(err => console.error('[site-ai] could not give the credit back:', err.message));
     const msg = result && result.error === 'timeout' ? 'That took too long. Please try again.' : 'The page writer could not finish just now. Please try again.';
-    return { status: 502, body: { error: msg } };
+    return { status: 502, body: { error: msg, credits: await credits.getCredits(userId).catch(() => undefined) } };
   }
   lastModel = result.model;
+  const u = result.usage || {};
+  console.log(`[site-ai] wrote a page with ${result.model}: ${u.input_tokens || 0} tokens in, ${u.output_tokens || 0} out`);
+  await credits.logUse(userId, spent.bucket, result.model, result.usage).catch(err => console.error('[site-ai] could not log the write:', err.message));
   const ai = result.data || {};
   // the owner's own contact details, address and look stay as they set them
   const merged = cleanSiteData(Object.assign({}, ai, {
@@ -199,7 +208,7 @@ async function writePage({ userId, pro, mode, description, draft, chapter, lang 
     color: current && mode === 'improve' ? current.color : ai.color,
   }));
   const tips = (Array.isArray(ai.tips) ? ai.tips : []).slice(0, 3).map(t => String(t).slice(0, 240));
-  return { status: 200, body: { draft: merged, tips, model: result.model, left: Math.max(0, limit - used), limit } };
+  return { status: 200, body: { draft: merged, tips, model: result.model, credits: await credits.getCredits(userId) } };
 }
 
-module.exports = { writePage, usedToday, currentModel, SCHEMA, DAILY, MODELS };
+module.exports = { writePage, currentModel, SCHEMA, DAILY_CAP, MODELS };
