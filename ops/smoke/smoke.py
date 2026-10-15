@@ -317,6 +317,10 @@ def attach_backend(context, state):
             except Exception:
                 body = None
             state['calls'].append((req.method, path))
+            if req.method == 'PUT' and path == '/api/account' and state.get('put_fail', 0) > 0:
+                # a test can drop the next N progress saves, like a phone losing signal
+                state['put_fail'] -= 1
+                return route.abort()
             if not api_routes.match(req.method, path, ROUTES):
                 state.setdefault('missing', set()).add(f'{req.method} {path}')
                 return route.fulfill(status=404, json={'error': 'Not found'})
@@ -2617,6 +2621,38 @@ def startup_account(browser, base):
             ctx.close()
 
 
+def save_retry(browser, base):
+    """Progress saves on a bad connection: the member is told once, and the app saves again when the signal is back."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    step = ['phone: saving with no signal']
+    ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+    st = new_state(True)
+    attach_backend(ctx, st)
+    ctx.add_init_script(init)
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load')
+    if not visible(page, '#appScreen', 10000):
+        problem(step[0], 'the app did not open'); finish(st, step[0]); ctx.close(); return
+    page.wait_for_timeout(800)
+    st['put_fail'] = 1
+    page.evaluate("completed.add('smoke/offline-lesson'); saveProgress()")
+    page.wait_for_timeout(800)
+    toast = page.evaluate("(()=>{ const t = document.getElementById('appToast'); return t.classList.contains('show') ? t.textContent : ''; })()")
+    if 'save' not in toast.lower():
+        problem(step[0], 'a save that fails is not mentioned — the member thinks the lesson is saved', toast)
+    else:
+        ok(step[0], 'the member is told the save did not go through')
+        shot(page, 'phone-save-offline')
+    page.evaluate("window.dispatchEvent(new Event('online'))")
+    page.wait_for_timeout(1000)
+    if 'smoke/offline-lesson' not in (st['data'].get('completed') or []):
+        problem(step[0], 'the lesson finished with no signal never reaches the server, even once the signal is back')
+    else:
+        ok(step[0], 'once the signal is back the progress saves on its own')
+    finish(st, step[0])
+    ctx.close()
+
+
 def account_settings(browser, base):
     """Account settings: fits the screen, the title and close button stay put, the form scrolls inside the box so
     every part (including Delete) can be reached, and the profile and password forms still work."""
@@ -3074,6 +3110,7 @@ def main():
         account_settings(browser, base)
         manage_subscription(browser, base)
         design_polish(browser, base)
+        save_retry(browser, base)
         browser.close()
     srv.shutdown()
     # de-duplicate
