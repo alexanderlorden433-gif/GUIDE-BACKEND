@@ -395,3 +395,16 @@ model PromoRedemption {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([codeId, userId])
 }
+
+// The free 7-day email course (src/leads.js): people who left their email on the landing page.
+// Created at startup with CREATE TABLE IF NOT EXISTS; declared here so the schema matches.
+model Lead {
+  id             String    @id
+  email          String    @unique
+  source         String?
+  token          String    @unique
+  day            Int       @default(0)
+  lastSentAt     DateTime?
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+}

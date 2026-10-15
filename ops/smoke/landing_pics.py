@@ -40,7 +40,7 @@ def main():
                                       device_scale_factor=560 / 390 if phone else 1, is_mobile=phone, has_touch=phone,
                                       service_workers='block')
             smoke.attach_backend(ctx, smoke.new_state(pro=pro))
-            ctx.add_init_script("try{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');"
+            ctx.add_init_script("try{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');"
                                 f"localStorage.setItem('guide_look','{look}');localStorage.setItem('guide_token','smoke-token');}}catch(e){{}}")
             page = ctx.new_page()
             page.goto(base + '/', wait_until='load')

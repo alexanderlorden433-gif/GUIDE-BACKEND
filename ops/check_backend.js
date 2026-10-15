@@ -6,6 +6,7 @@
 //   3. the Prisma schema is valid
 //   4. an error inside an async route gives a 500 instead of stopping the server
 //   5. big-enough request sizes: saving progress and Guider chats aren't cut off at 16 KB
+//   6. a host can edit a live call that has already started (to fix the link mid-call)
 // Usage: node ops/check_backend.js   (exit 1 on any failure)
 const fs = require('fs');
 const path = require('path');
@@ -149,9 +150,26 @@ async function checkBodyLimits() {
   }
 }
 
+// 6. live calls: the edit form always sends the call's time back. A call that started a while ago
+//    must still be editable (fixing a broken link mid-call), but a call can't be moved into the past.
+function checkLiveEdit() {
+  const { readCallFields } = require(path.join(ROOT, 'src', 'routes', 'live'));
+  if (typeof readCallFields !== 'function') return bad('src/routes/live.js no longer exports readCallFields — live edit not checked');
+  const started = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+  const existing = { title: 'Q&A', startsAt: started, durationMin: 45, joinUrl: 'https://meet.example.com/old' };
+  const form = { title: 'Q&A', description: '', nicheId: '', durationMin: 45, startsAt: started, joinUrl: 'https://meet.example.com/new' };
+  const edit = readCallFields(form, existing);
+  if (edit.error) bad(`a host can't fix the link of a call that started 20 minutes ago: "${edit.error}"`);
+  else ok('a host can edit a call that is already running (e.g. fix the link)');
+  const moved = readCallFields(Object.assign({}, form, { startsAt: new Date(Date.now() - 60 * 60 * 1000).toISOString() }), existing);
+  if (moved.error) ok('a call still can\'t be moved to a time that has passed');
+  else bad('a call can be moved to a time that has already passed');
+}
+
 checkAsyncErrors()
   .catch(e => bad('async error check failed: ' + e.message))
   .then(() => checkBodyLimits().catch(e => bad('request size check failed: ' + e.message)))
+  .then(() => { try { checkLiveEdit(); } catch (e) { bad('live edit check failed: ' + e.message); } })
   .finally(() => {
   console.log(problems.length ? `${problems.length} backend problem(s)` : 'Backend OK');
   process.exit(problems.length ? 1 : 0);
