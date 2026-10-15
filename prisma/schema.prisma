@@ -408,3 +408,14 @@ model Lead {
   unsubscribedAt DateTime?
   createdAt      DateTime  @default(now())
 }
+
+// Billing emails (src/billingEmails.js): which one-time emails went out (trial ending, checkout left).
+// Created at startup with CREATE TABLE IF NOT EXISTS; declared here so the schema matches.
+model EmailSent {
+  id     String   @id
+  kind   String
+  ref    String
+  userId String?
+  sentAt DateTime @default(now())
+  @@unique([kind, ref])
+}
