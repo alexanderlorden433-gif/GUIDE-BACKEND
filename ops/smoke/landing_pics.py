@@ -5,6 +5,7 @@ and web/img/purple/app-*.webp (Purple). The page swaps between them with the loo
     python3 ops/smoke/landing_pics.py                 # both looks
     python3 ops/smoke/landing_pics.py --look=purple   # one look
     python3 ops/smoke/landing_pics.py app-course      # one picture
+    python3 ops/smoke/landing_pics.py --lang=es       # the Spanish set: web/img/es/ (and web/img/es/purple/)
 
 Same fake backend as smoke.py, so no real data ever appears in a picture.
 """
@@ -29,6 +30,7 @@ PICS = {
 
 def main():
     wanted = [a.split('=', 1)[1] for a in sys.argv if a.startswith('--look=')] or ['forest', 'purple']
+    lang = ([a.split('=', 1)[1] for a in sys.argv if a.startswith('--lang=')] or ['en'])[0]
     only = [a for a in sys.argv[1:] if not a.startswith('--')]
     srv, base = smoke.serve_web()
     with sync_playwright() as p:
@@ -39,7 +41,12 @@ def main():
             ctx = browser.new_context(viewport={'width': 390, 'height': 780} if phone else {'width': 1280, 'height': 841},
                                       device_scale_factor=560 / 390 if phone else 1, is_mobile=phone, has_touch=phone,
                                       service_workers='block')
-            smoke.attach_backend(ctx, smoke.new_state(pro=pro))
+            st = smoke.new_state(pro=pro)
+            if lang == 'es':
+                st['ai_reply'] = ('Empieza con tres paquetes: Básico, Estándar y Premium. Pon el precio según lo que entregas, '
+                                  'no según tus horas, y súbelo cuando tengas tus primeras tres reseñas.')
+            smoke.attach_backend(ctx, st)
+            ctx.add_init_script(f"try{{localStorage.setItem('guide_lang','{lang}');}}catch(e){{}}")
             ctx.add_init_script("try{localStorage.setItem('guide_staff','1');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');"
                                 f"localStorage.setItem('guide_look','{look}');localStorage.setItem('guide_token','smoke-token');}}catch(e){{}}")
             page = ctx.new_page()
@@ -54,11 +61,12 @@ def main():
                 page.evaluate("(()=>{const g=document.querySelector('#nicheView .guide.open'); window.scrollTo(0, g.getBoundingClientRect().top + window.scrollY - 70);})()")
                 page.wait_for_timeout(300)
             if name == 'app-mentor':
-                page.fill('#aiChatInput', 'How do I price my first product?')
+                page.fill('#aiChatInput', '¿Cómo le pongo precio a mi primer producto?' if lang == 'es' else 'How do I price my first product?')
                 page.click('#aiChatSendBtn')
                 page.wait_for_timeout(1500)
             png = page.screenshot()
-            folder = IMG if look == 'forest' else os.path.join(IMG, look)
+            folder = os.path.join(IMG, 'es') if lang == 'es' else IMG
+            folder = folder if look == 'forest' else os.path.join(folder, look)
             os.makedirs(folder, exist_ok=True)
             Image.open(io.BytesIO(png)).convert('RGB').save(os.path.join(folder, name + '.webp'), 'WEBP', quality=80, method=6)
             print('saved', look, name)

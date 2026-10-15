@@ -9,6 +9,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0C1310">
 <script>(function(){try{if(sessionStorage.getItem('guide_splash_seen')||localStorage.getItem('guide_splash')==='off')document.documentElement.classList.add('no-splash');}catch(e){}try{if(localStorage.getItem('guide_look')==='purple'){document.documentElement.setAttribute('data-theme','purple');var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content','#161028');}}catch(e){}})();</script>
+<script>/* Language: ?lang=es or ?lang=en is remembered; otherwise a Spanish-language browser starts in Spanish. */(function(){var l='en';try{var q=new URLSearchParams(location.search).get('lang');if(q==='es'||q==='en')localStorage.setItem('guide_lang',q);var s=localStorage.getItem('guide_lang');l=s||(/^es\b/i.test(navigator.language||'')?'es':'en');}catch(e){}window.GUIDE_LANG=l==='es'?'es':'en';if(window.GUIDE_LANG==='es')document.documentElement.lang='es';})();</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -3899,7 +3900,7 @@
     gap:12px;
     padding:16px 16px;
     background:var(--card-2);
-    color:var(--on-accent);
+    color:var(--ink);
   }
   .ai-chat-header .mascot-logo{
     width:36px;
@@ -3915,9 +3916,9 @@
     line-height:1.2;
   }
   .ai-chat-header-sub{
-    font-size:11px;
-    opacity:0.85;
-    margin-top:1px;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:2px;
   }
   .ai-chat-clear-btn{
     background:rgba(255,255,255,0.15);
@@ -4038,8 +4039,8 @@
     font-size:13px;
     padding:0 16px;
     border-radius:10px;
-    border:1px solid var(--line);
-    background:var(--card-2);
+    border:1px solid transparent;
+    background:var(--grape);
     color:var(--on-accent);
     cursor:pointer;
     flex-shrink:0;
@@ -5191,6 +5192,11 @@
   .lp-close .lp-lead{margin:0 0 var(--sp-5);}
   .lp-reassure{margin:var(--sp-3) 0 0; font-size:14px;}
   .lp-mark{margin-bottom:var(--sp-6);}
+  .lp-lang{margin-left:auto; min-height:36px; padding:0 var(--sp-3); border:1px solid var(--line-2); border-radius:var(--r-btn); background:transparent; color:var(--ink-2); font:500 14px 'Inter',sans-serif; cursor:pointer;}
+  .lp-lang:hover{color:var(--ink); border-color:var(--ink-soft);}
+  .lp-foot-lang{margin:var(--sp-2) 0 0;}
+  .lang-note{font-size:13px; color:var(--ink-soft); border-left:2px solid var(--line-2); padding-left:var(--sp-3); margin:0 0 var(--sp-3);}
+  .lp-lang-link{border:0; background:none; padding:0; color:inherit; font:inherit; text-decoration:underline; cursor:pointer;}
   .lp-mark b{font-size:17px;}
   .lp-hero{padding:var(--sp-7) 0 var(--sp-8);}
   .lp-hero-grid{gap:var(--sp-7);}
@@ -5604,6 +5610,7 @@
         <div class="lp-mark lp-rise">
           <svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="82" fill="none" stroke="currentColor" stroke-width="14" opacity=".8"/><path d="M100,32 L114.1,85.9 L168,100 L114.1,114.1 L100,168 L85.9,114.1 L32,100 L85.9,85.9 Z" fill="currentColor"/></svg>
           <b>The Guide</b>
+          <button type="button" class="lp-lang" data-lang-switch translate="no">Español</button>
         </div>
         <h1 class="lp-h1 lp-rise d1"><span>You don't need more videos.</span><span class="lp-grad">You need them in order.</span></h1>
         <p class="lp-sub lp-rise d2"><span data-count-word="cap">Sixteen</span> real businesses, each taught as a proper course: modules in sequence, narrated video lessons, and an AI mentor for the moment you get stuck.</p>
@@ -5859,6 +5866,7 @@
   <footer class="lp-foot">
     <div class="lp-wrap">
       Questions? Email <a href="mailto:TheGuide1@gmail.com">TheGuide1@gmail.com</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
+      <p class="lp-foot-lang"><button type="button" class="lp-lang-link" data-lang-switch translate="no">Español</button></p>
     </div>
   </footer>
 </div>
@@ -6027,6 +6035,7 @@
             <div class="account-menu-group">
               <button class="account-menu-item" id="accountBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.5a1.6 1.6 0 0 0 .32 1.77l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-1 1.46V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.77.32l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.46-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.32-1.77l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.6 1.6 0 0 0 9 4.6h.08a1.6 1.6 0 0 0 1-1.46V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.46 1.6 1.6 0 0 0 1.77-.32l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.32 1.77V9a1.6 1.6 0 0 0 1.46 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></svg><span>Account settings</span></button>
               <button class="account-menu-item" id="helpNavBtn" role="menuitem"><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.86.83c0 1.67-2.5 2.5-2.5 2.5"/><path d="M12 17h.01"/></svg><span>Help</span></button>
+              <button class="account-menu-item" id="langNavBtn" role="menuitem" data-lang-switch-item><svg class="ami" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span translate="no" data-lang-switch-label>Español</span></button>
             </div>
             <div class="account-menu-group" role="group" aria-label="Look">
               <div class="look-row">
@@ -6421,6 +6430,8 @@
 <!-- Chapters (see ops/niches/README.md). Loaded before the app starts. -->
 <script src="niches/base.js"></script>
 <script src="niches/pack-1.js"></script>
+<!-- Spanish (only for people who use the app in Spanish): the words for the screens, the chapter names and the Module 1 lessons. -->
+<script>if(window.GUIDE_LANG==='es')document.write('<script src="i18n/es.js"><\/script>');</script>
 <script>
 // Look helpers: read the live colours of the current look (Forest & Gold or Purple).
 function themeVar(name, fb){ try{ const v=getComputedStyle(document.documentElement).getPropertyValue(name).trim(); return v||fb; }catch(e){ return fb; } }
@@ -6581,10 +6592,164 @@ const NICHES = window.GUIDE_NICHES || [];
   if(NICHES.some(n => n.id === entry.chapter.id)) return;
   NICHES.push(Object.assign({}, entry.chapter, { guides: entry.guides }));
 }));
+// ---------- Language: English, or Spanish ----------
+// Spanish lives in i18n/es.js and is loaded only for people using the app in Spanish (see the top of the page).
+// Chapter names, module titles and the Module 1 lessons are swapped in the chapter data itself. Everything
+// else is translated as it appears on screen, from the same file: exact text, a little inline markup kept as
+// is (<b>, <a>…), and a few patterns for text with numbers in it. Lesson titles stay English in the data on
+// purpose (progress is saved under them) and are translated on screen only.
+const LANG = (window.GUIDE_LANG === 'es' && window.GUIDE_ES) ? 'es' : 'en';
+const I18N = (()=>{
+  const INLINE = new Set(['B', 'STRONG', 'EM', 'I', 'SMALL', 'SPAN', 'A', 'BR', 'CODE', 'U']);
+  const SKIP = 'script,style,textarea,noscript,svg,[translate="no"],.notranslate,.ai-msg,.gv-scenes,.gv-say,.gv-sent';
+  const ATTRS = ['placeholder', 'aria-label', 'title'];
+  const norm = (s)=> String(s).replace(/\s+/g, ' ').trim();
+  const hasWords = (s)=> /[A-Za-z]{2}/.test(s);
+  /** An element holding only text and plain inline formatting (no ids, icons or controls): it's translated whole. */
+  function inlineOnly(el){
+    for(const c of el.childNodes){
+      if(c.nodeType === 3 || c.nodeType === 8) continue;
+      if(c.nodeType !== 1 || !INLINE.has(c.tagName) || c.id || c.hasAttribute('data-ico') || !inlineOnly(c)) return false;
+    }
+    return true;
+  }
+  const mixed = (el)=> el.firstElementChild && [...el.childNodes].some(c=> c.nodeType === 3 && c.nodeValue.trim()) && inlineOnly(el);
+  // "sixteen courses": the number word is filled in by countWord(), so it isn't part of the text to match
+  const htmlKey = (el)=> norm(el.innerHTML).replace(/(<span data-count-word(?:="[^"]*")?>)[^<]*(<\/span>)/g, '$1#$2');
+  /** The keys the translator looks for under a node (used to list what needs translating). */
+  function keysIn(root){
+    const out = new Set();
+    const visit = (n)=>{
+      if(n.nodeType === 3){ const v = norm(n.nodeValue); if(hasWords(v)) out.add(v); return; }
+      if(n.nodeType !== 1 || n.matches(SKIP)) return;
+      ATTRS.forEach(a=>{ const v = n.getAttribute(a); if(v && hasWords(v)) out.add(norm(v)); });
+      if(mixed(n)){ out.add(htmlKey(n)); return; }
+      n.childNodes.forEach(visit);
+    };
+    visit(root);
+    return [...out];
+  }
+  if(LANG !== 'es') return { on: false, t: (s)=> s, keysIn };
+
+  const es = window.GUIDE_ES;
+  const dict = new Map();
+  Object.entries(es.titles || {}).forEach(([k, v])=> dict.set(k, v));
+  const cw = (h)=> h.replace(/(<span data-count-word(?:="[^"]*")?>)[^<]*(<\/span>)/g, '$1#$2');
+  Object.entries(es.ui || {}).forEach(([k, v])=> { if(k.includes('data-count-word')){ k = cw(k); v = cw(v); } dict.set(k, v); });
+  // Patterns are only tried on text that could match them: each is filed under the plain words it starts with
+  // ("Lesson ", "Watch video"…), under "starts with a number", or (a few) tried on everything.
+  const pats = (es.patterns || []).map(([src, out])=>{
+    const lead = (src.match(/^\^((?:[^\\()[\].*+?{}|$^]|\\[.$()?*+\[\]])*)/) || [, ''])[1].replace(/\\(.)/g, '$1');
+    return { re: new RegExp(src), out, lead, num: !lead && src.startsWith('^(\\d') };
+  });
+  const memo = new Map();
+  /** Spanish for a piece of English text, or the text unchanged. */
+  function t(s){
+    const k = norm(s);
+    if(!k) return s;
+    const hit = dict.get(k);
+    if(hit != null) return hit;
+    if(memo.has(k)) return memo.get(k) ?? s;
+    let res = null;
+    const digit = k.charCodeAt(0) >= 48 && k.charCodeAt(0) <= 57;
+    for(const p of pats){
+      if(p.lead ? !k.startsWith(p.lead) : (p.num && !digit)) continue;
+      const m = p.re.exec(k);
+      if(m){ res = p.out.replace(/\$(\d)/g, (_, i)=> { const g = m[+i] || ''; const h = dict.get(g); return h != null ? h : g; }); break; }
+    }
+    if(memo.size > 5000) memo.clear();
+    memo.set(k, res);
+    return res ?? s;
+  }
+  function trText(n){
+    const v = n.nodeValue;
+    if(!v || !hasWords(v)) return;
+    const out = t(v);
+    if(out !== v){ const lead = v.match(/^\s*/)[0], trail = v.match(/\s*$/)[0]; n.nodeValue = lead + out + trail; }
+  }
+  function trAttrs(el){
+    for(const a of ATTRS){
+      const v = el.getAttribute(a);
+      if(v && hasWords(v)){ const out = t(v); if(out !== v) el.setAttribute(a, out); }
+    }
+  }
+  function walk(n){
+    if(n.nodeType === 3){ trText(n); return; }
+    if(n.nodeType !== 1) return;
+    if(n.tagName === 'TEXTAREA' || n.tagName === 'INPUT'){ trAttrs(n); return; } // the hint, never what's typed
+    if(n.matches(SKIP)) return;
+    trAttrs(n);
+    if(mixed(n)){
+      const k = htmlKey(n), out = t(k);
+      if(out !== k){
+        n.innerHTML = out;
+        // the number word: filled in here once the app has started, and by the landing page's own code before that
+        try{ n.querySelectorAll('[data-count-word]').forEach(c=>{ c.textContent = countWord(NICHES.length, c.dataset.countWord === 'cap'); }); }catch(e){}
+        return;
+      }
+    }
+    for(const c of [...n.childNodes]) walk(c);
+  }
+  const skipped = (n)=>{ const p = n.parentElement; return !p || !!p.closest(SKIP); }; // the node itself is checked by walk()
+
+  // the chapter data: names, descriptions, modules, and the Module 1 lessons
+  NICHES.forEach(n=>{
+    const c = (es.chapters || {})[n.id];
+    if(c){
+      if(c.name) n.name = c.name;
+      if(c.description) n.description = c.description;
+      if(c.breakdown && n.breakdown) n.breakdown = c.breakdown;
+      (n.modules || []).forEach((m, i)=>{ const x = (c.modules || [])[i]; if(x){ m.title = x.title || m.title; m.goal = x.goal || m.goal; } });
+    }
+    n.guides.forEach(g=>{
+      const l = (es.lessons || {})[n.id + '|' + g.title];
+      if(l){ g.summary = l.summary; g.action = l.action; g.takeaway = l.takeaway; g.content = l.content; g.es = true; }
+    });
+  });
+  // dates in Spanish wherever the app asks for US English ones
+  for(const fn of ['toLocaleDateString', 'toLocaleString', 'toLocaleTimeString']){
+    const orig = Date.prototype[fn];
+    Date.prototype[fn] = function(loc, opts){ return orig.call(this, (loc == null || /^en/i.test(String(loc))) ? 'es-US' : loc, opts); };
+  }
+  // pop-up questions and notes
+  for(const fn of ['alert', 'confirm', 'prompt']){
+    const orig = window[fn].bind(window);
+    window[fn] = (msg, ...rest)=> orig(msg == null ? msg : t(String(msg)), ...rest);
+  }
+  const meta = document.querySelector('meta[name="description"]');
+  if(meta && es.meta && es.meta.description) meta.setAttribute('content', es.meta.description);
+  walk(document.documentElement);
+  new MutationObserver((list)=>{
+    for(const m of list){
+      if(m.type === 'characterData'){ if(!skipped(m.target)) trText(m.target); continue; }
+      m.addedNodes.forEach(n=>{ if(!skipped(n)) walk(n); });
+    }
+  }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+  return { on: true, t, keysIn };
+})();
+window.__guideI18nKeys = (root)=> I18N.keysIn(root || document.documentElement);
+/** Switch language: remembered on this device, then the page reloads in the other language. */
+function setLanguage(lang){
+  try{ localStorage.setItem('guide_lang', lang === 'es' ? 'es' : 'en'); }catch(e){}
+  try{ const u = new URL(location.href); u.searchParams.delete('lang'); history.replaceState(history.state, '', u.pathname + u.search + u.hash); }catch(e){}
+  location.reload();
+}
+
+// The language buttons (landing page and the account menu) always offer the other language, in that language.
+document.querySelectorAll('[data-lang-switch]').forEach(b=>{
+  b.textContent = LANG === 'es' ? 'English' : 'Español';
+  b.setAttribute('lang', LANG === 'es' ? 'en' : 'es');
+  b.addEventListener('click', ()=> setLanguage(LANG === 'es' ? 'en' : 'es'));
+});
+document.querySelectorAll('[data-lang-switch-label]').forEach(l=>{ l.textContent = LANG === 'es' ? 'English' : 'Español'; });
+document.querySelectorAll('[data-lang-switch-item]').forEach(b=> b.addEventListener('click', ()=> setLanguage(LANG === 'es' ? 'en' : 'es')));
+
 // Counts shown to people (landing page, upgrade box, FAQ) come from the real list, so they never go stale.
 const COUNT_WORDS = ['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty','twenty-one','twenty-two','twenty-three','twenty-four','twenty-five','twenty-six','twenty-seven','twenty-eight','twenty-nine','thirty','thirty-one','thirty-two','thirty-three','thirty-four','thirty-five','thirty-six'];
+// Spanish number words in the form used before a noun ("veintiún cursos").
+const COUNT_WORDS_ES = ['cero','un','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve','veinte','veintiún','veintidós','veintitrés','veinticuatro','veinticinco','veintiséis','veintisiete','veintiocho','veintinueve','treinta','treinta y un','treinta y dos','treinta y tres','treinta y cuatro','treinta y cinco','treinta y seis'];
 function countWord(n, capital){
-  const w = COUNT_WORDS[n] || String(n);
+  const w = (LANG === 'es' ? COUNT_WORDS_ES : COUNT_WORDS)[n] || String(n);
   return capital ? w.charAt(0).toUpperCase() + w.slice(1) : w;
 }
 function freeLessonCount(){ return NICHES.reduce((t, n)=> t + n.guides.filter(g => g.mod === 0).length, 0); }
@@ -7630,7 +7795,7 @@ function gvLighten(hex, amt){
 }
 
 function gvPillHtml(dur, large){
-  return `<button type="button" class="gv-watch ${large ? 'gv-watch-lg' : ''}" title="Watch the video lesson"><i data-ico="play"></i><span class="gv-dur">${large ? 'Watch video · ' : ''}${gvFmt(dur)}</span></button>`;
+  return `<button type="button" class="gv-watch ${large ? 'gv-watch-lg' : ''}" title="${LANG === 'es' ? 'Ver la lección en video (en inglés)' : 'Watch the video lesson'}"><i data-ico="play"></i><span class="gv-dur">${large ? 'Watch video · ' : ''}${gvFmt(dur)}</span></button>`;
 }
 /** Small "▶ 0:52" pill for a guide row; returns '' when that guide has no video. */
 function gvWatchPill(niche, guide, large){
@@ -8223,7 +8388,7 @@ const landingSignupBtn = document.getElementById('landingSignupBtn');
   if(grid && typeof NICHES !== 'undefined'){
     grid.innerHTML = NICHES.map(n=> `<div class="lp-chip"><em>${nicheIco(n)}</em>${n.name}</div>`).join('');
     const c = document.getElementById('lpOurCourses');
-    if(c) c.textContent = `${countWord(NICHES.length, true)} courses`;
+    if(c) c.textContent = `${countWord(NICHES.length, true)} ${LANG === 'es' ? 'cursos' : 'courses'}`;
     document.querySelectorAll('[data-count-word]').forEach(el => { el.textContent = countWord(NICHES.length, el.dataset.countWord === 'cap'); });
   }
 
@@ -9324,9 +9489,10 @@ function setLook(name){
   try{ localStorage.setItem('guide_look', look); }catch(e){}
   document.querySelectorAll('.look-chip').forEach(b=> b.setAttribute('aria-checked', b.dataset.look === look ? 'true' : 'false'));
   // the landing page shows real screenshots of the app, so each look has its own set
+  // (and the Spanish page has its own pictures of the app in Spanish)
   document.querySelectorAll('.landing-view img[src^="img/"]').forEach(img=>{
-    const file = img.getAttribute('src').replace(/^img\/(purple\/)?/, '');
-    const want = (look === 'purple' ? 'img/purple/' : 'img/') + file;
+    const file = img.getAttribute('src').replace(/^img\/(es\/)?(purple\/)?/, '');
+    const want = 'img/' + (LANG === 'es' ? 'es/' : '') + (look === 'purple' ? 'purple/' : '') + file;
     if(img.getAttribute('src') !== want) img.setAttribute('src', want);
   });
 }
@@ -10972,10 +11138,10 @@ function renderHome(){
       document.getElementById('continueCard').addEventListener('click', ()=>{
         openNiche(niche.id);
         setTimeout(()=>{
-          const rows = [...guideList.querySelectorAll('.guide-title')];
-          const match = rows.find(r=>r.textContent===guide.title);
-          if(match){
-            const parent = match.closest('.guide');
+          // found by its id, not its title on screen (which may be translated)
+          const want = gvId(niche.id, guide.title);
+          const parent = [...guideList.querySelectorAll('.guide')].find(el=> el.dataset.gv === want);
+          if(parent){
             openGuideRow(parent);
             parent.scrollIntoView({behavior:'smooth', block:'center'});
           }
@@ -11487,6 +11653,7 @@ function renderNicheDetail(){
       g._filled = true;
       g.querySelector('.guide-content').innerHTML = `
         ${!lock && gvInfo(niche.id, guide.title) ? `<div class="view-mode-row" style="margin-top:0">${gvWatchPill(niche, guide, true)}</div>` : ''}
+        ${LANG === 'es' && !guide.es ? '<p class="lang-note" lang="es">Esta lección todavía está en inglés. Pronto la tendrás en español.</p>' : ''}
         ${guide.summary ? `<p style="color:var(--ink-soft); font-style:italic;">${guide.summary}</p>` : ''}
         ${(()=>{
           const paras = String(guide.content).replace(/\\n/g, '\n').split(/\n\s*\n/);
@@ -16236,6 +16403,7 @@ function toggleSpeech(key, text, btn, pauseLabel, resumeLabel, idleLabel){
   chunks.forEach((chunk, i)=>{
     const utter = new SpeechSynthesisUtterance(chunk);
     utter.rate = 1;
+    if(LANG === 'es') utter.lang = 'es-US'; // read Spanish text with a Spanish voice
     if(i === chunks.length - 1){
       utter.onend = ()=>{
         if(currentSpeechKey === key){ currentSpeechKey = null; btn.textContent = idleLabel; }
@@ -16260,7 +16428,7 @@ function printGuidePDF(guide, niche){
   const printArea = document.getElementById('printArea');
   printArea.innerHTML = `
     <div class="print-brand">THE GUIDE · ${niche.name}</div>
-    <h1>${guide.title}</h1>
+    <h1>${I18N.t(guide.title)}</h1>
     <div class="print-meta">${guideKindLabel(guide)} · ${guide.time} read</div>
     ${guide.summary ? `<p class="print-summary">${guide.summary}</p>` : ''}
     ${guide.content.split('\n\n').map(guidePara).join('')}
@@ -16279,7 +16447,7 @@ function printChapterPDF(niche){
     <div class="print-meta">${niche.description} · ${niche.guides.length} lessons</div>
     ${niche.guides.map((guide,i)=>`
       <div class="${i>0 ? 'print-page-break' : ''}">
-        <h1 style="font-size:18px;${i>0?'margin-top:0;':'margin-top:20px;'}">${guide.title}</h1>
+        <h1 style="font-size:18px;${i>0?'margin-top:0;':'margin-top:20px;'}">${I18N.t(guide.title)}</h1>
         <div class="print-meta">${guideKindLabel(guide)} · ${guide.time} read</div>
         ${guide.summary ? `<p class="print-summary">${guide.summary}</p>` : ''}
         ${guide.content.split('\n\n').map(guidePara).join('')}
@@ -17380,7 +17548,8 @@ async function sendAiChatMessage(niche, text){
           modules: (niche.modules || []).map(m=> ({ title: m.title })),
           guides: niche.guides.map(g=> ({ title: g.title, mod: g.mod }))
         },
-        messages: aiChatHistory[niche.id].slice(-20)
+        messages: aiChatHistory[niche.id].slice(-20),
+        lang: LANG // the app's language: The Guider answers in Spanish for people using the app in Spanish
       })
     });
     aiChatHistory[niche.id].push({role:'assistant', content: result.reply});
@@ -18770,7 +18939,7 @@ searchInput.addEventListener('input', ()=>{
   const checklistMatches = [];
   NICHES.forEach(niche=>{
     niche.guides.forEach(guide=>{
-      if(guide.title.toLowerCase().includes(q) || guide.summary.toLowerCase().includes(q) || guide.content.toLowerCase().includes(q)){
+      if(guide.title.toLowerCase().includes(q) || (I18N.on && I18N.t(guide.title).toLowerCase().includes(q)) || guide.summary.toLowerCase().includes(q) || guide.content.toLowerCase().includes(q)){
         guideMatches.push({niche, guide});
       }
     });
@@ -18800,10 +18969,9 @@ searchInput.addEventListener('input', ()=>{
   guideMatches.slice(0,6).forEach(({niche,guide})=>{
     const item = makeSearchResultItem('Guide', guide.title, niche, ()=>{
       goToNicheTab(niche, 'guides', ()=>{
-        const rows = [...guideList.querySelectorAll('.guide-title')];
-        const match = rows.find(r=>r.textContent===guide.title);
-        if(match){
-          const parent = match.closest('.guide');
+        const want = gvId(niche.id, guide.title);
+        const parent = [...guideList.querySelectorAll('.guide')].find(el=> el.dataset.gv === want);
+        if(parent){
           openGuideRow(parent);
           parent.scrollIntoView({behavior:'smooth', block:'center'});
         }
