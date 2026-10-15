@@ -3191,6 +3191,146 @@ def design_polish(browser, base):
         ctx.close(); ctx2.close()
 
 
+def thirty_day_plan(browser, base):
+    """The 30-day plan: Home offers it, two questions make it, the plan page lays out 30 days a module a week, a
+    lesson day opens its lesson, the check-in opens The Guider with the message typed in, and sending it ticks
+    the day off. Free members see the Pro weeks locked."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}"
+    def open_app(label, pro, plan=None, completed=None, vp=None):
+        step = [f'30-day plan ({label})']
+        vp = vp or {'width': 390, 'height': 844}
+        mobile = vp['width'] < 600
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        st = new_state(pro)
+        if plan:
+            st['data']['dayPlan'] = plan
+        if completed:
+            st['data']['completed'] = completed
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
+        page.wait_for_timeout(900)
+        return step, ctx, st, page
+    days_ago = lambda n: time.strftime('%Y-%m-%d', time.localtime(time.time() - n * 86400))
+
+    # 1) making a plan from the offer on Home
+    got = open_app('making one', True)
+    if got:
+        step, ctx, st, page = got
+        if not visible(page, '#planOffer', 3000):
+            problem(step[0], 'Home should offer a 30-day plan to someone without one')
+        else:
+            ok(step[0], 'Home offers a 30-day plan')
+            page.click('#planOfferGo'); page.wait_for_timeout(500)
+            if not visible(page, '#planNicheSel', 2000):
+                problem(step[0], 'Make my plan should open the two questions')
+            else:
+                page.select_option('#planNicheSel', 'lawn'); page.wait_for_timeout(150)
+                page.click('.pl-goal[data-goal="first_500"]'); page.wait_for_timeout(150)
+                shot(page, 'phone-plan-maker')
+                page.click('#planMakeGo'); page.wait_for_timeout(900)
+                saved = st['data'].get('dayPlan') or {}
+                rows = page.locator('#planContent .pl-day').count()
+                weeks = page.locator('#planContent .pl-week').count()
+                first = page.evaluate("(()=>{const d=document.querySelector('.pl-day[data-day=\"1\"]'); return d ? {today:d.classList.contains('today'), text:d.innerText} : null})()")
+                seven = page.evaluate("(()=>{const d=document.querySelector('.pl-day[data-day=\"7\"]'); return d ? d.innerText : ''})()")
+                if (visible(page, '#planView', 2000) and rows == 30 and weeks == 5 and first and first['today']
+                        and saved.get('nicheId') == 'lawn' and saved.get('goal') == 'first_500' and saved.get('start') == TODAY
+                        and 'Check in with The Guider' in seven and 'lawn' in st['data'].get('niches', [])):
+                    ok(step[0], 'two questions make the plan: 30 days in 5 sections, day 1 is today, day 7 is a Guider check-in, and it is saved')
+                else:
+                    problem(step[0], 'the plan was not made or laid out right', {'rows': rows, 'weeks': weeks, 'first': first, 'saved': saved, 'seven': seven[:60]})
+                sub = page.inner_text('#planSub')
+                if 'Lawn' in sub and 'first $500' in sub:
+                    ok(step[0], 'the plan page shows the chapter and the goal')
+                else:
+                    problem(step[0], 'the plan page should show the chapter and the goal', sub[:120])
+                no_sideways_scroll(page, step[0])
+                shot(page, 'phone-plan-page')
+                page.click('.pl-day[data-day="1"]'); page.wait_for_timeout(800)
+                opened = page.evaluate("(()=>{const g=document.querySelector('#guideList .guide.open'); return {chapter: getComputedStyle(document.getElementById('nicheView')).display !== 'none', open: g ? g.querySelector('.guide-title').textContent : null}})()")
+                first_title = page.evaluate("NICHES.find(n=>n.id==='lawn').guides[0].title")
+                if opened['chapter'] and opened['open'] == first_title:
+                    ok(step[0], 'tapping day 1 opens its lesson')
+                else:
+                    problem(step[0], 'tapping a lesson day should open that lesson', {'opened': opened, 'want': first_title})
+                page.evaluate('showHome()'); page.wait_for_timeout(500)
+                card = page.inner_text('#planWrap')
+                if 'Day 1 of 30' in card and re.search(r'0 of \d+ steps done', card) and 'See my plan' in card:
+                    ok(step[0], 'Home now shows the plan: day 1 of 30 and the steps done')
+                else:
+                    problem(step[0], 'Home should show the plan card', card[:160])
+        finish(st, step[0]); ctx.close()
+
+    # 2) a check-in day: The Guider opens with the message ready, and sending it ticks the day off
+    lawn_m0 = None
+    got = open_app('check-in day', True, plan={'nicheId': 'lawn', 'start': days_ago(6), 'goal': 'first_customer', 'from': 0, 'checkins': {}})
+    if got:
+        step, ctx, st, page = got
+        lawn_m0 = page.evaluate("NICHES.find(n=>n.id==='lawn').guides.filter(g=>g.mod===0).map(g=>'lawn|'+g.title)")
+        card = page.inner_text('#planWrap')
+        if 'Day 7 of 30' in card and page.locator('#planWrap [data-plan-checkin="7"]').count():
+            ok(step[0], 'on day 7 Home asks for the week 1 check-in')
+            page.click('#planWrap [data-plan-checkin="7"]'); page.wait_for_timeout(900)
+            val = page.evaluate("(document.getElementById('aiChatInput')||{}).value || ''")
+            if val.startswith('Week 1 check-in for my 30-day plan.') and 'my first paying customer' in val and 'week 2' in val:
+                ok(step[0], 'The Guider opens with the check-in typed in, ready to send')
+            else:
+                problem(step[0], 'the check-in message should be typed in for them', val[:160])
+            page.click('#aiChatSendBtn'); page.wait_for_timeout(900)
+            saved = (st['data'].get('dayPlan') or {}).get('checkins', {})
+            if saved.get('7') == TODAY:
+                ok(step[0], 'sending the check-in ticks day 7 off')
+            else:
+                problem(step[0], 'sending the check-in should tick day 7 off', saved)
+        else:
+            problem(step[0], 'on day 7 Home should offer the check-in', card[:160])
+        finish(st, step[0]); ctx.close()
+
+    # 3) a free member: week 1 is open, the Pro weeks are locked and open the Pro window
+    got = open_app('free member', False, plan={'nicheId': 'lawn', 'start': TODAY, 'goal': 'set_up', 'from': 0, 'checkins': {}},
+                   completed=(lawn_m0 or [])[:2])
+    if got:
+        step, ctx, st, page = got
+        page.click('#planSeeBtn'); page.wait_for_timeout(700)
+        state = page.evaluate("[...document.querySelectorAll('.pl-day')].map(d=>({day:+d.dataset.day, locked:d.classList.contains('locked'), done:d.classList.contains('done'), pro:/Pro/.test(d.querySelector('.pl-tag')?d.querySelector('.pl-tag').textContent:'')}))")
+        w1 = [d for d in state if d['day'] <= 6]
+        w2 = [d for d in state if 8 <= d['day'] <= 13]
+        if state and not any(d['locked'] for d in w1) and all(d['locked'] and d['pro'] for d in w2) and state[0]['done']:
+            ok(step[0], 'week 1 is open (and day 1 shows done), weeks 2 to 4 are marked Pro')
+        else:
+            problem(step[0], 'a free member should see week 1 open and the Pro weeks locked', {'w1': w1, 'w2': w2})
+        page.click('.pl-day[data-day="8"]'); page.wait_for_timeout(600)
+        if visible(page, '#upgradeOverlay', 2000):
+            ok(step[0], 'tapping a Pro day opens the Pro window')
+        else:
+            problem(step[0], 'tapping a Pro day should open the Pro window')
+        close_paywall(page)
+        finish(st, step[0]); ctx.close()
+
+    # 4) the plan page on a laptop, in both looks
+    got = open_app('laptop', True, plan={'nicheId': 'video', 'start': days_ago(9), 'goal': 'grow', 'from': 0, 'checkins': {'7': days_ago(3)}},
+                   vp={'width': 1280, 'height': 800})
+    if got:
+        step, ctx, st, page = got
+        page.click('#planSeeBtn'); page.wait_for_timeout(700)
+        today = page.evaluate("(()=>{const d=document.querySelector('.pl-day.today'); return d ? +d.dataset.day : 0})()")
+        done7 = page.evaluate("document.querySelector('.pl-day[data-day=\"7\"]').classList.contains('done')")
+        if today == 10 and done7:
+            ok(step[0], 'day 10 is marked today and the week 1 check-in shows done')
+        else:
+            problem(step[0], 'the plan page should mark today and the finished check-in', {'today': today, 'done7': done7})
+        shot(page, 'desktop-plan-forest')
+        page.evaluate("document.documentElement.setAttribute('data-theme','purple')"); page.wait_for_timeout(200)
+        shot(page, 'desktop-plan-purple')
+        finish(st, step[0]); ctx.close()
+
+
+
+
 def creator_payouts(browser, base):
     """Owner dashboard: a code can carry a creator share, and the payouts card shows each creator's cut
     for a month and lets the owner mark it paid."""
@@ -3227,6 +3367,7 @@ def creator_payouts(browser, base):
     else:
         problem(step[0], 'no Mark paid button on an unpaid creator')
     finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3287,6 +3428,7 @@ def landing_trust(browser, base):
 
 
 
+
 def billing_email_links(browser, base):
     """The billing emails link back with ?open=upgrade ("Pick up where you left off") and ?open=account
     ("Open my account"): the first opens the Pro box for a free member, the second opens account settings."""
@@ -3303,6 +3445,7 @@ def billing_email_links(browser, base):
         else:
             problem(step[0], f'?open={which} did not open the right screen')
         finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3390,6 +3533,7 @@ def public_pages(browser, base):
     else:
         problem(step[0], 'the app page is missing its title, description or share picture', r)
     finish(st, step[0]); ctx.close()
+
 
 
 
@@ -3486,8 +3630,9 @@ def main():
         account_settings(browser, base)
         manage_subscription(browser, base)
         design_polish(browser, base)
-        creator_payouts(browser, base)
+        thirty_day_plan(browser, base)
         save_retry(browser, base)
+        creator_payouts(browser, base)
         landing_trust(browser, base)
         billing_email_links(browser, base)
         public_pages(browser, base)
