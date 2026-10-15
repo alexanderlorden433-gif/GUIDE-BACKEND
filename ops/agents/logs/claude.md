@@ -174,3 +174,7 @@ Things worth remembering:
   (mode payment, card only, price_data inline, metadata.kind='site_credits'). The webhook checks kind FIRST and breaks,
   so credits never hit the Pro path. Return URL /billing/credits?credits_session=… → app calls POST /sites/credits/confirm.
   Daily per-member cap is now 30 (DAILY_CAP); app-wide SITE_AI_DAILY_TOTAL default 1000.
+- PR #61 also: Pro's daily AI hour (Alexander's call: Pro + old Lifetime plan get 1 hour/day free, credits after).
+  Table SiteAiHour (userId, day = member's local date from the tz the app sends, startedAt); time left is computed
+  in SQL (no server/DB clock mismatch). useDailyHour() runs before spendCredit(); hour writes log free=0 paid=0.
+  Lifetime = User.planType 'lifetime' (also counts if isPro got switched off). 30/day write cap still applies.
