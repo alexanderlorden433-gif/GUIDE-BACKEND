@@ -5590,23 +5590,47 @@
   .sf-faq{display:grid; grid-template-columns:1fr 36px; gap:var(--sp-2); padding-bottom:var(--sp-2); border-bottom:1px solid var(--line);}
   .sf-faq textarea{grid-column:1; min-height:72px;}
   #sfFaqList{display:grid; gap:var(--sp-2);}
-  /* the AI page writer card */
-  .site-ai{background:var(--card); border-radius:var(--r-card); padding:var(--sp-5); margin-bottom:var(--sp-6); display:grid; gap:var(--sp-3);}
-  .site-ai .ss-head .ico{width:20px; height:20px; color:var(--ink-soft);}
-  .site-ai .ss-sub{margin:0;}
-  .site-ai .sa-fields{gap:var(--sp-3);}
-  .sa-err{margin:0; font-size:14px; font-weight:500; color:rgb(var(--danger-rgb)); max-width:68ch;}
-  .sa-err:empty{display:none;}
+  /* the website builder: the chat, and the page next to it (stacked on phones) */
+  .site-builder{display:grid; grid-template-columns:minmax(0, 1fr); gap:var(--sp-6); margin-bottom:var(--sp-6);}
+  @media (min-width:980px){ .site-builder{grid-template-columns:minmax(0, 440px) minmax(0, 1fr); align-items:start;} }
+  .sb-chat-col{display:grid; gap:var(--sp-3); min-width:0;}
+  .sb-chat{height:min(560px, 60vh);}
+  @media (min-width:980px){ .sb-chat{height:min(640px, 72vh);} }
+  .sb-chat .ai-chat-header .mascot-logo{width:32px; height:32px;}
+  .sb-chat .ai-msg{max-width:85%; font-size:14px;}
+  .sb-chat .ai-msg.thinking{display:flex; align-items:center; gap:var(--sp-2);}
+  .sc-acts{display:flex; flex-wrap:wrap; gap:0 var(--sp-4); margin:calc(var(--sp-3) * -1) 0 0 40px;}
+  .sc-acts .site-text{padding:0; display:inline-flex; align-items:center; gap:var(--sp-1); font-size:13px;}
+  .sc-err{margin:0; padding:var(--sp-2) var(--sp-4); font-size:13px; font-weight:500; line-height:1.5; color:rgb(var(--danger-rgb)); border-top:1px solid var(--line);}
+  .sc-chips{display:flex; gap:var(--sp-2); overflow-x:auto; padding:var(--sp-2) var(--sp-3) 0; scrollbar-width:none; border-top:1px solid var(--line);}
+  .sc-chips::-webkit-scrollbar{display:none;}
+  .sc-chip{flex:none; min-height:36px; padding:0 var(--sp-3); border:1px solid var(--line-2); border-radius:999px; background:transparent; color:var(--ink-2); font:500 13px 'Inter',sans-serif; cursor:pointer; white-space:nowrap;}
+  .sc-chip:hover{border-color:var(--ink-soft); color:var(--ink);}
+  .sb-chat .sc-chips + .ai-chat-input-row{border-top:0;}
+  .sb-chat .ai-chat-input-row{align-items:flex-end;}
+  .sb-chat .ai-chat-input-row textarea{min-height:var(--btn-h); max-height:140px; font-size:15px; line-height:1.4;}
+  .sb-chat .ai-chat-send-btn{min-height:var(--btn-h);}
+  .sb-foot{display:grid; gap:var(--sp-2);}
+  .sb-foot .site-text{justify-self:start; padding:0;}
   .sa-note{font-size:13px; line-height:1.5; color:var(--ink-soft); max-width:68ch;}
   .sa-hour.on{color:var(--ink); font-weight:500;}
-  .sa-bar{height:4px; border-radius:2px; background:var(--line); overflow:hidden;}
-  .sa-bar span{display:block; height:100%; width:0; background:var(--grape); transition:width 1s linear;}
-  .sa-done{border-top:1px solid var(--line); padding-top:var(--sp-3); display:grid; gap:var(--sp-2);}
-  .sa-done-h{margin:0; display:flex; gap:var(--sp-2); align-items:flex-start; font-size:15px; font-weight:500; color:var(--ink); max-width:68ch;}
-  .sa-done-h .ico{width:18px; height:18px; flex:none; margin-top:2px; color:var(--ink-soft);}
   .sa-tips-h{margin:var(--sp-1) 0 0; font-size:14px; font-weight:600; color:var(--ink);}
-  .sa-tips{margin:0; padding-left:var(--sp-5); font-size:14px; line-height:1.5; color:var(--ink-2); max-width:68ch;}
-  .sa-done .site-text{padding:0;}
+  .sb-preview{display:grid; gap:var(--sp-3); min-width:0;}
+  .sb-preview-head{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); font-size:16px; color:var(--ink);}
+  .sb-preview-head b{font-weight:600;}
+  .sb-preview-head .site-text{padding:0; display:inline-flex; align-items:center; gap:var(--sp-1);}
+  .sb-frame{border:1px solid var(--line-2); border-radius:var(--r-card); overflow:hidden; background:var(--card);}
+  .sb-frame iframe{display:block; width:100%; height:min(620px, 72vh); border:0;}
+  .sb-empty{display:grid; place-items:center; gap:var(--sp-2); text-align:center; padding:var(--sp-8) var(--sp-5); min-height:240px; color:var(--ink-soft);}
+  .sb-empty .ico{width:28px; height:28px;}
+  .sb-empty p{margin:0; max-width:32ch; font-size:14px; line-height:1.5;}
+  .sb-unsaved{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--sp-3); padding:var(--sp-3) 0; font-size:14px; color:var(--ink-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  details.site-edit > summary{cursor:pointer; list-style:none; margin:0;}
+  details.site-edit > summary::-webkit-details-marker{display:none;}
+  details.site-edit > summary::after{content:'+'; margin-left:auto; color:var(--ink-soft); font-weight:400;}
+  details.site-edit[open] > summary::after{content:'\2013';}
+  details.site-edit[open] > summary{margin-bottom:var(--sp-3);}
+  details.site-edit .ss-sub{margin-top:0;}
   .sa-buy{border-top:1px solid var(--line); padding-top:var(--sp-3); display:grid; gap:var(--sp-2);}
   .sa-buy .sa-tips-h{margin:0;}
   .sa-packs{display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--sp-2); max-width:640px;}
@@ -5621,7 +5645,6 @@
     .sa-packs{grid-template-columns:1fr;}
     .sa-pack{grid-template-areas:"name price" "each price"; grid-template-columns:1fr auto; align-items:center; column-gap:var(--sp-3);}
   }
-  @media (prefers-reduced-motion: reduce){ .sa-bar span{transition:none;} }
   @media (max-width:640px){
     .sf-two{grid-template-columns:1fr;}
     .sf-svc{grid-template-columns:1fr 110px 36px; padding-bottom:var(--sp-2); border-bottom:1px solid var(--line);}
@@ -10205,7 +10228,7 @@ document.getElementById('bottomTabEarn').addEventListener('click', ()=>{
 const FAQ_DATA = [
   { category: "New in The Guide", items: [
     { q: "How do I make a 30-day plan?", a: "On Home, tap 30-day plan under Your tools. You can also start one from any chapter (the 30-day plan button at the top) or from the account menu. Pick a business and what you want by day 30, and you get one small step a day, with a check-in with The Guider every 7 days." },
-    { q: "How do I get my own website?", a: "On Home, tap My website under Your tools, or open it from the account menu. Add your business name, your services and prices, and how to reach you, then tap Save and preview. Putting the page live is part of Pro. Requests people send from your page show up there, and you can add them to your Lead Pipeline." },
+    { q: "How do I get my own website?", a: "On Home, tap My website under Your tools, or open it from the account menu. Describe your business in the chat (what you do, where, and what you charge) and it builds your page, shown right next to the chat. Ask for any change, like a different colour or another service. Putting the page live is part of Pro. Requests people send from your page show up there, and you can add them to your Lead Pipeline." },
     { q: "Can I use The Guide in Spanish?", a: "Yes. Tap your picture at the top right, then Español. Tap English in the same place to switch back. The free lessons are in Spanish; the Pro lessons are still being translated." },
   ]},
   { category: "Getting around", items: [
@@ -18251,12 +18274,16 @@ function showSite(){
   currentNicheId = null;
   window.scrollTo(0, 0);
   if(!siteAi.busy){ siteAi.last = null; siteAi.error = ''; siteAi.buying = false; }
-  return renderSiteView(true);
+  return renderSiteView(true).then(()=>{ siteChatScroll(); sitePreviewRefresh(); });
 }
 
-// The AI page writer (POST /sites/ai, src/siteAi.js): the member says what they do in a few lines and Claude
-// writes the whole page into the form below. Nothing is public until they put it live.
-let siteAi = { busy: '', started: 0, open: false, desc: '', error: '', buying: false, last: null };
+// The website chat (POST /sites/ai, src/siteAi.js): the member describes their business in their own words, the AI
+// builds the page, and they keep chatting to change it ("make it blue", "add hedge trimming for $30"). The page shows
+// next to the chat as a live preview (POST /sites/preview draws it exactly as visitors see it, shown in a sandboxed
+// frame). The chat is kept with the member's progress (businessData.siteChat). Nothing is public until they put it live.
+let siteAi = { busy: false, started: 0, error: '', buying: false, last: null, input: '', editOpen: false };
+let sitePreviewUrl = '';     // the preview frame's page (a blob: address made on this device)
+let sitePreviewTimer = null;
 // the member's time zone: Pro's daily AI hour resets at their midnight
 const SITE_TZ = (()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){ return ''; } })();
 let siteHourTimer = null;
@@ -18289,9 +18316,11 @@ function siteHourTick(){
   }, 20000);
 }
 const SITE_AI_NAMES = { 'claude-fable-5-1': 'Claude Fable 5.1', 'claude-opus-5-5': 'Claude Opus 5.5', 'claude-sonnet-5-5': 'Claude Sonnet 5.5' };
-const SITE_AI_STEPS = ['Reading what you wrote…', 'Working out your services and prices…', 'Writing why people should pick you…',
+const SITE_AI_STEPS = ['Reading your message…', 'Writing your page…', 'Working out services and prices…',
   'Answering the questions customers ask…', 'Checking it reads well…', 'Almost there…'];
+const SITE_CHAT_KEEP = 40;   // messages kept with the member's progress
 function siteHasContent(d){ return !!(d && (d.name || d.about || (d.services || []).some(s => s.name))); }
+function siteChat(){ if(!Array.isArray(businessData.siteChat)) businessData.siteChat = []; return businessData.siteChat; }
 /** What the chapter teaches about pricing and offers, so the AI suggests prices the way the lessons do. */
 function siteAiChapter(nicheId){
   const n = NICHES.find(x => x.id === nicheId);
@@ -18301,30 +18330,32 @@ function siteAiChapter(nicheId){
     .map(g => `${g.title}: ${g.takeaway || g.summary || ''}`.trim());
   return { name: n.name, description: n.description || '', tips };
 }
-function siteAiHtml(d){
+
+/** The chat column: messages, suggestions, the box to type in, and what writes are left. */
+function siteChatHtml(d){
   const ai = siteState.ai;
   if(!ai || !ai.ready) return '';
-  const model = SITE_AI_NAMES[ai.model] || 'Claude';
-  if(siteAi.busy) return `<section class="site-ai" id="siteAi">
-      <div class="ss-head">${ico('sparkles')}<b>${siteAi.busy === 'improve' ? 'Making your page better…' : 'Writing your page…'}</b></div>
-      <p class="ss-sub" id="saStep" role="status">${SITE_AI_STEPS[0]}</p>
-      <div class="sa-bar" aria-hidden="true"><span id="saBar"></span></div>
-      <small class="sa-note">This takes about a minute. You can stay on this screen.</small>
-    </section>`;
-  const has = siteHasContent(d), showForm = !has || siteAi.open;
-  const kinds = NICHES.filter(n => n && n.guides && n.guides.length);
-  const last = siteAi.last;
-  const done = last ? `<div class="sa-done">
-      <p class="sa-done-h">${ico('checkCircle')}<span id="saDoneText">${last.saved ? 'Done. Your page is saved as a draft. Tap Preview to see it.' : last.live ? 'Done. Check it below, then tap Save changes to update your live page.' : 'Done. Check it below, then tap Save.'}</span></p>
-      ${last.tips.length ? `<p class="sa-tips-h">Before you put it live</p><ul class="sa-tips" translate="no">${last.tips.map(t => `<li>${gvEsc(t)}</li>`).join('')}</ul>` : ''}
-      <div class="site-row"><button type="button" class="site-text" id="saUndo">Undo, put my old page back</button></div>
-    </div>` : '';
+  const chat = siteChat(), has = siteHasContent(d);
+  const row = (role, text)=> `<div class="ai-msg-row${role === 'user' ? ' user' : ''}">${role === 'user' ? '' : `<div class="ai-msg-avatar">${MASCOT_AVATAR_SVG}</div>`}<div class="ai-msg ${role === 'user' ? 'user' : 'assistant'}">${text}</div></div>`;
+  // the chat bubbles are left as typed (the translator skips them), so the app's own words are translated here
+  const hello = I18N.t(has && !chat.length
+    ? 'Your page is next to this chat. Tell me what to change, like "make it blue" or "add hedge trimming for $30".'
+    : "Hi! Tell me about your business and I'll build your website. What do you do, where, and what do you charge?");
+  let lastChanged = -1;
+  chat.forEach((m, i)=>{ if(m.role === 'assistant' && m.changed) lastChanged = i; });
+  const msgs = chat.map((m, i)=> row(m.role, gvEsc(m.content)) + (i === lastChanged && siteAi.last ? `<div class="sc-acts">
+      <button type="button" class="site-text" data-sc="see">${ico('eye')} See your page</button>
+      <button type="button" class="site-text" data-sc="undo">Undo this change</button></div>` : '')).join('');
+  const thinking = siteAi.busy ? `<div class="ai-msg-row"><div class="ai-msg-avatar">${MASCOT_AVATAR_SVG}</div><div class="ai-msg thinking"><span class="ai-thinking-dots"><span></span><span></span><span></span></span><span id="scStep">${gvEsc(I18N.t(SITE_AI_STEPS[0]))}</span></div></div>` : '';
+  const chips = siteAi.busy ? [] : has
+    ? ['Make it sound more professional', 'Change the colour to blue', 'Add another service', 'Write my page in Spanish']
+    : ['I mow lawns in my town on weekends, $40 a cut', 'I clean homes on weekends', "I detail cars at people's homes"];
   const c = ai.credits || { free: 0, paid: 0, total: 0 };
   const h = ai.hour || { included: false };
   const hourOpen = !!(h.included && h.state !== 'used');   // a Pro member's daily hour is still to come or running
-  const creditLine = c.total <= 0 ? "You're out of AI credits. Each write uses 1."
-    : !c.paid ? (c.free === 1 ? 'You have 1 free AI credit to try it. Each write uses 1.' : `You have ${c.free} free AI credits to try it. Each write uses 1.`)
-    : (c.total === 1 ? 'You have 1 AI credit. Each write uses 1.' : `You have ${c.total} AI credits. Each write uses 1.`);
+  const creditLine = c.total <= 0 ? "You're out of AI credits. Each message uses 1."
+    : !c.paid ? (c.free === 1 ? 'You have 1 free AI credit to try it. Each message uses 1.' : `You have ${c.free} free AI credits to try it. Each message uses 1.`)
+    : (c.total === 1 ? 'You have 1 AI credit. Each message uses 1.' : `You have ${c.total} AI credits. Each message uses 1.`);
   const money = (n)=> '$' + Number(n).toFixed(2);
   const packs = siteAi.buying || (c.total <= 0 && !hourOpen) ? `<div class="sa-buy" id="saBuy">
       <p class="sa-tips-h">Get more AI credits</p>
@@ -18332,52 +18363,96 @@ function siteAiHtml(d){
           <b>${p.credits} credits</b><span class="sa-price">${money(p.price)}</span><small>${money(p.each)} a page</small></button>`).join('')}</div>
       <small class="sa-note">One-time payment through Stripe. Credits never expire, and a write that fails gives its credit back.${h.included ? '' : ' Pro includes 1 hour of AI writing every day, and putting your page live.'}</small>
     </div>` : '';
-  return `<section class="site-ai" id="siteAi">
-      <div class="ss-head">${ico('sparkles')}<b>${has ? 'Let AI improve your page' : 'Let AI write your page'}</b></div>
-      ${last ? '' : has && !showForm ? '<p class="ss-sub">It makes your page clearer and more convincing, fills gaps like reasons to pick you and common questions, and keeps your facts and prices.</p>'
-        : '<p class="ss-sub">Tell it what you do, where, for whom and what you charge. It writes your services and prices, reasons to pick you and answers to common questions. You can change anything before it goes live.</p>'}
-      ${done}
-      ${showForm ? `<div class="site-form sa-fields">
-        <label class="sf-l">Kind of business<select id="saKind">
-          <option value="">Something else</option>
-          ${kinds.map(n => `<option value="${gvEsc(n.id)}"${n.id === d.nicheId ? ' selected' : ''}>${gvEsc(n.name)}</option>`).join('')}
-        </select></label>
-        <label class="sf-l">About your business<textarea id="saDesc" maxlength="2000" rows="4" placeholder="I mow lawns in Springfield on weekends. $40 a cut, leaf cleanup in the fall. Most of my customers are busy families.">${gvEsc(siteAi.desc)}</textarea></label>
-      </div>` : ''}
-      <p class="sa-err" role="alert">${gvEsc(siteAi.error)}</p>
-      <div class="site-row">
-        ${showForm
-          ? `<button type="button" class="live-btn primary" id="saWrite">${ico('sparkles')} Write my page</button>${has ? '<button type="button" class="site-text" id="saCancel">Cancel</button>' : ''}`
-          : `<button type="button" class="live-btn primary" id="saBetter">${ico('sparkles')} Make it better</button><button type="button" class="live-btn" id="saWrite">Write it again</button>`}
-        ${packs || c.total <= 0 || hourOpen ? '' : '<button type="button" class="site-text" id="saMore">Get more credits</button>'}
+  const model = SITE_AI_NAMES[(siteAi.last && siteAi.last.model) || ai.model] || 'Claude';
+  return `<div class="sb-chat-col" id="siteAi">
+      <div class="ai-chat-wrap sb-chat">
+        <div class="ai-chat-header">
+          ${MASCOT_AVATAR_SVG}
+          <div class="ai-chat-header-text">
+            <div class="ai-chat-header-name">Website builder</div>
+            <div class="ai-chat-header-sub">Describe your business. It builds your page and changes anything you ask.</div>
+          </div>
+          ${chat.length && !siteAi.busy ? '<button type="button" class="site-text" data-sc="clear">Clear chat</button>' : ''}
+        </div>
+        <div class="ai-chat-messages" id="scMsgs" aria-live="polite">${row('assistant', gvEsc(hello))}${msgs}${thinking}</div>
+        ${siteAi.error ? `<p class="sc-err" role="alert">${gvEsc(siteAi.error)}</p>` : ''}
+        ${chips.length ? `<div class="sc-chips">${chips.map(t => `<button type="button" class="sc-chip" data-chip>${gvEsc(t)}</button>`).join('')}</div>` : ''}
+        <div class="ai-chat-input-row">
+          <textarea id="scInput" rows="2" maxlength="1500" placeholder="${has ? 'Ask for a change…' : 'Describe your business…'}" aria-label="Message to the website builder"${siteAi.busy ? ' disabled' : ''}>${gvEsc(siteAi.input)}</textarea>
+          <button type="button" class="ai-chat-send-btn" id="scSend"${siteAi.busy ? ' disabled' : ''}>Send</button>
+        </div>
       </div>
-      ${h.included ? `<small class="sa-note sa-hour${h.state === 'active' ? ' on' : ''}" id="saHour">${siteHourLine(h)}</small>` : ''}
-      ${hourOpen ? '' : `<small class="sa-note" id="saLeft">${creditLine}</small>`}
-      ${packs}
-      <small class="sa-note" id="saModel">${last && last.model ? `Written by ${gvEsc(SITE_AI_NAMES[last.model] || 'Claude')}, made by Anthropic.` : `Uses ${gvEsc(model)}, made by Anthropic.`} Check prices and details before you put it live.</small>
-    </section>`;
+      <div class="sb-foot">
+        ${h.included ? `<small class="sa-note sa-hour${h.state === 'active' ? ' on' : ''}" id="saHour">${siteHourLine(h)}</small>` : ''}
+        ${hourOpen ? '' : `<small class="sa-note" id="saLeft">${creditLine}</small>`}
+        ${packs || c.total <= 0 || hourOpen ? '' : '<button type="button" class="site-text" id="saMore">Get more credits</button>'}
+        ${packs}
+        <small class="sa-note" id="saModel">Uses ${gvEsc(model)}, made by Anthropic. Check prices and details before you put your page live.</small>
+      </div>
+    </div>`;
 }
-/** Moves the "writing…" line and bar along while the AI works (it keeps going if the view redraws). */
+
+/** The preview column: the page as visitors will see it, or a note before there's anything to show. */
+function sitePreviewHtml(d){
+  const site = siteState.site;
+  return `<div class="sb-preview" id="sbPreview">
+      <div class="sb-preview-head"><b>Your page</b>${site ? `<a class="site-text" href="${gvEsc(`${SITE_ORIGIN}/s/${site.slug}?preview=${encodeURIComponent(site.previewKey)}`)}" target="_blank" rel="noopener">${ico('external')} Open full page</a>` : ''}</div>
+      <div id="sbUnsaved" role="status">${siteUnsavedHtml()}</div>
+      <div class="sb-frame">${siteHasContent(d) ? `<iframe id="sbFrame" title="Preview of your page" sandbox="" referrerpolicy="no-referrer"${sitePreviewUrl ? ` src="${sitePreviewUrl}"` : ''}></iframe>`
+        : `<div class="sb-empty">${ico('globe')}<p>Your page shows up here once you describe your business.</p></div>`}</div>
+    </div>`;
+}
+/** On a live page, changes wait for Save: a line saying so, with the button. */
+function siteUnsavedHtml(){
+  const site = siteState && siteState.site;
+  return site && site.published && siteDirty() ? `<div class="sb-unsaved"><span>These changes aren't on your live page yet.</span><button type="button" class="live-btn primary" id="sbSaveLive">Save changes</button></div>` : '';
+}
+function siteUnsavedPaint(){
+  const w = document.getElementById('sbUnsaved');
+  if(!w) return;
+  const html = siteUnsavedHtml();
+  if(w.innerHTML.trim() !== html.trim()) w.innerHTML = html;
+}
+/** True when the form differs from what's saved (only matters for a live page, where changes wait for Save). */
+function siteDirty(){
+  const site = siteState && siteState.site;
+  if(!site || !siteDraft) return false;
+  const norm = (x)=> JSON.stringify(Object.assign({}, x, { services: (x.services || []).filter(s => s.name), faq: (x.faq || []).filter(f => f.q && f.a), highlights: (x.highlights || []).filter(Boolean) }));
+  return norm(siteDraft.data) !== norm(site.data) || (siteDraft.slug && siteDraft.slug !== site.slug);
+}
+/** Draws the page for the preview frame (debounced when typing in the form). */
+function sitePreviewRefresh(delay){
+  clearTimeout(sitePreviewTimer);
+  sitePreviewTimer = setTimeout(async ()=>{
+    if(!siteDraft || !siteHasContent(siteDraft.data)) return;
+    try{
+      const r = await apiFetch('/sites/preview', { method: 'POST', body: JSON.stringify({ slug: siteDraft.slug, data: siteDraft.data }) });
+      if(sitePreviewUrl) URL.revokeObjectURL(sitePreviewUrl);
+      sitePreviewUrl = URL.createObjectURL(new Blob([r.html], { type: 'text/html' }));
+      const f = document.getElementById('sbFrame');
+      if(f) f.src = sitePreviewUrl;
+      else if(document.getElementById('sbPreview')){ readSiteForm(); renderSiteView(); }
+      siteUnsavedPaint();
+    }catch(e){ /* the preview is a nicety; the page itself is unaffected */ }
+  }, delay || 0);
+}
+/** Moves the "writing…" line along while the AI works (it keeps going if the view redraws). */
 function siteAiTick(){
-  const step = document.getElementById('saStep'), bar = document.getElementById('saBar');
-  if(!siteAi.busy) return;
-  const s = (Date.now() - siteAi.started) / 1000;
-  const line = SITE_AI_STEPS[Math.min(SITE_AI_STEPS.length - 1, Math.floor(s / 11))];
-  if(step && step.dataset.en !== line){ step.dataset.en = line; step.textContent = line; }
-  if(bar) bar.style.width = Math.round(95 * (1 - Math.exp(-s / 35))) + '%';
+  const step = document.getElementById('scStep');
+  if(!siteAi.busy || !step) return;
+  const sec = (Date.now() - siteAi.started) / 1000;
+  const line = I18N.t(SITE_AI_STEPS[Math.min(SITE_AI_STEPS.length - 1, Math.floor(sec / 9))]);
+  if(step.textContent !== line) step.textContent = line;
 }
-async function siteAiRun(mode){
+function siteChatScroll(){ const m = document.getElementById('scMsgs'); if(m) m.scrollTop = m.scrollHeight; }
+
+/** Sends what's in the box. The page comes back changed (or not, for a question), with a reply for the chat. */
+async function siteChatSend(){
   if(siteAi.busy) return;
   readSiteForm();
+  const text = siteAi.input.trim();
+  if(!text){ const t = document.getElementById('scInput'); if(t) t.focus(); return; }
   const ai = siteState.ai || {};
-  const d = siteDraft.data;
-  if(mode === 'write' && siteAi.desc.trim().length < 10){
-    siteAi.error = 'Tell it a little about your business first: what you do, where, and for whom.';
-    siteAi.open = true;
-    renderSiteView();
-    const t = document.getElementById('saDesc'); if(t) t.focus();
-    return;
-  }
   const hourOpen = !!(ai.hour && ai.hour.included && ai.hour.state !== 'used');
   if(ai.credits && ai.credits.total <= 0 && !hourOpen){
     siteAi.error = ai.hour && ai.hour.included ? "You've used today's AI hour. It comes back tomorrow, or pick a pack to keep writing now." : "You're out of AI credits. Pick a pack to keep writing.";
@@ -18386,31 +18461,42 @@ async function siteAiRun(mode){
     const b = document.getElementById('saBuy'); if(b && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     return;
   }
-  siteAi.busy = mode; siteAi.started = Date.now(); siteAi.error = ''; siteAi.buying = false; siteAi.last = null;
+  const chat = siteChat();
+  const history = chat.slice(-10).map(m => ({ role: m.role, content: m.content }));
+  const d = siteDraft.data;
+  chat.push({ role: 'user', content: text.slice(0, 1500) });
+  siteAi.input = ''; siteAi.busy = true; siteAi.started = Date.now(); siteAi.error = ''; siteAi.buying = false;
   renderSiteView();
+  siteChatScroll();
   const timer = setInterval(siteAiTick, 1000);
-  siteAiTick();
   try{
-    const r = await apiFetch('/sites/ai', { method: 'POST', body: JSON.stringify({ mode, description: siteAi.desc.trim(), draft: d,
-      chapter: siteAiChapter(d.nicheId), lang: d.lang === 'es' ? 'es' : 'en', tz: SITE_TZ }) });
+    const r = await apiFetch('/sites/ai', { method: 'POST', body: JSON.stringify({ message: text, history, draft: d,
+      chapter: siteAiChapter(d.nicheId || selectedNiches[0]), lang: d.lang === 'es' ? 'es' : 'en', appLang: LANG, tz: SITE_TZ }) });
     if(!siteDraft) siteDraft = siteNew();
-    const prev = JSON.parse(JSON.stringify(siteDraft.data));
-    siteDraft.data = r.draft;
-    if(!siteDraft.slugTouched || !siteDraft.slug) siteDraft.slug = siteSlugify(r.draft.name);
     if(r.credits) ai.credits = r.credits;
     if(r.hour) siteSetHour(r.hour);
     ai.model = r.model || ai.model;
-    const live = !!(siteState.site && siteState.site.published);
-    siteAi.busy = ''; siteAi.open = false;
-    siteAi.last = { tips: r.tips || [], model: r.model, prev, live, saved: !live };
-    renderSiteView();
-    // a page that isn't live is saved as a draft straight away, so Preview shows it; a live page waits for Save
-    if(!live && !(await saveSite())){
-      siteAi.last.saved = false;
-      const t = document.getElementById('saDoneText'); if(t) t.textContent = 'Done. Check it below, then tap Save.';
+    chat.push({ role: 'assistant', content: String(r.reply || '').slice(0, 1200), changed: !!r.changed });
+    while(chat.length > SITE_CHAT_KEEP) chat.shift();
+    saveProgress();
+    siteAi.busy = false;
+    if(r.changed && r.draft){
+      const prev = JSON.parse(JSON.stringify(siteDraft.data));
+      siteDraft.data = r.draft;
+      if(!siteDraft.slugTouched || !siteDraft.slug) siteDraft.slug = siteSlugify(r.draft.name);
+      const live = !!(siteState.site && siteState.site.published);
+      siteAi.last = { prev, model: r.model, live };
+      sitePreviewRefresh();
+      // a page that isn't live is saved as a draft straight away, so the full preview link works; a live page waits for Save
+      if(!live){ renderSiteView(); siteChatScroll(); await saveSite(undefined, true); }
     }
+    renderSiteView();
+    siteChatScroll();
   }catch(e){
-    siteAi.busy = '';
+    // the message didn't go through: take it back out of the chat and put it in the box to send again
+    if(chat.length && chat[chat.length - 1].role === 'user') chat.pop();
+    siteAi.input = text;
+    siteAi.busy = false;
     const b = e.body || {};
     if(b.credits) ai.credits = b.credits;
     if(b.hour) siteSetHour(b.hour);
@@ -18418,6 +18504,7 @@ async function siteAiRun(mode){
     siteAi.error = b.error || (e.status ? 'The page writer could not finish just now. Please try again.' : 'Your connection dropped. Check it and try again.');
     siteAi.buying = !!b.buy;
     renderSiteView();
+    siteChatScroll();
   }finally{
     clearInterval(timer);
   }
@@ -18425,7 +18512,7 @@ async function siteAiRun(mode){
 /** Off to Stripe for a pack of credits. What's in the form is kept on this device and put back on return. */
 async function siteBuyCredits(packId, btn){
   readSiteForm();
-  try{ localStorage.setItem('guide_site_kept', JSON.stringify({ at: Date.now(), draft: siteDraft, desc: siteAi.desc })); }catch(e){}
+  try{ localStorage.setItem('guide_site_kept', JSON.stringify({ at: Date.now(), draft: siteDraft, desc: siteAi.input })); }catch(e){}
   document.querySelectorAll('#saBuy .sa-pack').forEach(b => { b.disabled = true; });
   if(btn) btn.classList.add('on');
   try{
@@ -18460,9 +18547,10 @@ async function siteCreditsReturn(id){
   }
   if(siteState && siteState.ai && r.credits) siteState.ai.credits = r.credits;
   siteAi.buying = false; siteAi.error = '';
+  readSiteForm();
   renderSiteView();
   fireConfetti(40);
-  showAppToast(`${r.pack} AI credits added. Each write uses 1.`, 'success');
+  showAppToast(`${r.pack} AI credits added. Each message uses 1.`, 'success');
 }
 function siteAiUndo(){
   const last = siteAi.last;
@@ -18470,8 +18558,9 @@ function siteAiUndo(){
   siteDraft.data = last.prev;
   siteAi.last = null;
   renderSiteView();
-  if(last.saved && siteHasContent(last.prev)) saveSite();
-  else showAppToast('Your old page is back in the form.', 'success');
+  sitePreviewRefresh();
+  if(!last.live && siteHasContent(last.prev)) saveSite(undefined, true);
+  else showAppToast('Your page is back to how it was.', 'success');
 }
 document.getElementById('siteNavBtn').addEventListener('click', showSite);
 document.getElementById('siteBackBtn').addEventListener('click', ()=> showHome());
@@ -18503,7 +18592,7 @@ async function renderSiteView(fresh){
     catch(e){ box.innerHTML = `<div class="tool-empty">Your website couldn't load just now. Check your connection and try again.</div>`; return; }
     siteDraft = null;
     const kept = siteTakeKept();   // back from buying credits: the form as they left it
-    if(kept){ siteDraft = kept.draft; if(kept.desc) siteAi.desc = kept.desc; }
+    if(kept){ siteDraft = kept.draft; if(kept.desc) siteAi.input = kept.desc; }
     paintSiteBadge();
   }
   const site = siteState.site, colors = siteState.colors || {};
@@ -18566,14 +18655,21 @@ async function renderSiteView(fresh){
       <textarea data-k="a" maxlength="400" rows="2" placeholder="Answer" aria-label="Answer to question ${i + 1}">${gvEsc(f.a)}</textarea>
     </div>`;
   const reasons = ['Same day every week', 'Photos when the job is done', 'No contracts'];
-  const editor = `<section class="site-edit">
-      <h3 class="site-h">${site ? 'Your page' : 'Make your page'}</h3>
-      ${site ? '' : '<p class="ss-sub">Fill in what you can. You can change any of it later, and nothing is public until you put it live.</p>'}
+  const kinds = NICHES.filter(n => n && n.guides && n.guides.length);
+  const chatOn = !!(siteState.ai && siteState.ai.ready);
+  // with the AI on, the chat does the writing and the form folds away for small fixes (address, phone, email…)
+  const editor = `<details class="site-edit" id="siteEditBox"${!chatOn || siteAi.editOpen ? ' open' : ''}>
+      <summary class="site-h">${chatOn ? `${ico('pencil')} Edit the details yourself` : site ? 'Your page' : 'Make your page'}</summary>
+      ${chatOn ? '<p class="ss-sub">Web address, phone, email, and any wording you want to fix by hand.</p>' : site ? '' : '<p class="ss-sub">Fill in what you can. You can change any of it later, and nothing is public until you put it live.</p>'}
       <form id="siteForm" class="site-form" novalidate>
         <label class="sf-l">Business name<input id="sfName" maxlength="60" autocomplete="organization" value="${gvEsc(d.name)}"></label>
         <label class="sf-l">Web address
           <span class="sf-addr"><span aria-hidden="true">${SITE_HOST}</span><input id="sfSlug" maxlength="40" autocapitalize="none" autocomplete="off" spellcheck="false" aria-label="Web address" value="${gvEsc(siteDraft.slug)}"></span>
           <small class="sf-err" id="sfSlugErr" role="alert"></small></label>
+        <label class="sf-l">Kind of business<select id="sfKind">
+          <option value="">Something else</option>
+          ${kinds.map(n => `<option value="${gvEsc(n.id)}"${n.id === d.nicheId ? ' selected' : ''}>${gvEsc(n.name)}</option>`).join('')}
+        </select></label>
         <label class="sf-l">What you do, in one line<input id="sfTagline" maxlength="140" placeholder="Weekly mowing and tidy edges, done on time" value="${gvEsc(d.tagline)}"></label>
         <div class="sf-two">
           <label class="sf-l">Where you work<input id="sfArea" maxlength="80" placeholder="Springfield and nearby" value="${gvEsc(d.area)}"></label>
@@ -18606,11 +18702,19 @@ async function renderSiteView(fresh){
         <small class="sf-hint">The words around yours, like the request form, show in this language.</small>
         <div class="site-row"><button type="submit" class="live-btn primary" id="sfSave">${site ? 'Save changes' : 'Save and preview'}</button><span class="sf-msg" id="sfMsg" role="status"></span></div>
       </form>
-    </section>`;
+    </details>`;
 
-  box.innerHTML = status + siteAiHtml(d) + requests + editor;
+  const builder = chatOn ? `<section class="site-builder" id="siteBuilder">${siteChatHtml(d)}${sitePreviewHtml(d)}</section>` : '';
+  // keep what's being typed in the chat and where the chat is scrolled when the view redraws
+  const msgs = document.getElementById('scMsgs');
+  const keepScroll = msgs ? msgs.scrollTop : null;
+  const typing = document.activeElement && document.activeElement.id === 'scInput';
+  box.innerHTML = status + builder + requests + editor;
   const form = document.getElementById('siteForm');
   if(siteAi.busy){ form.inert = true; form.classList.add('busy'); siteAiTick(); }
+  const m2 = document.getElementById('scMsgs');
+  if(m2 && keepScroll != null) m2.scrollTop = keepScroll;
+  if(typing){ const t = document.getElementById('scInput'); if(t){ t.focus(); t.selectionStart = t.selectionEnd = t.value.length; } }
   siteHourTick();
   wireSiteView();
 }
@@ -18628,9 +18732,9 @@ function readSiteForm(){
   d.highlights = [...f.querySelectorAll('.sf-hl')].map(i => i.value.trim()).filter(Boolean);
   d.faq = [...f.querySelectorAll('.sf-faq')].map(row => ({ q: row.querySelector('[data-k="q"]').value.trim(), a: row.querySelector('[data-k="a"]').value.trim() }));
   d.lang = v('sfLang') === 'es' ? 'es' : 'en';
-  // the AI card above the form: the kind of business is part of the page, the description is just for the AI
-  const kind = document.getElementById('saKind'); if(kind) d.nicheId = kind.value;
-  const desc = document.getElementById('saDesc'); if(desc) siteAi.desc = desc.value;
+  const kind = document.getElementById('sfKind'); if(kind) d.nicheId = kind.value;
+  // the chat box: what's typed but not sent yet
+  const input = document.getElementById('scInput'); if(input) siteAi.input = input.value;
   siteDraft.slug = siteSlugify(v('sfSlug')) || siteSlugify(d.name);
   return siteDraft;
 }
@@ -18680,6 +18784,7 @@ function wireSiteView(){
     if(c){
       siteDraft.data.color = c.dataset.color;
       form.querySelectorAll('.sf-color').forEach(b=>{ const on = b === c; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+      readSiteForm(); sitePreviewRefresh(200);
     }
   });
   form.addEventListener('submit', (e)=>{ e.preventDefault(); saveSite(); });
@@ -18688,22 +18793,34 @@ function wireSiteView(){
   if(aiBox) aiBox.addEventListener('click', (e)=>{
     const b = e.target.closest('button');
     if(!b || b.disabled) return;
-    const sai = siteState.ai || {};
-    const none = !!(sai.credits && sai.credits.total <= 0 && !(sai.hour && sai.hour.included && sai.hour.state !== 'used'));
-    if(b.id === 'saWrite'){
-      if(siteHasContent(siteDraft.data) && !siteAi.open && !none){
-        readSiteForm(); siteAi.open = true; siteAi.error = ''; renderSiteView();
-        const t = document.getElementById('saDesc'); if(t) t.focus();
-        return;
-      }
-      siteAiRun('write');
+    if(b.id === 'scSend') siteChatSend();
+    else if(b.dataset.chip != null){
+      // a suggestion goes into the box (as shown, so in the app's language) to send as it is or change first
+      const t = document.getElementById('scInput');
+      if(t){ t.value = b.textContent.trim(); siteAi.input = t.value; t.focus(); }
     }
-    else if(b.id === 'saBetter') siteAiRun('improve');
-    else if(b.id === 'saCancel'){ readSiteForm(); siteAi.open = false; siteAi.error = ''; renderSiteView(); }
-    else if(b.id === 'saUndo') siteAiUndo();
+    else if(b.dataset.sc === 'undo') siteAiUndo();
+    else if(b.dataset.sc === 'see'){ const p = document.getElementById('sbPreview'); if(p) p.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    else if(b.dataset.sc === 'clear'){
+      if(!confirm('Clear the chat? Your page stays as it is.')) return;
+      businessData.siteChat = []; siteAi.last = null; siteAi.error = ''; saveProgress(); readSiteForm(); renderSiteView();
+    }
     else if(b.id === 'saMore'){ readSiteForm(); siteAi.buying = true; renderSiteView(); }
     else if(b.dataset.pack) siteBuyCredits(b.dataset.pack, b);
   });
+  const chatIn = document.getElementById('scInput');
+  if(chatIn){
+    chatIn.addEventListener('input', ()=>{ siteAi.input = chatIn.value; });
+    // Enter sends (Shift+Enter for a new line), like other chats; on phones the Send button does it
+    chatIn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && !e.shiftKey && !e.isComposing && window.matchMedia('(hover: hover)').matches){ e.preventDefault(); siteChatSend(); } });
+  }
+  const pv = document.getElementById('sbPreview');
+  if(pv) pv.addEventListener('click', (e)=>{ if(e.target.closest('#sbSaveLive')) saveSite(); });
+  const editBox = document.getElementById('siteEditBox');
+  if(editBox) editBox.addEventListener('toggle', ()=>{ siteAi.editOpen = editBox.open; });
+  // typing in the form updates the preview after a pause
+  form.addEventListener('input', ()=>{ readSiteForm(); siteUnsavedPaint(); sitePreviewRefresh(900); });
+  form.addEventListener('change', ()=>{ readSiteForm(); sitePreviewRefresh(300); });
 
   const site = siteState.site;
   const url = site ? `${SITE_ORIGIN}/s/${site.slug}` : '';
@@ -18735,7 +18852,8 @@ function wireSiteView(){
 }
 
 /** Saves the form. publish: true puts it live, false takes it down, undefined keeps it as it is. */
-async function saveSite(publish){
+/** quiet: no "Saved" note (the chat saves a draft by itself after each change). */
+async function saveSite(publish, quiet){
   const draft = readSiteForm();
   const site = siteState.site;
   const published = publish === undefined ? !!(site && site.published) : publish;
@@ -18747,12 +18865,17 @@ async function saveSite(publish){
     siteState.site = r.site;
     siteDraft = null;
     renderSiteView();
-    showAppToast(publish === true ? 'Your page is live.' : publish === false ? 'Your page is down for now.' : site ? 'Saved.' : 'Saved. Tap Preview to see it.', 'success');
+    if(!quiet) showAppToast(publish === true ? 'Your page is live.' : publish === false ? 'Your page is down for now.' : site ? 'Saved.' : 'Saved. Tap Preview to see it.', 'success');
     return true;
   }catch(e){
     if(e.status === 403 && e.body && e.body.upgrade){ if(msg) msg.textContent = ''; openUpgradeModal({ type: 'website' }); return false; }
     const text = (e.body && e.body.error) || 'Could not save just now. Please try again.';
-    if(e.body && e.body.field === 'slug' && slugErr){ slugErr.textContent = text; if(msg) msg.textContent = ''; document.getElementById('sfSlug').focus(); }
+    if(e.body && e.body.field === 'slug' && slugErr){
+      // the address box may be folded away under "Edit the details yourself": open it so the note shows
+      const box = document.getElementById('siteEditBox'); if(box && !box.open){ box.open = true; siteAi.editOpen = true; }
+      slugErr.textContent = text; if(msg) msg.textContent = ''; document.getElementById('sfSlug').focus();
+      if(quiet) showAppToast(text, 'error');
+    }
     else if(msg) msg.textContent = text;
     return false;
   }

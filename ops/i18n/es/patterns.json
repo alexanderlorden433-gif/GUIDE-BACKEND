@@ -480,14 +480,6 @@
   "$1 capítulos terminados"
  ],
  [
-  "^Uses (Claude(?: [A-Za-z]+ [\\d.]+)?), made by Anthropic\\. Check prices and details before you put it live\\.$",
-  "Usa $1, de Anthropic. Revisa los precios y los detalles antes de publicarla."
- ],
- [
-  "^Written by (Claude(?: [A-Za-z]+ [\\d.]+)?), made by Anthropic\\. Check prices and details before you put it live\\.$",
-  "Escrita por $1, de Anthropic. Revisa los precios y los detalles antes de publicarla."
- ],
- [
   "^Question (\\d+)$",
   "Pregunta $1"
  ],
@@ -502,18 +494,6 @@
  [
   "^Reason (\\d+)$",
   "Razón $1"
- ],
- [
-  "^You have (\\d+) free AI credits to try it\\. Each write uses 1\\.$",
-  "Tienes $1 créditos de IA gratis para probarlo. Cada escritura usa 1."
- ],
- [
-  "^You have (\\d+) AI credits\\. Each write uses 1\\.$",
-  "Tienes $1 créditos de IA. Cada escritura usa 1."
- ],
- [
-  "^(\\d+) AI credits added\\. Each write uses 1\\.$",
-  "Se agregaron $1 créditos de IA. Cada escritura usa 1."
  ],
  [
   "^(\\d+) credits$",
@@ -538,5 +518,21 @@
  [
   "^Your plan includes 1 hour of AI writing every day \\(up to (\\d+) writes\\)\\. It starts with your first write\\.$",
   "Tu plan incluye 1 hora de escritura con IA cada día (hasta $1 escrituras). Empieza con tu primera escritura."
+ ],
+ [
+  "^You have (\\d+) free AI credits to try it\\. Each message uses 1\\.$",
+  "Tienes $1 créditos de IA gratis para probarlo. Cada mensaje usa 1."
+ ],
+ [
+  "^You have (\\d+) AI credits\\. Each message uses 1\\.$",
+  "Tienes $1 créditos de IA. Cada mensaje usa 1."
+ ],
+ [
+  "^(\\d+) AI credits added\\. Each message uses 1\\.$",
+  "Se agregaron $1 créditos de IA. Cada mensaje usa 1."
+ ],
+ [
+  "^Uses (Claude(?: [A-Za-z]+ [\\d.]+)?), made by Anthropic\\. Check prices and details before you put your page live\\.$",
+  "Usa $1, de Anthropic. Revisa los precios y los detalles antes de publicar tu página."
  ]
 ]

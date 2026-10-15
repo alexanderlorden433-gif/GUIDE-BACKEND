@@ -6,7 +6,7 @@ const rateLimit = require('express-rate-limit');
 const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { isProUser } = require('../pro');
-const { SITE_ORIGIN, COLORS, state, oneLine, slugify, slugProblem, cleanSiteData, publishProblem } = require('../sites');
+const { SITE_ORIGIN, COLORS, state, oneLine, slugify, slugProblem, cleanSiteData, publishProblem, renderSitePage } = require('../sites');
 const { writePage, currentModel } = require('../siteAi');
 const credits = require('../siteCredits');
 const { stripe, createCreditsCheckout } = require('../stripe');
@@ -47,18 +47,30 @@ router.get('/mine', async (req, res) => {
 });
 
 // ---------- POST /api/sites/ai ----------
-// The AI writes the page {mode: "write"|"improve", description, draft, chapter: {name, description, tips}, lang, tz}.
-// Free during a Pro member's daily AI hour, otherwise uses one AI credit. Answers {draft, tips, model, paidWith,
-// credits, hour}; nothing is saved here, the app shows it in the editor first. Out of both: 402 {buy: true, …}.
+// One message in the website chat: {message, history: [{role, content}], draft, chapter: {name, description, tips},
+// lang (the page's), appLang, tz}. Free during a Pro member's daily AI hour, otherwise uses one AI credit. Answers
+// {reply, changed, draft, model, paidWith, credits, hour}; nothing is saved here, the app shows the page first.
+// Out of both: 402 {buy: true, …}.
 // A write takes up to a minute, so on top of the daily limit there's a short-term one per member.
 const aiBurst = rateLimit({ windowMs: 10 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false,
                             keyGenerator: (req) => 'site-ai:' + req.user.id,
                             message: { error: 'Too many tries in a row. Wait a few minutes, then try again.' } });
 router.post('/ai', aiBurst, async (req, res) => {
   const b = req.body || {};
-  const r = await writePage({ userId: req.user.id, mode: b.mode, description: b.description, draft: b.draft,
-                              chapter: b.chapter, lang: b.lang, tz: b.tz });
+  const r = await writePage({ userId: req.user.id, message: b.message, history: b.history, draft: b.draft, chapter: b.chapter,
+                              lang: b.lang, appLang: b.appLang, tz: b.tz, mode: b.mode, description: b.description });
   res.status(r.status).json(r.body);
+});
+
+// ---------- POST /api/sites/preview ----------
+// {slug, data} → {html}: the page drawn exactly as visitors would see it, for the live preview next to the chat
+// (shown in a sandboxed frame, so nothing on it runs or submits). Works before anything is saved.
+router.post('/preview', async (req, res) => {
+  const b = req.body || {};
+  const data = cleanSiteData(b.data);
+  const slug = slugify(b.slug || data.name) || 'your-page';
+  res.set('Cache-Control', 'no-store');
+  res.json({ html: renderSitePage({ slug, previewKey: '', data, published: false }, { preview: true, previewKey: '', inApp: true }) });
 });
 
 // ---------- POST /api/sites/credits/checkout ----------
