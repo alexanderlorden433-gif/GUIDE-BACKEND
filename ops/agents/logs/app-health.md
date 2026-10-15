@@ -77,3 +77,4 @@
 - Note: app home shows "0 / 876 lessons" (packs added) vs the "756 guides" claim in CLAUDE.md/marketing — not changing claims; mention to Alexander if it comes up again.
 - Still queued: aiChat rate limit per IP not per account. Still open with Alexander: delete account vs Stripe subscription (10-06), terms.html old prices (10-06).
 - Next step-5 area: src/routes/billing.js webhook edge cases (read-only review) or certificates (#41).
+- 2026-10-15 later: #48 and #47 MERGED (#47 needed a main merge: kept both smoke steps design_polish + save_retry).
