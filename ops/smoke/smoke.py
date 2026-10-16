@@ -145,6 +145,11 @@ def fixture(state, method, path, body):
                      'trialEligible': True,
                      'canManageBilling': state.get('billing', state['pro']),
                      'data': state['data'], 'referralCode': 'SMOKE1', 'referredCount': 0, 'referredProCount': 0, 'bonusProUntil': None}
+    if p == '/api/account' and method == 'DELETE':
+        state['deletes'] = state.get('deletes', 0) + 1
+        if state.get('delete_fail'):
+            return 502, {'error': "We couldn't cancel your subscription just now, so your account wasn't deleted. Please try again in a minute."}
+        return 200, {'message': 'Account deleted.'}
     if p == '/api/account' and method == 'PUT':
         if isinstance(body, dict) and isinstance(body.get('data'), dict):
             state['data'] = body['data']
@@ -3049,6 +3054,53 @@ def account_settings(browser, base):
         ctx.close()
 
 
+def delete_account(browser, base):
+    """Account settings → Delete account (two taps). It works: the member is signed out to the landing page. When
+    the backend refuses (it couldn't cancel the Stripe subscription), the member stays signed in and sees why,
+    instead of being signed out as if the account were gone. Paying members are told the subscription stops too."""
+    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    for fail in (False, True):
+        step = ['delete account (' + ('backend refuses' if fail else 'works') + ')']
+        ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
+        st = new_state(True); st['billing'] = True; st['delete_fail'] = fail
+        attach_backend(ctx, st)
+        ctx.add_init_script(init)
+        page = ctx.new_page(); watch_errors(page, step)
+        page.goto(base + '/', wait_until='load')
+        if not visible(page, '#appScreen', 10000):
+            problem(step[0], 'the app did not open'); ctx.close(); continue
+        page.wait_for_timeout(600)
+        page.evaluate("document.getElementById('accountBtn').click()")
+        if not visible(page, '#accDeleteBtn'):
+            problem(step[0], 'account settings did not open'); ctx.close(); continue
+        page.wait_for_timeout(400)
+        hint = page.evaluate("(()=>{ const h = document.getElementById('accDeleteBillingHint'); return h && !h.hidden ? h.innerText : ''; })()")
+        if 'cancels your subscription' not in hint:
+            problem(step[0], 'a paying member should be told deleting also cancels the subscription', hint)
+        btn = page.locator('#accDeleteBtn')
+        btn.scroll_into_view_if_needed(timeout=3000)
+        btn.click(timeout=3000)
+        if st.get('deletes'):
+            problem(step[0], 'the first tap should only ask to confirm')
+        btn.click(timeout=3000)
+        page.wait_for_timeout(800)
+        signed_out = page.evaluate("(()=>{ let t=null; try{ t=localStorage.getItem('guide_token'); }catch(e){} return !t && document.getElementById('appScreen').style.display === 'none'; })()")
+        if st.get('deletes') != 1:
+            problem(step[0], 'the second tap should ask the backend to delete the account once', st.get('deletes'))
+        elif not fail:
+            if signed_out: ok(step[0], 'two taps delete the account and sign out')
+            else: problem(step[0], 'after deleting, the member should be signed out')
+        else:
+            msg = page.inner_text('#accDeleteError') if visible(page, '#accDeleteError', 2000) else ''
+            if not signed_out and 'wasn' in msg and page.inner_text('#accDeleteBtn').strip() == 'Delete my account':
+                ok(step[0], 'when the backend refuses, the member stays signed in and sees why')
+                shot(page, 'phone-account-delete-refused')
+            else:
+                problem(step[0], 'a refused delete should keep the member signed in and show the reason', {'signed_out': signed_out, 'msg': msg})
+        finish(st, step[0])
+        ctx.close()
+
+
 def manage_subscription(browser, base):
     """Account settings → "Your subscription": people who pay through Stripe can open Stripe's billing page to
     change plan, card or cancel; people with nothing in Stripe (free, owner/preview/referral-bonus Pro) don't see it."""
@@ -4399,6 +4451,7 @@ def main():
         step_one_demo(browser, base)
         account_settings(browser, base)
         manage_subscription(browser, base)
+        delete_account(browser, base)
         design_polish(browser, base)
         find_new_things(browser, base)
         spanish(browser, base)
