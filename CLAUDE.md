@@ -99,6 +99,12 @@ bash ops/check.sh --quick      # same, smoke test on 3 chapters only
   Lesson audio needs `--autoplay-policy=no-user-gesture-required`.
 - Deploy status of a commit: `gh api repos/alexanderlorden433-gif/GUIDE-BACKEND/commits/<sha>/status`
   (Railway and Netlify report here).
+- **Railway runs the backend on Node 18** (this sandbox has a newer Node). A package that needs a newer
+  Node loads fine here and crashes the live server. `ops/check.sh` loads the backend on Node 18 too; before
+  adding or upgrading a backend package, also check its `engines` field and its dependencies' (e.g.
+  `npm view <pkg>@<version> engines`). Pin exact versions.
+- If the live backend crashes after a merge, Railway's **Restart** button on the crashed row reruns that same
+  broken version. The way back is **Redeploy** on the last good row, or merging a fix.
 
 ## Agent logs
 
