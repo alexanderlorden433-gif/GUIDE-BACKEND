@@ -187,6 +187,16 @@ function checkMemberSites() {
   const closes = (html.match(/<\/script>/g) || []).length, opens = (html.match(/<script/g) || []).length;
   if (scripts || closes !== opens || /<img/i.test(html) || html.includes('<script>alert')) bad('a member website lets typed text run as page code');
   else ok("member websites show typed text as text (no code runs), including reasons and questions");
+  // pages the AI designs: nothing that runs survives the cleaning, and they're served with no scripts, sandboxed
+  const design = require(path.join(ROOT, 'src', 'siteDesign'));
+  const dirty = '<h1>Hi</h1><script>alert(1)</script><img src="https://x.test/a.png" onerror="alert(1)"><a href="javascript:alert(1)" onclick="x()">a</a>'
+    + '<iframe src="https://evil.test"></iframe><svg onload="alert(1)"><a href="javascript:alert(1)"><text>t</text></a></svg><form action="https://evil.test"></form><div style="x:y" data-guide="form"></div>';
+  const clean = design.cleanHtml(dirty), cleanCss = design.cleanCss('@import url(https://evil.test/x.css);a{background:url(javascript:alert(1))}</style><script>');
+  const page = sites.renderSitePage({ slug: 'joes-lawns', previewKey: 'k', data: { name: evil, services: [{ name: evil, price: '$1' }], design: { html: dirty, css: 'a{}</style><script>alert(1)</script>', fonts: ['Inter'] } } }, {});
+  const pageScripts = (page.match(/<script(?![^>]*application\/ld\+json)/g) || []).length;
+  if (/<script|onerror|onclick|onload|javascript:|<iframe|<form action="https:|style=/i.test(clean) || /@import|javascript:|<\/style/i.test(cleanCss) || pageScripts
+      || !/default-src 'none'/.test(design.CUSTOM_CSP) || !/sandbox /.test(design.CUSTOM_CSP) || /allow-scripts|allow-same-origin/.test(design.CUSTOM_CSP)) bad('an AI-designed page could run code: ' + clean.slice(0, 200));
+  else ok('pages the AI designs keep no code that runs, and go out with no scripts allowed, sandboxed');
   // the AI page writer: loads, and its answer format is one the API accepts (every object closed, no length rules)
   const siteAi = require(path.join(ROOT, 'src', 'siteAi'));
   const objs = []; (function walk(n) { if (n && typeof n === 'object') { if (n.type === 'object') objs.push(n); Object.values(n).forEach(walk); } })(siteAi.SCHEMA);

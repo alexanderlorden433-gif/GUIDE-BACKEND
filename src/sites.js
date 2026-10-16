@@ -13,6 +13,7 @@
 // and are declared in prisma/schema.prisma as MemberSite and SiteRequest. Deleting an account removes
 // its page and its requests (ON DELETE CASCADE).
 const prisma = require('./db');
+const { cleanDesign, fontsHref, fillDesign, CUSTOM_CSP } = require('./siteDesign');
 
 const SITE_ORIGIN = 'https://theguide.company';
 
@@ -174,8 +175,13 @@ function cleanSiteData(b) {
       .filter(f => f.q && f.a),
     // the language of the page itself (the words around the member's own text)
     lang: b.lang === 'es' ? 'es' : 'en',
+    // a page the AI designed from scratch ({html, css, fonts}, cleaned in src/siteDesign.js), or null for the
+    // standard layout built from the fields above
+    design: cleanDesign(b.design),
   };
 }
+/** True when the page has its own AI-made design (it's then served with CUSTOM_CSP). */
+const isDesigned = (data) => !!(data && data.design && data.design.html);
 /** What has to be there before a page can go live. null when it's ready. */
 function publishProblem(data) {
   if (!data.name) return 'Add your business name before you publish.';
@@ -306,6 +312,7 @@ ${body}
 /** The member's page. `opts`: {preview, sent, error, form} — what to show after the form was used. */
 function renderSitePage(site, opts = {}) {
   const d = cleanSiteData(site.data);
+  if (d.design) return renderDesignedPage(site, opts, d);
   const W = WORDS[d.lang] || WORDS.en;
   const color = COLORS[d.color] || COLORS.green;
   const url = `${SITE_ORIGIN}/s/${site.slug}`;
@@ -366,6 +373,90 @@ function renderSitePage(site, opts = {}) {
   return shell({ title, description, canonical: opts.preview ? '' : url, robots: opts.preview ? 'noindex, nofollow' : 'index, follow', body, color, jsonLd: opts.preview ? null : jsonLd, lang: d.lang });
 }
 
+/**
+ * A page the AI designed: its own cleaned markup and CSS, with our request form, the owner's contact links and
+ * the "Made with The Guide" line put in. Served with CUSTOM_CSP (no scripts, sandboxed).
+ */
+function renderDesignedPage(site, opts, d) {
+  const W = WORDS[d.lang] || WORDS.en;
+  const g = d.design;
+  const url = `${SITE_ORIGIN}/s/${site.slug}`;
+  const title = d.area ? `${d.name} · ${d.area}` : d.name || W.soon;
+  const description = d.tagline || (d.services.length ? d.services.map(s => s.name).slice(0, 4).join(', ') : '') || d.about.slice(0, 150);
+  const form = opts.form || {};
+  const error = opts.error && d.lang === 'es' ? (ERRORS_ES[opts.error] || opts.error) : opts.error;
+  const options = d.services.map(s => `<option${form.service === s.name ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
+  const action = `/s/${esc(site.slug)}/request${opts.preview ? `?preview=${esc(opts.previewKey || '')}` : ''}`;
+  const formHtml = `<div class="tg-ask" id="ask">${opts.sent
+    ? `<p class="tg-note tg-ok" role="status">${esc(W.sent(d.name || W.them))}</p>`
+    : `${error ? `<p class="tg-note tg-bad" role="alert">${esc(error)}</p>` : ''}
+      <form class="tg-form" method="post" action="${action}">
+        <label>${W.yourName}<input name="name" required maxlength="60" autocomplete="name" value="${esc(form.name || '')}"></label>
+        <label>${W.contact}<input name="contact" required maxlength="120" autocomplete="on" value="${esc(form.contact || '')}"></label>
+        ${options ? `<label>${W.need}<select name="service"><option value="">${W.choose}</option>${options}<option${form.service === 'Something else' ? ' selected' : ''} value="Something else">${W.other}</option></select></label>` : ''}
+        <label>${W.message}<textarea name="message" maxlength="1000" placeholder="${W.messageHint}">${esc(form.message || '')}</textarea></label>
+        <div class="tg-hp" aria-hidden="true"><label>${W.empty}<input name="website" tabindex="-1" autocomplete="off"></label></div>
+        <button class="tg-btn" type="submit">${W.send}</button>
+        <p class="tg-small">${esc(W.private(d.name || W.thisBiz))}</p>
+      </form>`}</div>`;
+  const filled = fillDesign(g.html, { formHtml, phone: d.phone, phoneHref: d.phone ? telHref(d.phone) : '', email: d.email });
+  const business = {
+    '@context': 'https://schema.org', '@type': 'LocalBusiness', name: d.name, url,
+    ...(description ? { description } : {}), ...(d.area ? { areaServed: d.area } : {}),
+    ...(d.phone ? { telephone: d.phone } : {}), ...(d.email ? { email: d.email } : {}),
+    ...(d.services.length ? { makesOffer: d.services.map(s => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.name }, ...(s.price ? { description: s.price } : {}) })) } : {}),
+  };
+  const fonts = fontsHref(g.fonts);
+  const canonical = opts.preview ? '' : url;
+  return `<!DOCTYPE html>
+<html lang="${d.lang === 'es' ? 'es' : 'en'}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(title)}</title>
+${description ? `<meta name="description" content="${esc(description)}">` : ''}
+<meta name="robots" content="${opts.preview ? 'noindex, nofollow' : 'index, follow'}">
+${canonical ? `<link rel="canonical" href="${esc(canonical)}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="${esc(title)}">
+${description ? `<meta property="og:description" content="${esc(description)}">` : ''}
+<meta property="og:url" content="${esc(canonical)}">` : ''}
+<link rel="icon" href="${SITE_ORIGIN}/icons/favicon-32.png">
+${fonts ? `<link rel="preconnect" href="https://fonts.googleapis.com"><link href="${esc(fonts)}" rel="stylesheet">` : ''}
+${opts.preview ? '' : `<script type="application/ld+json">${JSON.stringify(business).replace(/</g, '\\u003c')}</script>`}
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;font-family:${g.fonts[0] ? `'${g.fonts[0]}', ` : ''}system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;line-height:1.5}
+  img,svg{max-width:100%;height:auto}
+  .tg-ask{width:100%}
+  .tg-form{display:grid;gap:14px;max-width:560px}
+  .tg-form label{display:grid;gap:6px;font-weight:600;font-size:15px}
+  .tg-form input,.tg-form select,.tg-form textarea{font:inherit;font-weight:400;padding:12px 14px;border:1px solid rgba(0,0,0,.22);border-radius:10px;background:#fff;color:#15191A;width:100%}
+  .tg-form textarea{min-height:110px;resize:vertical}
+  .tg-btn{font:inherit;font-weight:700;padding:14px 22px;border:0;border-radius:10px;background:#15191A;color:#fff;cursor:pointer;justify-self:start}
+  .tg-small{font-size:13px;opacity:.75;margin:0}
+  .tg-hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
+  .tg-note{padding:12px 14px;border-radius:10px;font-weight:500}
+  .tg-ok{background:#E8F6EE;color:#14532D}
+  .tg-bad{background:#FDECEC;color:#7F1D1D}
+</style>
+<style>${g.css}</style>
+<style>
+  .tg-made{display:block!important;visibility:visible!important;text-align:center;font:400 13px/1.5 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#66706D;background:#fff;padding:20px 16px;margin:0}
+  .tg-made a{color:inherit}
+  .tg-preview{display:block!important;text-align:center;font:500 14px/1.4 system-ui,sans-serif;background:#FFF4D6;color:#5C4400;padding:10px 16px;margin:0}
+</style>
+</head>
+<body>
+${opts.preview && !opts.inApp ? `<p class="tg-preview">${W.preview}</p>` : ''}
+${filled.html}
+${filled.formPlaced ? '' : `<section class="tg-ask-section" style="padding:32px 20px;max-width:640px;margin:0 auto"><h2>${W.quote}</h2>${formHtml}</section>`}
+<p class="tg-made">${W.madeWith} <a href="${SITE_ORIGIN}/?utm_source=member_site&amp;utm_medium=referral&amp;utm_campaign=${esc(site.slug)}${d.lang === 'es' ? '&amp;lang=es' : ''}" target="_blank" rel="noopener">The Guide</a>${W.madeTail}</p>
+</body>
+</html>`;
+}
+
 /** For an address with no live page behind it. */
 function renderMissingPage() {
   const body = `<main class="wrap"><header class="top"><h1>This page isn't available</h1>
@@ -376,5 +467,5 @@ function renderMissingPage() {
 
 module.exports = {
   SITE_ORIGIN, COLORS, state, ensureSiteTables, oneLine, slugify, slugProblem, cleanSiteData, publishProblem,
-  cleanRequest, renderSitePage, renderMissingPage,
+  cleanRequest, renderSitePage, renderMissingPage, isDesigned, CUSTOM_CSP,
 };
