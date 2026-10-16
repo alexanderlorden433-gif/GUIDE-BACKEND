@@ -55,11 +55,34 @@ router.get('/mine', async (req, res) => {
 const aiBurst = rateLimit({ windowMs: 10 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false,
                             keyGenerator: (req) => 'site-ai:' + req.user.id,
                             message: { error: 'Too many tries in a row. Wait a few minutes, then try again.' } });
+// A whole new design can take a couple of minutes, and the way in to this server may drop a request that has
+// sent nothing for about a minute. So if the answer isn't ready after 20 seconds, the reply starts (200, JSON)
+// and a space goes out every 15 seconds until it's done (JSON allows leading spaces). A failure that ends such a
+// reply says {ok: false, status, error, …}, which the app treats like the status it names.
 router.post('/ai', aiBurst, async (req, res) => {
   const b = req.body || {};
-  const r = await writePage({ userId: req.user.id, message: b.message, history: b.history, draft: b.draft, chapter: b.chapter,
-                              lang: b.lang, appLang: b.appLang, tz: b.tz, mode: b.mode, description: b.description });
-  res.status(r.status).json(r.body);
+  let streaming = false;
+  let beat = null;
+  const start = setTimeout(() => {
+    if (res.headersSent) return;
+    streaming = true;
+    res.status(200).set({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' });
+    res.write(' ');
+    beat = setInterval(() => { try { res.write(' '); } catch (e) { /* the member left */ } }, 15000);
+  }, parseInt(process.env.SITE_AI_STREAM_AFTER_MS, 10) || 20000);
+  try {
+    const r = await writePage({ userId: req.user.id, message: b.message, history: b.history, draft: b.draft, chapter: b.chapter,
+                                lang: b.lang, appLang: b.appLang, tz: b.tz, mode: b.mode, description: b.description });
+    if (!streaming) return res.status(r.status).json(r.body);
+    res.end(JSON.stringify(r.status === 200 ? r.body : Object.assign({ ok: false, status: r.status }, r.body)));
+  } catch (err) {
+    if (!streaming) throw err;
+    console.error('[site-ai] the chat turn failed:', err.message);
+    res.end(JSON.stringify({ ok: false, status: 500, error: 'Something went wrong on our end. Please try again.' }));
+  } finally {
+    clearTimeout(start);
+    clearInterval(beat);
+  }
 });
 
 // ---------- POST /api/sites/preview ----------

@@ -7,8 +7,9 @@
 //     passes 16 KB quickly; the route itself allows up to 512 KB.
 //   - POST /api/ai-chat sends the last 20 messages of a Guider conversation
 //     plus the chapter's lesson list; a few long answers pass 16 KB.
-//   - POST /api/sites/ai sends the member's whole page, what they wrote about
-//     their business and a few lessons from their chapter (about 12 KB at most).
+//   - My website (/api/sites/…) sends the member's whole page, which can be a
+//     page the AI designed (its own markup and CSS, up to about 90 KB), plus the
+//     chat so far and a few lessons from their chapter.
 // Before this, the first two were cut off at 16 KB, so saving silently stopped working
 // and The Guider stopped answering once someone had used the app for a while.
 //
@@ -16,7 +17,7 @@
 const LIMITS = [
   ['/api/account', '600kb'],
   ['/api/ai-chat', '200kb'],
-  ['/api/sites/ai', '48kb'],
+  ['/api/sites', '200kb'],
 ];
 const DEFAULT_LIMIT = '16kb';
 

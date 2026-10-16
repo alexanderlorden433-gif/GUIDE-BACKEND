@@ -532,7 +532,7 @@
   "Se agregaron $1 créditos de IA. Cada mensaje usa 1."
  ],
  [
-  "^Uses (Claude(?: [A-Za-z]+ [\\d.]+)?), made by Anthropic\\. Check prices and details before you put your page live\\.$",
-  "Usa $1, de Anthropic. Revisa los precios y los detalles antes de publicar tu página."
+  "^Designed by (Claude(?: [A-Za-z]+ [\\d.]+)?), made by Anthropic\\. Check prices and details before you publish\\.$",
+  "Diseñado por $1, de Anthropic. Revisa los precios y los detalles antes de publicar."
  ]
 ]
