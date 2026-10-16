@@ -97,16 +97,38 @@ def site_ai_credits(ai):
     return {'free': ai['free'], 'paid': ai['paid'], 'total': ai['free'] + ai['paid']}
 
 
+SITE_AI_HTML = (
+    '<header class="hero"><nav class="nav"><b class="logo">Green Mile</b><a class="pill" href="#ask">Get a quote</a></nav>'
+    '<div class="hero-in"><p class="kicker">Lawn care in Springfield</p><h1>A tidy lawn, every week, without lifting a finger.</h1>'
+    '<p class="lead">Weekly mowing, edging and leaf cleanup for busy families. Same day every week, a text when it\'s done.</p>'
+    '<div class="cta"><a class="btn" href="#ask">Get a free quote</a><a class="btn ghost" data-guide="phone">Call us</a></div></div></header>'
+    '<section class="svc"><h2>Services</h2><div class="grid">'
+    '<div class="card"><h3>Weekly mowing</h3><p>Mow, edge and blow off paths.</p><b>$40 a visit</b></div>'
+    '<div class="card"><h3>Leaf cleanup</h3><p>Raked, bagged and hauled away.</p><b>from $120</b></div>'
+    '<div class="card"><h3>Hedge trim</h3><p>Neat lines, clippings gone.</p><b>$25 an hour</b></div></div></section>'
+    '<section class="ask" id="ask"><h2>Ask for a quote</h2><p>Tell me about your yard and I\'ll reply the same day.</p><div data-guide="form"></div></section>'
+    '<footer class="foot">Green Mile Lawn Care · Springfield</footer>'
+)
+SITE_AI_CSS = (
+    ':root{--g:#0f3d2e;--g2:#1f7a4d;--cream:#f6f3ea}body{font-family:"Fraunces",Georgia,serif;color:#16201b;background:var(--cream);margin:0}'
+    '.hero{background:var(--g);color:#fff;padding:20px 20px 56px}.nav{display:flex;justify-content:space-between;align-items:center;max-width:1040px;margin:0 auto}'
+    '.logo{font-size:20px}.pill{color:#fff;border:1px solid rgba(255,255,255,.4);padding:8px 14px;border-radius:999px;text-decoration:none;font-family:Inter,sans-serif;font-size:14px}'
+    '.hero-in{max-width:1040px;margin:48px auto 0}.kicker{font-family:Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;font-size:13px;opacity:.8}'
+    'h1{font-size:clamp(34px,6vw,60px);line-height:1.05;margin:12px 0 16px;max-width:16ch}.lead{font-family:Inter,sans-serif;font-size:18px;max-width:52ch;opacity:.9}'
+    '.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.btn{background:#d9f99d;color:var(--g);padding:14px 22px;border-radius:999px;text-decoration:none;font-family:Inter,sans-serif;font-weight:700}'
+    '.btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}.svc,.ask{max-width:1040px;margin:0 auto;padding:56px 20px}'
+    '.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 1px 0 rgba(0,0,0,.05)}'
+    '.card b{color:var(--g2);font-family:Inter,sans-serif}.foot{text-align:center;padding:28px;font-family:Inter,sans-serif;font-size:14px;color:#55615a}'
+)
+
+
 def site_ai_page():
-    """What the fake AI writes: a whole lawn-care page, shaped like cleanSiteData() in src/sites.js."""
+    """What the fake AI makes: a whole designed page, shaped like cleanSiteData() in src/sites.js."""
     return {'name': 'Green Mile Lawn Care', 'tagline': 'Weekly mowing for busy families in Springfield', 'area': 'Springfield', 'hours': 'Mon to Sat, 8am to 6pm',
-            'about': "I'm Sam. I started mowing for neighbours last summer and now keep a weekly route.",
-            'services': [{'name': 'Weekly mowing', 'price': '$40 a visit', 'note': 'Mow, edge and blow off paths.'},
-                         {'name': 'Leaf cleanup', 'price': 'from $120', 'note': ''}, {'name': 'Hedge trim', 'price': '$25 an hour', 'note': ''}],
-            'highlights': ['Same day every week', 'Text when the job is done', 'No contracts'],
-            'faq': [{'q': 'Do I need to be home?', 'a': 'No. Just leave the gate unlocked.'}, {'q': 'How do I pay?', 'a': 'Cash, Venmo or Zelle after each visit.'},
-                    {'q': 'Which areas do you cover?', 'a': 'Springfield and the towns next to it.'}],
-            'color': 'green', 'email': '', 'phone': '', 'nicheId': '', 'lang': 'en'}
+            'about': '', 'services': [{'name': 'Weekly mowing', 'price': '$40 a visit', 'note': ''},
+                                      {'name': 'Leaf cleanup', 'price': 'from $120', 'note': ''}, {'name': 'Hedge trim', 'price': '$25 an hour', 'note': ''}],
+            'highlights': [], 'faq': [], 'color': 'green', 'email': '', 'phone': '', 'nicheId': '', 'lang': 'en',
+            'design': {'html': SITE_AI_HTML, 'css': SITE_AI_CSS, 'fonts': ['Fraunces', 'Inter']}}
 
 
 def fixture(state, method, path, body):
@@ -298,11 +320,14 @@ def fixture(state, method, path, body):
                          'draft': d, 'tips': [], 'model': 'claude-fable-5-1', 'paidWith': paid_with, 'credits': site_ai_credits(ai), 'hour': ai['hour']}
         page = site_ai_page()
         if has_page:
-            page = {**page, 'name': d.get('name') or page['name'], 'color': d.get('color') or page['color']}
-        if 'blue' in msg.lower():
-            page = {**(d if has_page else page), 'color': 'blue'}
+            page = {**page, 'name': d.get('name') or page['name']}
+        if 'darker' in msg.lower() or 'blue' in msg.lower():
+            base = d if (has_page and d.get('design')) else page
+            design = dict(base.get('design') or page['design'])
+            design['css'] = design['css'].replace('--g:#0f3d2e', '--g:#06231a')
+            page = {**base, 'design': design}
         page.update({'email': d.get('email', ''), 'phone': d.get('phone', ''), 'nicheId': d.get('nicheId', ''), 'lang': b.get('lang') or 'en'})
-        reply = '<img src=x onerror="window.__xss=1">Here is your page: Green Mile Lawn Care with 3 services. Check the prices against two local lawn services. Want me to change the colour?'
+        reply = '<img src=x onerror="window.__xss=1">Here is your page: Green Mile Lawn Care, dark green with 3 services. Check the prices against two local lawn services. Want a gallery section?'
         return 200, {'reply': reply, 'changed': True, 'draft': page, 'tips': [],
                      'model': 'claude-fable-5-1', 'paidWith': paid_with, 'credits': site_ai_credits(ai), 'hour': ai['hour']}
     # the live preview: a small stand-in for renderSitePage() in src/sites.js
@@ -311,6 +336,13 @@ def fixture(state, method, path, body):
         state.setdefault('previews', []).append(d)
         esc = lambda v: str(v or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
         svcs = ''.join('<li>' + esc(x.get('name')) + ' ' + esc(x.get('price')) + '</li>' for x in (d.get('services') or []) if (x or {}).get('name'))
+        g = d.get('design') or {}
+        if g.get('html'):
+            form = '<form class="tg-form"><label>Your name<input></label><label>Phone or email<input></label><button class="tg-btn">Send request</button></form>'
+            body = g['html'].replace('<div data-guide="form"></div>', form).replace('<a class="btn ghost" data-guide="phone">Call us</a>', '<a class="btn ghost" href="tel:5551234">Call us</a>' if d.get('phone') else '')
+            return 200, {'html': '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>' + g.get('css', '')
+                         + '.tg-form{display:grid;gap:12px;max-width:520px}.tg-form label{display:grid;gap:6px;font-family:Inter,sans-serif}.tg-form input{padding:12px;border-radius:10px;border:1px solid #ccc}.tg-btn{justify-self:start;padding:14px 22px;border-radius:999px;border:0;background:#0f3d2e;color:#fff}</style></head><body>'
+                         + body + '<p class="tg-made" data-phone="' + esc(d.get('phone')) + '">Made with The Guide</p></body></html>'}
         return 200, {'html': '<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:sans-serif;margin:24px;background:#fff;color:#111}</style></head><body data-color="' + esc(d.get('color')) + '"><h1 id="pvName">'
                      + esc(d.get('name')) + '</h1><p>' + esc(d.get('tagline')) + '</p><ul>' + svcs + '</ul><a href="#ask">Ask for a quote</a><p id="ask">Form</p></body></html>'}
     # buying AI credits: state['credit_checkouts'] records the packs asked for; confirm adds them once
@@ -1412,7 +1444,8 @@ def trial_card(browser, base):
         step = [f'trial card ({label})']
         ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
         st = new_state(True)
-        st['data']['trial'] = {'startedAt': time.strftime('%Y-%m-%d', time.gmtime(time.time() - days_ago * 86400)), 'days': 4}
+        # the app counts days in the phone's own time zone, so the test does too (UTC broke this every evening in the US)
+        st['data']['trial'] = {'startedAt': time.strftime('%Y-%m-%d', time.localtime(time.time() - days_ago * 86400)), 'days': 4}
         attach_backend(ctx, st)
         ctx.add_init_script(init)
         page = ctx.new_page(); watch_errors(page, step)
@@ -3441,6 +3474,8 @@ def member_website(browser, base):
         st = new_state(pro)
         if site:
             st['site'] = site
+        # the plain form-and-requests layout, as members see it when the AI website builder isn't set up
+        st['site_ai'] = {'ready': False, 'free': 2, 'paid': 0}
         attach_backend(ctx, st)
         ctx.add_init_script(init)
         page = ctx.new_page(); watch_errors(page, step)
@@ -3451,9 +3486,6 @@ def member_website(browser, base):
         page.wait_for_timeout(700)
         page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
         page.click('#siteNavBtn'); page.wait_for_timeout(900)
-        # this test is about the form, which sits folded under the website chat: open it
-        page.evaluate("(()=>{ const d = document.getElementById('siteEditBox'); if(d && !d.open) d.querySelector('summary').click(); })()")
-        page.wait_for_timeout(200)
         return step, ctx, st, page
 
     # 1) a free member makes a page, previews it, and is offered Pro to put it live
@@ -3992,15 +4024,15 @@ def side_business_quiz(browser, base):
     ctx.close()
 
 def website_ai(browser, base):
-    """My website → the website chat: the member describes their business in their own words, the AI (Claude,
-    src/siteAi.js) builds the page and the live preview shows it next to the chat; they keep chatting to change it
-    ("make it blue"), a question changes nothing, Undo puts the page back, a page that isn't live is saved as a draft
-    while a live one waits for Save. Each message uses an AI credit (2 free to start; Pro gets an hour a day), running
-    out shows the packs, buying one comes back with the chat and the half-typed message kept, the chat is kept with
-    the member's progress, and nothing the AI writes runs as page code."""
+    """My website, the Lovable-style builder: a start screen with one big box; the member describes their business and
+    the look, the AI (Claude, src/siteAi.js) designs the whole page and the workspace opens: the chat, the page live in
+    a big preview (desktop or phone size), and a bar with Requests, Details and Publish. They keep chatting to change it
+    ("make it darker"), a question changes nothing, Undo puts the page back; a draft saves itself while a live page
+    waits for Update. Each message uses an AI credit (2 free; Pro gets an hour a day); running out shows the packs and
+    buying one comes back with the chat and the half-typed message kept. Nothing the AI writes runs as page code."""
     init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
     def open_site(label, pro, site=None, vp=None, ai=None):
-        step = [f'website chat ({label})']
+        step = [f'website builder ({label})']
         vp = vp or {'width': 390, 'height': 844}
         mobile = vp['width'] < 600
         ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
@@ -4018,10 +4050,9 @@ def website_ai(browser, base):
             problem(step[0], 'signed-in app did not open'); finish(st, step[0]); ctx.close(); return None
         page.wait_for_timeout(700)
         page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
-        page.click('#siteNavBtn'); page.wait_for_timeout(1000)
+        page.click('#siteNavBtn'); page.wait_for_timeout(1200)
         return step, ctx, st, page
     bubbles = lambda page: page.evaluate("[...document.querySelectorAll('#scMsgs .ai-msg:not(.thinking)')].map(e => (e.classList.contains('user') ? 'me: ' : 'ai: ') + e.textContent.trim())")
-    frame_text = lambda page: page.evaluate("""(()=>{ const f = document.getElementById('sbFrame'); try{ return f && f.contentDocument ? f.contentDocument.body.innerText : ''; }catch(e){ return 'opaque'; } })()""")
     def preview_text(page):
         for fr in page.frames:
             if fr.url.startswith('blob:'):
@@ -4030,70 +4061,73 @@ def website_ai(browser, base):
                 except Exception:
                     return ''
         return ''
-    def send(page, text, wait=1300):
+    def send(page, text, wait=1500):
         page.fill('#scInput', text); page.click('#scSend'); page.wait_for_timeout(wait)
+    def tab(page, name):
+        page.click(f'.st-tabs [data-tab="{name}"]'); page.wait_for_timeout(400)
 
-    # 1) a free member with no page yet
+    # 1) a free member with no page yet, on a phone
     got = open_site('free member, new page', False)
     if got:
         step, ctx, st, page = got
-        card = page.inner_text('#siteAi') if page.locator('#siteAi').count() else ''
-        empty = page.inner_text('#sbPreview') if page.locator('#sbPreview').count() else ''
-        if ('Website builder' in card and 'Tell me about your business' in card and 'You have 2 free AI credits to try it. Each message uses 1.' in card
-                and 'Claude Fable 5.1' in card and page.locator('#scInput').count() and page.locator('.sc-chip').count() == 3
-                and 'shows up here once you describe your business' in empty and not page.evaluate("document.getElementById('siteEditBox').open")):
-            ok(step[0], 'it opens as a chat (with 3 example messages and the 2 free credits) next to an empty page preview; the form is folded away')
+        start = page.inner_text('#siteContent')
+        if (page.evaluate("document.getElementById('siteView').classList.contains('studio-start')") and "What's your business?" in start
+                and page.locator('.st-start .sc-chip').count() == 4 and 'You have 2 free AI credits to try it. Each message uses 1.' in start and 'Claude Fable 5.1' in start):
+            ok(step[0], 'it starts with one big box (what is your business and the look you want), 4 examples, and the 2 free credits')
         else:
-            problem(step[0], 'My website should open as a chat with a preview', {'card': card[:300], 'preview': empty[:120]})
+            problem(step[0], 'My website should open on the start screen', start[:300])
         page.click('#scSend'); page.wait_for_timeout(300)
         page.locator('.sc-chip').first.click(); page.wait_for_timeout(200)
-        chip_text = page.input_value('#scInput')
-        if not st.get('site_ai_posts') and chip_text.startswith('I mow lawns'):
+        if not st.get('site_ai_posts') and page.input_value('#scInput').startswith('I mow lawns'):
             ok(step[0], 'Send with nothing typed does nothing; an example goes into the box to edit or send')
         else:
-            problem(step[0], 'empty sends should do nothing and examples should fill the box', {'posts': st.get('site_ai_posts'), 'box': chip_text})
-        # the AI can't finish: the message comes back to the box, nothing is lost
+            problem(step[0], 'empty sends should do nothing and examples should fill the box', st.get('site_ai_posts'))
         st['site_ai_reply'] = (502, {'error': 'The page writer could not finish just now. Please try again.', 'credits': {'free': 2, 'paid': 0, 'total': 2}})
-        send(page, 'I mow lawns in Springfield on weekends. $40 a cut.', 900)
-        if page.input_value('#scInput') == 'I mow lawns in Springfield on weekends. $40 a cut.' and bubbles(page) == ['ai: ' + page.evaluate("document.querySelector('#scMsgs .ai-msg').textContent.trim()")] and 'could not finish' in page.inner_text('#siteAi'):
+        send(page, 'I mow lawns in Springfield on weekends. $40 a cut. Dark green, modern.', 900)
+        if page.input_value('#scInput').startswith('I mow lawns in Springfield') and 'could not finish' in page.inner_text('#siteContent') and page.locator('.st-start').count():
             ok(step[0], "if the AI can't finish, it says so and the message goes back in the box (nothing lost)")
         else:
-            problem(step[0], 'a failed send should put the message back', {'box': page.input_value('#scInput'), 'bubbles': bubbles(page)})
+            problem(step[0], 'a failed send should put the message back', page.inner_text('#siteContent')[:200])
         held = []
         page.route('**/api/sites/ai', lambda route: held.append(route))
         page.click('#scSend'); page.wait_for_timeout(1500)
         b = bubbles(page)
-        thinking = page.locator('#scMsgs .ai-msg.thinking').count()
-        if b[-1:] == ['me: I mow lawns in Springfield on weekends. $40 a cut.'] and thinking and page.is_disabled('#scInput') and page.evaluate("!!document.getElementById('siteForm').inert"):
-            ok(step[0], 'sending: the message shows in the chat with a "writing…" reply, and the box and form wait')
+        if (page.locator('#siteStudio').count() and b[-1:] == ['me: I mow lawns in Springfield on weekends. $40 a cut. Dark green, modern.']
+                and page.locator('#scMsgs .ai-msg.thinking').count() and page.is_disabled('#scInput') and page.is_disabled('#stPublish')):
+            ok(step[0], 'sending opens the workspace: the message in the chat, a "designing…" reply, the box waits')
         else:
-            problem(step[0], 'the sending state should show', {'bubbles': b, 'thinking': thinking})
-        shot(page, 'phone-website-chat-writing')
+            problem(step[0], 'the workspace should open while it designs', {'bubbles': b})
+        shot(page, 'phone-website-studio-designing')
         if held:
             body = held[0].request.post_data_json or {}
             ch = body.get('chapter') or {}
-            if (body.get('message', '').startswith('I mow lawns') and body.get('history') == [] and body.get('appLang') == 'en' and body.get('lang') == 'en'
-                    and body.get('tz') and ch.get('name') and len(ch.get('tips') or []) >= 2 and 'draft' in body):
-                ok(step[0], "it sends the message, the page so far, the time zone and the chapter's pricing lessons")
+            if body.get('message', '').startswith('I mow lawns') and body.get('history') == [] and body.get('appLang') == 'en' and body.get('tz') and ch.get('name') and len(ch.get('tips') or []) >= 2:
+                ok(step[0], "it sends the message, the time zone and the chapter's pricing lessons")
             else:
-                problem(step[0], 'the chat request is missing something', {k: body.get(k) for k in ('message', 'history', 'appLang', 'lang', 'tz', 'chapter')})
+                problem(step[0], 'the request is missing something', {k: body.get(k) for k in ('message', 'history', 'appLang', 'tz', 'chapter')})
             status, payload = fixture(st, 'POST', '/api/sites/ai', body)
             held[0].fulfill(status=status, json=payload, headers={'access-control-allow-origin': '*'})
         page.unroute('**/api/sites/ai')
-        page.wait_for_timeout(1800)
+        page.wait_for_timeout(2000)
+        saved = (st.get('site_saves') or [{}])[-1]
+        sd = saved.get('data') or {}
+        pv = preview_text(page)
+        if (page.evaluate("document.getElementById('siteStudio').classList.contains('show-stage')") and 'A tidy lawn, every week' in pv
+                and saved.get('published') is False and 'A tidy lawn' in ((sd.get('design') or {}).get('html') or '')
+                and 'Draft' in page.inner_text('.st-bar') and not page.is_disabled('#stPublish')):
+            ok(step[0], 'the designed page shows full screen on the phone (Preview tab), saved as a draft, ready to publish')
+        else:
+            problem(step[0], 'the designed page should show and save', {'preview': pv[:80], 'saved': saved.get('published'), 'bar': page.inner_text('.st-bar')[:80]})
+        shot(page, 'phone-website-studio-preview')
+        no_sideways_scroll(page, step[0])
+        tab(page, 'chat')
         b = bubbles(page)
         xss = page.evaluate("!!window.__xss || !!document.querySelector('#scMsgs img')")
-        saved = (st.get('site_saves') or [{}])[-1]
-        pv = preview_text(page)
-        if (len(b) == 3 and 'Here is your page' in b[-1] and not xss and page.locator('.sc-acts [data-sc="undo"]').count()
-                and 'Green Mile Lawn Care' in pv and saved.get('published') is False and (saved.get('data') or {}).get('name') == 'Green Mile Lawn Care'
-                and 'Not live yet' in page.inner_text('#siteStatus') and 'You have 1 free AI credit' in page.inner_text('#siteAi')):
-            ok(step[0], 'the reply shows as text, the preview shows the new page, and it is saved as a draft (1 free credit left)')
+        if len(b) == 3 and 'Here is your page' in b[-1] and not xss and page.locator('.sc-acts [data-sc="undo"]').count() and 'You have 1 free AI credit' in page.inner_text('#siteAi'):
+            ok(step[0], 'in the chat: the reply as text, Undo, and 1 free credit left')
         else:
-            problem(step[0], 'the written page should show in the preview and save', {'bubbles': b, 'xss': xss, 'preview': pv[:80], 'saved': saved.get('data', {}).get('name')})
-        shot(page, 'phone-website-chat-done')
-        no_sideways_scroll(page, step[0])
-        # a question: answered, the page stays as it is
+            problem(step[0], 'the reply should show in the chat', {'bubbles': b, 'xss': xss})
+        shot(page, 'phone-website-studio-chat')
         saves = len(st.get('site_saves') or [])
         send(page, 'How much should I charge?')
         q = (st.get('site_ai_posts') or [{}])[-1]
@@ -4101,118 +4135,119 @@ def website_ai(browser, base):
             ok(step[0], 'a question gets an answer and leaves the page alone; the chat so far goes along with it')
         else:
             problem(step[0], 'a question should not change the page', {'bubbles': bubbles(page)[-1:], 'history': q.get('history')})
-        # out of credits now: the packs, and nothing sent
         posts = len(st.get('site_ai_posts') or [])
         card = page.inner_text('#siteAi')
         packs = page.evaluate("[...document.querySelectorAll('#saBuy .sa-pack')].map(b => b.innerText.replace(/\\s+/g, ' ').trim())")
-        send(page, 'Make it blue', 500)
+        send(page, 'Make it darker', 500)
         if ("You're out of AI credits" in card and packs == ['5 credits $4.99 $1.00 a page', '15 credits $9.99 $0.67 a page', '40 credits $19.99 $0.50 a page']
-                and 'Pro includes 1 hour of AI writing every day' in card and len(st.get('site_ai_posts') or []) == posts
-                and 'Pick a pack' in page.inner_text('#siteAi') and page.input_value('#scInput') == 'Make it blue'):
-            ok(step[0], 'out of credits: the packs show under the chat, and a new message waits in the box')
+                and len(st.get('site_ai_posts') or []) == posts and 'Pick a pack' in page.inner_text('#siteAi') and page.input_value('#scInput') == 'Make it darker'):
+            ok(step[0], 'out of credits: the packs show in the chat, and a new message waits in the box')
         else:
             problem(step[0], 'running out should show the packs and keep the message', {'card': card[:200], 'packs': packs})
-        shot(page, 'phone-website-chat-packs')
         page.click('#saBuy .sa-pack[data-pack="medium"]'); page.wait_for_timeout(3000)
-        card = page.inner_text('#siteAi') if page.locator('#siteAi').count() else ''
         toast = page.evaluate("(document.getElementById('appToast') || {}).textContent || ''")
-        if (st.get('credit_checkouts') == ['medium'] and 'You have 15 AI credits' in card and page.input_value('#scInput') == 'Make it blue'
-                and len(bubbles(page)) == 5 and '15 AI credits added' in toast and 'Green Mile Lawn Care' in preview_text(page)):
-            ok(step[0], 'buying 15 credits: back on My website with 15 credits, the chat, the page and the waiting message')
+        if (st.get('credit_checkouts') == ['medium'] and page.locator('#siteStudio').count() and 'You have 15 AI credits' in page.inner_text('#siteAi')
+                and page.input_value('#scInput') == 'Make it darker' and len(bubbles(page)) == 5 and '15 AI credits added' in toast):
+            ok(step[0], 'buying 15 credits: back in the workspace with 15 credits, the chat and the waiting message')
         else:
-            problem(step[0], 'buying credits should come back to the chat as it was', {'card': card[:200], 'box': page.input_value('#scInput') if page.locator('#scInput').count() else None, 'bubbles': len(bubbles(page)), 'toast': toast})
-        page.click('#scSend'); page.wait_for_timeout(1500)
+            problem(step[0], 'buying credits should come back to the workspace', {'toast': toast, 'bubbles': len(bubbles(page))})
+        page.click('#scSend'); page.wait_for_timeout(2000)
         saved = (st.get('site_saves') or [{}])[-1]
-        if (saved.get('data') or {}).get('color') == 'blue' and (st.get('previews') or [{}])[-1].get('color') == 'blue':
-            ok(step[0], '"Make it blue" recolours the page: saved and shown in the preview')
+        css = ((saved.get('data') or {}).get('design') or {}).get('css', '')
+        if '--g:#06231a' in css and '06231a' not in SITE_AI_CSS:
+            ok(step[0], '"Make it darker" changes the design: saved and shown')
         else:
-            problem(step[0], 'asking for a change should change the page', saved.get('data', {}).get('color'))
-        page.click('.sc-acts [data-sc="undo"]'); page.wait_for_timeout(1200)
-        saved = (st.get('site_saves') or [{}])[-1]
-        if (saved.get('data') or {}).get('color') == 'green' and not page.locator('.sc-acts [data-sc="undo"]').count():
-            ok(step[0], 'Undo puts the page back the way it was (and saves it)')
+            problem(step[0], 'asking for a change should change the design', css[:80])
+        tab(page, 'chat')
+        page.click('.sc-acts [data-sc="undo"]'); page.wait_for_timeout(1300)
+        css = (((st.get('site_saves') or [{}])[-1].get('data') or {}).get('design') or {}).get('css', '')
+        if '--g:#0f3d2e' in css and not page.locator('.sc-acts [data-sc="undo"]').count():
+            ok(step[0], 'Undo puts the design back the way it was (and saves it)')
         else:
-            problem(step[0], 'Undo should restore the page', saved.get('data', {}).get('color'))
-        kept = len(((st['data'].get('business') or {}).get('siteChat')) or [])
+            problem(step[0], 'Undo should restore the design', css[:80])
         page.reload(wait_until='load'); page.wait_for_timeout(1200)
         page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
-        page.click('#siteNavBtn'); page.wait_for_timeout(1200)
-        if kept == 6 and len(bubbles(page)) == 7:
-            ok(step[0], 'the chat is kept with their progress and is there next time')
+        page.click('#siteNavBtn'); page.wait_for_timeout(1500)
+        if page.locator('#siteStudio').count() and len(bubbles(page)) == 7:
+            ok(step[0], 'the chat is kept with their progress, and the workspace opens next time')
         else:
-            problem(step[0], 'the chat should be kept', {'kept': kept, 'bubbles': len(bubbles(page))})
-        page.click('#siteAi [data-sc="clear"]'); page.wait_for_timeout(500)
-        if len(bubbles(page)) == 1 and 'Tell me what to change' in bubbles(page)[0] and 'Green Mile Lawn Care' in preview_text(page):
-            ok(step[0], 'Clear chat empties the chat and keeps the page')
+            problem(step[0], 'the chat should be kept', len(bubbles(page)))
+        page.click('#stPublish'); page.wait_for_timeout(800)
+        if visible(page, '#upgradeOverlay', 2000):
+            ok(step[0], 'Publish offers Pro to a free member')
         else:
-            problem(step[0], 'Clear chat should keep the page', bubbles(page))
+            problem(step[0], 'Publish should open the Pro window for a free member')
+        close_paywall(page)
         finish(st, step[0]); ctx.close()
 
-    # 2) a Pro member with a live page: the daily hour pays, changes wait for Save
-    site = {'site': {'slug': 'pat-cleans', 'url': 'https://theguide.company/s/pat-cleans', 'previewKey': 'smokepreviewkey123456', 'published': True, 'updatedAt': TODAY,
-                     'data': {'name': 'Pat Cleans', 'tagline': 'Deep cleans', 'area': 'Shelbyville', 'hours': '', 'about': '', 'email': 'pat@example.com', 'phone': '', 'color': 'blue', 'nicheId': 'cleaning',
-                              'services': [{'name': 'Deep clean', 'price': '$150', 'note': ''}], 'highlights': [], 'faq': [], 'lang': 'en'}},
-            'requests': []}
-    got = open_site('Pro member, live page', True, site=site, ai={'ready': True, 'free': 0, 'paid': 12})
+    # 2) a Pro member with a live designed page, on a laptop
+    page_data = {**site_ai_page(), 'email': 'pat@example.com', 'nicheId': 'cleaning'}
+    site = {'site': {'slug': 'green-mile', 'url': 'https://theguide.company/s/green-mile', 'previewKey': 'smokepreviewkey123456', 'published': True, 'updatedAt': TODAY,
+                     'data': page_data}, 'requests': [{'id': 'r1', 'name': 'Alex', 'contact': 'alex@example.com', 'service': 'Weekly mowing', 'message': 'Saturdays?', 'seen': False, 'createdAt': TODAY + 'T10:00:00Z'}]}
+    got = open_site('Pro member, live page, laptop', True, site=json.loads(json.dumps(site)), vp={'width': 1280, 'height': 860}, ai={'ready': True, 'free': 0, 'paid': 12})
     if got:
         step, ctx, st, page = got
-        card = page.inner_text('#siteAi')
-        if ('Tell me what to change' in card and 'includes 1 hour of AI writing every day (up to 10 writes)' in card and 'You have 12' not in card
-                and 'Pat Cleans' in preview_text(page) and page.locator('.sc-chip').count() == 4):
-            ok(step[0], 'a live page: the chat asks what to change, the preview shows the page, and the Pro hour is there')
+        bar = page.inner_text('.st-bar')
+        boxes = page.evaluate("[document.querySelector('.st-chat').getBoundingClientRect(), document.querySelector('.st-stage').getBoundingClientRect()].map(r => [Math.round(r.left), Math.round(r.top), Math.round(r.width)])")
+        if ('Published' in bar and 'Share' in bar and 'A tidy lawn' in preview_text(page) and boxes[0][0] < boxes[1][0] and abs(boxes[0][1] - boxes[1][1]) < 4 and boxes[1][2] > 700
+                and 'includes 1 hour of AI writing every day (up to 10 writes)' in page.inner_text('#siteAi') and page.locator('.st-dot').count()):
+            ok(step[0], 'a live page opens straight in the workspace: chat beside a big preview, Live, Share, 1 new request, the Pro hour')
         else:
-            problem(step[0], 'a live page should open ready for changes', {'card': card[:300], 'preview': preview_text(page)[:80]})
-        page.locator('.sc-chip').first.click(); page.click('#scSend'); page.wait_for_timeout(1500)
+            problem(step[0], 'a live page should open in the workspace', {'bar': bar[:120], 'boxes': boxes})
+        shot(page, 'desktop-website-studio-forest')
+        page.locator('.sc-chip', has_text='Use darker colours').click(); page.click('#scSend'); page.wait_for_timeout(2000)
         post = (st.get('site_ai_posts') or [{}])[-1]
-        hour_line = page.inner_text('#saHour') if page.locator('#saHour').count() else ''
-        unsaved = page.inner_text('#sbPreview')
-        if (st.get('site_ai_paid_with') == ['hour'] and 'Your AI hour: 9 free writes and 60 minutes left' in hour_line and post.get('message') == 'Make it sound more professional'
-                and not st.get('site_saves') and "aren't on your live page yet" in unsaved and 'Green Mile' not in preview_text(page) and 'Pat Cleans' in preview_text(page)):
-            ok(step[0], 'the change uses the Pro hour, shows in the preview, and waits for Save on a live page')
+        stage_bar = page.inner_text('.st-stage-bar')
+        if (st.get('site_ai_paid_with') == ['hour'] and post.get('message') == 'Use darker colours' and not st.get('site_saves')
+                and 'Changes not live yet' in stage_bar and 'Update' in page.inner_text('#stPublish') and 'Your AI hour: 9 free writes' in page.inner_text('#siteAi')):
+            ok(step[0], 'a change uses the Pro hour, shows in the preview, and waits for Update on a live page')
         else:
-            problem(step[0], 'a change to a live page should wait for Save', {'paid': st.get('site_ai_paid_with'), 'hour': hour_line, 'saves': st.get('site_saves'), 'preview': unsaved[:120]})
-        page.click('#sbSaveLive'); page.wait_for_timeout(900)
+            problem(step[0], 'a change to a live page should wait for Update', {'paid': st.get('site_ai_paid_with'), 'saves': st.get('site_saves'), 'stage': stage_bar, 'publish': page.inner_text('#stPublish')})
+        page.click('#stPublish'); page.wait_for_timeout(900)
         saved = (st.get('site_saves') or [{}])[-1]
-        if saved.get('published') is True and (saved.get('data') or {}).get('email') == 'pat@example.com' and not page.locator('#sbSaveLive').count():
-            ok(step[0], 'Save changes puts it on the live page (their email kept)')
+        if saved.get('published') is True and '--g:#06231a' in ((saved.get('data') or {}).get('design') or {}).get('css', '') and 'Share' in page.inner_text('#stPublish'):
+            ok(step[0], 'Update puts it on the live page; the button goes back to Share')
         else:
-            problem(step[0], 'Save changes should update the live page', saved)
-        page.click('#siteEditBox > summary'); page.wait_for_timeout(300)
+            problem(step[0], 'Update should save the live page', saved.get('published'))
+        page.click('[data-device="phone"]'); page.wait_for_timeout(800)
+        w = page.evaluate("Math.round(document.querySelector('.st-device').getBoundingClientRect().width)")
+        if page.locator('.st-canvas.phone').count() and 380 <= w <= 400:
+            ok(step[0], 'the preview can be seen at phone size')
+        else:
+            problem(step[0], 'the phone preview should be phone-sized', w)
+        shot(page, 'desktop-website-studio-phone-size')
+        page.click('.st-acts [data-pane="details"]'); page.wait_for_timeout(600)
+        form = page.inner_text('#siteForm') if page.locator('#siteForm').count() else ''
+        if 'Web address' in form and 'Phone' in form and 'Services and prices' not in form and 'Your page is live' in page.inner_text('.st-pane'):
+            ok(step[0], 'Details: the link, the web address, phone and email (the words come from the chat)')
+        else:
+            problem(step[0], 'Details should show the address and contact fields', form[:200])
         page.fill('#sfPhone', '555 123 4567'); page.wait_for_timeout(1300)
-        if (st.get('previews') or [{}])[-1].get('phone') == '555 123 4567' and page.locator('#sbSaveLive').count():
-            ok(step[0], 'editing the details by hand updates the preview too')
+        if (st.get('previews') or [{}])[-1].get('phone') == '555 123 4567' and 'Update' in page.inner_text('#stPublish'):
+            ok(step[0], 'a phone number typed in Details goes into the page (and waits for Update)')
         else:
-            problem(step[0], 'hand edits should show in the preview', (st.get('previews') or [{}])[-1].get('phone'))
-        shot(page, 'phone-website-chat-live')
+            problem(step[0], 'Details edits should reach the page', (st.get('previews') or [{}])[-1].get('phone'))
+        page.click('.st-acts [data-pane="requests"]'); page.wait_for_timeout(600)
+        if page.locator('.st-pane .site-req').count() == 1 and 'Saturdays?' in page.inner_text('.st-pane'):
+            ok(step[0], 'Requests: the requests from the page, in the workspace')
+        else:
+            problem(step[0], 'Requests should list the requests', page.inner_text('.st-pane')[:200])
+        page.click('.st-stage-bar [data-pane="preview"]'); page.wait_for_timeout(600)
+        page.evaluate("document.documentElement.setAttribute('data-theme','purple')"); page.wait_for_timeout(300)
+        shot(page, 'desktop-website-studio-purple')
+        no_sideways_scroll(page, step[0])
         finish(st, step[0]); ctx.close()
 
     # 3) a Pro member who used today's hour and has no credits
-    got = open_site('Pro member, hour used', True, site=site, ai={'ready': True, 'free': 0, 'paid': 0, 'hour': {'included': True, 'state': 'used', 'minutes': 60}})
+    got = open_site('Pro member, hour used', True, site=json.loads(json.dumps(site)), ai={'ready': True, 'free': 0, 'paid': 0, 'hour': {'included': True, 'state': 'used', 'minutes': 60}})
     if got:
         step, ctx, st, page = got
         card = page.inner_text('#siteAi')
         send(page, 'Add window cleaning for $60', 500)
-        if ("You've used today's AI hour" in card and page.locator('#saBuy .sa-pack').count() == 3 and not st.get('site_ai_posts')
-                and 'used today' in page.inner_text('#siteAi .sc-err')):
+        if "You've used today's AI hour" in card and page.locator('#saBuy .sa-pack').count() == 3 and not st.get('site_ai_posts') and 'used today' in page.inner_text('#siteAi .sc-err'):
             ok(step[0], 'hour used and no credits: the packs show and the message waits')
         else:
             problem(step[0], 'a used hour with no credits should show the packs', card[:300])
-        finish(st, step[0]); ctx.close()
-
-    # 4) on a laptop: the chat and the page side by side, both looks
-    got = open_site('laptop', True, site=site, vp={'width': 1280, 'height': 900}, ai={'ready': True, 'free': 2, 'paid': 0})
-    if got:
-        step, ctx, st, page = got
-        no_sideways_scroll(page, step[0])
-        boxes = page.evaluate("[document.getElementById('siteAi').getBoundingClientRect(), document.getElementById('sbPreview').getBoundingClientRect()].map(r => [Math.round(r.left), Math.round(r.top), Math.round(r.width)])")
-        page.evaluate("document.getElementById('siteBuilder').scrollIntoView()"); page.wait_for_timeout(200)
-        shot(page, 'desktop-website-chat-forest')
-        page.evaluate("document.documentElement.setAttribute('data-theme','purple')"); page.wait_for_timeout(200)
-        shot(page, 'desktop-website-chat-purple')
-        if boxes[0][0] < boxes[1][0] and abs(boxes[0][1] - boxes[1][1]) < 4 and boxes[1][2] > 400:
-            ok(step[0], 'on a laptop the chat and the page sit side by side, in both looks')
-        else:
-            problem(step[0], 'the chat and the preview should sit side by side on a laptop', boxes)
         finish(st, step[0]); ctx.close()
 
 

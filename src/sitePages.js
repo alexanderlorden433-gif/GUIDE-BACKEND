@@ -6,7 +6,7 @@ const express = require('express');
 const crypto = require('crypto');
 const prisma = require('./db');
 const { isProUser } = require('./pro');
-const { state, oneLine, cleanRequest, renderSitePage, renderMissingPage } = require('./sites');
+const { state, oneLine, cleanRequest, renderSitePage, renderMissingPage, isDesigned, CUSTOM_CSP } = require('./sites');
 
 const REQUESTS_PER_SITE_PER_DAY = 30;
 
@@ -52,8 +52,11 @@ async function findSite(slug, previewKey) {
   return { site, preview: false };
 }
 
-function send(res, status, html, cache) {
-  res.status(status).set({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cache || 'no-store' }).send(html);
+/** site: when it's a page the AI designed, it goes out locked down (no scripts, sandboxed; see src/siteDesign.js). */
+function send(res, status, html, cache, site) {
+  res.status(status).set({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cache || 'no-store' });
+  if (site && isDesigned(site.data)) res.set('Content-Security-Policy', CUSTOM_CSP);
+  res.send(html);
 }
 
 const pages = express.Router();
@@ -66,7 +69,7 @@ pages.get('/:slug', async (req, res) => {
   if (!found) return send(res, 404, renderMissingPage(), 'public, max-age=30');
   const { site, preview } = found;
   send(res, 200, renderSitePage(site, { preview, previewKey: preview ? site.previewKey : '', sent: req.query.sent === '1' }),
-    preview || req.query.sent ? 'no-store' : 'public, max-age=60');
+    preview || req.query.sent ? 'no-store' : 'public, max-age=60', site);
 });
 
 // ---------- POST /s/:slug/request ----------
@@ -78,7 +81,7 @@ pages.post('/:slug/request', express.urlencoded({ extended: false, limit: '8kb' 
   const found = await findSite(slug, previewKey);
   if (!found) return send(res, 404, renderMissingPage());
   const { site, preview } = found;
-  const again = (extra) => send(res, 200, renderSitePage(site, Object.assign({ preview, previewKey: preview ? site.previewKey : '' }, extra)));
+  const again = (extra) => send(res, 200, renderSitePage(site, Object.assign({ preview, previewKey: preview ? site.previewKey : '' }, extra)), 'no-store', site);
   const back = `/s/${site.slug}?${preview ? `preview=${encodeURIComponent(site.previewKey)}&` : ''}sent=1#ask`;
 
   const body = req.body || {};

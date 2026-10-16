@@ -5590,47 +5590,106 @@
   .sf-faq{display:grid; grid-template-columns:1fr 36px; gap:var(--sp-2); padding-bottom:var(--sp-2); border-bottom:1px solid var(--line);}
   .sf-faq textarea{grid-column:1; min-height:72px;}
   #sfFaqList{display:grid; gap:var(--sp-2);}
-  /* the website builder: the chat, and the page next to it (stacked on phones) */
-  .site-builder{display:grid; grid-template-columns:minmax(0, 1fr); gap:var(--sp-6); margin-bottom:var(--sp-6);}
-  @media (min-width:980px){ .site-builder{grid-template-columns:minmax(0, 440px) minmax(0, 1fr); align-items:start;} }
-  .sb-chat-col{display:grid; gap:var(--sp-3); min-width:0;}
-  .sb-chat{height:min(560px, 60vh);}
-  @media (min-width:980px){ .sb-chat{height:min(640px, 72vh);} }
-  .sb-chat .ai-chat-header .mascot-logo{width:32px; height:32px;}
-  .sb-chat .ai-msg{max-width:85%; font-size:14px;}
-  .sb-chat .ai-msg.thinking{display:flex; align-items:center; gap:var(--sp-2);}
+  /* My website, the Lovable-style builder: a start screen with one big box, then a workspace that fills the screen
+     between the top bar and the tab bar: a bar (page, Requests, Details, Publish), the chat, and the page itself */
+  #siteView.studio > .back-btn, #siteView.studio > .page-title, #siteView.studio > .page-sub,
+  #siteView.studio-start > .page-title, #siteView.studio-start > .page-sub{display:none;}
+  .site-studio{position:fixed; left:0; right:0; top:var(--st-top, 61px); bottom:var(--st-bottom, 72px); z-index:20; display:flex; flex-direction:column; background:var(--bg);}
+  .st-bar{display:flex; align-items:center; gap:var(--sp-2); padding:var(--sp-2) var(--sp-4); min-height:60px; border-bottom:1px solid var(--line); background:var(--card);}
+  .st-icon{flex:none; width:var(--btn-h); height:var(--btn-h); display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:var(--r-btn); background:none; color:var(--ink-2); cursor:pointer;}
+  .st-icon .ico{width:20px; height:20px; transform:rotate(180deg);}
+  .st-icon:hover{color:var(--ink); background:var(--card-2);}
+  .st-title{flex:1; min-width:0; display:flex; align-items:center; gap:var(--sp-2);}
+  .st-title b{font-size:15px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .st-pill{flex:none; padding:2px var(--sp-2); border:1px solid var(--line-2); border-radius:999px; font-size:12px; font-weight:600; color:var(--ink-soft);}
+  .st-pill.live{color:var(--grape-soft); border-color:rgba(var(--accent-rgb),.45);}
+  .st-acts{flex:none; display:flex; align-items:center; gap:var(--sp-1);}
+  .st-tool{position:relative; display:inline-flex; align-items:center; gap:var(--sp-2); min-height:var(--btn-h); padding:0 var(--sp-3); border:0; border-radius:var(--r-btn); background:none; color:var(--ink-2); font:500 14px 'Inter',sans-serif; text-decoration:none; cursor:pointer;}
+  .st-tool:hover, .st-tool.on{color:var(--ink); background:var(--card-2);}
+  .st-tool .ico{width:18px; height:18px;}
+  .st-dot{position:absolute; top:4px; right:2px; min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:var(--grape); color:var(--on-accent); font-size:10px; font-weight:700; line-height:16px; text-align:center;}
+  .st-publish{margin-left:var(--sp-2);}
+  .st-publish:disabled{opacity:.5; cursor:default;}
+  .st-tabs{display:none;}
+  .st-main{flex:1; min-height:0; display:grid; grid-template-columns:minmax(320px, 400px) minmax(0, 1fr);}
+  .st-chat{display:flex; flex-direction:column; min-height:0; border-right:1px solid var(--line); background:var(--card);}
+  .st-chat .ai-chat-messages{flex:1; min-height:0;}
+  .st-chat .ai-msg{max-width:88%; font-size:14px;}
+  .st-chat .ai-msg.thinking{display:flex; align-items:center; gap:var(--sp-2);}
+  .st-chat .sb-foot{padding:0 var(--sp-4) var(--sp-3);}
   .sc-acts{display:flex; flex-wrap:wrap; gap:0 var(--sp-4); margin:calc(var(--sp-3) * -1) 0 0 40px;}
   .sc-acts .site-text{padding:0; display:inline-flex; align-items:center; gap:var(--sp-1); font-size:13px;}
-  .sc-err{margin:0; padding:var(--sp-2) var(--sp-4); font-size:13px; font-weight:500; line-height:1.5; color:rgb(var(--danger-rgb)); border-top:1px solid var(--line);}
+  .sc-err{margin:0; padding:var(--sp-2) var(--sp-4); font-size:13px; font-weight:500; line-height:1.5; color:rgb(var(--danger-rgb));}
   .sc-chips{display:flex; gap:var(--sp-2); overflow-x:auto; padding:var(--sp-2) var(--sp-3) 0; scrollbar-width:none; border-top:1px solid var(--line);}
   .sc-chips::-webkit-scrollbar{display:none;}
   .sc-chip{flex:none; min-height:36px; padding:0 var(--sp-3); border:1px solid var(--line-2); border-radius:999px; background:transparent; color:var(--ink-2); font:500 13px 'Inter',sans-serif; cursor:pointer; white-space:nowrap;}
   .sc-chip:hover{border-color:var(--ink-soft); color:var(--ink);}
-  .sb-chat .sc-chips + .ai-chat-input-row{border-top:0;}
-  .sb-chat .ai-chat-input-row{align-items:flex-end;}
-  .sb-chat .ai-chat-input-row textarea{min-height:var(--btn-h); max-height:140px; font-size:15px; line-height:1.4;}
-  .sb-chat .ai-chat-send-btn{min-height:var(--btn-h);}
+  .st-compose{position:relative; margin:var(--sp-2) var(--sp-3) var(--sp-3);}
+  .st-compose textarea{display:block; width:100%; min-height:76px; max-height:200px; resize:none; padding:var(--sp-3) 60px var(--sp-3) var(--sp-3); border:1px solid var(--line-2); border-radius:var(--r-card); background:var(--bg); color:var(--ink); font:400 15px/1.45 'Inter',sans-serif; outline:none;}
+  .st-compose textarea:focus{border-color:var(--ink-soft);}
+  .st-send{position:absolute; right:var(--sp-2); bottom:var(--sp-2); width:var(--btn-h); height:var(--btn-h); display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:50%; background:var(--grape); color:var(--on-accent); cursor:pointer;}
+  .st-send .ico{width:20px; height:20px; transform:rotate(-90deg);}
+  .st-send:disabled{opacity:.5; cursor:default;}
+  .st-compose.big textarea{min-height:150px; padding:var(--sp-4) 72px var(--sp-4) var(--sp-4); font-size:16px;}
+  .st-compose.big .st-send{right:var(--sp-3); bottom:var(--sp-3);}
   .sb-foot{display:grid; gap:var(--sp-2);}
   .sb-foot .site-text{justify-self:start; padding:0;}
   .sa-note{font-size:13px; line-height:1.5; color:var(--ink-soft); max-width:68ch;}
   .sa-hour.on{color:var(--ink); font-weight:500;}
   .sa-tips-h{margin:var(--sp-1) 0 0; font-size:14px; font-weight:600; color:var(--ink);}
-  .sb-preview{display:grid; gap:var(--sp-3); min-width:0;}
-  .sb-preview-head{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); font-size:16px; color:var(--ink);}
-  .sb-preview-head b{font-weight:600;}
-  .sb-preview-head .site-text{padding:0; display:inline-flex; align-items:center; gap:var(--sp-1);}
-  .sb-frame{border:1px solid var(--line-2); border-radius:var(--r-card); overflow:hidden; background:var(--card);}
-  .sb-frame iframe{display:block; width:100%; height:min(620px, 72vh); border:0;}
-  .sb-empty{display:grid; place-items:center; gap:var(--sp-2); text-align:center; padding:var(--sp-8) var(--sp-5); min-height:240px; color:var(--ink-soft);}
+  .st-stage{display:flex; flex-direction:column; min-width:0; min-height:0;}
+  .st-stage-bar{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); min-height:52px; padding:var(--sp-2) var(--sp-4); border-bottom:1px solid var(--line);}
+  .st-stage-bar .site-text{padding:0; display:inline-flex; align-items:center; gap:var(--sp-1);}
+  .st-seg{display:inline-flex; border:1px solid var(--line-2); border-radius:var(--r-btn); overflow:hidden;}
+  .st-seg button{display:inline-flex; align-items:center; gap:var(--sp-1); min-height:36px; padding:0 var(--sp-3); border:0; background:none; color:var(--ink-soft); font:500 13px 'Inter',sans-serif; cursor:pointer;}
+  .st-seg button.on{background:var(--card-2); color:var(--ink);}
+  .st-seg .ico{width:16px; height:16px;}
+  .sb-unsaved{font-size:13px; color:var(--ink-soft);}
+  .st-canvas{flex:1; min-height:0; display:flex; justify-content:center; padding:var(--sp-4); overflow:hidden;}
+  .st-device{position:relative; width:100%; height:100%; overflow:hidden; border:1px solid var(--line-2); border-radius:var(--r-card); background:var(--card);}
+  .st-canvas.phone .st-device{width:390px; max-width:100%; border-radius:28px;}
+  .st-device iframe{display:block; width:100%; height:100%; border:0;}
+  .st-veil{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:var(--sp-2); background:rgba(var(--bg-rgb),.62); color:var(--ink); font-weight:500;}
+  .st-building{margin:auto; display:grid; justify-items:center; gap:var(--sp-2); text-align:center; color:var(--ink-soft);}
+  .st-building b{font-size:18px; font-weight:600; color:var(--ink);}
+  .st-pane{flex:1; min-height:0; overflow-y:auto; padding:var(--sp-5) var(--sp-6);}
+  .st-pane .site-status, .st-pane .site-form{max-width:640px;}
+  .st-pane .site-edit{border-top:0; padding-top:0;}
+  .st-phone-only, .sc-acts .st-phone-only{display:none;}
+  .sb-empty{display:grid; place-items:center; gap:var(--sp-2); margin:auto; text-align:center; padding:var(--sp-8) var(--sp-5); color:var(--ink-soft);}
   .sb-empty .ico{width:28px; height:28px;}
-  .sb-empty p{margin:0; max-width:32ch; font-size:14px; line-height:1.5;}
-  .sb-unsaved{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--sp-3); padding:var(--sp-3) 0; font-size:14px; color:var(--ink-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
-  details.site-edit > summary{cursor:pointer; list-style:none; margin:0;}
-  details.site-edit > summary::-webkit-details-marker{display:none;}
-  details.site-edit > summary::after{content:'+'; margin-left:auto; color:var(--ink-soft); font-weight:400;}
-  details.site-edit[open] > summary::after{content:'\2013';}
-  details.site-edit[open] > summary{margin-bottom:var(--sp-3);}
-  details.site-edit .ss-sub{margin-top:0;}
+  .sb-empty p{margin:0; max-width:34ch; font-size:14px; line-height:1.5;}
+  @media (max-width:899px){
+    .st-bar{padding:var(--sp-1) var(--sp-2); min-height:56px;}
+    .st-tool-l, .st-wide-only{display:none;}
+    .st-tool{padding:0 var(--sp-2);}
+    .st-publish{margin-left:var(--sp-1); padding:0 var(--sp-3);}
+    .st-tabs{display:flex; border-bottom:1px solid var(--line); background:var(--card);}
+    .st-tabs button{flex:1; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2); min-height:var(--btn-h); border:0; border-bottom:2px solid transparent; background:none; color:var(--ink-soft); font:600 14px 'Inter',sans-serif; cursor:pointer;}
+    .st-tabs button.on{color:var(--ink); border-bottom-color:var(--grape);}
+    .st-tabs .ico{width:16px; height:16px;}
+    .st-main{grid-template-columns:minmax(0, 1fr);}
+    .site-studio.show-chat .st-stage, .site-studio.show-stage .st-chat{display:none;}
+    .st-chat{border-right:0;}
+    .st-seg{display:none;}
+    .st-stage-bar{min-height:0; padding:0; border-bottom:0;}
+    .st-stage-bar:not(:has(.sb-unsaved)):not(:has(.site-text)){display:none;}
+    .st-stage-bar .site-text, .st-stage-bar .sb-unsaved{padding:var(--sp-2) var(--sp-4);}
+    .st-canvas{padding:0;}
+    .st-device{border:0; border-radius:0;}
+    .st-pane{padding:var(--sp-4);}
+    .st-phone-only, .sc-acts .st-phone-only{display:inline-flex;}
+  }
+  /* the start screen */
+  .st-start{max-width:720px; margin:var(--sp-5) auto var(--sp-8); display:grid; justify-items:center; gap:var(--sp-4); text-align:center;}
+  .st-start-ico .mascot-logo{width:56px; height:56px;}
+  .st-start-h{margin:0; font-size:clamp(28px, 6vw, 40px); font-weight:700; letter-spacing:-.02em; color:var(--ink);}
+  .st-start-sub{margin:0; max-width:52ch; font-size:16px; line-height:1.5; color:var(--ink-soft);}
+  .st-start .st-compose{width:100%; margin:var(--sp-2) 0 0; text-align:left;}
+  .st-start .sc-chips{flex-wrap:wrap; justify-content:center; overflow:visible; padding:0; border-top:0;}
+  .st-start .sc-chip{max-width:100%; min-height:36px; padding:var(--sp-2) var(--sp-3); border-radius:var(--r-btn); white-space:normal; text-align:left; line-height:1.35;}
+  .st-start .sb-foot{justify-items:center; text-align:center;}
+  .st-start .sa-buy{width:100%; text-align:left;}
   .sa-buy{border-top:1px solid var(--line); padding-top:var(--sp-3); display:grid; gap:var(--sp-2);}
   .sa-buy .sa-tips-h{margin:0;}
   .sa-packs{display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--sp-2); max-width:640px;}
@@ -10228,7 +10287,7 @@ document.getElementById('bottomTabEarn').addEventListener('click', ()=>{
 const FAQ_DATA = [
   { category: "New in The Guide", items: [
     { q: "How do I make a 30-day plan?", a: "On Home, tap 30-day plan under Your tools. You can also start one from any chapter (the 30-day plan button at the top) or from the account menu. Pick a business and what you want by day 30, and you get one small step a day, with a check-in with The Guider every 7 days." },
-    { q: "How do I get my own website?", a: "On Home, tap My website under Your tools, or open it from the account menu. Describe your business in the chat (what you do, where, and what you charge) and it builds your page, shown right next to the chat. Ask for any change, like a different colour or another service. Putting the page live is part of Pro. Requests people send from your page show up there, and you can add them to your Lead Pipeline." },
+    { q: "How do I get my own website?", a: "On Home, tap My website under Your tools, or open it from the account menu. Describe your business and the look you want, and the AI designs your whole page, shown right next to the chat. Ask for any change, like darker colours, a bigger headline or another section, then tap Publish. Publishing is part of Pro. Requests people send from your page show up under Requests, and you can add them to your Lead Pipeline." },
     { q: "Can I use The Guide in Spanish?", a: "Yes. Tap your picture at the top right, then Español. Tap English in the same place to switch back. The free lessons are in Spanish; the Pro lessons are still being translated." },
   ]},
   { category: "Getting around", items: [
@@ -18273,7 +18332,7 @@ function showSite(){
   document.getElementById('siteView').style.display = '';
   currentNicheId = null;
   window.scrollTo(0, 0);
-  if(!siteAi.busy){ siteAi.last = null; siteAi.error = ''; siteAi.buying = false; }
+  if(!siteAi.busy){ siteAi.last = null; siteAi.error = ''; siteAi.buying = false; siteAi.pane = 'preview'; siteAi.tab = 'chat'; }
   return renderSiteView(true).then(()=>{ siteChatScroll(); sitePreviewRefresh(); });
 }
 
@@ -18281,7 +18340,7 @@ function showSite(){
 // builds the page, and they keep chatting to change it ("make it blue", "add hedge trimming for $30"). The page shows
 // next to the chat as a live preview (POST /sites/preview draws it exactly as visitors see it, shown in a sandboxed
 // frame). The chat is kept with the member's progress (businessData.siteChat). Nothing is public until they put it live.
-let siteAi = { busy: false, started: 0, error: '', buying: false, last: null, input: '', editOpen: false };
+let siteAi = { busy: false, started: 0, error: '', buying: false, last: null, input: '', pane: 'preview', tab: 'chat', device: 'desktop' };
 let sitePreviewUrl = '';     // the preview frame's page (a blob: address made on this device)
 let sitePreviewTimer = null;
 // the member's time zone: Pro's daily AI hour resets at their midnight
@@ -18316,8 +18375,8 @@ function siteHourTick(){
   }, 20000);
 }
 const SITE_AI_NAMES = { 'claude-fable-5-1': 'Claude Fable 5.1', 'claude-opus-5-5': 'Claude Opus 5.5', 'claude-sonnet-5-5': 'Claude Sonnet 5.5' };
-const SITE_AI_STEPS = ['Reading your message…', 'Writing your page…', 'Working out services and prices…',
-  'Answering the questions customers ask…', 'Checking it reads well…', 'Almost there…'];
+const SITE_AI_STEPS = ['Reading your message…', 'Picking colours and fonts…', 'Laying out the sections…', 'Writing your page…',
+  'Working out services and prices…', 'Polishing the design…', 'Almost there…'];
 const SITE_CHAT_KEEP = 40;   // messages kept with the member's progress
 function siteHasContent(d){ return !!(d && (d.name || d.about || (d.services || []).some(s => s.name))); }
 function siteChat(){ if(!Array.isArray(businessData.siteChat)) businessData.siteChat = []; return businessData.siteChat; }
@@ -18331,25 +18390,46 @@ function siteAiChapter(nicheId){
   return { name: n.name, description: n.description || '', tips };
 }
 
-/** The chat column: messages, suggestions, the box to type in, and what writes are left. */
-function siteChatHtml(d){
+/** The chat: messages, suggestions, the box to type in, and what writes are left. */
+function siteChatPanel(d){
   const ai = siteState.ai;
-  if(!ai || !ai.ready) return '';
   const chat = siteChat(), has = siteHasContent(d);
   const row = (role, text)=> `<div class="ai-msg-row${role === 'user' ? ' user' : ''}">${role === 'user' ? '' : `<div class="ai-msg-avatar">${MASCOT_AVATAR_SVG}</div>`}<div class="ai-msg ${role === 'user' ? 'user' : 'assistant'}">${text}</div></div>`;
   // the chat bubbles are left as typed (the translator skips them), so the app's own words are translated here
   const hello = I18N.t(has && !chat.length
-    ? 'Your page is next to this chat. Tell me what to change, like "make it blue" or "add hedge trimming for $30".'
-    : "Hi! Tell me about your business and I'll build your website. What do you do, where, and what do you charge?");
+    ? 'Your page is on the right. Tell me what to change, like "make it darker" or "add a section about my prices".'
+    : "Hi! Tell me about your business and the look you want, and I'll design your website.");
   let lastChanged = -1;
   chat.forEach((m, i)=>{ if(m.role === 'assistant' && m.changed) lastChanged = i; });
   const msgs = chat.map((m, i)=> row(m.role, gvEsc(m.content)) + (i === lastChanged && siteAi.last ? `<div class="sc-acts">
-      <button type="button" class="site-text" data-sc="see">${ico('eye')} See your page</button>
+      <button type="button" class="site-text st-phone-only" data-sc="see">${ico('eye')} See your page</button>
       <button type="button" class="site-text" data-sc="undo">Undo this change</button></div>` : '')).join('');
   const thinking = siteAi.busy ? `<div class="ai-msg-row"><div class="ai-msg-avatar">${MASCOT_AVATAR_SVG}</div><div class="ai-msg thinking"><span class="ai-thinking-dots"><span></span><span></span><span></span></span><span id="scStep">${gvEsc(I18N.t(SITE_AI_STEPS[0]))}</span></div></div>` : '';
-  const chips = siteAi.busy ? [] : has
-    ? ['Make it sound more professional', 'Change the colour to blue', 'Add another service', 'Write my page in Spanish']
-    : ['I mow lawns in my town on weekends, $40 a cut', 'I clean homes on weekends', "I detail cars at people's homes"];
+  return `<aside class="st-chat" id="siteAi">
+      <div class="ai-chat-messages" id="scMsgs" aria-live="polite">${row('assistant', gvEsc(hello))}${msgs}${thinking}</div>
+      ${siteAi.error ? `<p class="sc-err" role="alert">${gvEsc(siteAi.error)}</p>` : ''}
+      ${siteChipsHtml(has)}
+      ${siteComposerHtml(has)}
+      ${siteFootHtml()}
+    </aside>`;
+}
+function siteChipsHtml(has){
+  if(siteAi.busy) return '';
+  const chips = has
+    ? ['Make it look more modern', 'Use darker colours', 'Add a section about my prices', 'Write my page in Spanish']
+    : ['I mow lawns in my town on weekends, $40 a cut. Clean and modern, dark green.', 'I clean homes on weekends. Bright, friendly and simple.',
+       "I detail cars at people's homes. Bold and sporty, black and red.", 'I take family photos outdoors. Soft, warm and elegant.'];
+  return `<div class="sc-chips">${chips.map(t => `<button type="button" class="sc-chip" data-chip>${gvEsc(t)}</button>`).join('')}</div>`;
+}
+function siteComposerHtml(has, big){
+  return `<div class="st-compose${big ? ' big' : ''}">
+      <textarea id="scInput" rows="${big ? 4 : 2}" maxlength="1500" placeholder="${big ? 'Describe your business and the look you want…' : has ? 'Ask for a change…' : 'Describe your business…'}" aria-label="Message to the website builder"${siteAi.busy ? ' disabled' : ''}>${gvEsc(siteAi.input)}</textarea>
+      <button type="button" class="st-send" id="scSend" aria-label="Send"${siteAi.busy ? ' disabled' : ''}>${ico('chevron')}</button>
+    </div>`;
+}
+/** What writes are left (Pro's hour or credits), the packs when they run out, and which AI does the work. */
+function siteFootHtml(){
+  const ai = siteState.ai;
   const c = ai.credits || { free: 0, paid: 0, total: 0 };
   const h = ai.hour || { included: false };
   const hourOpen = !!(h.included && h.state !== 'used');   // a Pro member's daily hour is still to come or running
@@ -18364,54 +18444,92 @@ function siteChatHtml(d){
       <small class="sa-note">One-time payment through Stripe. Credits never expire, and a write that fails gives its credit back.${h.included ? '' : ' Pro includes 1 hour of AI writing every day, and putting your page live.'}</small>
     </div>` : '';
   const model = SITE_AI_NAMES[(siteAi.last && siteAi.last.model) || ai.model] || 'Claude';
-  return `<div class="sb-chat-col" id="siteAi">
-      <div class="ai-chat-wrap sb-chat">
-        <div class="ai-chat-header">
-          ${MASCOT_AVATAR_SVG}
-          <div class="ai-chat-header-text">
-            <div class="ai-chat-header-name">Website builder</div>
-            <div class="ai-chat-header-sub">Describe your business. It builds your page and changes anything you ask.</div>
-          </div>
-          ${chat.length && !siteAi.busy ? '<button type="button" class="site-text" data-sc="clear">Clear chat</button>' : ''}
-        </div>
-        <div class="ai-chat-messages" id="scMsgs" aria-live="polite">${row('assistant', gvEsc(hello))}${msgs}${thinking}</div>
-        ${siteAi.error ? `<p class="sc-err" role="alert">${gvEsc(siteAi.error)}</p>` : ''}
-        ${chips.length ? `<div class="sc-chips">${chips.map(t => `<button type="button" class="sc-chip" data-chip>${gvEsc(t)}</button>`).join('')}</div>` : ''}
-        <div class="ai-chat-input-row">
-          <textarea id="scInput" rows="2" maxlength="1500" placeholder="${has ? 'Ask for a change…' : 'Describe your business…'}" aria-label="Message to the website builder"${siteAi.busy ? ' disabled' : ''}>${gvEsc(siteAi.input)}</textarea>
-          <button type="button" class="ai-chat-send-btn" id="scSend"${siteAi.busy ? ' disabled' : ''}>Send</button>
-        </div>
-      </div>
-      <div class="sb-foot">
-        ${h.included ? `<small class="sa-note sa-hour${h.state === 'active' ? ' on' : ''}" id="saHour">${siteHourLine(h)}</small>` : ''}
-        ${hourOpen ? '' : `<small class="sa-note" id="saLeft">${creditLine}</small>`}
-        ${packs || c.total <= 0 || hourOpen ? '' : '<button type="button" class="site-text" id="saMore">Get more credits</button>'}
-        ${packs}
-        <small class="sa-note" id="saModel">Uses ${gvEsc(model)}, made by Anthropic. Check prices and details before you put your page live.</small>
-      </div>
+  return `<div class="sb-foot">
+      ${h.included ? `<small class="sa-note sa-hour${h.state === 'active' ? ' on' : ''}" id="saHour">${siteHourLine(h)}</small>` : ''}
+      ${hourOpen ? '' : `<small class="sa-note" id="saLeft">${creditLine}</small>`}
+      ${packs || c.total <= 0 || hourOpen ? '' : '<button type="button" class="site-text" id="saMore">Get more credits</button>'}
+      ${packs}
+      <small class="sa-note" id="saModel">Designed by ${gvEsc(model)}, made by Anthropic. Check prices and details before you publish.</small>
     </div>`;
 }
 
-/** The preview column: the page as visitors will see it, or a note before there's anything to show. */
-function sitePreviewHtml(d){
+/** The first screen, before there's a page: one big box, like starting a project. */
+function siteStartHtml(requests){
+  return `<div class="st-start" id="siteAi">
+      <div class="st-start-ico">${MASCOT_AVATAR_SVG}</div>
+      <h2 class="st-start-h">What's your business?</h2>
+      <p class="st-start-sub">Describe what you do and the look you want. The AI designs your website in a minute or two, and you change anything by chatting.</p>
+      ${siteAi.error ? `<p class="sc-err" role="alert">${gvEsc(siteAi.error)}</p>` : ''}
+      ${siteComposerHtml(false, true)}
+      ${siteChipsHtml(false)}
+      ${siteFootHtml()}
+    </div>${requests}`;
+}
+
+/** The workspace: a bar with the page and Publish, the chat, and the page (or its details, or its requests). */
+function siteStudioHtml(d, parts){
   const site = siteState.site;
-  return `<div class="sb-preview" id="sbPreview">
-      <div class="sb-preview-head"><b>Your page</b>${site ? `<a class="site-text" href="${gvEsc(`${SITE_ORIGIN}/s/${site.slug}?preview=${encodeURIComponent(site.previewKey)}`)}" target="_blank" rel="noopener">${ico('external')} Open full page</a>` : ''}</div>
-      <div id="sbUnsaved" role="status">${siteUnsavedHtml()}</div>
-      <div class="sb-frame">${siteHasContent(d) ? `<iframe id="sbFrame" title="Preview of your page" sandbox="" referrerpolicy="no-referrer"${sitePreviewUrl ? ` src="${sitePreviewUrl}"` : ''}></iframe>`
-        : `<div class="sb-empty">${ico('globe')}<p>Your page shows up here once you describe your business.</p></div>`}</div>
+  const live = !!(site && site.published);
+  const pane = siteAi.pane || 'preview';
+  const unseen = siteState.unseen || 0;
+  const url = site ? `${SITE_ORIGIN}/s/${site.slug}` : '';
+  const openHref = site ? (live ? url : `${url}?preview=${encodeURIComponent(site.previewKey)}`) : '';
+  const building = siteAi.busy && !siteHasContent(d);
+  let stage = '';
+  // Publish is in the bar; the details keep the live page's link, sharing and "take it down"
+  if(pane === 'details') stage = `<div class="st-pane">${live ? parts.status : ''}${parts.editor}</div>`;
+  else if(pane === 'requests') stage = `<div class="st-pane">${parts.requests || `<div class="sb-empty">${ico('mail')}<p>No requests yet. When someone fills in the form on your page, it shows up here.</p></div>`}</div>`;
+  else stage = `<div class="st-canvas ${siteAi.device === 'phone' ? 'phone' : 'desktop'}">
+      ${building ? `<div class="st-building"><span class="ai-thinking-dots"><span></span><span></span><span></span></span><b>Designing your page…</b><span id="stStep">${gvEsc(I18N.t(SITE_AI_STEPS[0]))}</span></div>`
+        : siteHasContent(d) ? `<div class="st-device"><iframe id="sbFrame" title="Preview of your page" sandbox="" referrerpolicy="no-referrer"${sitePreviewUrl ? ` src="${sitePreviewUrl}"` : ''}></iframe>${siteAi.busy ? `<div class="st-veil"><span class="ai-thinking-dots"><span></span><span></span><span></span></span><span id="stVeilText">Updating your page…</span></div>` : ''}</div>`
+        : `<div class="sb-empty">${ico('globe')}<p>Your page shows up here once you describe your business.</p></div>`}
+    </div>`;
+  const tab = siteAi.tab || 'chat';
+  return `<div class="site-studio show-${tab}" id="siteStudio">
+      <div class="st-bar">
+        <button type="button" class="st-icon" id="stHome" aria-label="Back to Home">${ico('chevron')}</button>
+        <div class="st-title"><b translate="no">${gvEsc(d.name || I18N.t('My website'))}</b><span class="st-pill${live ? ' live' : ''}">${live ? 'Published' : 'Draft'}</span></div>
+        <div class="st-acts">
+          <button type="button" class="st-tool${pane === 'requests' ? ' on' : ''}" data-pane="requests" aria-label="Requests">${ico('mail')}<span class="st-tool-l">Requests</span>${unseen ? `<span class="st-dot">${unseen > 9 ? '9+' : unseen}</span>` : ''}</button>
+          <button type="button" class="st-tool${pane === 'details' ? ' on' : ''}" data-pane="details" aria-label="Details">${ico('pencil')}<span class="st-tool-l">Details</span></button>
+          ${openHref ? `<a class="st-tool st-wide-only" href="${gvEsc(openHref)}" target="_blank" rel="noopener" aria-label="Open">${ico('external')}<span class="st-tool-l">Open</span></a>` : ''}
+          <button type="button" class="live-btn primary st-publish" id="stPublish"${siteHasContent(d) ? '' : ' disabled'}>${sitePublishLabel()}</button>
+        </div>
+      </div>
+      <div class="st-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="${tab === 'chat'}" class="${tab === 'chat' ? 'on' : ''}" data-tab="chat">${ico('chat')} Chat</button>
+        <button type="button" role="tab" aria-selected="${tab === 'stage'}" class="${tab === 'stage' ? 'on' : ''}" data-tab="stage">${ico('eye')} ${pane === 'details' ? 'Details' : pane === 'requests' ? 'Requests' : 'Preview'}</button>
+      </div>
+      <div class="st-main">
+        ${siteChatPanel(d)}
+        <section class="st-stage">
+          <div class="st-stage-bar">
+            ${pane === 'preview' ? `<div class="st-seg" role="group" aria-label="Preview size">
+                <button type="button" class="${siteAi.device === 'phone' ? '' : 'on'}" data-device="desktop">${ico('monitor')} Desktop</button>
+                <button type="button" class="${siteAi.device === 'phone' ? 'on' : ''}" data-device="phone">${ico('phone')} Phone</button></div>`
+              : `<button type="button" class="site-text" data-pane="preview">${ico('eye')} Back to the preview</button>`}
+            <div id="sbUnsaved" role="status">${siteUnsavedHtml()}</div>
+          </div>
+          ${stage}
+        </section>
+      </div>
     </div>`;
 }
-/** On a live page, changes wait for Save: a line saying so, with the button. */
+function sitePublishLabel(){
+  const site = siteState && siteState.site;
+  if(!site || !site.published) return (siteState && siteState.pro ? '' : ico('lock') + ' ') + 'Publish';
+  return siteDirty() ? 'Update' : `${ico('share')} Share`;
+}
+/** On a live page, changes wait until they tap Update: a short line saying so. */
 function siteUnsavedHtml(){
   const site = siteState && siteState.site;
-  return site && site.published && siteDirty() ? `<div class="sb-unsaved"><span>These changes aren't on your live page yet.</span><button type="button" class="live-btn primary" id="sbSaveLive">Save changes</button></div>` : '';
+  return site && site.published && siteDirty() ? `<span class="sb-unsaved">Changes not live yet</span>` : '';
 }
 function siteUnsavedPaint(){
   const w = document.getElementById('sbUnsaved');
-  if(!w) return;
-  const html = siteUnsavedHtml();
-  if(w.innerHTML.trim() !== html.trim()) w.innerHTML = html;
+  if(w){ const html = siteUnsavedHtml(); if(w.innerHTML.trim() !== html.trim()) w.innerHTML = html; }
+  const b = document.getElementById('stPublish');
+  if(b){ const label = sitePublishLabel(); if(b.dataset.label !== label){ b.dataset.label = label; b.innerHTML = label; } }
 }
 /** True when the form differs from what's saved (only matters for a live page, where changes wait for Save). */
 function siteDirty(){
@@ -18431,18 +18549,17 @@ function sitePreviewRefresh(delay){
       sitePreviewUrl = URL.createObjectURL(new Blob([r.html], { type: 'text/html' }));
       const f = document.getElementById('sbFrame');
       if(f) f.src = sitePreviewUrl;
-      else if(document.getElementById('sbPreview')){ readSiteForm(); renderSiteView(); }
+      else if(document.getElementById('siteStudio') && siteAi.pane === 'preview' && !siteAi.busy){ readSiteForm(); renderSiteView(); }
       siteUnsavedPaint();
     }catch(e){ /* the preview is a nicety; the page itself is unaffected */ }
   }, delay || 0);
 }
 /** Moves the "writing…" line along while the AI works (it keeps going if the view redraws). */
 function siteAiTick(){
-  const step = document.getElementById('scStep');
-  if(!siteAi.busy || !step) return;
+  if(!siteAi.busy) return;
   const sec = (Date.now() - siteAi.started) / 1000;
-  const line = I18N.t(SITE_AI_STEPS[Math.min(SITE_AI_STEPS.length - 1, Math.floor(sec / 9))]);
-  if(step.textContent !== line) step.textContent = line;
+  const line = I18N.t(SITE_AI_STEPS[Math.min(SITE_AI_STEPS.length - 1, Math.floor(sec / 14))]);
+  ['scStep', 'stStep'].forEach(id => { const el = document.getElementById(id); if(el && el.textContent !== line) el.textContent = line; });
 }
 function siteChatScroll(){ const m = document.getElementById('scMsgs'); if(m) m.scrollTop = m.scrollHeight; }
 
@@ -18472,6 +18589,8 @@ async function siteChatSend(){
   try{
     const r = await apiFetch('/sites/ai', { method: 'POST', body: JSON.stringify({ message: text, history, draft: d,
       chapter: siteAiChapter(d.nicheId || selectedNiches[0]), lang: d.lang === 'es' ? 'es' : 'en', appLang: LANG, tz: SITE_TZ }) });
+    // a long answer arrives as a 200 that may still say it failed (see POST /api/sites/ai)
+    if(r && r.ok === false){ const err = new Error(r.error || 'failed'); err.status = r.status || 502; err.body = r; throw err; }
     if(!siteDraft) siteDraft = siteNew();
     if(r.credits) ai.credits = r.credits;
     if(r.hour) siteSetHour(r.hour);
@@ -18486,6 +18605,9 @@ async function siteChatSend(){
       if(!siteDraft.slugTouched || !siteDraft.slug) siteDraft.slug = siteSlugify(r.draft.name);
       const live = !!(siteState.site && siteState.site.published);
       siteAi.last = { prev, model: r.model, live };
+      siteAi.pane = 'preview';
+      // on a phone, show the page that just changed (the reply stays in the chat)
+      if(window.matchMedia('(max-width: 899px)').matches) siteAi.tab = 'stage';
       sitePreviewRefresh();
       // a page that isn't live is saved as a draft straight away, so the full preview link works; a live page waits for Save
       if(!live){ renderSiteView(); siteChatScroll(); await saveSite(undefined, true); }
@@ -18657,10 +18779,12 @@ async function renderSiteView(fresh){
   const reasons = ['Same day every week', 'Photos when the job is done', 'No contracts'];
   const kinds = NICHES.filter(n => n && n.guides && n.guides.length);
   const chatOn = !!(siteState.ai && siteState.ai.ready);
-  // with the AI on, the chat does the writing and the form folds away for small fixes (address, phone, email…)
-  const editor = `<details class="site-edit" id="siteEditBox"${!chatOn || siteAi.editOpen ? ' open' : ''}>
-      <summary class="site-h">${chatOn ? `${ico('pencil')} Edit the details yourself` : site ? 'Your page' : 'Make your page'}</summary>
-      ${chatOn ? '<p class="ss-sub">Web address, phone, email, and any wording you want to fix by hand.</p>' : site ? '' : '<p class="ss-sub">Fill in what you can. You can change any of it later, and nothing is public until you put it live.</p>'}
+  // a page the AI designed gets its words and look from the chat; the form keeps the details the AI never sees
+  const designed = !!d.design;
+  const editor = `<section class="site-edit" id="siteEditBox">
+      <h3 class="site-h">${chatOn ? 'Details' : site ? 'Your page' : 'Make your page'}</h3>
+      ${designed ? '<p class="ss-sub">The words and the look come from the chat. Here you set your web address and how customers reach you; the AI never sees your phone or email.</p>'
+        : chatOn ? '<p class="ss-sub">Web address, phone, email, and any wording you want to fix by hand.</p>' : site ? '' : '<p class="ss-sub">Fill in what you can. You can change any of it later, and nothing is public until you put it live.</p>'}
       <form id="siteForm" class="site-form" novalidate>
         <label class="sf-l">Business name<input id="sfName" maxlength="60" autocomplete="organization" value="${gvEsc(d.name)}"></label>
         <label class="sf-l">Web address
@@ -18670,7 +18794,7 @@ async function renderSiteView(fresh){
           <option value="">Something else</option>
           ${kinds.map(n => `<option value="${gvEsc(n.id)}"${n.id === d.nicheId ? ' selected' : ''}>${gvEsc(n.name)}</option>`).join('')}
         </select></label>
-        <label class="sf-l">What you do, in one line<input id="sfTagline" maxlength="140" placeholder="Weekly mowing and tidy edges, done on time" value="${gvEsc(d.tagline)}"></label>
+        ${designed ? '' : `<label class="sf-l">What you do, in one line<input id="sfTagline" maxlength="140" placeholder="Weekly mowing and tidy edges, done on time" value="${gvEsc(d.tagline)}"></label>
         <div class="sf-two">
           <label class="sf-l">Where you work<input id="sfArea" maxlength="80" placeholder="Springfield and nearby" value="${gvEsc(d.area)}"></label>
           <label class="sf-l">Hours (optional)<input id="sfHours" maxlength="80" placeholder="Mon to Sat, 8am to 6pm" value="${gvEsc(d.hours)}"></label>
@@ -18686,15 +18810,15 @@ async function renderSiteView(fresh){
         <fieldset class="sf-svcs"><legend class="sf-l">Questions customers ask (optional)</legend>
           <div id="sfFaqList">${d.faq.map(faqRow).join('')}</div>
           ${d.faq.length < 6 ? `<button type="button" class="live-btn" id="sfAddFaq">${ico('plus')} Add a question</button>` : ''}
-        </fieldset>
+        </fieldset>`}
         <div class="sf-two">
           <label class="sf-l">Phone (optional)<input id="sfPhone" type="tel" maxlength="30" autocomplete="tel" value="${gvEsc(d.phone)}"></label>
           <label class="sf-l">Email (optional)<input id="sfEmail" type="email" maxlength="120" autocomplete="email" value="${gvEsc(d.email)}"></label>
         </div>
         <small class="sf-hint">Your phone and email show on the page. Leave them out and customers use the request form instead.</small>
-        <div class="sf-l">Colour
+        ${designed ? '' : `<div class="sf-l">Colour
           <div class="sf-colors" role="radiogroup" aria-label="Colour">${Object.keys(colors).map(k => `<button type="button" class="sf-color${k === d.color ? ' on' : ''}" role="radio" aria-checked="${k === d.color}" aria-label="${gvEsc(k)}" data-color="${gvEsc(k)}" style="--sw:${gvEsc(colors[k])}"></button>`).join('')}</div>
-        </div>
+        </div>`}
         <label class="sf-l">Page language<select id="sfLang">
           <option value="en"${d.lang === 'es' ? '' : ' selected'}>English</option>
           <option value="es"${d.lang === 'es' ? ' selected' : ''} translate="no">Español</option>
@@ -18702,92 +18826,120 @@ async function renderSiteView(fresh){
         <small class="sf-hint">The words around yours, like the request form, show in this language.</small>
         <div class="site-row"><button type="submit" class="live-btn primary" id="sfSave">${site ? 'Save changes' : 'Save and preview'}</button><span class="sf-msg" id="sfMsg" role="status"></span></div>
       </form>
-    </details>`;
+    </section>`;
 
-  const builder = chatOn ? `<section class="site-builder" id="siteBuilder">${siteChatHtml(d)}${sitePreviewHtml(d)}</section>` : '';
   // keep what's being typed in the chat and where the chat is scrolled when the view redraws
   const msgs = document.getElementById('scMsgs');
   const keepScroll = msgs ? msgs.scrollTop : null;
   const typing = document.activeElement && document.activeElement.id === 'scInput';
-  box.innerHTML = status + builder + requests + editor;
+  const view = document.getElementById('siteView');
+  // with the AI on: the start screen (one big box) until there's a page or a chat, then the workspace
+  const start = chatOn && !siteHasContent(d) && !siteChat().length && !siteAi.busy;
+  view.classList.toggle('studio', chatOn && !start);
+  view.classList.toggle('studio-start', start);
+  box.innerHTML = !chatOn ? status + requests + editor
+    : start ? siteStartHtml(requests)
+    : siteStudioHtml(d, { status, requests, editor });
   const form = document.getElementById('siteForm');
-  if(siteAi.busy){ form.inert = true; form.classList.add('busy'); siteAiTick(); }
+  if(siteAi.busy){ if(form){ form.inert = true; form.classList.add('busy'); } siteAiTick(); }
   const m2 = document.getElementById('scMsgs');
   if(m2 && keepScroll != null) m2.scrollTop = keepScroll;
   if(typing){ const t = document.getElementById('scInput'); if(t){ t.focus(); t.selectionStart = t.selectionEnd = t.value.length; } }
+  siteStudioFit();
   siteHourTick();
   wireSiteView();
 }
+/** The workspace fills the screen between the app's top bar and its tab bar. */
+function siteStudioFit(){
+  const st = document.getElementById('siteStudio');
+  if(!st) return;
+  const bar = document.querySelector('.topbar');
+  const tabs = document.getElementById('bottomTabBar');
+  const top = bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) : 0;
+  const tabTop = tabs && getComputedStyle(tabs).display !== 'none' ? tabs.getBoundingClientRect().top : window.innerHeight;
+  st.style.setProperty('--st-top', top + 'px');
+  st.style.setProperty('--st-bottom', Math.max(0, Math.round(window.innerHeight - tabTop)) + 'px');
+}
+window.addEventListener('resize', siteStudioFit);
 
-/** Copies the form into siteDraft. Returns the draft. */
+/** Copies the form (when it's on screen) and the chat box into siteDraft. Returns the draft. */
 function readSiteForm(){
-  const f = document.getElementById('siteForm');
-  if(!f || !siteDraft) return siteDraft;
-  const v = (id)=> (document.getElementById(id) || {}).value || '';
-  const d = siteDraft.data;
-  Object.assign(d, { name: v('sfName').trim(), tagline: v('sfTagline').trim(), area: v('sfArea').trim(), hours: v('sfHours').trim(),
-    about: v('sfAbout').trim(), phone: v('sfPhone').trim(), email: v('sfEmail').trim() });
-  d.services = [...f.querySelectorAll('.sf-svc')].map(row => ({
-    name: row.querySelector('[data-k="name"]').value.trim(), price: row.querySelector('[data-k="price"]').value.trim(), note: row.querySelector('[data-k="note"]').value.trim() }));
-  d.highlights = [...f.querySelectorAll('.sf-hl')].map(i => i.value.trim()).filter(Boolean);
-  d.faq = [...f.querySelectorAll('.sf-faq')].map(row => ({ q: row.querySelector('[data-k="q"]').value.trim(), a: row.querySelector('[data-k="a"]').value.trim() }));
-  d.lang = v('sfLang') === 'es' ? 'es' : 'en';
-  const kind = document.getElementById('sfKind'); if(kind) d.nicheId = kind.value;
   // the chat box: what's typed but not sent yet
   const input = document.getElementById('scInput'); if(input) siteAi.input = input.value;
-  siteDraft.slug = siteSlugify(v('sfSlug')) || siteSlugify(d.name);
+  const f = document.getElementById('siteForm');
+  if(!f || !siteDraft) return siteDraft;
+  const d = siteDraft.data;
+  const el = (id)=> document.getElementById(id);
+  const take = (key, id)=>{ const x = el(id); if(x) d[key] = x.value.trim(); };
+  take('name', 'sfName'); take('tagline', 'sfTagline'); take('area', 'sfArea'); take('hours', 'sfHours');
+  take('about', 'sfAbout'); take('phone', 'sfPhone'); take('email', 'sfEmail');
+  if(el('sfSvcList')) d.services = [...f.querySelectorAll('.sf-svc')].map(row => ({
+    name: row.querySelector('[data-k="name"]').value.trim(), price: row.querySelector('[data-k="price"]').value.trim(), note: row.querySelector('[data-k="note"]').value.trim() }));
+  if(f.querySelector('.sf-hl')) d.highlights = [...f.querySelectorAll('.sf-hl')].map(i => i.value.trim()).filter(Boolean);
+  if(el('sfFaqList')) d.faq = [...f.querySelectorAll('.sf-faq')].map(row => ({ q: row.querySelector('[data-k="q"]').value.trim(), a: row.querySelector('[data-k="a"]').value.trim() }));
+  if(el('sfLang')) d.lang = el('sfLang').value === 'es' ? 'es' : 'en';
+  if(el('sfKind')) d.nicheId = el('sfKind').value;
+  if(el('sfSlug')) siteDraft.slug = siteSlugify(el('sfSlug').value) || siteSlugify(d.name);
   return siteDraft;
 }
 
 function wireSiteView(){
   const form = document.getElementById('siteForm');
   const slugIn = document.getElementById('sfSlug');
-  document.getElementById('sfName').addEventListener('input', (e)=>{
+  const nameIn = document.getElementById('sfName');
+  if(nameIn && slugIn) nameIn.addEventListener('input', (e)=>{
     if(!siteDraft.slugTouched) slugIn.value = siteSlugify(e.target.value);
   });
-  slugIn.addEventListener('input', ()=>{ siteDraft.slugTouched = true; document.getElementById('sfSlugErr').textContent = ''; });
-  slugIn.addEventListener('blur', ()=>{ if(slugIn.value) slugIn.value = siteSlugify(slugIn.value); });
-  form.addEventListener('click', (e)=>{
-    const del = e.target.closest('[data-del]');
-    if(del){
-      readSiteForm();
-      siteDraft.data.services.splice(+del.dataset.del, 1);
-      renderSiteView();
-      return;
-    }
-    if(e.target.closest('#sfAddSvc')){
-      readSiteForm();
-      siteDraft.data.services.push({ name: '', price: '', note: '' });
-      renderSiteView();
-      const rows = document.querySelectorAll('#sfSvcList .sf-svc');
-      const last = rows[rows.length - 1];
-      if(last) last.querySelector('input').focus();
-      return;
-    }
-    const delFaq = e.target.closest('[data-del-faq]');
-    if(delFaq){
-      readSiteForm();
-      siteDraft.data.faq.splice(+delFaq.dataset.delFaq, 1);
-      renderSiteView();
-      return;
-    }
-    if(e.target.closest('#sfAddFaq')){
-      readSiteForm();
-      siteDraft.data.faq.push({ q: '', a: '' });
-      renderSiteView();
-      const rows = document.querySelectorAll('#sfFaqList .sf-faq');
-      const last = rows[rows.length - 1];
-      if(last) last.querySelector('input').focus();
-      return;
-    }
-    const c = e.target.closest('[data-color]');
-    if(c){
-      siteDraft.data.color = c.dataset.color;
-      form.querySelectorAll('.sf-color').forEach(b=>{ const on = b === c; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
-      readSiteForm(); sitePreviewRefresh(200);
-    }
-  });
-  form.addEventListener('submit', (e)=>{ e.preventDefault(); saveSite(); });
+  if(slugIn){
+    slugIn.addEventListener('input', ()=>{ siteDraft.slugTouched = true; document.getElementById('sfSlugErr').textContent = ''; });
+    slugIn.addEventListener('blur', ()=>{ if(slugIn.value) slugIn.value = siteSlugify(slugIn.value); });
+  }
+  if(form){
+    form.addEventListener('click', (e)=>{
+      const del = e.target.closest('[data-del]');
+      if(del){
+        readSiteForm();
+        siteDraft.data.services.splice(+del.dataset.del, 1);
+        renderSiteView();
+        return;
+      }
+      if(e.target.closest('#sfAddSvc')){
+        readSiteForm();
+        siteDraft.data.services.push({ name: '', price: '', note: '' });
+        renderSiteView();
+        const rows = document.querySelectorAll('#sfSvcList .sf-svc');
+        const last = rows[rows.length - 1];
+        if(last) last.querySelector('input').focus();
+        return;
+      }
+      const delFaq = e.target.closest('[data-del-faq]');
+      if(delFaq){
+        readSiteForm();
+        siteDraft.data.faq.splice(+delFaq.dataset.delFaq, 1);
+        renderSiteView();
+        return;
+      }
+      if(e.target.closest('#sfAddFaq')){
+        readSiteForm();
+        siteDraft.data.faq.push({ q: '', a: '' });
+        renderSiteView();
+        const rows = document.querySelectorAll('#sfFaqList .sf-faq');
+        const last = rows[rows.length - 1];
+        if(last) last.querySelector('input').focus();
+        return;
+      }
+      const c = e.target.closest('[data-color]');
+      if(c){
+        siteDraft.data.color = c.dataset.color;
+        form.querySelectorAll('.sf-color').forEach(b=>{ const on = b === c; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+        readSiteForm(); sitePreviewRefresh(200);
+      }
+    });
+    form.addEventListener('submit', (e)=>{ e.preventDefault(); saveSite(); });
+    // typing in the form updates the preview after a pause
+    form.addEventListener('input', ()=>{ readSiteForm(); siteUnsavedPaint(); sitePreviewRefresh(900); });
+    form.addEventListener('change', ()=>{ readSiteForm(); sitePreviewRefresh(300); });
+  }
 
   const aiBox = document.getElementById('siteAi');
   if(aiBox) aiBox.addEventListener('click', (e)=>{
@@ -18800,11 +18952,7 @@ function wireSiteView(){
       if(t){ t.value = b.textContent.trim(); siteAi.input = t.value; t.focus(); }
     }
     else if(b.dataset.sc === 'undo') siteAiUndo();
-    else if(b.dataset.sc === 'see'){ const p = document.getElementById('sbPreview'); if(p) p.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-    else if(b.dataset.sc === 'clear'){
-      if(!confirm('Clear the chat? Your page stays as it is.')) return;
-      businessData.siteChat = []; siteAi.last = null; siteAi.error = ''; saveProgress(); readSiteForm(); renderSiteView();
-    }
+    else if(b.dataset.sc === 'see'){ siteStudioShow('stage', 'preview'); }
     else if(b.id === 'saMore'){ readSiteForm(); siteAi.buying = true; renderSiteView(); }
     else if(b.dataset.pack) siteBuyCredits(b.dataset.pack, b);
   });
@@ -18814,13 +18962,17 @@ function wireSiteView(){
     // Enter sends (Shift+Enter for a new line), like other chats; on phones the Send button does it
     chatIn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && !e.shiftKey && !e.isComposing && window.matchMedia('(hover: hover)').matches){ e.preventDefault(); siteChatSend(); } });
   }
-  const pv = document.getElementById('sbPreview');
-  if(pv) pv.addEventListener('click', (e)=>{ if(e.target.closest('#sbSaveLive')) saveSite(); });
-  const editBox = document.getElementById('siteEditBox');
-  if(editBox) editBox.addEventListener('toggle', ()=>{ siteAi.editOpen = editBox.open; });
-  // typing in the form updates the preview after a pause
-  form.addEventListener('input', ()=>{ readSiteForm(); siteUnsavedPaint(); sitePreviewRefresh(900); });
-  form.addEventListener('change', ()=>{ readSiteForm(); sitePreviewRefresh(300); });
+  // the workspace: its bar (back, requests, details, publish), the phone tabs, the preview size
+  const studio = document.getElementById('siteStudio');
+  if(studio) studio.addEventListener('click', (e)=>{
+    const b = e.target.closest('button');
+    if(!b || b.disabled) return;
+    if(b.id === 'stHome') showHome();
+    else if(b.id === 'stPublish') sitePublish();
+    else if(b.dataset.pane) siteStudioShow('stage', siteAi.pane === b.dataset.pane && b.closest('.st-acts') ? 'preview' : b.dataset.pane);
+    else if(b.dataset.tab) siteStudioShow(b.dataset.tab);
+    else if(b.dataset.device){ readSiteForm(); siteAi.device = b.dataset.device; renderSiteView(); }
+  });
 
   const site = siteState.site;
   const url = site ? `${SITE_ORIGIN}/s/${site.slug}` : '';
@@ -18851,6 +19003,25 @@ function wireSiteView(){
   });
 }
 
+/** Switches the workspace: tab (on a phone: 'chat' or 'stage') and what the big pane shows ('preview', 'details', 'requests'). */
+function siteStudioShow(tab, pane){
+  readSiteForm();
+  siteAi.tab = tab || siteAi.tab;
+  if(pane) siteAi.pane = pane;
+  renderSiteView();
+  if(siteAi.pane === 'preview') sitePreviewRefresh();
+}
+/** The Publish button: put it live (Pro), update a live page with the changes, or share it when it's up to date. */
+async function sitePublish(){
+  const site = siteState.site;
+  if(!siteState.pro){ await saveSite(undefined, true); openUpgradeModal({ type: 'website' }); return; }
+  if(!site || !site.published){ if(await saveSite(true)) fireConfetti(60); return; }
+  if(siteDirty()){ await saveSite(); return; }
+  const url = `${SITE_ORIGIN}/s/${site.slug}`;
+  if(navigator.share) navigator.share({ title: site.data.name, url }).catch(()=>{});
+  else (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(()=> showAppToast('Link copied.', 'success')).catch(()=> prompt('Copy your page link:', url));
+}
+
 /** Saves the form. publish: true puts it live, false takes it down, undefined keeps it as it is. */
 /** quiet: no "Saved" note (the chat saves a draft by itself after each change). */
 async function saveSite(publish, quiet){
@@ -18870,13 +19041,16 @@ async function saveSite(publish, quiet){
   }catch(e){
     if(e.status === 403 && e.body && e.body.upgrade){ if(msg) msg.textContent = ''; openUpgradeModal({ type: 'website' }); return false; }
     const text = (e.body && e.body.error) || 'Could not save just now. Please try again.';
-    if(e.body && e.body.field === 'slug' && slugErr){
-      // the address box may be folded away under "Edit the details yourself": open it so the note shows
-      const box = document.getElementById('siteEditBox'); if(box && !box.open){ box.open = true; siteAi.editOpen = true; }
-      slugErr.textContent = text; if(msg) msg.textContent = ''; document.getElementById('sfSlug').focus();
-      if(quiet) showAppToast(text, 'error');
+    if(e.body && e.body.field === 'slug'){
+      // in the workspace the address box is under Details: open it so the note shows next to it
+      if(!document.getElementById('sfSlugErr')){ siteAi.pane = 'details'; siteAi.tab = 'stage'; renderSiteView(); }
+      const se = document.getElementById('sfSlugErr'), m2 = document.getElementById('sfMsg');
+      if(se){ se.textContent = text; document.getElementById('sfSlug').focus(); }
+      if(m2) m2.textContent = '';
+      if(quiet || !se) showAppToast(text, 'error');
     }
     else if(msg) msg.textContent = text;
+    else showAppToast(text, 'error');
     return false;
   }
 }
