@@ -3465,7 +3465,8 @@ def spanish(browser, base):
 def member_website(browser, base):
     """My website: a member fills in a one-page site, saves it, previews it; going live is Pro. Requests from the
     page are listed, can be added to the Lead Pipeline (shown as text, never as page code) and deleted."""
-    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    # My website is paused in the app (SITE_ON in web/index.html); the test switches it on so the builder stays tested
+    init = "window.GUIDE_SITE_ON=true;try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
     def open_site(label, pro, site=None, vp=None):
         step = [f'my website ({label})']
         vp = vp or {'width': 390, 'height': 844}
@@ -4030,7 +4031,8 @@ def website_ai(browser, base):
     ("make it darker"), a question changes nothing, Undo puts the page back; a draft saves itself while a live page
     waits for Update. Each message uses an AI credit (2 free; Pro gets an hour a day); running out shows the packs and
     buying one comes back with the chat and the half-typed message kept. Nothing the AI writes runs as page code."""
-    init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
+    # My website is paused in the app (SITE_ON in web/index.html); the test switches it on so the builder stays tested
+    init = "window.GUIDE_SITE_ON=true;try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}"
     def open_site(label, pro, site=None, vp=None, ai=None):
         step = [f'website builder ({label})']
         vp = vp or {'width': 390, 'height': 844}
@@ -4253,8 +4255,9 @@ def website_ai(browser, base):
 
 def find_new_things(browser, base):
     """The newer parts of the app are easy to find: links at the top of the landing page, a one-time "New in
-    The Guide" card and a row of shortcuts on Home, the plan and website first in the account menu, a 30-day plan
-    button on every chapter, and My website in the Business tools."""
+    The Guide" card and a row of shortcuts on Home, the plan first in the account menu and a 30-day plan button on
+    every chapter. My website is paused (SITE_ON in web/index.html): hidden everywhere, but a bell notice about a
+    request from a page that's already live still opens it."""
     step = ['finding things: landing']
     ctx = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, service_workers='block')
     attach_backend(ctx, new_state(False))
@@ -4290,8 +4293,8 @@ def find_new_things(browser, base):
         page.wait_for_timeout(900)
         news = page.evaluate("[...document.querySelectorAll('#newsCard [data-news]')].map(b=>b.dataset.news)")
         tiles = page.evaluate("[...document.querySelectorAll('#shortcutsWrap .tool-tile')].map(b=>b.dataset.go)")
-        if news == ['plan', 'site', 'lang'] and tiles == ['plan', 'site', 'guider', 'business', 'live', 'calc']:
-            ok(step[0], 'Home says what is new and shows six shortcuts (plan, website, Guider, business tools, live calls, calculators)')
+        if news == ['plan', 'lang'] and tiles == ['plan', 'guider', 'business', 'live', 'calc']:
+            ok(step[0], 'Home says what is new and shows five shortcuts (plan, Guider, business tools, live calls, calculators; My website is paused)')
         else:
             problem(step[0], 'Home should show the news card and the shortcuts', {'news': news, 'tiles': tiles})
         shot(page, f"phone-home-shortcuts-{'pro' if pro else 'free'}")
@@ -4301,12 +4304,6 @@ def find_new_things(browser, base):
         else:
             problem(step[0], 'the 30-day plan shortcut should open the plan')
         page.evaluate("closeStepLayer()")
-        page.click('#shortcutsWrap [data-go="site"]'); page.wait_for_timeout(800)
-        if visible(page, '#siteView', 2000):
-            ok(step[0], 'the My website shortcut opens My website')
-        else:
-            problem(step[0], 'the My website shortcut should open My website')
-        page.evaluate("showHome()"); page.wait_for_timeout(400)
         page.click('#shortcutsWrap [data-go="business"]'); page.wait_for_timeout(600)
         opened = page.evaluate("({biz: getComputedStyle(document.getElementById('businessView')).display !== 'none', pay: document.getElementById('upgradeOverlay').classList.contains('open')})")
         if (pro and opened['biz']) or (not pro and opened['pay']):
@@ -4321,11 +4318,13 @@ def find_new_things(browser, base):
         else:
             problem(step[0], 'Got it should hide the news card and remember it', st['data'].get('userProfile'))
         page.evaluate("document.getElementById('accountMenuTrigger').click()"); page.wait_for_timeout(300)
-        first = page.evaluate("[...document.querySelectorAll('#accountMenu .account-menu-item')].slice(0,2).map(b=>b.id)")
-        if first == ['planNavBtn', 'siteNavBtn']:
-            ok(step[0], 'the account menu starts with My 30-day plan and My website')
+        first = page.evaluate("[...document.querySelectorAll('#accountMenu .account-menu-item')].slice(0,1).map(b=>b.id)")
+        hidden = page.evaluate("""({menu: !!document.getElementById('siteNavBtn'), biz: !!document.querySelector('#businessSubNav [data-biz="website"]'),
+            help: FAQ_DATA.some(c => c.items.some(i => /website/i.test(i.q)))})""")
+        if first == ['planNavBtn'] and hidden == {'menu': False, 'biz': False, 'help': False}:
+            ok(step[0], 'the account menu starts with My 30-day plan; My website is hidden from the menu, Business tools and Help')
         else:
-            problem(step[0], 'the plan and website should be first in the account menu', first)
+            problem(step[0], 'the plan should be first in the account menu and My website hidden', {'first': first, 'still there': hidden})
         page.evaluate("document.getElementById('accountMenuClose').click()"); page.wait_for_timeout(200)
         page.evaluate("openNiche('cleaning')"); page.wait_for_timeout(600)
         page.click('#chapterPlanBtn'); page.wait_for_timeout(500)
@@ -4337,11 +4336,18 @@ def find_new_things(browser, base):
         page.evaluate("closeStepLayer()")
         if pro:
             page.evaluate("showBusiness()"); page.wait_for_timeout(500)
-            page.click('#businessSubNav [data-biz="website"]'); page.wait_for_timeout(700)
-            if visible(page, '#siteView', 2000):
-                ok(step[0], 'Business tools has a My website tab')
+            tab = page.evaluate("(document.querySelector('#businessSubNav .sub-tab.active')||{}).dataset.biz")
+            if tab == 'invoicing' and visible(page, '#businessView', 2000):
+                ok(step[0], 'Business tools opens on Invoicing, with no My website tab')
             else:
-                problem(step[0], 'the My website tab in Business tools should open My website')
+                problem(step[0], 'Business tools should open on Invoicing', tab)
+        # someone whose page is already live still reads a request from it through the bell notice
+        page.evaluate("goToNotificationTarget({view: 'website'})"); page.wait_for_timeout(900)
+        if visible(page, '#siteView', 2000):
+            ok(step[0], 'a bell notice about a website request still opens My website')
+        else:
+            problem(step[0], 'a bell notice about a website request should still open My website')
+        page.evaluate("showHome()"); page.wait_for_timeout(300)
         no_sideways_scroll(page, step[0])
         finish(st, step[0]); ctx.close()
     # someone who joined after these launched doesn't need the "new" card
@@ -4351,7 +4357,7 @@ def find_new_things(browser, base):
     attach_backend(ctx, st); ctx.add_init_script(init)
     page = ctx.new_page(); watch_errors(page, step)
     page.goto(base + '/', wait_until='load'); page.wait_for_timeout(1200)
-    if page.locator('#newsCard').count() == 0 and page.locator('#shortcutsWrap .tool-tile').count() == 6:
+    if page.locator('#newsCard').count() == 0 and page.locator('#shortcutsWrap .tool-tile').count() == 5:
         ok(step[0], 'a member who joined later sees the shortcuts but not the "new" card')
     else:
         problem(step[0], 'a new member should see shortcuts only')
