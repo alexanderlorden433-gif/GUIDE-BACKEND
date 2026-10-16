@@ -185,7 +185,7 @@ Things worth remembering:
   URL (srcdoc would resolve "#ask" against the app's URL). Chat kept in businessData.siteChat (40 max). The form is in
   <details id="siteEditBox">; tests must open it. Playwright service_workers='block' throws inside sandboxed frames:
   SANDBOX_SW is ignored in watch_errors.
-- PR #62 became the Lovable-style builder: the AI writes data.design = {html, css, fonts} (schema: reply, changed,
+- PR #63 (PR #62 = the plain chat, merged first) is the Lovable-style builder: the AI writes data.design = {html, css, fonts} (schema: reply, changed,
   name/tagline/area/hours/services, lang, phone, email, fonts, html, css, edits[{target, find, replace}]).
   src/siteDesign.js cleans it on EVERY save (sanitize-html pinned 2.17.7) and designed pages go out with CUSTOM_CSP
   (default-src 'none' + sandbox, no allow-scripts/same-origin) because /s/* is on the app's own origin.
@@ -196,3 +196,4 @@ Things worth remembering:
   by siteStudioFit). member_website smoke test runs with site_ai.ready=false (plain layout).
 - Smoke trial_card used gmtime: fails 8pm-midnight ET; now localtime.
 - Pre-existing npm audit items (express/qs/proxy-addr/node-cron) not touched; told Alexander privately.
+- Before pushing to an existing PR branch, check the PR isn't merged already (#62 was merged while I worked).
