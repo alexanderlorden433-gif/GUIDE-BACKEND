@@ -205,3 +205,11 @@ Things worth remembering:
   check_backend.js under `npx -p node@18 node` and fails if anything doesn't load there.
 - Rule for next time: before adding any npm dependency, load it on Node 18 (`npx -y -p node@18 node -e "require('x')"`)
   and check its engines and its dependencies' engines.
+
+## 2026-10-16 — website maker parked
+- Owner said the AI website maker "still doesn't work" after #63–#65 and asked to leave it for later. Don't start new
+  website-maker work unless he brings it up again.
+- Unknown when parked: whether the live studio shows at all. It only shows when the server has the AI key
+  (`ai.ready` from GET /api/sites/mine); without it, My website falls back to the old form. Check that first next time,
+  and ask him for a screenshot of My website.
+- Server was healthy after #65 (Railway deploy 6848ee8 success, stayed up).
