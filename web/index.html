@@ -5444,7 +5444,7 @@
   .home-tools{margin-bottom:var(--sp-6);}
   .home-tools-h{font-size:17px; font-weight:600; margin:0 0 var(--sp-3);}
   .tool-tiles{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:var(--sp-2);}
-  @media (min-width:720px){ .tool-tiles{grid-template-columns:repeat(6, minmax(0, 1fr));} }
+  @media (min-width:720px){ .tool-tiles{grid-template-columns:repeat(6, minmax(0, 1fr));} .tool-tiles.five{grid-template-columns:repeat(5, minmax(0, 1fr));} }
   .tool-tile{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-2); min-height:84px; padding:var(--sp-3) var(--sp-2); border:1px solid var(--line); border-radius:var(--r-card); background:var(--card); color:var(--ink); font:500 13px/1.25 'Inter',sans-serif; text-align:center; cursor:pointer;}
   .tool-tile:hover{border-color:var(--line-2);}
   .tt-ico{color:var(--ink-2);}
@@ -6923,6 +6923,11 @@ const NICHES = window.GUIDE_NICHES || [];
 // is (<b>, <a>…), and a few patterns for text with numbers in it. Lesson titles stay English in the data on
 // purpose (progress is saved under them) and are translated on screen only.
 const LANG = (window.GUIDE_LANG === 'es' && window.GUIDE_ES) ? 'es' : 'en';
+// My website is paused (October 2026): it's hidden from the account menu, Home, Business tools and Help until it
+// comes back. Pages members already put live keep working, and the bell notice for a request from one still opens
+// My website so they can read it. To bring it back, set this to true. (The smoke test turns it on with
+// window.GUIDE_SITE_ON so the builder stays tested while it's hidden.)
+const SITE_ON = window.GUIDE_SITE_ON === true;
 const I18N = (()=>{
   const INLINE = new Set(['B', 'STRONG', 'EM', 'I', 'SMALL', 'SPAN', 'A', 'BR', 'CODE', 'U']);
   const SKIP = 'script,style,textarea,noscript,svg,[translate="no"],.notranslate,.ai-msg,.gv-scenes,.gv-say,.gv-sent';
@@ -10206,7 +10211,7 @@ async function handlePostCheckoutReturn(){
 
   if(action.type === 'today') showToday();
   else if(action.type === 'business') showBusiness();
-  else if(action.type === 'website') showSite();
+  else if(action.type === 'website'){ if(SITE_ON) showSite(); }
   else if(action.type === 'stats') showStats();
   else if(action.type === 'live') showLive();
   else if(action.type === 'tab' && action.nicheId){
@@ -10287,7 +10292,7 @@ document.getElementById('bottomTabEarn').addEventListener('click', ()=>{
 const FAQ_DATA = [
   { category: "New in The Guide", items: [
     { q: "How do I make a 30-day plan?", a: "On Home, tap 30-day plan under Your tools. You can also start one from any chapter (the 30-day plan button at the top) or from the account menu. Pick a business and what you want by day 30, and you get one small step a day, with a check-in with The Guider every 7 days." },
-    { q: "How do I get my own website?", a: "On Home, tap My website under Your tools, or open it from the account menu. Describe your business and the look you want, and the AI designs your whole page, shown right next to the chat. Ask for any change, like darker colours, a bigger headline or another section, then tap Publish. Publishing is part of Pro. Requests people send from your page show up under Requests, and you can add them to your Lead Pipeline." },
+    ...(SITE_ON ? [{ q: "How do I get my own website?", a: "On Home, tap My website under Your tools, or open it from the account menu. Describe your business and the look you want, and the AI designs your whole page, shown right next to the chat. Ask for any change, like darker colours, a bigger headline or another section, then tap Publish. Publishing is part of Pro. Requests people send from your page show up under Requests, and you can add them to your Lead Pipeline." }] : []),
     { q: "Can I use The Guide in Spanish?", a: "Yes. Tap your picture at the top right, then Español. Tap English in the same place to switch back. The free lessons are in Spanish; the Pro lessons are still being translated." },
   ]},
   { category: "Getting around", items: [
@@ -12567,7 +12572,7 @@ function renderNews(clearOnly){
   wrap.innerHTML = `<section class="news-card" id="newsCard" aria-label="New in The Guide">
       <div class="pc-top"><span class="pc-label">New in The Guide</span></div>
       ${row('plan', 'calendar', 'Your 30-day plan', 'One small step a day, with a check-in from The Guider every week.')}
-      ${row('site', 'globe', 'Your own website', 'A one-page site for your business, with a form that sends quote requests to you here.')}
+      ${SITE_ON ? row('site', 'globe', 'Your own website', 'A one-page site for your business, with a form that sends quote requests to you here.') : ''}
       ${LANG === 'en' ? row('lang', 'globe', 'The Guide en español', 'Switch the app to Spanish, and back, from your account menu.') : ''}
       <div class="pc-row"><button type="button" class="live-btn" id="newsDone">Got it</button></div>
     </section>`;
@@ -12591,9 +12596,9 @@ function renderShortcuts(clearOnly){
   const item = (go, icon, label, tag)=> `<button type="button" class="tool-tile" data-go="${go}"><span class="tt-ico">${ico(icon)}</span><span class="tt-label">${label}</span>${tag || ''}</button>`;
   wrap.innerHTML = `<section class="home-tools" aria-label="Shortcuts">
       <h3 class="home-tools-h">Your tools</h3>
-      <div class="tool-tiles">
+      <div class="tool-tiles${SITE_ON ? '' : ' five'}">
         ${item('plan', 'calendar', '30-day plan', fresh)}
-        ${item('site', 'globe', 'My website', fresh)}
+        ${SITE_ON ? item('site', 'globe', 'My website', fresh) : ''}
         ${item('guider', 'guider', 'The Guider')}
         ${item('business', 'briefcase', 'Business tools')}
         ${item('live', 'live', 'Live calls')}
@@ -13838,7 +13843,7 @@ function handleOpenParam(){
   if(!open) return;
   window.history.replaceState({}, '', window.location.pathname);
   if(open === 'live') setTimeout(()=> showLive(), 300);
-  if(open === 'website') setTimeout(()=> showSite(), 300); // e.g. back from a credits checkout they didn't finish
+  if(open === 'website' && SITE_ON) setTimeout(()=> showSite(), 300); // e.g. back from a credits checkout they didn't finish
   // from the billing emails: "Pick up where you left off" and "Open my account"
   if(open === 'upgrade') setTimeout(()=>{ if(!isPro) openUpgradeModal(); }, 500);
   if(open === 'account') setTimeout(()=>{ const b = document.getElementById('accountBtn'); if(b) b.click(); }, 500);
@@ -18685,6 +18690,11 @@ function siteAiUndo(){
   else showAppToast('Your page is back to how it was.', 'success');
 }
 document.getElementById('siteNavBtn').addEventListener('click', showSite);
+if(!SITE_ON){ // paused: no way in from the menu or Business tools (see SITE_ON)
+  document.getElementById('siteNavBtn').remove();
+  const bizTab = document.querySelector('#businessSubNav [data-biz="website"]');
+  if(bizTab) bizTab.remove();
+}
 document.getElementById('siteBackBtn').addEventListener('click', ()=> showHome());
 
 function paintSiteBadge(){
