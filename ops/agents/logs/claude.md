@@ -197,3 +197,11 @@ Things worth remembering:
 - Smoke trial_card used gmtime: fails 8pm-midnight ET; now localtime.
 - Pre-existing npm audit items (express/qs/proxy-addr/node-cron) not touched; told Alexander privately.
 - Before pushing to an existing PR branch, check the PR isn't merged already (#62 was merged while I worked).
+
+## 2026-10-16 (incident: #63 crashed the live backend)
+- Railway runs the backend on **Node 18.20.8** (engines ">=18"). sanitize-html 2.17.7 -> htmlparser2 12 (ESM-only,
+  Node >= 20.19) -> ERR_REQUIRE_ESM on start. Local checks passed because this sandbox has Node 22.
+- Fix PR #64: sanitize-html pinned to 2.17.1 (htmlparser2 8, CommonJS). ops/check.sh now also runs
+  check_backend.js under `npx -p node@18 node` and fails if anything doesn't load there.
+- Rule for next time: before adding any npm dependency, load it on Node 18 (`npx -y -p node@18 node -e "require('x')"`)
+  and check its engines and its dependencies' engines.
