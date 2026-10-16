@@ -24,3 +24,8 @@
 - Live check done (Adspirer 5/15 after it, resets Nov 4). Campaign, ad set, ad all ACTIVE, budget $5/day, still no delivery since launch (FAEV* zero Oct 4-14; FACA*/FADE* empty). Ad set "budget remaining" shows $0.00.
 - Setup gaps unchanged: US only, ad named "New Leads Ad", no URL tags, Multi-advertiser ads enrolled.
 - Next live check: Mon Oct 19.
+
+## 2026-10-16 (Fri)
+- Still zero delivery every day Oct 4-15 (FAEV*). FACA*/FADE* still empty. No Adspirer ad calls (not a check day, nothing changed). Adspirer 5/15, resets Nov 4.
+- Live app and ads.json both say Pro $24.99/mo (CLAUDE.md's $28.99 is out of date; ads are fine).
+- Next live check: Mon Oct 19.
