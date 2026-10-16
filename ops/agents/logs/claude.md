@@ -213,3 +213,6 @@ Things worth remembering:
   (`ai.ready` from GET /api/sites/mine); without it, My website falls back to the old form. Check that first next time,
   and ask him for a screenshot of My website.
 - Server was healthy after #65 (Railway deploy 6848ee8 success, stayed up).
+- Owner then asked to hide it: PR #66 adds `SITE_ON` (web/index.html, near LANG) = false → no menu item, Home tile/news row,
+  Business tab or Help question. Bell notice (view 'website') still opens it for live-page owners. Smoke tests set
+  `window.GUIDE_SITE_ON=true` for member_website/website_ai. To bring it back: set SITE_ON true, revert find_new_things.
