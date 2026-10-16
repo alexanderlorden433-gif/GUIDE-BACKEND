@@ -78,3 +78,13 @@
 - Still queued: aiChat rate limit per IP not per account. Still open with Alexander: delete account vs Stripe subscription (10-06), terms.html old prices (10-06).
 - Next step-5 area: src/routes/billing.js webhook edge cases (read-only review) or certificates (#41).
 - 2026-10-15 later: #48 and #47 MERGED (#47 needed a main merge: kept both smoke steps design_polish + save_retry).
+
+## 2026-10-16 (Fri)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway status on main 6848ee8 = success (after #64 fixed a Node 18 crash earlier today).
+- Since last notes: claude agent merged #49–#65 (AI website + credits through Stripe, SEO pages, Spanish, 30-day plan, creator payouts…). Open: #66 hide My website (claude agent).
+- check.sh on main: ALL PASS.
+- Opened PR #67 [sensitive] agent/app-health/2026-10-16-delete-cancels-subscription: DELETE /api/account cancels live Stripe subscriptions first (cancelAllSubscriptions in src/stripe.js); Stripe down → 502, account kept. App: failed delete no longer signs out; shows #accDeleteError. Delete-card hint reworded. check_backend step 10 (fails on main), smoke step delete_account. Closes the 10-06 open question.
+- Step 5 area: AI website credits (src/routes/sites.js, siteCredits.js, stripe createCreditsCheckout, webhook branch) → solid: confirm checks owner + amount + currency, grant idempotent on stripeSession, credits never turn on Pro.
+- Prices: CLAUDE.md says $28.99/mo, $325.99/yr; terms.html and billing-email check say $24.99/$149. Asked Alexander which is real (don't change).
+- Still queued: aiChat rate limit per IP not per account.
+- Next step-5 area: certificates (#41) or src/routes/codes.js (partner codes / payouts).
