@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { ensureReferralCode } = require('../referral');
+const { cancelAllSubscriptions } = require('../stripe');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -121,6 +122,17 @@ router.put('/password', async (req, res) => {
 // Permanently deletes the account and all its data. The frontend already
 // requires a two-click confirmation before calling this.
 router.delete('/', async (req, res) => {
+  // Stop their Stripe subscription first, so a deleted account is never charged again. If Stripe can't be
+  // reached, keep the account (they can try again) rather than delete it and leave the payments running.
+  const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { stripeCustomerId: true } });
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  if (user.stripeCustomerId) {
+    try { await cancelAllSubscriptions(user.stripeCustomerId); }
+    catch (err) {
+      console.error('[account] could not cancel the subscription before deleting:', err.message);
+      return res.status(502).json({ error: "We couldn't cancel your subscription just now, so your account wasn't deleted. Please try again in a minute." });
+    }
+  }
   await prisma.user.delete({ where: { id: req.user.id } });
   // Also remove analytics attribution and the Meta ads-matching row.
   await forgetUser(req.user.id);

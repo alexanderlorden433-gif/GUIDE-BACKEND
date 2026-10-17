@@ -74,6 +74,23 @@ async function createCreditsCheckout({ user, pack }) {
 }
 
 /**
+ * Stops every subscription a Stripe customer still has (used when a member deletes their account, so a
+ * deleted account is never charged again). Cancels straight away, without a refund. Returns how many were
+ * stopped. Throws if Stripe can't be reached, so the caller can keep the account and ask to try again.
+ */
+const LIVE_SUB_STATUSES = ['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'];
+async function cancelAllSubscriptions(customerId, client = stripe) {
+  if (!customerId) return 0;
+  let stopped = 0;
+  for await (const sub of client.subscriptions.list({ customer: customerId, status: 'all', limit: 100 })) {
+    if (!LIVE_SUB_STATUSES.includes(sub.status)) continue;
+    await client.subscriptions.cancel(sub.id);
+    stopped++;
+  }
+  return stopped;
+}
+
+/**
  * Creates a Stripe Billing Portal session so an existing customer can manage
  * or cancel their subscription without you building that UI yourself.
  */
@@ -117,4 +134,4 @@ async function getPlanPrices() {
   return out;
 }
 
-module.exports = { stripe, createCheckoutSession, createCreditsCheckout, createPortalSession, getPlanPrices, TRIAL_DAYS };
+module.exports = { stripe, createCheckoutSession, createCreditsCheckout, cancelAllSubscriptions, createPortalSession, getPlanPrices, TRIAL_DAYS };

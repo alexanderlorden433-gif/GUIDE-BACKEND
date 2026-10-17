@@ -10,6 +10,7 @@
 //   7. The Guider is told about the member's 30-day plan in that chapter (day and goal), and only that chapter
 //   8. the billing emails (trial ends tomorrow, checkout left) say the amount, how to cancel, and nothing was charged
 //   9. member websites: what a member or a visitor types is shown as text, never run as page code
+//  10. deleting an account stops its Stripe subscription first (and keeps the account if Stripe can't be reached)
 // Usage: node ops/check_backend.js   (exit 1 on any failure)
 const fs = require('fs');
 const path = require('path');
@@ -237,6 +238,69 @@ function checkBillingEmails() {
   else bad('the checkout-left email is missing "nothing was charged", the prices, or the only-reminder line');
 }
 
+// 10. deleting an account: the Stripe subscription is stopped first, so a deleted account is never charged
+//     again; if Stripe can't be reached the account stays (the member is told to try again).
+async function checkDeleteCancels() {
+  const { cancelAllSubscriptions } = require(path.join(ROOT, 'src', 'stripe'));
+  const cancelled = [];
+  const fakeStripe = (fail) => ({ subscriptions: {
+    list: ({ customer }) => (async function* () {
+      if (fail) throw new Error('Stripe is down');
+      if (customer !== 'cus_1') return;
+      yield { id: 'sub_live', status: 'active' }; yield { id: 'sub_trial', status: 'trialing' };
+      yield { id: 'sub_old', status: 'canceled' }; yield { id: 'sub_late', status: 'past_due' };
+    })(),
+    cancel: async (id) => { cancelled.push(id); return { id, status: 'canceled' }; },
+  } });
+  const n = await cancelAllSubscriptions('cus_1', fakeStripe(false));
+  if (n === 3 && cancelled.join() === 'sub_live,sub_trial,sub_late') ok('cancelAllSubscriptions stops active, trial and overdue subscriptions (not old ones)');
+  else bad(`cancelAllSubscriptions stopped ${JSON.stringify(cancelled)}, expected the 3 live ones`);
+  if ((await cancelAllSubscriptions(null, fakeStripe(true))) === 0) ok('no Stripe customer: nothing to cancel');
+  else bad('cancelAllSubscriptions should do nothing without a Stripe customer');
+
+  // the route itself, with a stand-in database and Stripe
+  const routeFile = require.resolve(path.join(ROOT, 'src', 'routes', 'account'));
+  const stripeFile = require.resolve(path.join(ROOT, 'src', 'stripe'));
+  const dbFile = require.resolve(path.join(ROOT, 'src', 'db'));
+  const saved = { route: require.cache[routeFile], stripe: require.cache[stripeFile], db: require.cache[dbFile] };
+  const run = async (stripeFails) => {
+    const log = [];
+    const fakeDb = { user: {
+      findUnique: async () => ({ stripeCustomerId: 'cus_1' }),
+      delete: async () => { log.push('deleted'); return {}; },
+    } };
+    const realStripe = require(stripeFile);
+    delete require.cache[routeFile];
+    require.cache[dbFile] = { id: dbFile, filename: dbFile, loaded: true, exports: fakeDb };
+    require.cache[stripeFile] = { id: stripeFile, filename: stripeFile, loaded: true, exports: Object.assign({}, realStripe, {
+      cancelAllSubscriptions: async (c) => { if (stripeFails) throw new Error('Stripe is down'); log.push('cancelled ' + c); return 1; } }) };
+    const router = require(routeFile);
+    const express = require(path.join(ROOT, 'node_modules', 'express'));
+    const jwt = require(path.join(ROOT, 'node_modules', 'jsonwebtoken'));
+    const app = express();
+    app.use('/api/account', router);
+    app.use((err, req, res, next) => res.status(500).json({ error: err.message }));
+    const token = jwt.sign({ sub: 'u1', email: 'a@b.test' }, process.env.JWT_SECRET, { issuer: 'theguide', audience: 'theguide-app' });
+    const server = await new Promise(r => { const s = app.listen(0, '127.0.0.1', () => r(s)); });
+    try {
+      const res = await fetch(`http://127.0.0.1:${server.address().port}/api/account`, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token }, signal: AbortSignal.timeout(3000) });
+      return { status: res.status, log };
+    } finally { server.close(); }
+  };
+  try {
+    const good = await run(false);
+    if (good.status === 200 && good.log.join() === 'cancelled cus_1,deleted') ok('DELETE /api/account cancels the subscription, then deletes the account');
+    else bad(`DELETE /api/account: got ${good.status}, steps ${JSON.stringify(good.log)} (should cancel the subscription before deleting)`);
+    const down = await run(true);
+    if (down.status === 502 && !down.log.includes('deleted')) ok('if Stripe is down, the account is kept and the member is told to try again');
+    else bad(`DELETE /api/account with Stripe down: got ${down.status}, steps ${JSON.stringify(down.log)} (must not delete while still subscribed)`);
+  } finally {
+    for (const [k, f] of [['route', routeFile], ['stripe', stripeFile], ['db', dbFile]]) {
+      if (saved[k]) require.cache[f] = saved[k]; else delete require.cache[f];
+    }
+  }
+}
+
 checkAsyncErrors()
   .catch(e => bad('async error check failed: ' + e.message))
   .then(() => checkBodyLimits().catch(e => bad('request size check failed: ' + e.message)))
@@ -244,6 +308,7 @@ checkAsyncErrors()
   .then(() => { try { checkMemberSites(); } catch (e) { bad('member website check failed: ' + e.message); } })
   .then(() => { try { checkGuiderPlan(); } catch (e) { bad('Guider plan check failed: ' + e.message); } })
   .then(() => { try { checkBillingEmails(); } catch (e) { bad('billing email check failed: ' + e.message); } })
+  .then(() => checkDeleteCancels().catch(e => bad('delete account check failed: ' + e.message)))
   .finally(() => {
   console.log(problems.length ? `${problems.length} backend problem(s)` : 'Backend OK');
   process.exit(problems.length ? 1 : 0);
