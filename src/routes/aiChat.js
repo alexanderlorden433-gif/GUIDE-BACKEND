@@ -58,10 +58,13 @@ router.get('/free', async (req, res) => {
 
 // Real API calls cost real money, so this needs a tighter limit than most
 // other routes — enough for a normal back-and-forth conversation, not
-// enough to let one account run up a large bill.
+// enough to let one account run up a large bill. Counted per member (this runs after
+// requireAuth), so people sharing one network (an office, a school, a phone carrier)
+// don't use up each other's messages, and one member can't get more by changing networks.
 const aiChatLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 40,
+  keyGenerator: (req) => 'member:' + req.user.id,
   message: { error: 'Too many messages this hour. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -75,7 +78,11 @@ const MAX_MESSAGE_CHARS = 8000;
 // never sees or holds an API key. It sends the chapter context and the
 // recent conversation; this route builds the system prompt and forwards it.
 router.post('/', async (req, res) => {
-  const { nicheName, nicheDescription, messages, course } = req.body;
+  const { messages, course } = req.body;
+  // The chapter's name and one-line description go into The Guider's instructions; the app's
+  // longest are well under these caps, so anything longer is trimmed rather than paid for.
+  const nicheName = typeof req.body.nicheName === 'string' ? req.body.nicheName.trim().slice(0, 100) : '';
+  const nicheDescription = typeof req.body.nicheDescription === 'string' ? req.body.nicheDescription.trim().slice(0, 400) : '';
   // People using the app in Spanish get their answers in Spanish.
   const spanish = req.body.lang === 'es';
 
@@ -123,9 +130,9 @@ router.post('/', async (req, res) => {
       id: typeof course.id === 'string' ? course.id : '',
       guides: Array.isArray(course.guides) ? course.guides.slice(0, 400)
         .filter(g => g && typeof g.title === 'string')
-        .map(g => ({ title: g.title, mod: Number(g.mod) || 0 })) : [],
+        .map(g => ({ title: g.title.slice(0, 200), mod: Number(g.mod) || 0 })) : [],
       modules: Array.isArray(course.modules) ? course.modules.slice(0, 40)
-        .map(m => ({ title: m && typeof m.title === 'string' ? m.title : '' })) : [],
+        .map(m => ({ title: m && typeof m.title === 'string' ? m.title.slice(0, 200) : '' })) : [],
     } : null;
     about = buildGuiderContext(me && me.dataBlob, shape && shape.id ? shape : null);
   } catch (err) {
