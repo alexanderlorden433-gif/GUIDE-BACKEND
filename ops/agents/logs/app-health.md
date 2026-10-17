@@ -88,3 +88,12 @@
 - Prices: CLAUDE.md says $28.99/mo, $325.99/yr; terms.html and billing-email check say $24.99/$149. Asked Alexander which is real (don't change).
 - Still queued: aiChat rate limit per IP not per account.
 - Next step-5 area: certificates (#41) or src/routes/codes.js (partner codes / payouts).
+
+## 2026-10-17 (Sat)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway status on main f9af91f = success.
+- Since last notes: #66 (hide My website) merged. Open: #67 (mine, delete cancels subscription — mergeable, behind main by #66 but merges clean, preview ready, no comments), #68 (ads video, claude agent).
+- check.sh on main: ALL PASS (smoke 0 problems, 82 shots; phone home + desktop templates look fine).
+- Opened PR #69 agent/app-health/2026-10-17-guider-limits: aiChat limiter keyed per member (keyGenerator req.user.id) instead of per IP; nicheName/description/lesson titles trimmed (100/400/200). check_backend step 5b (fails on main). Merges clean with #67. Closes the long-queued aiChat item.
+- Step 5 area: src/routes/codes.js (partner codes/payouts) → owner gating + redeem rate limit OK. Two low items queued: (a) redeem checks maxUses then increments separately → simultaneous redemptions can exceed maxUses; (b) redemption row is written before uses++/bonusProUntil update with no transaction → a DB hiccup leaves "already used" without the days. Fix: one $transaction with conditional UPDATE … WHERE uses < maxUses. Next PR when a slot frees.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: certificates (#41).
