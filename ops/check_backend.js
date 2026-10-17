@@ -6,6 +6,7 @@
 //   3. the Prisma schema is valid
 //   4. an error inside an async route gives a 500 instead of stopping the server
 //   5. big-enough request sizes: saving progress and Guider chats aren't cut off at 16 KB
+//   5b. The Guider's hourly message limit counts per member, not per network
 //   6. a host can edit a live call that has already started (to fix the link mid-call)
 //   7. The Guider is told about the member's 30-day plan in that chapter (day and goal), and only that chapter
 //   8. the billing emails (trial ends tomorrow, checkout left) say the amount, how to cancel, and nothing was charged
@@ -153,6 +154,33 @@ async function checkBodyLimits() {
   }
 }
 
+// 5b. The Guider's hourly limit (it costs money per message) is counted per member. Counted per
+//     network instead, people sharing one (an office, a school, a phone carrier) would block each
+//     other, and one member could get around it by switching networks.
+async function checkGuiderLimit() {
+  const router = require(path.join(ROOT, 'src', 'routes', 'aiChat'));
+  const express = require(path.join(ROOT, 'node_modules', 'express'));
+  const jwt = require(path.join(ROOT, 'node_modules', 'jsonwebtoken'));
+  const app = express();
+  app.use('/api/ai-chat', router);
+  const token = (sub) => jwt.sign({ sub, email: sub + '@b.test' }, process.env.JWT_SECRET, { issuer: 'theguide', audience: 'theguide-app' });
+  const server = await new Promise(r => { const s = app.listen(0, '127.0.0.1', () => r(s)); });
+  // a path the limiter counts but no route answers, so nothing reaches the database or Anthropic
+  const hit = (sub) => fetch(`http://127.0.0.1:${server.address().port}/api/ai-chat/limit-check`, { method: 'POST',
+    headers: { Authorization: 'Bearer ' + token(sub) }, signal: AbortSignal.timeout(3000) }).then(r => r.status);
+  try {
+    let last = 0;
+    for (let i = 0; i < 41; i++) last = await hit('member-a');
+    if (last === 429) ok("The Guider's hourly limit stops a member after 40 messages");
+    else bad(`The Guider's hourly limit did not stop a member after 40 messages (got ${last})`);
+    const other = await hit('member-b');
+    if (other !== 429) ok('another member on the same network can still ask The Guider');
+    else bad("The Guider's limit is per network: a second member on the same network is blocked too");
+  } finally {
+    server.close();
+  }
+}
+
 // 6. live calls: the edit form always sends the call's time back. A call that started a while ago
 //    must still be editable (fixing a broken link mid-call), but a call can't be moved into the past.
 function checkLiveEdit() {
@@ -240,6 +268,7 @@ function checkBillingEmails() {
 checkAsyncErrors()
   .catch(e => bad('async error check failed: ' + e.message))
   .then(() => checkBodyLimits().catch(e => bad('request size check failed: ' + e.message)))
+  .then(() => checkGuiderLimit().catch(e => bad('Guider limit check failed: ' + e.message)))
   .then(() => { try { checkLiveEdit(); } catch (e) { bad('live edit check failed: ' + e.message); } })
   .then(() => { try { checkMemberSites(); } catch (e) { bad('member website check failed: ' + e.message); } })
   .then(() => { try { checkGuiderPlan(); } catch (e) { bad('Guider plan check failed: ' + e.message); } })
