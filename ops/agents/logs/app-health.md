@@ -97,3 +97,12 @@
 - Step 5 area: src/routes/codes.js (partner codes/payouts) → owner gating + redeem rate limit OK. Two low items queued: (a) redeem checks maxUses then increments separately → simultaneous redemptions can exceed maxUses; (b) redemption row is written before uses++/bonusProUntil update with no transaction → a DB hiccup leaves "already used" without the days. Fix: one $transaction with conditional UPDATE … WHERE uses < maxUses. Next PR when a slot frees.
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: certificates (#41).
+
+## 2026-10-18 (Sun)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway status on main f9af91f = success (main unchanged since yesterday).
+- Open: #67 and #69 (mine, both mergeable clean, Deploy Previews green, only the Netlify bot comment), #68 (ads video, claude agent). 2-PR cap reached → no new PR tonight.
+- check.sh on main: ALL PASS (smoke 0 problems, 82 shots).
+- Step 5 area: certificates (drawCertificate/previewCertificate in web/index.html). Low items queued: (a) long member/chapter names are drawn without measureText fitting → can run past the frame (shrink font to fit ~1000px); (b) previewCertificate has no guard against a second open (duplicate #certPreview ids) and no Escape to close; (c) certificate date is the download day, not the day the chapter was finished; (d) gradients/glow on the canvas break the design system (Design agent's area, not mine).
+- Still queued: codes.js redeem race / no transaction (from 10-17). Next PR when a slot frees: codes.js transaction first, then certificate name fitting.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/leads.js + publicWins.js (public, no-login routes).
