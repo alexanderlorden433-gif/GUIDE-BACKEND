@@ -29,3 +29,8 @@
 - Still zero delivery every day Oct 4-15 (FAEV*). FACA*/FADE* still empty. No Adspirer ad calls (not a check day, nothing changed). Adspirer 5/15, resets Nov 4.
 - Live app and ads.json both say Pro $24.99/mo (CLAUDE.md's $28.99 is out of date; ads are fine).
 - Next live check: Mon Oct 19.
+
+## 2026-10-18 (Sun)
+- No Oct 17 note found. Adspirer shows 6/15 used (was 5/15 on Oct 16) — one action used outside these notes. Resets Nov 4.
+- Still zero delivery every day Oct 4-17 (FAEV*). FACA*/FADE* still empty. No Adspirer ad calls (not a check day, nothing changed). No push sent (same blocker as already reported).
+- Next live check: Mon Oct 19 — confirm delivery and setup gaps; add weekly review.
