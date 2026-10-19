@@ -196,6 +196,62 @@
       "call_to_action": "SIGN_UP",
       "website_url": "https://theguide.company",
       "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}"
+    },
+    {
+      "name": "ad16-47-videos-v2",
+      "angle": "I watched 47 videos (v2: real app footage, Forest & Gold, Remotion)",
+      "format": "video",
+      "feed_4x5": "ad01-i-watched-47-videos-v2-feed-4x5.mp4",
+      "story_9x16": "ad01-i-watched-47-videos-v2-story-9x16.mp4",
+      "primary_text": "I watched 47 “make money online” videos and still didn't know what to do on Monday. So we built the actual steps: 16 real paths, 756 short lessons that each come with a video, an AI mentor, and done-for-you templates. Start free.",
+      "headline": "Stop watching. Start building.",
+      "description": "Free to start. Pro from $24.99/mo.",
+      "call_to_action": "SIGN_UP",
+      "website_url": "https://theguide.company",
+      "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+      "made_with": "ads/video (Remotion): node ads/video/render.mjs ad01-i-watched-47-videos"
+    },
+    {
+      "name": "ad17-ai-mentor-v2",
+      "angle": "The AI mentor wrote my DM (v2: real chat with The Guider on screen)",
+      "format": "video",
+      "feed_4x5": "ad02-ai-mentor-v2-feed-4x5.mp4",
+      "story_9x16": "ad02-ai-mentor-v2-story-9x16.mp4",
+      "primary_text": "Asked an AI business mentor how to land a first social media client. It gave a 3-step plan, then wrote the DM. It's called The Guider, and it's built into every path on The Guide. Start free.",
+      "headline": "Your AI business mentor",
+      "description": "Free to start. Pro from $24.99/mo.",
+      "call_to_action": "SIGN_UP",
+      "website_url": "https://theguide.company",
+      "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+      "made_with": "ads/video (Remotion): node ads/video/render.mjs ad02-ai-mentor"
+    },
+    {
+      "name": "ad18-stop-scrolling-v2",
+      "angle": "Stop scrolling (v2: the four steps shown in the real app)",
+      "format": "video",
+      "feed_4x5": "ad03-stop-scrolling-v2-feed-4x5.mp4",
+      "story_9x16": "ad03-stop-scrolling-v2-story-9x16.mp4",
+      "primary_text": "No guru. No $997 course. Just a plan: pick a path, follow the steps, ask when you're stuck, show up every day. Start free.",
+      "headline": "Pick a path. Follow the steps.",
+      "description": "Free to start. Pro from $24.99/mo.",
+      "call_to_action": "SIGN_UP",
+      "website_url": "https://theguide.company",
+      "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+      "made_with": "ads/video (Remotion): node ads/video/render.mjs ad03-stop-scrolling"
+    },
+    {
+      "name": "ad19-course-vs-guide-v2",
+      "angle": "A $997 course vs The Guide (v2: comparison, then the real app)",
+      "format": "video",
+      "feed_4x5": "ad04-course-vs-the-guide-v2-feed-4x5.mp4",
+      "story_9x16": "ad04-course-vs-the-guide-v2-story-9x16.mp4",
+      "primary_text": "Before buying another $997 course, compare: 756 video lessons, 16 paths, an AI mentor, and templates and tools included. Under $1 a day on the yearly plan. Start free.",
+      "headline": "Easy choice.",
+      "description": "Free to start. Pro from $24.99/mo.",
+      "call_to_action": "SIGN_UP",
+      "website_url": "https://theguide.company",
+      "url_parameters": "utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+      "made_with": "ads/video (Remotion): node ads/video/render.mjs ad04-course-vs-the-guide"
     }
   ]
 }

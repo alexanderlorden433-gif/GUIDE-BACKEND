@@ -1,0 +1,17 @@
+{
+  "name": "the-guide-video-ads",
+  "private": true,
+  "description": "The Guide's video ads, made with Remotion. See README.md.",
+  "scripts": {
+    "studio": "remotion studio src/index.jsx",
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.532",
+    "@remotion/cli": "4.0.532",
+    "@remotion/renderer": "4.0.532",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.532"
+  }
+}
