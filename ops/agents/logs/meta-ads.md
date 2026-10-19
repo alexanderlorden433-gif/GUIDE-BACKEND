@@ -34,3 +34,9 @@
 - No Oct 17 note found. Adspirer shows 6/15 used (was 5/15 on Oct 16) — one action used outside these notes. Resets Nov 4.
 - Still zero delivery every day Oct 4-17 (FAEV*). FACA*/FADE* still empty. No Adspirer ad calls (not a check day, nothing changed). No push sent (same blocker as already reported).
 - Next live check: Mon Oct 19 — confirm delivery and setup gaps; add weekly review.
+
+## 2026-10-19 (Mon)
+- Live check done (Adspirer 7/15 after it, resets Nov 4). Campaign, ad set, ad all ACTIVE, budget $5/day, still no delivery since launch (FAEV* zero Oct 4-18; FACA*/FADE* empty). Ad set "budget remaining" still $0.00.
+- Setup gaps unchanged: US only, ad named "New Leads Ad", no URL tags, Multi-advertiser ads enrolled.
+- Gmail connector (theguidesupport@ inbox): only Meta email in 20 days is an unread "Confirm your business email" for Theguidecompany from Oct 5. No billing/rejection emails there. Flagged to Alexander.
+- Next live check: Thu Oct 22.
