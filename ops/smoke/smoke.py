@@ -4329,6 +4329,30 @@ def find_new_things(browser, base):
         problem(step[0], 'Pricing should scroll to the prices', top)
     no_sideways_scroll(page, step[0])
     shot(page, 'phone-landing-links')
+    small = page.evaluate("[...document.querySelectorAll('.lp-nav a, .lp-nav button, .lp-mark button')].filter(e=>e.getBoundingClientRect().height < 44).map(e=>e.textContent)")
+    if small:
+        problem(step[0], 'links at the top of the landing page should be at least 44px tall on a phone', small)
+    else:
+        ok(step[0], 'links and buttons at the top of the landing page are big enough to tap')
+    page.click('#lpPricing .lp-price-cta [data-lp-signup]'); page.wait_for_timeout(400)
+    if visible(page, '#authScreen', 2000) and page.evaluate("authMode") == 'signup':
+        ok(step[0], 'the Start free button under the prices opens sign-up')
+    else:
+        problem(step[0], 'the Start free button under the prices should open sign-up')
+    ctx.close()
+
+    step = ['finding things: log in from the top of the landing page']
+    ctx = browser.new_context(viewport={'width': 360, 'height': 780}, is_mobile=True, has_touch=True, service_workers='block')
+    attach_backend(ctx, new_state(False))
+    ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+    page = ctx.new_page(); watch_errors(page, step)
+    page.goto(base + '/', wait_until='load'); page.wait_for_timeout(1000)
+    no_sideways_scroll(page, step[0])
+    page.click('.lp-mark [data-lp-login]'); page.wait_for_timeout(400)
+    if visible(page, '#authScreen', 2000) and page.evaluate("authMode") == 'login':
+        ok(step[0], 'Log in at the top of the landing page opens the login form')
+    else:
+        problem(step[0], 'Log in at the top of the landing page should open the login form')
     ctx.close()
 
     init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}"
