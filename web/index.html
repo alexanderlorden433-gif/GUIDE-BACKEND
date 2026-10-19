@@ -11748,8 +11748,9 @@ function renderAccountModal(){
         <section class="acct-card acct-danger">
           <h4>Delete account</h4>
           <p class="acct-hint">This permanently deletes your account and everything tracked in it. This can't be undone.</p>
-          <p class="acct-hint" id="accDeleteBillingHint" hidden>On Pro? Cancel your subscription above first — deleting your account doesn't stop the payments.</p>
+          <p class="acct-hint" id="accDeleteBillingHint" hidden>On Pro? Deleting your account also cancels your subscription, so you won't be charged again.</p>
           <button type="button" class="account-danger-btn" id="accDeleteBtn">Delete my account</button>
+          <div class="acct-note" id="accDeleteError" role="status"></div>
         </section>
       </div>
     </div>
@@ -11854,10 +11855,19 @@ function renderAccountModal(){
       e.target.textContent = 'Click again to permanently delete';
       return;
     }
+    const delError = upgradeModalBody.querySelector('#accDeleteError');
+    delError.textContent = '';
+    e.target.disabled = true;
     try{
       await apiFetch('/account', { method: 'DELETE' });
     }catch(err){
-      console.error('Delete account failed', err);
+      // the account (and any subscription) is still there: say so instead of signing out as if it were gone
+      console.warn('Delete account failed', err);
+      delError.textContent = err.body?.error || 'Your account could not be deleted just now. Please try again.';
+      e.target.disabled = false;
+      e.target.textContent = 'Delete my account';
+      deleteConfirming = false;
+      return;
     }
     setAuthToken(null);
     upgradeOverlay.classList.remove('open');
