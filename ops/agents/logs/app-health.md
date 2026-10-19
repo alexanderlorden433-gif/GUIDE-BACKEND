@@ -106,3 +106,14 @@
 - Still queued: codes.js redeem race / no transaction (from 10-17). Next PR when a slot frees: codes.js transaction first, then certificate name fitting.
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/leads.js + publicWins.js (public, no-login routes).
+
+## 2026-10-19 (Mon)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway status on main f9af91f = success (main unchanged since 10-17).
+- Open: #67 and #69 (mine, both still mergeable clean, no reviews), #68 (ads video, claude agent). 2-PR cap → no new PR tonight.
+- check.sh on main: ALL PASS (smoke 0 problems, 82 shots; phone guide + desktop home look fine).
+- Monday npm audit (--omit=dev): 7 (6 moderate, 1 critical). Critical = proxy-addr trust-subnet spoofing → we use `trust proxy` 1 (hop count), not a subnet, so not exploitable here. qs DoS (via express/body-parser/stripe) is moderate and fixable by a lockfile-only bump (qs 6.16.x, proxy-addr 2.0.8 — both Node 18 OK).
+  !! DON'T run plain `npm audit fix`: it bumps sanitize-html to 2.18.1, whose engines say node >=22.12 → would crash Railway (Node 18). node-cron fix needs a major (4.x) → skip. Queue: lockfile-only qs/proxy-addr bump PR when a slot frees.
+- Step 5 area: leads.js + publicWins.js (public routes) → rate limits, honeypot, no email leak (publicName), owner gating OK. Async errors are covered by src/asyncErrors.js (checked: verified a thrown async route kills Node without it; check_backend asserts it's loaded). Low: GET /api/leads/unsubscribe unsubscribes on the first GET → email link scanners (Outlook/Gmail safe-links) can unsubscribe people who never clicked; fix = confirm button (POST) or List-Unsubscribe-Post one-click.
+- Queue (in order, when a slot frees): codes.js redeem transaction; lockfile qs/proxy-addr bump; certificate name fitting; unsubscribe confirm step.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/notifications.js + mentorAlert.js.
