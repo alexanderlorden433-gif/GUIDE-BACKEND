@@ -40,3 +40,7 @@
 - Setup gaps unchanged: US only, ad named "New Leads Ad", no URL tags, Multi-advertiser ads enrolled.
 - Gmail connector (theguidesupport@ inbox): only Meta email in 20 days is an unread "Confirm your business email" for Theguidecompany from Oct 5. No billing/rejection emails there. Flagged to Alexander.
 - Next live check: Thu Oct 22.
+
+## 2026-10-20 (Tue)
+- Still zero delivery every day Oct 4-19 (FAEV*). FACA*/FADE* still empty. No Adspirer ad calls (not a check day, nothing changed). Adspirer 7/15, resets Nov 4.
+- No push sent (same blocker as already reported). Next live check: Thu Oct 22.
