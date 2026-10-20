@@ -117,3 +117,15 @@
 - Queue (in order, when a slot frees): codes.js redeem transaction; lockfile qs/proxy-addr bump; certificate name fitting; unsubscribe confirm step.
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/notifications.js + mentorAlert.js.
+
+## 2026-10-20 (Tue)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway status on main 9dd5367 = success.
+- Since last notes: #67, #69 (mine), #68, #70 MERGED. No open PRs before tonight.
+- check.sh on main: ALL PASS (smoke 0 problems, 83 shots).
+- Opened PR #71 agent/app-health/2026-10-20-code-redeem: POST /api/codes/redeem now one prisma.$transaction (conditional UPDATE uses<maxUses AND active → insert redemption → bonusProUntil); 409/410 via tagged errors. check_backend step 11 (in-memory db with serialized tx + rollback): concurrent last-use, double redeem, failure rollback. Fails on main.
+- Opened PR #72 agent/app-health/2026-10-20-qs-proxy-addr: lockfile-only express 4.22.3, body-parser 1.20.8, qs 6.16.1, proxy-addr 2.0.8 (all Node 18 OK, >1 month old). audit 7 → 3 moderate (node-cron/uuid needs major; sanitize-html fix needs Node 22 — leave).
+- #71 and #72 touch different files.
+- Step 5 area: notifications.js (fine: owner-scoped updateMany) + mentorAlert.js. Low: mentorAlert has no length caps on displayName/bio/contact and nicheName goes into the email subject unchecked (16kb body limit bounds it). Queue.
+- Queue (when a slot frees): certificate name fitting; unsubscribe confirm step; mentorAlert field caps.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/clientStatus.js + networking.js (were "missing routes" at setup — check they match the app now).
