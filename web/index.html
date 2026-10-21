@@ -2299,83 +2299,23 @@
   }
   #onboardContinueBtn:active{transform:scale(0.98); box-shadow:none;}
 
-  /* ---------- Intro/about onboarding screen ---------- */
   .auth-card{position:relative;}
-  .skip-corner-link{
-    position:absolute;
-    top:18px; right:18px;
-    background:none;
-    border:none;
-    color:var(--ink-soft);
-    font-size:11.5px;
-    font-weight:600;
-    cursor:pointer;
-    text-decoration:underline;
-    max-width:150px;
-    text-align:right;
-    line-height:1.3;
-  }
-  .skip-corner-link:hover{color:var(--ink);}
-  .intro-card{max-width:460px;}
-  .intro-body{margin:8px 0 24px;}
-  .intro-body p{
-    font-size:13.5px;
-    line-height:1.6;
-    color:var(--ink-soft);
-    margin:0 0 16px;
-  }
-  .intro-body p strong{color:var(--ink);}
-  #introContinueBtn{
-    width:100%;
-    font-family:'Inter',sans-serif;
-    font-weight:700;
-    font-size:15px;
-    padding:12px;
-    border-radius:10px;
-    border:none;
-    background:var(--accent-gradient);
-    color:var(--on-accent);
-    box-shadow:none;
-    cursor:pointer;
-  }
-  #introContinueBtn:active{transform:scale(0.98); box-shadow:none;}
 
-  /* ---------- Survey progress bar + option pills ---------- */
-  .survey-progress{display:flex;gap:8px;margin:0 0 24px;}
-  .survey-progress .sp-dot{
-    flex:1;height:5px;border-radius:99px;background:var(--line);transition:background .25s;
-  }
-  .survey-progress .sp-dot.done{background:var(--grape);}
-  .survey-progress .sp-dot.active{background:var(--grape);}
-  .survey-option-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
-  .survey-option{
-    display:flex;align-items:center;gap:12px;
-    border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;
-    transition:background .15s, border-color .15s;
-  }
-  .survey-option:hover{border-color:var(--ink-soft);}
-  .survey-option.selected{background:rgba(var(--accent-rgb),0.15);border-color:var(--grape);}
-  .survey-option .so-icon{font-size:20px;}
-  .survey-option .so-label{font-weight:700;font-size:14px;flex:1;line-height:1.3;}
-  .survey-option .so-check{
-    width:20px;height:20px;border:1px solid var(--line);border-radius:5px;
-    display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--bg-raised);
-  }
-  .survey-option.selected .so-check{background:var(--grape);color:var(--on-accent);border-color:var(--grape);}
-  .survey-nav{display:flex;gap:12px;margin-top:8px;}
-  .survey-nav button{flex:1;}
-  .survey-back-btn{
-    font-family:'Inter',sans-serif;font-weight:700;font-size:15px;padding:12px;
-    border-radius:10px;border:1px solid var(--line);background:var(--bg-raised);color:var(--ink);cursor:pointer;
-  }
-  .survey-back-btn:hover{background:var(--card);}
-  .survey-next-btn{
-    font-family:'Inter',sans-serif;font-weight:700;font-size:15px;padding:12px;
-    border-radius:10px;border:none;
-    background:var(--accent-gradient);
-    color:var(--on-accent);box-shadow:none;cursor:pointer;
-  }
-  .survey-next-btn:active{transform:scale(0.98);}
+  /* ---------- After sign-up: pick a business (one tap opens its first lesson) ---------- */
+  .ob-card{max-width:520px;}
+  .ob-picker{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:var(--sp-2);}
+  .ob-picker .niche-pick-item{min-height:56px; width:100%; padding:var(--sp-2) var(--sp-3); gap:var(--sp-2);
+    background:var(--bg-raised); color:var(--ink); font:inherit; text-align:left;}
+  .ob-picker .niche-pick-item.selected{background:rgba(var(--accent-rgb),0.15);}
+  .ob-picker .niche-pick-item:disabled{cursor:default;}
+  .ob-picker .niche-pick-item:disabled:not(.selected){opacity:.5;}
+  .ob-picker .niche-pick-item .np-name{font-size:13.5px; font-weight:600; line-height:1.25;}
+  .ob-picker .niche-pick-item:focus-visible{outline:2px solid var(--grape-soft); outline-offset:2px;}
+  .ob-skip{display:block; min-height:44px; margin:var(--sp-4) auto 0; padding:0 var(--sp-4); background:none; border:none;
+    color:var(--ink-soft); font:600 14px 'Inter',sans-serif; text-decoration:underline; cursor:pointer;}
+  .ob-skip:hover{color:var(--ink);}
+  @media (max-width:340px){ .ob-picker{grid-template-columns:1fr;} }
+
 
   /* ---------- Chapter quizzes ---------- */
   .quiz-section{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);}
@@ -5020,12 +4960,12 @@
      This block comes last on purpose: it overrides the louder rules above.
      ===================================================================== */
   .lp-cta, .lp-cta:hover, .ts-go, .sc-btn, .modal-cta, .modal-cta:hover, .module-unlock, .module-unlock:hover,
-  .export-btn, .welcome-next, .welcome-next:hover, .dm-done, #onboardContinueBtn, #introContinueBtn,
+  .export-btn, .welcome-next, .welcome-next:hover, .dm-done, #onboardContinueBtn,
   .auth-card button[type="submit"], .auth-card .auth-primary-btn,
   .auth-card button[type="submit"]:hover, .auth-card .auth-primary-btn:hover,
   .guide-content .mark-btn, .guide-content .mark-btn:hover, .sub-tab.active, .streak-badge,
   .gv-watch, .gv-watch:hover, .gv-ebtn.primary, .pm-step.st-done .pm-node,
-  .survey-next-btn, .pro-preview-btn, .biz-primary-btn, .biz-primary-btn:hover{box-shadow:none;}
+  .pro-preview-btn, .biz-primary-btn, .biz-primary-btn:hover{box-shadow:none;}
   .lp-cta:hover, .module-unlock:hover, .guide-content .mark-btn:hover, .welcome-next:hover{filter:brightness(1.07);}
 
   /* labels: plain sentence case */
@@ -5168,8 +5108,8 @@
 
   /* buttons: primary */
   .lp-cta, .modal-cta, .dm-done, .live-btn.primary, .cert-download-btn, .income-ring-form button,
-  .win-post-form button, .network-connect-btn, #authSubmitBtn, #introContinueBtn, .biz-primary-btn,
-  .welcome-next, .survey-next-btn, .tour-next-btn, .auth-card .auth-primary-btn, .pro-preview-btn{
+  .win-post-form button, .network-connect-btn, #authSubmitBtn, .biz-primary-btn,
+  .welcome-next, .tour-next-btn, .auth-card .auth-primary-btn, .pro-preview-btn{
     min-height:var(--btn-h); padding:0 24px; border-radius:var(--r-btn);
     font:600 15px/1.2 'Inter',sans-serif; letter-spacing:0;
     background:var(--grape); color:var(--on-accent); border:1px solid transparent; box-shadow:none;
@@ -5178,7 +5118,7 @@
   }
   .lp-cta:hover, .modal-cta:hover, .dm-done:hover, .live-btn.primary:hover, .cert-download-btn:hover{filter:brightness(1.08); box-shadow:none;}
   .lp-cta:active, .modal-cta:active, .dm-done:active{transform:translateY(1px); box-shadow:none;}
-  .modal-cta, .dm-done, #authSubmitBtn, #introContinueBtn{width:100%;}
+  .modal-cta, .dm-done, #authSubmitBtn{width:100%;}
   /* buttons: secondary */
   .lp-cta-ghost, .live-btn:not(.primary), .cert-share-btn{
     min-height:var(--btn-h); padding:0 16px; border-radius:var(--r-btn);
@@ -5350,7 +5290,7 @@
   .aff-category-title span.aff-cat-icon{display:inline-flex; color:var(--ink-soft);}
   .aff-cat-icon .ico{width:18px; height:18px;}
   .welcome-slide-icon .ico{width:32px; height:32px;}
-  .welcome-slide-feature .wsf-icon, .survey-option .so-icon{display:inline-flex; color:var(--ink-soft);}
+  .welcome-slide-feature .wsf-icon{display:inline-flex; color:var(--ink-soft);}
   .wsf-icon .ico, .so-icon .ico{width:20px; height:20px;}
   .referral-hero-icon{display:flex; justify-content:center; color:var(--ink-2);}
   .referral-hero-icon .ico{width:32px; height:32px;}
@@ -6243,94 +6183,13 @@
     <p class="auth-switch" id="forgotWrap" style="display:none;"><button type="button" id="forgotBtn">Forgot password?</button></p>
   </div>
 
-  <div class="auth-card intro-card" id="authCardIntro" style="display:none;">
-    <button type="button" class="skip-corner-link" id="introSkipBtn">No thanks, just take me to the main page →</button>
+  <!-- After sign-up: one question, then straight into the first lesson of the business they pick. -->
+  <div class="auth-card ob-card" id="authCardStep2" style="display:none;">
     <div class="auth-logo"><svg class="guide-logo-mark" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="100" cy="100" r="82" fill="none" stroke="url(#guideRingGrad)" stroke-width="14"/><path d="M100,32 L114.1,85.9 L168,100 L114.1,114.1 L100,168 L85.9,114.1 L32,100 L85.9,85.9 Z" fill="url(#guideStarGrad)"/><circle cx="100" cy="100" r="14" fill="#FFD23F"/></svg> The Guide</div>
-    <h2>Before you dive in…</h2>
-    <div class="intro-body">
-      <p><strong>What this is.</strong> The Guide pairs practical, no-fluff guides with real business tools (client trackers, schedulers, goal tracking) built specifically for whatever kind of work you actually do.</p>
-      <p><strong>Why we built it.</strong> Good guidance and good tools shouldn't only be available to people who can afford an expensive course or an agency. This is meant to be the thing you actually open daily, not a course you buy and forget.</p>
-      <p><strong>What's next.</strong> A couple of quick questions so we can set up your home screen around what you're actually working on. Takes about 20 seconds, or skip it entirely, your call.</p>
-    </div>
-    <button type="button" id="introContinueBtn">Continue →</button>
-  </div>
-
-  <div class="auth-card" id="authCardStep2" style="display:none;">
-    <button type="button" class="skip-corner-link survey-skip-link">No thanks, just take me to the main page →</button>
-    <div class="auth-logo"><svg class="guide-logo-mark" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="100" cy="100" r="82" fill="none" stroke="url(#guideRingGrad)" stroke-width="14"/><path d="M100,32 L114.1,85.9 L168,100 L114.1,114.1 L100,168 L85.9,114.1 L32,100 L85.9,85.9 Z" fill="url(#guideStarGrad)"/><circle cx="100" cy="100" r="14" fill="#FFD23F"/></svg> The Guide</div>
-    <div class="survey-progress" id="surveyProgress"></div>
-    <div id="surveyStepContainer">
-      <!-- Step 1: Niche picker (injected by JS) -->
-      <div class="survey-step" data-step="1" id="surveyStep1">
-        <h2>What are you working on?</h2>
-        <p class="auth-sub">Pick everything that applies. We'll set your home screen up around it. You can always change this later.</p>
-        <div class="niche-picker" id="nichePicker"></div>
-      </div>
-      <!-- Step 2: Experience -->
-      <div class="survey-step" data-step="2" id="surveyStep2" style="display:none;">
-        <h2>How long have you been doing this?</h2>
-        <p class="auth-sub">No wrong answer. This just helps us recommend the right starting point.</p>
-        <div class="survey-option-grid" data-key="experience">
-          <div class="survey-option" data-value="just_starting"><span class="so-icon" data-ico="sprout"></span><span class="so-label">Just getting started</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="under_1"><span class="so-icon" data-ico="calendar"></span><span class="so-label">Less than a year</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="1_to_3"><span class="so-icon" data-ico="muscle"></span><span class="so-label">1–3 years</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="3_to_5"><span class="so-icon" data-ico="rocket"></span><span class="so-label">3–5 years</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="5_plus"><span class="so-icon" data-ico="trophy"></span><span class="so-label">5+ years (veteran)</span><span class="so-check"></span></div>
-        </div>
-      </div>
-      <!-- Step 3: Goals -->
-      <div class="survey-step" data-step="3" id="surveyStep3" style="display:none;">
-        <h2>What do you want to learn most?</h2>
-        <p class="auth-sub">Pick up to three. You'll still have access to everything.</p>
-        <div class="survey-option-grid" data-key="goals" data-multi="3">
-          <div class="survey-option" data-value="getting_clients"><span class="so-icon" data-ico="target"></span><span class="so-label">Getting clients</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="pricing"><span class="so-icon" data-ico="coins"></span><span class="so-label">Pricing my work</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="marketing"><span class="so-icon" data-ico="megaphone"></span><span class="so-label">Marketing & visibility</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="operations"><span class="so-icon" data-ico="settings"></span><span class="so-label">Running the business side</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="scaling"><span class="so-icon" data-ico="trending"></span><span class="so-label">Scaling & growing</span><span class="so-check"></span></div>
-        </div>
-      </div>
-      <!-- Step 4: Income stage -->
-      <div class="survey-step" data-step="4" id="surveyStep4" style="display:none;">
-        <h2>Where are you with income from this?</h2>
-        <p class="auth-sub">Totally judgment-free. Everyone starts somewhere.</p>
-        <div class="survey-option-grid" data-key="income">
-          <div class="survey-option" data-value="no_income"><span class="so-icon" data-ico="sprout"></span><span class="so-label">No income yet</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="side_income"><span class="so-icon" data-ico="banknote"></span><span class="so-label">Side income (still have a day job)</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="full_time"><span class="so-icon" data-ico="home"></span><span class="so-label">Full-time income from this</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="growing_team"><span class="so-icon" data-ico="users"></span><span class="so-label">Growing a team / agency</span><span class="so-check"></span></div>
-        </div>
-      </div>
-      <!-- Step 5: Biggest challenge -->
-      <div class="survey-step" data-step="5" id="surveyStep5" style="display:none;">
-        <h2>What's your biggest challenge right now?</h2>
-        <p class="auth-sub">We'll highlight chapters that tackle this head-on.</p>
-        <div class="survey-option-grid" data-key="challenge">
-          <div class="survey-option" data-value="finding_clients"><span class="so-icon" data-ico="search"></span><span class="so-label">Finding clients</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="keeping_clients"><span class="so-icon" data-ico="handshake"></span><span class="so-label">Keeping clients coming back</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="pricing"><span class="so-icon" data-ico="tag"></span><span class="so-label">Knowing what to charge</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="time"><span class="so-icon" data-ico="alarm"></span><span class="so-label">Time management</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="marketing"><span class="so-icon" data-ico="phone"></span><span class="so-label">Marketing myself</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="confidence"><span class="so-icon" data-ico="gem"></span><span class="so-label">Confidence / imposter syndrome</span><span class="so-check"></span></div>
-        </div>
-      </div>
-      <!-- Step 6: How they found us -->
-      <div class="survey-step" data-step="6" id="surveyStep6" style="display:none;">
-        <h2>How did you hear about The Guide?</h2>
-        <p class="auth-sub">Last question. It helps us know what's working.</p>
-        <div class="survey-option-grid" data-key="source">
-          <div class="survey-option" data-value="social_media"><span class="so-icon" data-ico="phone"></span><span class="so-label">Social media</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="friend"><span class="so-icon" data-ico="chat"></span><span class="so-label">Friend or referral</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="google"><span class="so-icon" data-ico="search"></span><span class="so-label">Google search</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="youtube"><span class="so-icon" data-ico="play"></span><span class="so-label">YouTube</span><span class="so-check"></span></div>
-          <div class="survey-option" data-value="other"><span class="so-icon" data-ico="sparkles"></span><span class="so-label">Somewhere else</span><span class="so-check"></span></div>
-        </div>
-      </div>
-    </div>
-    <div class="survey-nav" id="surveyNav">
-      <button type="button" class="survey-back-btn" id="surveyBackBtn" style="display:none;">← Back</button>
-      <button type="button" class="survey-next-btn" id="surveyNextBtn">Next →</button>
-    </div>
+    <h2 id="obTitle">Which business do you want to start?</h2>
+    <p class="auth-sub" id="obSub">Tap one and its first lesson opens. You can add more businesses any time.</p>
+    <div class="niche-picker ob-picker" id="nichePicker" role="group" aria-labelledby="obTitle"></div>
+    <button type="button" class="ob-skip survey-skip-link" id="obSkipBtn">Skip for now</button>
   </div>
 
   <div class="auth-card" id="authCardReset" style="display:none;">
@@ -9452,7 +9311,7 @@ async function handleAuthSubmit(){
       setAuthToken(result.token);
       GuideMeta.track('CompleteRegistration', {}, 'reg');
       pendingSignup = { email: result.user.email, userId: result.user.id };
-      showIntroStep();
+      showOnboardingStep();
     } else {
       const result = await apiFetch('/auth/login', {
         method: 'POST',
@@ -9470,146 +9329,91 @@ async function handleAuthSubmit(){
   authSubmitBtn.textContent = originalLabel;
 }
 
-// ---------- Onboarding (6-step survey) ----------
+// ---------- After sign-up: pick a business, then its first lesson ----------
+// One question. Tapping a business saves the account and opens that business's first lesson right away, so a new
+// member reaches real value in a couple of taps (it used to be an intro page, six questions and a five-slide tour,
+// and none of those answers were used). "Skip for now" goes to Home instead. New members skip the welcome slides and
+// the old feature tour; Home and its shortcuts show the way around once they come back to it.
 let pendingSignup = null;
-const authCardIntro = document.getElementById('authCardIntro');
-const introContinueBtn = document.getElementById('introContinueBtn');
-const introSkipBtn = document.getElementById('introSkipBtn');
 const authCardStep2 = document.getElementById('authCardStep2');
 const nichePicker = document.getElementById('nichePicker');
-const surveyProgress = document.getElementById('surveyProgress');
-const surveyBackBtn = document.getElementById('surveyBackBtn');
-const surveyNextBtn = document.getElementById('surveyNextBtn');
-const SURVEY_TOTAL_STEPS = 6;
-let surveyStep = 1;
-let surveyAnswers = { niches: [], experience: null, goals: [], income: null, challenge: null, source: null };
+let obStarting = false;
 /** The business a visitor tried with "Try step one" on the landing page, if they tried one. */
 function demoPick(){
   try{ const id = sessionStorage.getItem('guide_demo_pick'); return NICHES.some(n=> n.id === id) ? id : null; }catch(e){ return null; }
 }
 /** "Skip" still keeps the business they tried. */
-function skippedAnswers(){ return { niches: demoPick() ? [demoPick()] : [], experience: null, goals: [], income: null, challenge: null, source: null }; }
-
-function showIntroStep(){
-  authCardStep1.style.display = 'none';
-  authCardIntro.style.display = '';
-}
-
-function buildProgressDots(){
-  surveyProgress.innerHTML = '';
-  for(let i = 1; i <= SURVEY_TOTAL_STEPS; i++){
-    const dot = document.createElement('div');
-    dot.className = 'sp-dot' + (i < surveyStep ? ' done' : '') + (i === surveyStep ? ' active' : '');
-    surveyProgress.appendChild(dot);
-  }
-}
-
-function showSurveyStep(step){
-  surveyStep = step;
-  document.querySelectorAll('.survey-step').forEach(s => s.style.display = 'none');
-  const el = document.getElementById('surveyStep' + step);
-  if(el) el.style.display = '';
-  buildProgressDots();
-  surveyBackBtn.style.display = step === 1 ? 'none' : '';
-  surveyNextBtn.textContent = step === SURVEY_TOTAL_STEPS ? "Let's go" : 'Next';
-}
+function skippedAnswers(){ return { niches: demoPick() ? [demoPick()] : [] }; }
 
 function showOnboardingStep(){
-  authCardIntro.style.display = 'none';
+  authCardStep1.style.display = 'none';
   authCardStep2.style.display = '';
-  surveyAnswers = { niches: [], experience: null, goals: [], income: null, challenge: null, source: null };
+  obStarting = false;
   onboardSelection = new Set();
-  const tried = demoPick();               // the business they tried on the landing page starts out ticked
+  const tried = demoPick();               // the business they tried on the landing page comes first, already marked
   if(tried) onboardSelection.add(tried);
+  const sub = document.getElementById('obSub');
+  if(sub) sub.textContent = I18N.t('Tap one and its first lesson opens. You can add more businesses any time.');
   nichePicker.innerHTML = '';
-  NICHES.forEach(niche=>{
-    const item = document.createElement('div');
+  const list = tried ? [NICHES.find(n=> n.id === tried)].concat(NICHES.filter(n=> n.id !== tried)) : NICHES.slice();
+  list.forEach(niche=>{
+    const item = document.createElement('button');
     const on = onboardSelection.has(niche.id);
+    item.type = 'button';
     item.className = 'niche-pick-item' + (on ? ' selected' : '');
-    item.innerHTML = `
-      <span class="np-icon">${nicheIco(niche)}</span>
-      <span class="np-name">${niche.name}</span>
-      <span class="np-check">${on ? ico('check') : ''}</span>
-    `;
-    item.addEventListener('click', ()=>{
-      if(onboardSelection.has(niche.id)){ onboardSelection.delete(niche.id); item.classList.remove('selected'); item.querySelector('.np-check').textContent=''; }
-      else { onboardSelection.add(niche.id); item.classList.add('selected'); item.querySelector('.np-check').innerHTML=ico('check'); }
-    });
+    item.dataset.id = niche.id;
+    item.setAttribute('aria-pressed', on ? 'true' : 'false');
+    item.innerHTML = `<span class="np-icon">${nicheIco(niche)}</span><span class="np-name">${gvEsc(niche.name)}</span>`;
+    item.addEventListener('click', ()=> startWithNiche(niche.id));
     nichePicker.appendChild(item);
   });
-  // Wire up option-grid click handlers for steps 2-6
-  document.querySelectorAll('.survey-option-grid').forEach(grid => {
-    const isMulti = grid.dataset.multi;
-    const maxPicks = isMulti ? parseInt(isMulti, 10) : 1;
-    grid.querySelectorAll('.survey-option').forEach(opt => {
-      opt.classList.remove('selected');
-      opt.querySelector('.so-check').textContent = '';
-      opt.addEventListener('click', () => {
-        if(opt.classList.contains('selected')){
-          opt.classList.remove('selected');
-          opt.querySelector('.so-check').textContent = '';
-        } else {
-          if(!isMulti){
-            grid.querySelectorAll('.survey-option').forEach(o => { o.classList.remove('selected'); o.querySelector('.so-check').textContent = ''; });
-          } else {
-            const picked = grid.querySelectorAll('.survey-option.selected').length;
-            if(picked >= maxPicks) return;
-          }
-          opt.classList.add('selected');
-          opt.querySelector('.so-check').innerHTML = ico('check');
-        }
-      });
-    });
+  try{ authScreen.scrollTo(0, 0); window.scrollTo(0, 0); }catch(e){}
+}
+
+/** A business was tapped: mark it, then save the account and open its first lesson. */
+function startWithNiche(id){
+  if(obStarting) return;
+  obStarting = true;
+  onboardSelection = new Set([id]);
+  nichePicker.querySelectorAll('.niche-pick-item').forEach(el=>{
+    const on = el.dataset.id === id;
+    el.classList.toggle('selected', on);
+    el.setAttribute('aria-pressed', on ? 'true' : 'false');
+    el.disabled = true;
   });
-  showSurveyStep(1);
+  const sub = document.getElementById('obSub');
+  if(sub) sub.textContent = I18N.t('Opening your first lesson…');
+  finishSignup({ niches: [id] }, true).then(ok=>{
+    if(ok) return;
+    obStarting = false;
+    nichePicker.querySelectorAll('.niche-pick-item').forEach(el=> el.disabled = false);
+  });
 }
 
-function collectCurrentStep(){
-  if(surveyStep === 1){
-    surveyAnswers.niches = Array.from(onboardSelection);
-  } else {
-    const stepEl = document.getElementById('surveyStep' + surveyStep);
-    const grid = stepEl.querySelector('.survey-option-grid');
-    if(!grid) return;
-    const key = grid.dataset.key;
-    const isMulti = grid.dataset.multi;
-    const selected = Array.from(grid.querySelectorAll('.survey-option.selected')).map(o => o.dataset.value);
-    surveyAnswers[key] = isMulti ? selected : (selected[0] || null);
-  }
-}
-
-async function finishSignup(answers){
-  if(!pendingSignup) return;
+async function finishSignup(answers, openFirstLesson){
+  if(!pendingSignup) return false;
   const initialData = {
     completed: [], tools: {}, niches: answers.niches,
-    streak: { count: 0, lastDate: null }, bookmarks: [], lastVisited: null, hasSeenTour: false, hasSeenWelcome: false,
-    surveyExperience: answers.experience,
-    surveyGoals: answers.goals,
-    surveyIncome: answers.income,
-    surveyChallenge: answers.challenge,
-    surveySource: answers.source
+    streak: { count: 0, lastDate: null }, bookmarks: [], lastVisited: null,
+    // straight into the app: no welcome slides or feature tour on the way in
+    hasSeenTour: true, hasSeenWelcome: true
   };
   try{
     await apiFetch('/account', { method: 'PUT', body: JSON.stringify({ data: initialData }) });
     await loginApp(pendingSignup.email, Object.assign({}, initialData, { isPro: false, joinedAt: new Date().toISOString() }), pendingSignup.userId);
   }catch(e){
-    authError.textContent = "Something went wrong finishing sign up. Please try again.";
-    authCardIntro.style.display = 'none';
+    authError.textContent = I18N.t('Something went wrong finishing sign up. Please try again.');
     authCardStep2.style.display = 'none';
     authCardStep1.style.display = '';
+    return false;
   }
   pendingSignup = null;
+  const start = openFirstLesson && answers.niches && NICHES.find(n=> n.id === answers.niches[0]);
+  if(start && start.guides.length) goToLesson(start.id, start.guides[0].title);
+  return true;
 }
 
-introContinueBtn.addEventListener('click', showOnboardingStep);
-introSkipBtn.addEventListener('click', ()=> finishSignup(skippedAnswers()));
-document.querySelectorAll('.survey-skip-link').forEach(btn => btn.addEventListener('click', ()=> finishSignup(skippedAnswers())));
-surveyBackBtn.addEventListener('click', ()=> { collectCurrentStep(); showSurveyStep(surveyStep - 1); });
-surveyNextBtn.addEventListener('click', ()=> {
-  collectCurrentStep();
-  if(surveyStep < SURVEY_TOTAL_STEPS){ showSurveyStep(surveyStep + 1); }
-  else { finishSignup(surveyAnswers); }
-});
+document.getElementById('obSkipBtn').addEventListener('click', ()=>{ if(!obStarting) finishSignup(skippedAnswers(), false); });
 
 authSubmitBtn.addEventListener('click', handleAuthSubmit);
 authEmail.addEventListener('keydown', (e)=>{ if(e.key==='Enter') handleAuthSubmit(); });
@@ -9855,7 +9659,6 @@ logoutBtn.addEventListener('click', ()=>{
   authScreen.style.display = 'none';
   landingView.style.display = '';
   authCardStep1.style.display = '';
-  authCardIntro.style.display = 'none';
   authCardStep2.style.display = 'none';
   authCardReset.style.display = 'none';
   authEmail.value = '';

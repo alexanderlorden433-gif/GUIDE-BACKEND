@@ -2736,6 +2736,70 @@ def niche_burst(browser, base):
         ctx.close()
 
 
+def first_two_minutes(browser, base):
+    """A new member's first two minutes: after sign-up there is one question ("Which business do you want to start?"),
+    tapping a business opens its first lesson straight away (no intro page, survey or welcome slides on the way), and
+    the account is saved with that business. "Skip for now" goes to Home. Phone and laptop, and the Purple look."""
+    for label, vp, mobile, look in (('phone', {'width': 390, 'height': 844}, True, ''), ('desktop', {'width': 1280, 'height': 800}, False, ''),
+                                    ('phone, purple', {'width': 390, 'height': 844}, True, 'purple')):
+        for skip in (False, True):
+            step = [f"first two minutes ({label}{', skip' if skip else ''})"]
+            ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+            st = new_state(False)
+            st['data'].update({'niches': [], 'streak': {'count': 0, 'lastDate': None}, 'hasSeenTour': False, 'hasSeenWelcome': False, 'userProfile': {}})
+            attach_backend(ctx, st)
+            ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');"
+                                + (f"localStorage.setItem('guide_look','{look}');" if look else '') + "}catch(e){}")
+            page = ctx.new_page(); watch_errors(page, step)
+            page.goto(base + '/', wait_until='load')
+            if not visible(page, '#landingView', 8000):
+                problem(step[0], 'landing page did not appear'); finish(st, step[0]); ctx.close(); continue
+            page.click('#landingSignupBtn'); page.wait_for_timeout(500)
+            page.fill('#authEmail', 'new@theguide.test'); page.fill('#authPassword', 'new-member-pass-1')
+            page.click('#authSubmitBtn')
+            if not visible(page, '#authCardStep2', 6000):
+                problem(step[0], 'after sign-up the business question should show'); finish(st, step[0]); ctx.close(); continue
+            page.wait_for_timeout(300)
+            q = page.evaluate("""(()=>{ const c = document.getElementById('authCardStep2'); const items = [...c.querySelectorAll('#nichePicker .niche-pick-item')];
+              return {title: c.querySelector('h2').textContent, items: items.length, buttons: items.every(b => b.tagName === 'BUTTON'),
+                      small: items.filter(b => b.getBoundingClientRect().height < 44).length, extra: document.querySelectorAll('.survey-step, #authCardIntro').length,
+                      wide: document.documentElement.scrollWidth > innerWidth + 1}; })()""")
+            if q['title'] != 'Which business do you want to start?' or q['items'] != len(page.evaluate('NICHES')) or not q['buttons'] or q['extra'] or q['small'] or q['wide']:
+                problem(step[0], 'one question, every business as a tappable button (44px+), no other survey screens', q)
+            else:
+                ok(step[0], f"one question after sign-up, {q['items']} businesses as tap-sized buttons")
+            if not skip:
+                shot(page, f"{label.replace(', ', '-')}-first-pick")
+                first = page.evaluate("(()=>{ const n = NICHES.find(x => x.id === 'lawn'); return {name: n.name, title: n.guides[0].title}; })()")
+                page.locator('#nichePicker .niche-pick-item[data-id="lawn"]').click()
+                page.wait_for_timeout(2500)
+                got = page.evaluate("""(()=>{ const open = document.querySelector('.guide.open');
+                  return {chapter: getComputedStyle(document.getElementById('nicheView')).display !== 'none', niche: currentNicheId,
+                          open: open ? open.dataset.gv : null, want: gvId('lawn', NICHES.find(x => x.id === 'lawn').guides[0].title),
+                          welcome: getComputedStyle(document.getElementById('welcomeOverlay')).display !== 'none',
+                          tour: (document.getElementById('tourTooltip') || {style: {}}).style.display === 'block'}; })()""")
+                saved = st['data']
+                if not (got['chapter'] and got['niche'] == 'lawn' and got['open'] == got['want']):
+                    problem(step[0], 'tapping a business should open its first lesson', got)
+                elif got['welcome'] or got['tour']:
+                    problem(step[0], 'no welcome slides or tour should cover the first lesson', got)
+                elif saved.get('niches') != ['lawn'] or saved.get('hasSeenWelcome') is not True or saved.get('hasSeenTour') is not True:
+                    problem(step[0], 'the account should be saved with the business picked', {k: saved.get(k) for k in ('niches', 'hasSeenWelcome', 'hasSeenTour')})
+                else:
+                    ok(step[0], f"tapping {first['name']} opens its first lesson, \"{first['title']}\", with nothing in the way")
+                no_sideways_scroll(page, step[0])
+                shot(page, f"{label.replace(', ', '-')}-first-lesson")
+            else:
+                page.click('#obSkipBtn'); page.wait_for_timeout(1800)
+                home = page.evaluate("({home: getComputedStyle(document.getElementById('homeView')).display !== 'none', welcome: getComputedStyle(document.getElementById('welcomeOverlay')).display !== 'none'})")
+                if home['home'] and not home['welcome']:
+                    ok(step[0], '"Skip for now" goes to Home, with no welcome slides')
+                else:
+                    problem(step[0], '"Skip for now" should go to Home', home)
+            finish(st, step[0])
+            ctx.close()
+
+
 def step_one_demo(browser, base):
     """The landing page's "Try step one": a visitor picks a business and sees its real first lesson, no signup."""
     for device, vp, mobile in (('phone', {'width': 390, 'height': 844}, True), ('desktop', {'width': 1280, 'height': 800}, False)):
@@ -4479,6 +4543,7 @@ def main():
         startup_account(browser, base)
         community_names(browser, base)
         step_one_demo(browser, base)
+        first_two_minutes(browser, base)
         account_settings(browser, base)
         manage_subscription(browser, base)
         delete_account(browser, base)
