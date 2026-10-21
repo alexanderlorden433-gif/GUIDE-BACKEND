@@ -129,3 +129,14 @@
 - Queue (when a slot frees): certificate name fitting; unsubscribe confirm step; mentorAlert field caps.
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/clientStatus.js + networking.js (were "missing routes" at setup — check they match the app now).
+
+## 2026-10-21 (Wed)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. Railway status on main 4e9792a = success.
+- Since last notes: #73 (Impact site check, claude agent) merged. Open: #71, #72 (mine, both still merge clean with main, no reviews; Netlify preview "canceled" = no web/ change, fine).
+- check.sh on main: ALL PASS (smoke 0 problems, 83 shots).
+- Step 5 area: clientStatus.js (solid: owner-scoped, Pro-gated, public route returns only client fields, random tokens) + networking.js.
+- networking.js: GET /network/connections returned other members' full rows (email + saved data) — not used by the app. Went over the 2-PR cap because it's member privacy: opened PR #74 agent/app-health/2026-10-21-network-privacy (select id+email only, return masked email + initial, same as /matches). check_backend step 12 (fails on main). #71 also edits check_backend.js tail → expect a small conflict when one merges; resolve by keeping both steps.
+- Low, queued: PUT /network/:id/respond lets the receiver flip an already-answered request; /matches scans the whole user table in 200-row batches when few members share a niche (slow as the table grows); nicheId not length-capped.
+- Queue (when a slot frees): certificate name fitting; unsubscribe confirm step; mentorAlert field caps; network respond only when pending.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/discussion.js + leaderboard.js.
