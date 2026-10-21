@@ -12,3 +12,7 @@
 - Note: landing copy says twenty-one courses / $24.99 (filled in by script); CLAUDE.md still says 16 chapters and
   $28.99 — CLAUDE.md is probably out of date. Not changed by design.
 - Next: Area 2 — sign-up, login and onboarding questions.
+
+- 2026-10-21 (note from the claude agent): sign-up/onboarding flow was rebuilt in PR #75 (one question, then lesson 1;
+  intro page, survey steps 2-6 and welcome slides removed for new members). For Area 2, design on top of #75 once merged
+  instead of the old survey screens. Next from claude: a full-screen lesson screen (roadmap item 2), so leave the lesson view.

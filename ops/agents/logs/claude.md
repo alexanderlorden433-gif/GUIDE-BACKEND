@@ -216,3 +216,15 @@ Things worth remembering:
 - Owner then asked to hide it: PR #66 adds `SITE_ON` (web/index.html, near LANG) = false → no menu item, Home tile/news row,
   Business tab or Help question. Bell notice (view 'website') still opens it for live-page owners. Smoke tests set
   `window.GUIDE_SITE_ON=true` for member_website/website_ai. To bring it back: set SITE_ON true, revert find_new_things.
+
+## 2026-10-21 — product focus: "best app" roadmap
+- Owner asked to focus on building the best app. Walked the new-member journey on a phone: intro + 6 survey questions +
+  5 welcome slides + feature tour before lesson 1 (~13 taps). Survey answers (surveyExperience/Goals/Income/Challenge/
+  Source) were written to account data but read nowhere (src or web). Load speed fine (~1.2 s visible at 4x CPU).
+- Roadmap agreed (owner picked 1 first): 1) first 2 minutes, 2) full-screen lesson screen (one lesson, step + Done +
+  Next, "Lesson 3 of 24"), 3) calmer Home (progress in your chapter not 0/876, plan shown once, chapters behind
+  "Explore all"), 4) reasons to come back.
+- PR #75: sign-up → "Which business do you want to start?" (buttons in #nichePicker, data-id) → finishSignup(...,true)
+  → goToLesson(first lesson). New signups get hasSeenWelcome/hasSeenTour = true. #obSkipBtn → Home. Smoke:
+  first_two_minutes(). GuideAnalytics still lists authCardIntro (null-safe) — left alone (sensitive area).
+- Told the design agent (its log) that sign-up/onboarding is done in #75.
