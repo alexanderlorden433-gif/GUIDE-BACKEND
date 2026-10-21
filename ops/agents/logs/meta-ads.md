@@ -44,3 +44,8 @@
 ## 2026-10-20 (Tue)
 - Still zero delivery every day Oct 4-19 (FAEV*). FACA*/FADE* still empty. No Adspirer ad calls (not a check day, nothing changed). Adspirer 7/15, resets Nov 4.
 - No push sent (same blocker as already reported). Next live check: Thu Oct 22.
+
+## 2026-10-21 (Wed)
+- FIRST DELIVERY: Metricool campaign data (FACA*) now shows a little delivery on Oct 20 only (well under the daily budget, 1 link click, 0 registrations). Nothing Oct 5-19, nothing yet for Oct 21. Ad-level FADE* still empty (lag).
+- Treat Oct 20 as day 1 of learning: no edits before Oct 23 except to stop harm. No Adspirer ad calls (not a check day). Adspirer 7/15, resets Nov 4.
+- Push sent (delivery started). Next live check: Thu Oct 22 — confirm delivery, review status, and setup gaps.
