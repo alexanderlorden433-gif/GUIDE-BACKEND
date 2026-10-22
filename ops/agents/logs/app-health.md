@@ -140,3 +140,13 @@
 - Queue (when a slot frees): certificate name fitting; unsubscribe confirm step; mentorAlert field caps; network respond only when pending.
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/discussion.js + leaderboard.js.
+
+## 2026-10-22 (Thu)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. main b72c9cd (#75 sign-up: one question then first lesson) has NO commit statuses yet (Railway didn't report; #75 changed only web/ + ops/, so the backend is unchanged). Previous main 4e9792a = Railway success. Re-check tomorrow.
+- Open: #71, #72, #74 (mine, all mergeable clean, no reviews). Over the 2-PR cap → no new PR tonight.
+- check.sh on main: ALL PASS (smoke 0 problems, 89 shots).
+- Read #75's sign-up code: if PUT /account fails after sign-up, the app goes back to step 1 with "try again"; tapping Sign up again → /auth/signup 409 "already exists" (account was created, token set). Pre-existing (old finishSignup had it too). Fix: in handleAuthSubmit, when authMode==='signup' and pendingSignup.email === email, skip /auth/signup and go straight to showOnboardingStep(). Add smoke step (fail PUT /account once). TOP of queue.
+- Step 5 area: discussion.js (owner/author gating OK, body caps OK). Low: nicheId not validated/capped (posts to made-up niches); replies per post unbounded in GET include. leaderboard.js: every request scans the whole user table loading every dataBlob (slow as members grow) → cache result ~5 min per type; returns other members' internal userId (not needed; drop it); challengeHistory assumed array.
+- Queue (when a slot frees): sign-up retry after 409 (above); certificate name fitting; unsubscribe confirm step; mentorAlert field caps; network respond only when pending; leaderboard cache.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/account.js + auth.js (password reset flow).
