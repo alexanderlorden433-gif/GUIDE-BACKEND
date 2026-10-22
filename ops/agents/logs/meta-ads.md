@@ -49,3 +49,9 @@
 - FIRST DELIVERY: Metricool campaign data (FACA*) now shows a little delivery on Oct 20 only (well under the daily budget, 1 link click, 0 registrations). Nothing Oct 5-19, nothing yet for Oct 21. Ad-level FADE* still empty (lag).
 - Treat Oct 20 as day 1 of learning: no edits before Oct 23 except to stop harm. No Adspirer ad calls (not a check day). Adspirer 7/15, resets Nov 4.
 - Push sent (delivery started). Next live check: Thu Oct 22 — confirm delivery, review status, and setup gaps.
+
+## 2026-10-22 (Thu)
+- Live check done (Adspirer 8/15 after it, resets Nov 4). Campaign, ad set, ad all ACTIVE, budget $5/day. Delivery still only on Oct 20 (tiny, 1 link click, 0 registrations); nothing yet for Oct 21 (may be lag). FADE* still empty.
+- Setup gaps unchanged in live config: US only, ad named "New Leads Ad", no URL tags, Multi-advertiser ads enrolled. Proposed one combined fix for Oct 23+ (after learning window), needs Alexander's OK.
+- Gmail: no Meta billing/rejection emails in last 20 days.
+- Push sent (live-check summary + proposal). Next live check: Mon Oct 26.
