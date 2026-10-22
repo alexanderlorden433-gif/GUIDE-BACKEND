@@ -12,6 +12,7 @@
 //   8. the billing emails (trial ends tomorrow, checkout left) say the amount, how to cancel, and nothing was charged
 //   9. member websites: what a member or a visitor types is shown as text, never run as page code
 //  10. deleting an account stops its Stripe subscription first (and keeps the account if Stripe can't be reached)
+//  11. partner codes: the last use of a code goes to one member only, and a failed redeem leaves nothing half-done
 // Usage: node ops/check_backend.js   (exit 1 on any failure)
 const fs = require('fs');
 const path = require('path');
@@ -329,6 +330,107 @@ async function checkDeleteCancels() {
   }
 }
 
+// 11. partner codes: redeeming is all-or-nothing, and a code with N uses gives out N, even when
+//     members redeem at the same moment. Uses an in-memory stand-in database whose transactions
+//     run one at a time and are thrown away on error (like Postgres row locks + rollback).
+async function checkCodeRedeem() {
+  const routeFile = require.resolve(path.join(ROOT, 'src', 'routes', 'codes'));
+  const dbFile = require.resolve(path.join(ROOT, 'src', 'db'));
+  const notifFile = require.resolve(path.join(ROOT, 'src', 'notifications'));
+  const saved = { route: require.cache[routeFile], db: require.cache[dbFile], notif: require.cache[notifFile] };
+  const tick = () => new Promise(r => setImmediate(r));
+  const makeDb = (opts) => {
+    let state = { codes: [{ id: 'c1', code: 'PODCAST-ONE', label: 'Podcast', days: 30, maxUses: opts.maxUses, uses: 0, active: true, expiresAt: null }],
+                  reds: [], users: { u1: { bonusProUntil: null }, u2: { bonusProUntil: null } } };
+    const api = (get) => ({
+      $executeRawUnsafe: async (sql, ...a) => {
+        await tick(); const st = get();
+        if (/^CREATE|^ALTER/.test(sql.trim())) return 0;
+        if (/INSERT INTO "PromoRedemption"/.test(sql)) {
+          if (st.reds.some(r => r.codeId === a[1] && r.userId === a[2])) throw new Error('unique violation');
+          st.reds.push({ id: a[0], codeId: a[1], userId: a[2] }); return 1;
+        }
+        if (/UPDATE "PromoCode" SET "uses"/.test(sql)) {
+          const c = st.codes.find(x => x.id === a[0]);
+          if (/"uses" < "maxUses"/.test(sql) && !(c.active && (c.maxUses == null || c.uses < c.maxUses))) return 0;
+          c.uses++; return 1;
+        }
+        throw new Error('unexpected SQL in check: ' + sql.slice(0, 60));
+      },
+      $queryRawUnsafe: async (sql, ...a) => {
+        await tick(); const st = get();
+        if (/FROM "PromoCode" WHERE "code"/.test(sql)) return st.codes.filter(c => c.code === a[0]).map(c => Object.assign({}, c));
+        if (/FROM "PromoRedemption"/.test(sql)) return st.reds.filter(r => r.codeId === a[0] && r.userId === a[1]);
+        throw new Error('unexpected query in check: ' + sql.slice(0, 60));
+      },
+      user: {
+        findUnique: async ({ where }) => { await tick(); return Object.assign({}, get().users[where.id]); },
+        update: async ({ where, data }) => { await tick(); if (opts.failUserUpdate) throw new Error('database hiccup'); Object.assign(get().users[where.id], data); return {}; },
+      },
+    });
+    let lock = Promise.resolve();
+    const db = api(() => state);
+    db.$transaction = (fn) => {
+      const run = lock.then(async () => {
+        const draft = JSON.parse(JSON.stringify(state));
+        const out = await fn(api(() => draft));
+        state = draft; return out;
+      });
+      lock = run.catch(() => {});
+      return run;
+    };
+    db.state = () => state;
+    return db;
+  };
+  const start = async (db) => {
+    delete require.cache[routeFile];
+    require.cache[dbFile] = { id: dbFile, filename: dbFile, loaded: true, exports: db };
+    require.cache[notifFile] = { id: notifFile, filename: notifFile, loaded: true, exports: { notifyUser: async () => {} } };
+    const router = require(routeFile);
+    await router.ensureCodeTables();
+    const express = require(path.join(ROOT, 'node_modules', 'express'));
+    const jwt = require(path.join(ROOT, 'node_modules', 'jsonwebtoken'));
+    const app = express();
+    app.use(express.json());
+    app.use('/api/codes', router);
+    app.use((err, req, res, next) => res.status(500).json({ error: err.message }));
+    const server = await new Promise(r => { const s = app.listen(0, '127.0.0.1', () => r(s)); });
+    const redeem = (uid) => fetch(`http://127.0.0.1:${server.address().port}/api/codes/redeem`, {
+      method: 'POST', signal: AbortSignal.timeout(3000),
+      headers: { 'Content-Type': 'application/json',
+                 Authorization: 'Bearer ' + jwt.sign({ sub: uid, email: uid + '@b.test' }, process.env.JWT_SECRET, { issuer: 'theguide', audience: 'theguide-app' }) },
+      body: JSON.stringify({ code: 'podcast-one' }) }).then(r => r.status);
+    return { redeem, close: () => server.close() };
+  };
+  try {
+    let db = makeDb({ maxUses: 1 });
+    let s = await start(db);
+    try {
+      const got = (await Promise.all([s.redeem('u1'), s.redeem('u2')])).sort().join();
+      const st = db.state();
+      const pro = Object.values(st.users).filter(u => u.bonusProUntil).length;
+      if (got === '200,410' && st.codes[0].uses === 1 && st.reds.length === 1 && pro === 1) ok('a code with 1 use left goes to one member when two redeem at the same moment');
+      else bad(`two members redeeming the last use of a code at once: answers ${got}, uses ${st.codes[0].uses}, ${pro} got Pro days (should be one 200 and one 410)`);
+      const again = await s.redeem('u1');
+      if (again === 409 || again === 410) ok('redeeming the same code twice is refused');
+      else bad(`redeeming the same code twice answered ${again}`);
+    } finally { s.close(); }
+
+    db = makeDb({ maxUses: 5, failUserUpdate: true });
+    s = await start(db);
+    try {
+      const first = await s.redeem('u1');
+      const st = db.state();
+      if (first >= 500 && st.reds.length === 0 && st.codes[0].uses === 0) ok('if adding the Pro days fails, the code is not marked used (the member can try again)');
+      else bad(`a failed redeem left the code half-used: answer ${first}, ${st.reds.length} redemption row(s), uses ${st.codes[0].uses} (member would be told "already used" without getting the days)`);
+    } finally { s.close(); }
+  } finally {
+    for (const [k, f] of [['route', routeFile], ['db', dbFile], ['notif', notifFile]]) {
+      if (saved[k]) require.cache[f] = saved[k]; else delete require.cache[f];
+    }
+  }
+}
+
 checkAsyncErrors()
   .catch(e => bad('async error check failed: ' + e.message))
   .then(() => checkBodyLimits().catch(e => bad('request size check failed: ' + e.message)))
@@ -338,6 +440,7 @@ checkAsyncErrors()
   .then(() => { try { checkGuiderPlan(); } catch (e) { bad('Guider plan check failed: ' + e.message); } })
   .then(() => { try { checkBillingEmails(); } catch (e) { bad('billing email check failed: ' + e.message); } })
   .then(() => checkDeleteCancels().catch(e => bad('delete account check failed: ' + e.message)))
+  .then(() => checkCodeRedeem().catch(e => bad('partner code check failed: ' + e.message)))
   .finally(() => {
   console.log(problems.length ? `${problems.length} backend problem(s)` : 'Backend OK');
   process.exit(problems.length ? 1 : 0);

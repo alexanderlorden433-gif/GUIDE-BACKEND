@@ -129,18 +129,33 @@ router.post('/redeem', redeemLimiter, async (req, res) => {
     `SELECT "id" FROM "PromoRedemption" WHERE "codeId" = $1::text AND "userId" = $2::text`, c.id, req.user.id);
   if (already[0]) return res.status(409).json({ error: 'You have already used this code.' });
 
-  const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { bonusProUntil: true } });
-  const base = user.bonusProUntil && user.bonusProUntil > new Date() ? user.bonusProUntil : new Date();
-  const until = new Date(base.getTime() + c.days * 24 * 60 * 60 * 1000);
-  // record first; the unique index makes a double tap a no-op
+  // One transaction: count the use only while the code still has room (so two members redeeming
+  // the last use at the same moment can't both get it), record the redemption (the unique index
+  // makes a double tap a no-op), then add the days. If any step fails, none of it sticks.
+  let until;
   try {
-    await prisma.$executeRawUnsafe(`INSERT INTO "PromoRedemption" ("id","codeId","userId") VALUES ($1::text,$2::text,$3::text)`,
-      crypto.randomUUID(), c.id, req.user.id);
+    until = await prisma.$transaction(async (tx) => {
+      const counted = await tx.$executeRawUnsafe(
+        `UPDATE "PromoCode" SET "uses" = "uses" + 1 WHERE "id" = $1::text AND "active" AND ("maxUses" IS NULL OR "uses" < "maxUses")`, c.id);
+      if (!counted) throw Object.assign(new Error('code used up'), { redeem: 410 });
+      try {
+        await tx.$executeRawUnsafe(`INSERT INTO "PromoRedemption" ("id","codeId","userId") VALUES ($1::text,$2::text,$3::text)`,
+          crypto.randomUUID(), c.id, req.user.id);
+      } catch (e) {
+        throw Object.assign(new Error('already redeemed'), { redeem: 409 });
+      }
+      const user = await tx.user.findUnique({ where: { id: req.user.id }, select: { bonusProUntil: true } });
+      const now = new Date();
+      const base = user && user.bonusProUntil && user.bonusProUntil > now ? user.bonusProUntil : now;
+      const newUntil = new Date(base.getTime() + c.days * 24 * 60 * 60 * 1000);
+      await tx.user.update({ where: { id: req.user.id }, data: { bonusProUntil: newUntil } });
+      return newUntil;
+    });
   } catch (e) {
-    return res.status(409).json({ error: 'You have already used this code.' });
+    if (e.redeem === 409) return res.status(409).json({ error: 'You have already used this code.' });
+    if (e.redeem === 410) return res.status(410).json({ error: 'That code is no longer available.' });
+    throw e;
   }
-  await prisma.$executeRawUnsafe(`UPDATE "PromoCode" SET "uses" = "uses" + 1 WHERE "id" = $1::text`, c.id);
-  await prisma.user.update({ where: { id: req.user.id }, data: { bonusProUntil: until } });
   notifyUser(req.user.id, {
     type: 'referral_bonus',
     title: `${c.days} days of Pro are on 🎉`,
