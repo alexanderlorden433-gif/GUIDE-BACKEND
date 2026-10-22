@@ -151,19 +151,24 @@ router.get('/connections', async (req, res) => {
     const [sent, received] = await Promise.all([
       prisma.networkRequest.findMany({
         where: { fromUserId: req.user.id },
-        include: { toUser: { select: { id: true, email: true, dataBlob: true } } },
+        include: { toUser: { select: { id: true, email: true } } },
         orderBy: { createdAt: 'desc' },
         take: limit,
       }),
       prisma.networkRequest.findMany({
         where: { toUserId: req.user.id },
-        include: { fromUser: { select: { id: true, email: true, dataBlob: true } } },
+        include: { fromUser: { select: { id: true, email: true } } },
         orderBy: { createdAt: 'desc' },
         take: limit,
       }),
     ]);
 
-    res.json({ sent, received });
+    // Other members' accounts are never sent whole: just a masked email and an initial.
+    const shape = (r, other) => ({
+      id: r.id, status: r.status, nicheId: r.nicheId || null, createdAt: r.createdAt,
+      user: other ? { userId: other.id, email: maskEmail(other.email), initial: other.email.charAt(0).toUpperCase() } : null,
+    });
+    res.json({ sent: sent.map(r => shape(r, r.toUser)), received: received.map(r => shape(r, r.fromUser)) });
   } catch (err) {
     console.error('Connections error:', err);
     res.status(500).json({ error: 'Failed to load connections.' });

@@ -12,6 +12,7 @@
 //   8. the billing emails (trial ends tomorrow, checkout left) say the amount, how to cancel, and nothing was charged
 //   9. member websites: what a member or a visitor types is shown as text, never run as page code
 //  10. deleting an account stops its Stripe subscription first (and keeps the account if Stripe can't be reached)
+//  12. networking: the connections list never sends another member's email or saved data
 // Usage: node ops/check_backend.js   (exit 1 on any failure)
 const fs = require('fs');
 const path = require('path');
@@ -329,6 +330,50 @@ async function checkDeleteCancels() {
   }
 }
 
+// 12. networking: GET /api/network/connections lists the people a member sent requests to or got
+//     requests from. Anyone can send a request, so that list must never carry another member's
+//     full email or their saved data (progress, Guider chats, business numbers) — only a masked
+//     email and an initial.
+async function checkNetworkPrivacy() {
+  const routeFile = require.resolve(path.join(ROOT, 'src', 'routes', 'networking'));
+  const dbFile = require.resolve(path.join(ROOT, 'src', 'db'));
+  const saved = { route: require.cache[routeFile], db: require.cache[dbFile] };
+  const secret = { completed: ['x'], aiChat: [{ text: 'PRIVATE-CHAT' }], business: { revenue: 'PRIVATE-NUMBERS' } };
+  const person = (id, email) => ({ id, email, dataBlob: secret });
+  // a stand-in database that, like Prisma, returns whatever fields the route asks for in select
+  const pick = (u, sel) => { if (!sel) return u; const o = {}; for (const k of Object.keys(sel)) if (sel[k]) o[k] = u[k]; return o; };
+  const fakeDb = { networkRequest: { findMany: async ({ where, include }) => {
+    const mine = where.fromUserId === 'u1';
+    const r = { id: mine ? 'r1' : 'r2', fromUserId: mine ? 'u1' : 'u3', toUserId: mine ? 'u2' : 'u1', status: 'pending', nicheId: 'lawn', createdAt: new Date() };
+    if (include.toUser) r.toUser = pick(person('u2', 'bobsmith@example.test'), include.toUser.select);
+    if (include.fromUser) r.fromUser = pick(person('u3', 'carolj@example.test'), include.fromUser.select);
+    return [r];
+  } } };
+  try {
+    delete require.cache[routeFile];
+    require.cache[dbFile] = { id: dbFile, filename: dbFile, loaded: true, exports: fakeDb };
+    const router = require(routeFile);
+    const express = require(path.join(ROOT, 'node_modules', 'express'));
+    const jwt = require(path.join(ROOT, 'node_modules', 'jsonwebtoken'));
+    const app = express();
+    app.use('/api/network', router);
+    const token = jwt.sign({ sub: 'u1', email: 'a@b.test' }, process.env.JWT_SECRET, { issuer: 'theguide', audience: 'theguide-app' });
+    const server = await new Promise(r => { const s = app.listen(0, '127.0.0.1', () => r(s)); });
+    let text, status;
+    try {
+      const res = await fetch(`http://127.0.0.1:${server.address().port}/api/network/connections`, { headers: { Authorization: 'Bearer ' + token }, signal: AbortSignal.timeout(3000) });
+      status = res.status; text = await res.text();
+    } finally { server.close(); }
+    const leaked = ['bobsmith@', 'carolj@', 'PRIVATE-CHAT', 'PRIVATE-NUMBERS', 'dataBlob'].filter(w => text.includes(w));
+    if (status === 200 && !leaked.length && text.includes('b***@e***')) ok("network connections show a masked email only, never another member's email or saved data");
+    else bad(`GET /api/network/connections (${status}) sends other members' private data: ${leaked.join(', ') || 'unexpected shape'}`);
+  } finally {
+    for (const [k, f] of [['route', routeFile], ['db', dbFile]]) {
+      if (saved[k]) require.cache[f] = saved[k]; else delete require.cache[f];
+    }
+  }
+}
+
 checkAsyncErrors()
   .catch(e => bad('async error check failed: ' + e.message))
   .then(() => checkBodyLimits().catch(e => bad('request size check failed: ' + e.message)))
@@ -338,6 +383,7 @@ checkAsyncErrors()
   .then(() => { try { checkGuiderPlan(); } catch (e) { bad('Guider plan check failed: ' + e.message); } })
   .then(() => { try { checkBillingEmails(); } catch (e) { bad('billing email check failed: ' + e.message); } })
   .then(() => checkDeleteCancels().catch(e => bad('delete account check failed: ' + e.message)))
+  .then(() => checkNetworkPrivacy().catch(e => bad('network privacy check failed: ' + e.message)))
   .finally(() => {
   console.log(problems.length ? `${problems.length} backend problem(s)` : 'Backend OK');
   process.exit(problems.length ? 1 : 0);
