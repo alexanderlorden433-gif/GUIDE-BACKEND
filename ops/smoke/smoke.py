@@ -3986,6 +3986,48 @@ def billing_email_links(browser, base):
 
 
 
+def reset_link(browser, base):
+    """The "Reset your password" email links to /reset-password?<param>=<token> (src/routes/auth.js). Opening that
+    link shows "Set a new password", and saving sends the same token to POST /api/auth/reset-password."""
+    step = ['password reset link']
+    src = open(os.path.join(ROOT, 'src', 'routes', 'auth.js')).read()
+    m = re.search(r"/reset-password\?(\w+)=\$\{rawToken\}", src)
+    if not m:
+        problem(step[0], 'could not find the reset link in src/routes/auth.js'); return
+    param = m.group(1)
+    for label, vp, mobile in (('phone', {'width': 390, 'height': 844}, True), ('desktop', {'width': 1280, 'height': 800}, False)):
+        ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, service_workers='block')
+        st = new_state(False); attach_backend(ctx, st)
+        ctx.add_init_script("try{localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');}catch(e){}")
+        sent = []
+        def on_reset(route):
+            try: sent.append(route.request.post_data_json)
+            except Exception: sent.append(None)
+            route.fulfill(status=200, json={'message': 'Password updated'}, headers={'access-control-allow-origin': '*'})
+        page = ctx.new_page(); watch_errors(page, step)
+        page.route(API_ORIGIN + '/api/auth/reset-password', on_reset)
+        # Netlify serves the app at /reset-password (web/_redirects, checked in public_pages); the test server doesn't
+        page.route(re.compile(r'^' + re.escape(base) + r'/reset-password(\?.*)?$'), lambda r: r.fulfill(
+            status=200, body=open(os.path.join(ROOT, 'web', 'index.html'), 'rb').read(), headers={'content-type': 'text/html'}))
+        page.goto(base + f'/reset-password?{param}=smoke-reset-123', wait_until='load'); page.wait_for_timeout(1500)
+        title = page.evaluate("(document.getElementById('resetCardTitle')||{}).textContent || ''")
+        if 'new password' in title.lower() and page.locator('#resetPassword').is_visible():
+            ok(f'{label}: ' + step[0], 'the emailed reset link opens "Set a new password"')
+        else:
+            problem(f'{label}: ' + step[0], 'the emailed reset link should open "Set a new password"', title)
+            finish(st, step[0]); ctx.close(); continue
+        if param in page.url:
+            problem(f'{label}: ' + step[0], 'the reset token should be removed from the address bar', page.url)
+        page.fill('#resetPassword', 'new-password-1'); page.click('#resetSubmitBtn'); page.wait_for_timeout(1000)
+        if sent and sent[0] == {'token': 'smoke-reset-123', 'newPassword': 'new-password-1'}:
+            ok(f'{label}: ' + step[0], 'saving sends the token from the link and the new password')
+        else:
+            problem(f'{label}: ' + step[0], 'the new password was not sent with the token from the link', sent)
+        if page.locator('#authCardReset').is_visible():
+            problem(f'{label}: ' + step[0], 'after saving it should go back to Log in')
+        shot(page, f'{label}-reset-link'); finish(st, step[0]); ctx.close()
+
+
 def public_pages(browser, base):
     """The public pages Google can find: a guide per business with its free Module 1, free calculators,
     sitemap/robots, a real title and share picture on the app, and the "Start Module 1 free" deep link."""
@@ -4385,8 +4427,14 @@ def find_new_things(browser, base):
         ok(step[0], 'the top of the landing page links to the free guides, calculators, the quiz and pricing')
     else:
         problem(step[0], 'the landing page links are missing', links)
-    page.click('.lp-nav [data-lp-scroll="lpPricing"]'); page.wait_for_timeout(900)
-    top = page.evaluate("document.getElementById('lpPricing').getBoundingClientRect().top")
+    page.click('.lp-nav [data-lp-scroll="lpPricing"]')
+    # the landing page is long, so the smooth scroll can take well over a second: wait for it to settle
+    top = None
+    for _ in range(20):
+        page.wait_for_timeout(200)
+        now = page.evaluate("document.getElementById('lpPricing').getBoundingClientRect().top")
+        if now == top: break
+        top = now
     if -50 < top < 300:
         ok(step[0], 'Pricing scrolls to the prices')
     else:
@@ -4557,6 +4605,7 @@ def main():
         creator_payouts(browser, base)
         landing_trust(browser, base)
         billing_email_links(browser, base)
+        reset_link(browser, base)
         public_pages(browser, base)
         side_business_quiz(browser, base)
         browser.close()
