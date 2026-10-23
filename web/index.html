@@ -9055,11 +9055,12 @@ resetSubmitBtn.addEventListener('click', async ()=>{
   resetSubmitBtn.textContent = original;
 });
 
-// If the page was opened from an emailed reset link (?resetToken=...), jump
-// straight to the "set a new password" screen.
+// If the page was opened from an emailed reset link (/reset-password?token=...), jump
+// straight to the "set a new password" screen. The email uses ?token= (src/routes/auth.js);
+// ?resetToken= is the older name, still accepted.
 function checkForResetTokenInUrl(){
   const params = new URLSearchParams(window.location.search);
-  const token = params.get('resetToken');
+  const token = params.get('token') || params.get('resetToken');
   if(!token) return;
   resetTokenFromUrl = token;
   resetMode = 'confirm';
