@@ -150,3 +150,13 @@
 - Queue (when a slot frees): sign-up retry after 409 (above); certificate name fitting; unsubscribe confirm step; mentorAlert field caps; network respond only when pending; leaderboard cache.
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/account.js + auth.js (password reset flow).
+
+## 2026-10-23 (Fri)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. main b72c9cd still has NO commit statuses (2nd night). GitHub deployments: last Railway production deploy = 4e9792a (10-20). #75 was web/+ops/ only → Railway likely skipped it (watch paths). Netlify status not reported on main either — can't confirm the site deploy from here.
+- Open before tonight: #71, #72, #74 (mine, all mergeable clean, only the Netlify bot comment).
+- check.sh on main: FAILED 1 — "finding things: landing" Pricing scroll: smooth scroll on the long landing page takes ~1.5s, test read it at 0.9s (failed 3/3 locally, not flaky). Test gap, fixed in #76 (wait until scroll settles).
+- REAL BUG found in step 5 (auth.js): reset email links /reset-password?token=… but the app only read ?resetToken= → reset link opened the start page; nobody could reset a password (since the start). Went over the 2-PR cap (login broken = top priority): PR #76 agent/app-health/2026-10-23-reset-link — app accepts token || resetToken; new smoke step reset_link (reads link format from auth.js; fails on main). Subscribed to #76.
+- Step 5 area: auth.js + account.js. Low, queued (private): (a) password reset/change doesn't sign out other sessions (JWT has no version; old tokens stay valid until expiry) → add tokenVersion to user + check in requireAuth; (b) after a successful reset, other unused reset links for that user stay valid for their hour → mark all usedAt; (c) PUT /account/password has no rate limit (needs a valid login, low); (d) the "Password updated" message after reset shows in red (color set then cleared immediately; hard-coded #166534) — Design/visual; (e) check whether the Meta pixel PageView can fire before checkForResetTokenInUrl strips the token from the URL.
+- Queue (when a slot frees): sign-up retry after 409; tokenVersion sign-out on reset; certificate name fitting; unsubscribe confirm step; mentorAlert field caps; network respond only when pending; leaderboard cache.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/billing.js read-through (no changes — sensitive) + src/routes/ai*.js.
