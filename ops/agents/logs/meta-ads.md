@@ -55,3 +55,8 @@
 - Setup gaps unchanged in live config: US only, ad named "New Leads Ad", no URL tags, Multi-advertiser ads enrolled. Proposed one combined fix for Oct 23+ (after learning window), needs Alexander's OK.
 - Gmail: no Meta billing/rejection emails in last 20 days.
 - Push sent (live-check summary + proposal). Next live check: Mon Oct 26.
+
+## 2026-10-23 (Fri)
+- Delivery still only on Oct 20 (tiny, 1 link click, 0 registrations). Oct 21 and Oct 22 both empty in FACA* two days later — looks like delivery stopped again, not lag. FADE* still empty.
+- No Adspirer ad calls (not a check day; nothing to pause). Adspirer 8/15, resets Nov 4. Setup-fix proposal from Oct 22 still waiting for Alexander's OK.
+- Push sent (delivery stalled again). Next live check: Mon Oct 26 (or sooner if Alexander approves the fix).
