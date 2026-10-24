@@ -60,3 +60,8 @@
 - Delivery still only on Oct 20 (tiny, 1 link click, 0 registrations). Oct 21 and Oct 22 both empty in FACA* two days later — looks like delivery stopped again, not lag. FADE* still empty.
 - No Adspirer ad calls (not a check day; nothing to pause). Adspirer 8/15, resets Nov 4. Setup-fix proposal from Oct 22 still waiting for Alexander's OK.
 - Push sent (delivery stalled again). Next live check: Mon Oct 26 (or sooner if Alexander approves the fix).
+
+## 2026-10-24 (Sat)
+- Still no delivery Oct 21, 22, 23 (FAEV* zero; FACA* lifetime unchanged = only the tiny Oct 20 delivery). FADE* still empty.
+- Adspirer shows 9/15 (was 8/15 on Oct 23) — one action used outside these notes. Resets Nov 4. No Adspirer ad calls today (not a check day, nothing to pause).
+- No push sent (same stall already reported Oct 23; setup-fix proposal still waiting). Next live check: Mon Oct 26.
