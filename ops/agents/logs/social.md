@@ -21,3 +21,4 @@
 - 2026-10-21 (free plan mode): 1 TikTok, ugc/1e17157a, Oct 21 10:00 NY (best time). 19/20 posts used in October. Skipped coaching/01078458, local/0db994c6 (renderer issue), trading/01230763, creator/02b0e9ed (money topics), design/1325e4e4 (rejected before). Rejected photo/0451f7e8 (overlapping text mid-transition). affiliate/43f614a3 rendered fine, not posted (income angle). jsDelivr url worked. Cover 5500ms.
 - 2026-10-22 (free plan mode): 1 Reel, writing/2b6129ce, Oct 22 10:00 NY (best time). 20/20 posts used in October — plan full until Nov 1. Skipped the known-bad/money-topic lessons. Rejected realestate/09559fef and marketing/040693fc (overlapping text mid-transition caught in frames). jsDelivr url worked. Cover 5750ms.
 - 2026-10-23 (free plan mode): posted nothing — October is full (20/20). Posting restarts Nov 1.
+- 2026-10-24 (free plan mode): posted nothing — October is full (20/20). Posting restarts Nov 1.
