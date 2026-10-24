@@ -160,3 +160,15 @@
 - Queue (when a slot frees): sign-up retry after 409; tokenVersion sign-out on reset; certificate name fitting; unsubscribe confirm step; mentorAlert field caps; network respond only when pending; leaderboard cache.
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/billing.js read-through (no changes — sensitive) + src/routes/ai*.js.
+
+## 2026-10-24 (Sat)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. main b72c9cd: no commit statuses (3rd night; web/+ops/ only change). Last Railway production deploy still 4e9792a = success.
+- Open: #71, #72, #74, #76 (mine, all mergeable clean, no reviews). Over the 2-PR cap → no new PR tonight.
+- check.sh on main: 1 fail = landing Pricing scroll timing (same test gap as 10-23, fixed in #76). Everything else passes, 89 shots.
+- Step 5 area: billing.js (read only, sensitive) + aiChat.js.
+  - billing webhook: any error inside the handler still answers 200 → Stripe never retries. If the DB hiccups on checkout.session.completed, the member is charged but never gets Pro. Retrying is safe (referral guarded by wasAlreadyPro, recordMoney/trackPurchase keyed by event.id) → return 500 for that case so Stripe retries. [sensitive] PR, TOP of queue.
+  - billing: referral reward fires again when a member cancels and re-subscribes (isPro false after delete) — comment says "first time only". Low; fix = store a referralRewarded flag.
+  - aiChat.js: fine (server-side key, per-member limiter, caps). Low: two parallel free requests can both pass the daily check (count happens after the reply) → 2 free answers; cost tiny.
+- Queue (when a slot frees): webhook retry on error; sign-up retry after 409; tokenVersion sign-out on reset; certificate name fitting; unsubscribe confirm step; mentorAlert field caps; network respond only when pending; leaderboard cache; referral once-only.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/sites.js + siteCredits.js.
