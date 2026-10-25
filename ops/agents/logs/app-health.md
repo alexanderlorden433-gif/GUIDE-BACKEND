@@ -172,3 +172,13 @@
 - Queue (when a slot frees): webhook retry on error; sign-up retry after 409; tokenVersion sign-out on reset; certificate name fitting; unsubscribe confirm step; mentorAlert field caps; network respond only when pending; leaderboard cache; referral once-only.
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/sites.js + siteCredits.js.
+
+## 2026-10-25 (Sun)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. main b72c9cd: still no commit statuses (web/+ops/ only change).
+- Open: #71, #72, #74, #76 (mine, all mergeable clean, no reviews). Over the 2-PR cap → no new PR tonight.
+- check.sh on main: 1 fail = landing Pricing scroll timing (test gap, fixed in #76). Everything else passes, 89 shots.
+- Step 5 area: routes/sites.js + src/siteCredits.js. Solid: owner-scoped requests, Pro needed to publish and to stay live (sitePages checks isProUser), credit spend/grant single-statement, checkout grant idempotent by session id, metadata.userId checked on confirm, no promo codes on credits checkout.
+  - Low: Pro daily AI hour is keyed by the time zone the app sends; switching tz (e.g. Pacific/Kiritimati vs Etc/GMT+12) gives a different "day" → up to ~2 hours/real day. siteAi.js daily cap still bounds it. Fix = key by UTC day or remember first tz per day. Queue (low).
+- Queue (when a slot frees): webhook retry on error; sign-up retry after 409; tokenVersion sign-out on reset; certificate name fitting; unsubscribe confirm step; mentorAlert field caps; network respond only when pending; leaderboard cache; referral once-only; daily-hour tz key.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/mentors.js + partners.js.
