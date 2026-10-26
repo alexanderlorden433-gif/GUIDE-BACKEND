@@ -182,3 +182,14 @@
 - Queue (when a slot frees): webhook retry on error; sign-up retry after 409; tokenVersion sign-out on reset; certificate name fitting; unsubscribe confirm step; mentorAlert field caps; network respond only when pending; leaderboard cache; referral once-only; daily-hour tz key.
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/mentors.js + partners.js.
+
+## 2026-10-26 (Mon)
+- Live checks: WebFetch permission prompt timed out again (unattended) → no direct live check. main b72c9cd: commit status "pending", no statuses (4th night; web/+ops/ only). Last Railway production deploy still 4e9792a.
+- Open: #71, #72, #74, #76 (mine, all mergeable clean, no reviews). Over the 2-PR cap → no new PR; improved #72 instead.
+- check.sh on main: 1 fail = landing Pricing scroll timing (test gap, fixed in #76). 89 shots.
+- Monday npm audit: NEW high — body-parser <1.20.9 (DoS via compressed body). Pushed body-parser 1.20.9 to #72 (lockfile only, Node 18 OK, check --quick: backend/lint/API OK). With #72: no high/critical left.
+  - sanitize-html 2.17.1: new moderate XSS advisories; every fixed version (2.17.7+) needs Node >=22 → can't upgrade on Railway Node 18. Risk low: our allowlist excludes the affected attrs/tags (action/formaction/data/poster/background, noscript, textarea, meta) and member pages are served with a no-script sandbox CSP. Real fix = Railway on Node 22 (ask Alexander when relevant). node-cron/uuid moderate needs major → left.
+- Step 5 area: routes/mentors.js + partners.js. Solid: author from session, owner-only partner edits, URL scheme checked, async errors handled (src/asyncErrors.js). Low: mentors nicheId not validated (profiles on made-up chapters); new-mentor notify loads every user's dataBlob (same scaling issue as leaderboard); /all/search q length uncapped.
+- Queue unchanged (webhook retry on error at top).
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/discussion-adjacent: notifications.js + push.js.
