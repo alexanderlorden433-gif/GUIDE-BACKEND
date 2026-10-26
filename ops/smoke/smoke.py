@@ -4385,8 +4385,15 @@ def find_new_things(browser, base):
         ok(step[0], 'the top of the landing page links to the free guides, calculators, the quiz and pricing')
     else:
         problem(step[0], 'the landing page links are missing', links)
-    page.click('.lp-nav [data-lp-scroll="lpPricing"]'); page.wait_for_timeout(900)
-    top = page.evaluate("document.getElementById('lpPricing').getBoundingClientRect().top")
+    page.click('.lp-nav [data-lp-scroll="lpPricing"]')
+    # smooth scroll on a long page: wait until it settles (up to 3s) instead of a fixed pause
+    top = None
+    for _ in range(15):
+        page.wait_for_timeout(200)
+        now = page.evaluate("document.getElementById('lpPricing').getBoundingClientRect().top")
+        if now == top:
+            break
+        top = now
     if -50 < top < 300:
         ok(step[0], 'Pricing scrolls to the prices')
     else:
@@ -4417,6 +4424,29 @@ def find_new_things(browser, base):
         ok(step[0], 'Log in at the top of the landing page opens the login form')
     else:
         problem(step[0], 'Log in at the top of the landing page should open the login form')
+    # Log in / reset on a phone: eye button shows the password, links are tap-sized, "link sent" is not error red.
+    page.fill('#authPassword', 'secret123')
+    page.click('#authCardStep1 .pw-toggle'); page.wait_for_timeout(100)
+    shown = page.evaluate("[document.getElementById('authPassword').type, document.querySelector('#authCardStep1 .pw-toggle').getAttribute('aria-pressed')]")
+    if shown == ['text', 'true']:
+        ok(step[0], 'the eye button shows the password')
+    else:
+        problem(step[0], 'the eye button should show the password', shown)
+    small = page.evaluate("[...document.querySelectorAll('#authCardStep1 .auth-switch button, #authCardStep1 .pw-toggle')].filter(e=>e.offsetParent && e.getBoundingClientRect().height < 44).map(e=>e.textContent || e.className)")
+    if small:
+        problem(step[0], 'log-in links should be at least 44px tall on a phone', small)
+    else:
+        ok(step[0], 'log-in links and the eye button are big enough to tap')
+    page.route('**/auth/forgot-password', lambda r: r.fulfill(status=200, content_type='application/json',
+               body=json.dumps({'message': 'If that email is registered, a reset link has been sent.'})))
+    page.click('#forgotBtn'); page.wait_for_timeout(200)
+    page.fill('#resetEmail', 'ana@example.com'); page.click('#resetSubmitBtn'); page.wait_for_timeout(600)
+    msg = page.evaluate("(()=>{const e=document.getElementById('resetError'); return [e.textContent, e.classList.contains('ok')];})()")
+    if msg[0] and msg[1]:
+        ok(step[0], '"reset link sent" shows as a success message, not an error')
+    else:
+        problem(step[0], '"reset link sent" should show as a success message', msg)
+    no_sideways_scroll(page, step[0])
     ctx.close()
 
     init = "try{localStorage.setItem('guide_token','smoke-token');localStorage.setItem('guide_ads','no');localStorage.setItem('guide_splash','off');localStorage.setItem('guide_course_view','list');}catch(e){}"

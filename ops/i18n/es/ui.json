@@ -1362,5 +1362,9 @@
  "Which business do you want to start?": "¿Qué negocio quieres empezar?",
  "Tap one and its first lesson opens. You can add more businesses any time.": "Toca uno y se abre su primera lección. Puedes añadir más negocios cuando quieras.",
  "Opening your first lesson…": "Abriendo tu primera lección…",
- "Skip for now": "Saltar por ahora"
+ "Skip for now": "Saltar por ahora",
+ "Show password": "Mostrar contraseña",
+ "Hide password": "Ocultar contraseña",
+ "At least 8 characters.": "Al menos 8 caracteres.",
+ "Log in to pick up right where you left off.": "Inicia sesión para seguir justo donde lo dejaste."
 }
