@@ -40,6 +40,7 @@ SCREENS = {
     'landing-demo-done': (False, "document.querySelector('#lpPick button:nth-child(2)').click(); document.querySelector('.dm-done').click(); document.getElementById('lpStepOne').scrollIntoView()"),
     'signup':      (False, "document.getElementById('landingSignupBtn').click()"),
     'login':       (False, "document.getElementById('landingLoginBtn').click()"),
+    'signup-pick': (False, "document.getElementById('landingSignupBtn').click(); pendingSignup={email:'ana@example.com',userId:'u1'}; showOnboardingStep()"),
     'reset':       (False, "document.getElementById('landingLoginBtn').click(); document.getElementById('forgotBtn').click()"),
     'home':        (True,  "showHome()"),
     'greet-ask':   (True,  "showHome()"),

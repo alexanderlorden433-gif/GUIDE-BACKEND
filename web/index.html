@@ -5761,6 +5761,44 @@
   @media (max-width:340px){
     .lp-mark b{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
   }
+
+  /* ---------- Sign-up, log in, reset and the one question (design pass, area 2) ---------- */
+  /* Logo sits plainly at the top (no pill box inside the card). */
+  .auth-logo{background:none; color:var(--ink); padding:0; border-radius:0; margin-bottom:var(--sp-5);}
+  .auth-logo .guide-logo-mark{width:22px; height:22px;}
+  .auth-sub{font-size:15px; color:var(--ink-2); max-width:36ch;}
+  .auth-card input{min-height:48px;}
+  /* Password boxes get an eye button to show what was typed. */
+  .pw-wrap{position:relative;}
+  .pw-wrap input{padding-right:52px;}
+  .pw-toggle{position:absolute; top:2px; right:2px; bottom:2px; width:44px; display:flex; align-items:center; justify-content:center;
+    background:none; border:none; border-radius:8px; color:var(--ink-soft); cursor:pointer;}
+  .pw-toggle:hover{color:var(--ink);}
+  .pw-toggle:focus-visible{outline:2px solid var(--grape-soft); outline-offset:-2px;}
+  .pw-toggle .ico{width:20px; height:20px;}
+  .auth-hint{margin:var(--sp-2) 0 0; font-size:13px; color:var(--ink-soft);}
+  /* Errors in the theme's readable red; "link sent" / "password updated" in green, not red. */
+  .auth-error{color:rgb(var(--danger-rgb)); font-size:13.5px; line-height:1.45; min-height:0; margin-top:var(--sp-3);}
+  .auth-error:empty{margin-top:0;}
+  .auth-error.ok{color:var(--grape-soft);}
+  .auth-card .auth-primary-btn{margin-top:var(--sp-5);}
+  /* "Log in", "Sign up", "Forgot password?", "Back to log in": full 44px tap targets, no heavy underline. */
+  .auth-switch{margin:var(--sp-3) 0 0;}
+  .auth-switch + .auth-switch{margin-top:0;}
+  .auth-switch button{display:inline-flex; align-items:center; min-height:var(--btn-h); padding:0 var(--sp-1);
+    font-weight:600; text-decoration:none; font-size:14px;}
+  .auth-switch button:hover{text-decoration:underline; text-underline-offset:3px;}
+  #forgotBtn, #resetBackBtn{color:var(--ink-2);}
+  /* "What should we call you?" on Home: Skip is a full-height button that lines up with Save. */
+  .home-greet-form .biz-primary-btn, .home-greet-form .tr-act{min-height:var(--btn-h);}
+  .home-greet-form .tr-act{padding:0 var(--sp-4); font-size:14px;}
+  /* Phones: the form sits on the page (no card), starts near the top so the keyboard never covers the button. */
+  @media (max-width:520px){
+    .auth-screen{align-items:flex-start; padding:calc(var(--sp-7) + env(safe-area-inset-top, 0px)) var(--sp-4) var(--sp-7);}
+    .auth-card{background:none; border:none; padding:0; border-radius:0;}
+    .auth-card h2{font-size:28px; line-height:1.15;}
+    .ob-picker .niche-pick-item{min-height:60px;}
+  }
 </style>
 </head>
 <body>
@@ -6170,13 +6208,14 @@
   <div class="auth-card" id="authCardStep1">
     <div class="auth-logo"><svg class="guide-logo-mark" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="100" cy="100" r="82" fill="none" stroke="url(#guideRingGrad)" stroke-width="14"/><path d="M100,32 L114.1,85.9 L168,100 L114.1,114.1 L100,168 L85.9,114.1 L32,100 L85.9,85.9 Z" fill="url(#guideStarGrad)"/><circle cx="100" cy="100" r="14" fill="#FFD23F"/></svg> The Guide</div>
     <h2 id="authTitle">Create your account</h2>
-    <p class="auth-sub">Your progress saves automatically once you're in. No more losing your place.</p>
+    <p class="auth-sub" id="authSub">Your progress saves automatically once you're in. No more losing your place.</p>
     <div id="authForm">
       <label for="authEmail">Email</label>
       <input type="email" id="authEmail" placeholder="you@email.com" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false">
       <label for="authPassword">Password</label>
-      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password">
-      <div class="auth-error" id="authError"></div>
+      <div class="pw-wrap"><input type="password" id="authPassword" placeholder="••••••••" autocomplete="new-password"><button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false"></button></div>
+      <p class="auth-hint" id="authPwHint">At least 8 characters.</p>
+      <div class="auth-error" id="authError" role="alert"></div>
       <button type="button" id="authSubmitBtn" class="auth-primary-btn">Sign up & start learning</button>
     </div>
     <p class="auth-switch" id="authSwitchText"></p>
@@ -6202,9 +6241,10 @@
     </div>
     <div id="resetPasswordWrap" style="display:none;">
       <label for="resetPassword">New password</label>
-      <input type="password" id="resetPassword" placeholder="••••••••" autocomplete="new-password">
+      <div class="pw-wrap"><input type="password" id="resetPassword" placeholder="••••••••" autocomplete="new-password"><button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false"></button></div>
+      <p class="auth-hint">At least 8 characters.</p>
     </div>
-    <div class="auth-error" id="resetError"></div>
+    <div class="auth-error" id="resetError" role="alert"></div>
     <button type="button" id="resetSubmitBtn" class="auth-primary-btn">Send reset link</button>
     <p class="auth-switch"><button type="button" id="resetBackBtn">Back to log in</button></p>
   </div>
@@ -8964,18 +9004,35 @@ function bindAuthToggle(){
   const btn = document.getElementById('authToggleBtn2');
   if(btn) btn.addEventListener('click', ()=> setAuthMode(authMode==='signup' ? 'login' : 'signup'));
 }
+const authSub = document.getElementById('authSub');
+const authPwHint = document.getElementById('authPwHint');
+// Eye button on password boxes: show or hide what was typed.
+document.querySelectorAll('.pw-toggle').forEach(btn=>{
+  const input = btn.previousElementSibling;
+  const paint = ()=>{ const shown = input.type === 'text'; btn.innerHTML = ico(shown ? 'eyeOff' : 'eye');
+    btn.setAttribute('aria-label', shown ? 'Hide password' : 'Show password'); btn.setAttribute('aria-pressed', shown ? 'true' : 'false'); };
+  btn.addEventListener('click', ()=>{ input.type = input.type === 'password' ? 'text' : 'password'; paint(); input.focus(); });
+  paint();
+});
 function setAuthMode(mode){
   authMode = mode;
   authError.textContent = '';
+  authError.classList.remove('ok');
   authCardStep1.style.display = '';
   authCardReset.style.display = 'none';
   if(mode==='signup'){
     authTitle.textContent = "Create your account";
+    authSub.textContent = "Your progress saves automatically once you're in. No more losing your place.";
+    authPassword.setAttribute('autocomplete', 'new-password');
+    authPwHint.style.display = '';
     authSubmitBtn.textContent = "Sign up & start learning";
     authSwitchText.innerHTML = 'Already have an account? <button type="button" id="authToggleBtn2">Log in</button>';
     forgotWrap.style.display = 'none';
   } else {
     authTitle.textContent = "Welcome back";
+    authSub.textContent = "Log in to pick up right where you left off.";
+    authPassword.setAttribute('autocomplete', 'current-password');
+    authPwHint.style.display = 'none';
     authSubmitBtn.textContent = "Log in";
     authSwitchText.innerHTML = 'New here? <button type="button" id="authToggleBtn2">Sign up</button>';
     forgotWrap.style.display = '';
@@ -8994,6 +9051,7 @@ const resetPasswordWrap = document.getElementById('resetPasswordWrap');
 
 function renderResetCard(){
   resetError.textContent = '';
+  resetError.classList.remove('ok');
   if(resetMode === 'confirm'){
     resetCardTitle.textContent = 'Set a new password';
     resetCardSub.textContent = 'Enter a new password for your account.';
@@ -9023,6 +9081,7 @@ resetBackBtn.addEventListener('click', ()=>{
 });
 resetSubmitBtn.addEventListener('click', async ()=>{
   resetError.textContent = '';
+  resetError.classList.remove('ok');
   resetSubmitBtn.disabled = true;
   const original = resetSubmitBtn.textContent;
   resetSubmitBtn.textContent = 'One sec…';
@@ -9032,9 +9091,8 @@ resetSubmitBtn.addEventListener('click', async ()=>{
       const email = resetEmail.value.trim().toLowerCase();
       if(!email || !email.includes('@')){ resetError.textContent = 'Enter a valid email.'; resetSubmitBtn.disabled = false; resetSubmitBtn.textContent = original; return; }
       const result = await apiFetch('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
-      resetError.style.color = '#166534';
+      resetError.classList.add('ok');
       resetError.textContent = result.message || 'If that email is registered, a reset link has been sent.';
-      resetError.style.color = '';
     } else {
       const newPw = resetPassword.value;
       if(!newPw || newPw.length < 8){ resetError.textContent = 'New password should be at least 8 characters.'; resetSubmitBtn.disabled = false; resetSubmitBtn.textContent = original; return; }
@@ -9042,10 +9100,8 @@ resetSubmitBtn.addEventListener('click', async ()=>{
       authCardReset.style.display = 'none';
       authCardStep1.style.display = '';
       setAuthMode('login');
-      authError.textContent = '';
-      authError.style.color = '#166534';
+      authError.classList.add('ok');
       authError.textContent = 'Password updated. Log in with your new password.';
-      authError.style.color = '';
       resetTokenFromUrl = null;
     }
   }catch(e){
@@ -9281,6 +9337,7 @@ async function loginApp(email, record, userId){
 
 async function handleAuthSubmit(){
   authError.textContent = '';
+  authError.classList.remove('ok');
   const email = authEmail.value.trim().toLowerCase();
   const pw = authPassword.value;
 
