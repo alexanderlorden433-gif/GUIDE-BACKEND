@@ -193,3 +193,12 @@
 - Queue unchanged (webhook retry on error at top).
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/discussion-adjacent: notifications.js + push.js.
+
+## 2026-10-27 (Tue)
+- Live checks: WebFetch permission prompt timed out again (unattended, 6th night) → no direct live check. main b72c9cd: still "pending", no statuses (web/+ops/ only). Last Railway production deploy still 4e9792a (10-20).
+- Open: #71, #72, #74, #76 (mine) + #77 (design agent), all mergeable clean. Over the 2-PR cap → no new PR.
+- check.sh on main: 1 fail = landing Pricing scroll timing (test gap, fixed in #76). Backend/lint/API OK, 89 shots.
+- Step 5 area: notifications.js (owner-scoped, rate-limited, fine) + push.js / src/push.js. Low, queued: sendToUsers fires every device send at once (Promise.all, up to 5000 users x 10 devices) with no per-request timeout → batch ~50 at a time + timeout; push endpoint accepts any https host → limit to known browser push services.
+- Queue unchanged (webhook retry on error at top, then sign-up retry after 409).
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/wins.js + publicWins.js.
