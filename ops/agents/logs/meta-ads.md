@@ -70,3 +70,9 @@
 - Still no new delivery: FACA* lifetime unchanged (only the tiny Oct 20 delivery, 1 link click, 0 registrations); yesterday (Oct 24) empty. FADE* still empty.
 - Adspirer 9/15 (unchanged), resets Nov 4. No Adspirer ad calls (not a check day, nothing to pause). Setup-fix proposal from Oct 22 still waiting for Alexander's OK.
 - No push sent (same stall already reported Oct 23). Next live check: Mon Oct 26 — include weekly review.
+
+## 2026-10-27 (Tue)
+- No Oct 26 note found. Adspirer shows 10/15 (was 9/15 on Oct 25) — likely the Monday live check, not logged here. Resets Nov 4. Only 5 left: 4 kept in reserve, so live checks should be skipped unless needed.
+- Still no new delivery: FACA* lifetime unchanged (only the tiny Oct 20 delivery, 1 link click, 0 registrations); Oct 23-26 all empty. FADE* still empty.
+- No Adspirer ad calls (not a check day, nothing to pause). Setup-fix proposal from Oct 22 still waiting for Alexander's OK.
+- No push sent (same stall already reported). Next live check: Thu Oct 29 — only if it leaves 4 actions in reserve (it would: 11/15).
