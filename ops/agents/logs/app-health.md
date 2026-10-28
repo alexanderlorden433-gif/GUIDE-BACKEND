@@ -202,3 +202,12 @@
 - Queue unchanged (webhook retry on error at top, then sign-up retry after 409).
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/wins.js + publicWins.js.
+
+## 2026-10-28 (Wed)
+- Live checks: WebFetch permission prompt timed out again (unattended, 7th night) → no direct live check. main still b72c9cd (no new merges since 10-21); no statuses on it (web/+ops/ only).
+- Open: #71, #72, #74, #76 (mine) + #77 (design), all merge cleanly with main. Over the 2-PR cap → no new PR.
+- check.sh on main: 1 fail = landing Pricing scroll timing (test gap, fixed in #76). Backend/lint/API OK, 89 shots.
+- Step 5 area: wins.js + publicWins.js. Solid: author-only delete, owner-only review, public list shows name not email, bodies escaped in app + landing + owner page. Low, queued: POST /wins emoji not checked against a list / no length cap (render falls back to trophy icon, so cosmetic); react on a deleted win → 500 instead of 404; deleted public win can stay on the landing page up to ~10 min (5-min server cache + 5-min browser cache) → clear cache on delete.
+- Queue unchanged (webhook retry on error at top, then sign-up retry after 409).
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
+- Next step-5 area: src/routes/tools*.js / trackers.
