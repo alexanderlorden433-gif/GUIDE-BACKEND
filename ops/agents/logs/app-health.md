@@ -211,3 +211,12 @@
 - Queue unchanged (webhook retry on error at top, then sign-up retry after 409).
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails).
 - Next step-5 area: src/routes/tools*.js / trackers.
+
+## 2026-10-29 (Thu)
+- Live checks: WebFetch permission prompt timed out again (unattended, 8th night) → no direct live check. main still b72c9cd (no merges since 10-21).
+- Open: #71, #72, #74, #76 (mine) + #77 (design); main unchanged so all still merge cleanly. Over the 2-PR cap → no new PR.
+- check.sh on main: 1 fail = landing Pricing scroll timing (test gap, fixed in #76). Backend/lint/API OK, 89 shots.
+- Step 5 area: no tools*/tracker routes exist (trackers are app-side). Reviewed clientStatus.js (now built: owner-scoped, Pro-gated, random 24-byte tokens, public route returns no account data, rate-limited — solid) + leads.js. Low, queued: unsubscribe page says "No more course emails will be sent" even when the token is invalid/unknown → say "link not recognised" in that case.
+- Queue unchanged (webhook retry on error at top, then sign-up retry after 409).
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails); merging the 4 waiting PRs.
+- Next step-5 area: web/index.html Business tab (client portal + trackers UI) error/loading states.
