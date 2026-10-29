@@ -81,3 +81,10 @@
 - Still no new delivery: FACA* lifetime unchanged (only the tiny Oct 20 delivery, 1 link click, 0 registrations); yesterday (Oct 27) and last 7 days empty. FADE* still empty.
 - Adspirer 10/15 (unchanged), resets Nov 4. No Adspirer ad calls (not a check day, nothing to pause). Setup-fix proposal from Oct 22 still waiting for Alexander's OK.
 - No push sent (same stall already reported). Next live check: Thu Oct 29 (leaves 4 in reserve: 11/15).
+
+## 2026-10-29 (Thu)
+- Metricool connector failed to connect this run (no numbers at all). Live check done via Adspirer instead (11/15 after it, resets Nov 4; 4 left = reserve only).
+- Live: campaign, ad set, ad all ACTIVE, budget $5/day, "no delivery recorded in last 7 days". Ad set "budget remaining" still $0.00.
+- Setup gaps unchanged: US only, ad named "New Leads Ad", no URL tags, Multi-advertiser ads enrolled. Oct 22 fix proposal still waiting.
+- Gmail: no Meta emails in last 10 days.
+- Push sent (live check + Metricool down). Next live check: none until Nov 4 reset unless needed for a pause/approved change.
