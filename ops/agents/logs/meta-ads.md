@@ -88,3 +88,8 @@
 - Setup gaps unchanged: US only, ad named "New Leads Ad", no URL tags, Multi-advertiser ads enrolled. Oct 22 fix proposal still waiting.
 - Gmail: no Meta emails in last 10 days.
 - Push sent (live check + Metricool down). Next live check: none until Nov 4 reset unless needed for a pause/approved change.
+
+## 2026-10-30 (Fri)
+- Metricool back. Still no new delivery: FACA* lifetime unchanged (only the tiny Oct 20 delivery, 1 link click, 0 registrations); yesterday (Oct 29) and last 7 days empty. FADE* still empty.
+- Adspirer 11/15 (unchanged), resets Nov 4. No Adspirer calls (not a check day, reserve only). Oct 22 setup-fix proposal still waiting for Alexander's OK.
+- No push sent (same stall already reported). Next live check: Mon Nov 2 only if reserve allows (it doesn't: would leave 3) — otherwise after Nov 4 reset.
