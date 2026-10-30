@@ -220,3 +220,12 @@
 - Queue unchanged (webhook retry on error at top, then sign-up retry after 409).
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails); merging the 4 waiting PRs.
 - Next step-5 area: web/index.html Business tab (client portal + trackers UI) error/loading states.
+
+## 2026-10-30 (Fri)
+- Live checks: WebFetch permission prompt timed out again (unattended, 9th night) → no direct live check. main still b72c9cd (no merges since 10-21); last Railway production deploy 4e9792a = success.
+- Open: #71, #72, #74, #76 (mine) + #77 (design), all merge cleanly. Over the 2-PR cap → no new PR.
+- check.sh on main: 1 fail = landing Pricing scroll timing (test gap, fixed in #76). Backend/lint/API OK, 89 shots.
+- Step 5 area: web/index.html Business tab → Client Portal panel. Has loading skeleton + error states (good). Low, queued: client/project names and notes put into innerHTML unescaped (member's own data only, but a "</textarea>" or "<" in notes breaks the card) → escape like other panels; Create button has no busy guard (double tap = 2 pages); Save/Delete errors use alert().
+- Queue unchanged otherwise (webhook retry on error at top, then sign-up retry after 409).
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails); merging the 4 waiting PRs.
+- Next step-5 area: web/index.html Business tab trackers (income/expense) input validation.
