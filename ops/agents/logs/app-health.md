@@ -229,3 +229,12 @@
 - Queue unchanged otherwise (webhook retry on error at top, then sign-up retry after 409).
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails); merging the 4 waiting PRs.
 - Next step-5 area: web/index.html Business tab trackers (income/expense) input validation.
+
+## 2026-10-31 (Sat)
+- Live checks: WebFetch permission prompt timed out again (unattended, 10th night) → no direct live check. main still b72c9cd (no merges since 10-21); last Railway production deploy 4e9792a = success.
+- Open: #71, #72, #74, #76 (mine) + #77 (design), all merge cleanly. Over the 2-PR cap → no new PR.
+- check.sh on main: 1 fail = landing Pricing scroll timing (test gap, fixed in #76). Backend/lint/API OK (also on Node 18), 89 shots.
+- Step 5 area: Business tab trackers (Expenses, income goal, Business Goal). Low, queued: Expenses "Add" silently does nothing on empty description/amount (no message); negative / huge amounts accepted; expense desc + category put into innerHTML unescaped; Business Goal label put into value="" unescaped (a quote cuts it off); recurring expense skipped months only log once. Income goal input OK (rejects <=0).
+- Queue unchanged otherwise (webhook retry on error at top, then sign-up retry after 409).
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails); merging the 4 waiting PRs.
+- Next step-5 area: web/index.html invoicing panel (invoice totals, line items, status changes).
