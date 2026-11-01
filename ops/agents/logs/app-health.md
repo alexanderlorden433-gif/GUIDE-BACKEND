@@ -238,3 +238,15 @@
 - Queue unchanged otherwise (webhook retry on error at top, then sign-up retry after 409).
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails); merging the 4 waiting PRs.
 - Next step-5 area: web/index.html invoicing panel (invoice totals, line items, status changes).
+
+## 2026-11-01 (Sun)
+- Live checks: WebFetch permission prompt timed out again (unattended, 11th night) → no direct live check. main still b72c9cd (no merges since 10-21); last Railway production deploy 4e9792a = success.
+- Open: #71, #72, #74, #76 (mine) + #77 (design), all mergeable clean. Over the 2-PR cap → no new PR.
+- check.sh on main: 1 fail = landing Pricing scroll timing (test gap, fixed in #76). Backend/lint/API OK, 89 shots.
+- Step 5 area: Business tab → Invoicing. Good: line items/list escaped, empty-form message, delete with undo, overdue/due-soon labels. Queued:
+  - Medium: Income goal ring says "based on Paid invoices this month" but sums every paid invoice ever (no paid date stored) → store paidDate on Mark paid, count this month only (old ones without date: fall back to createdDate).
+  - Low: printInvoice ("Send PDF") puts client, line text and business name into innerHTML unescaped ("<" breaks the PDF) → escapeHtml.
+  - Low: recurring copies get no due date; skipped months only create one copy (same as expenses); Create button uses alert() + no double-tap guard.
+- Queue (when a slot frees): income-ring month fix, webhook retry on error, sign-up retry after 409, then the rest as before.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails); merging the 4 waiting PRs.
+- Next step-5 area: web/index.html Contracts panel.
