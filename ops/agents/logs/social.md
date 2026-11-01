@@ -29,3 +29,4 @@
 - 2026-10-29 (free plan mode): posted nothing — October is full (20/20). Posting restarts Nov 1.
 - 2026-10-30 (free plan mode): posted nothing — October is full (20/20). Posting restarts Nov 1.
 - 2026-10-31 (free plan mode): posted nothing — October is full (20/20). Posting restarts Nov 1.
+- 2026-11-01 (free plan mode): 1 TikTok, creator/06508a09, Nov 1 10:00 NY (best time). 1/20 posts used in November. Skipped the known-bad/money-topic lessons. Rejected coaching/0130c2bb and local/1acc0f32 (overlapping text mid-transition). jsDelivr url worked. Cover 4000ms.
