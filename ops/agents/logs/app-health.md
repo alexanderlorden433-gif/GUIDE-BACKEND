@@ -250,3 +250,16 @@
 - Queue (when a slot frees): income-ring month fix, webhook retry on error, sign-up retry after 409, then the rest as before.
 - Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails); merging the 4 waiting PRs.
 - Next step-5 area: web/index.html Contracts panel.
+
+## 2026-11-02 (Mon)
+- Live checks: WebFetch permission prompt timed out again (unattended, 12th night) → no direct live check. main still b72c9cd (no merges since 10-21); last Railway production deploy 4e9792a = success.
+- Open: #71, #72, #74, #76 (mine) + #77 (design). Over the 2-PR cap → no new PR.
+- check.sh on main: 1 fail = landing Pricing scroll timing (test gap, fixed in #76). Backend/lint/API OK, 89 shots.
+- Monday npm audit --omit=dev: 0 vulnerabilities.
+- Step 5 area: Business tab → Contracts (+ glanced at Mileage). Queued:
+  - Medium: a contract's status can't be changed after adding (no way to mark Sent → Signed) → add a status select per row.
+  - Low: client + type put into innerHTML unescaped; Signed/Expired badges use hard-coded colours (brand rule) → theme vars; Add does nothing silently on empty name.
+  - Low: Mileage uses the 2024 IRS rate (0.67) labelled as current; purpose unescaped; negative miles accepted.
+- Queue (when a slot frees): income-ring month fix, contract status change, webhook retry on error, sign-up retry after 409, then the rest.
+- Still open with Alexander: real prices ($28.99/$325.99 in CLAUDE.md vs $24.99/$149 in terms + billing emails); merging the 4 waiting PRs.
+- Next step-5 area: web/index.html Time Tracker + Mileage panels.
